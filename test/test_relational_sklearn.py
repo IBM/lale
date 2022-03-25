@@ -1194,11 +1194,13 @@ class TestTaskGraphs(unittest.TestCase):
                     pipeline=rasl_trainable,
                     batches=batches,
                     n_batches=n_batches,
+                    scoring=None,
                     unique_class_labels=unique_class_labels,
                     max_resident=3 * math.ceil(train_data_space / n_batches),
                     prio=prio,
                     incremental=False,
                     verbose=0,
+                    progress_callback=None,
                 )
                 _check_trained_ordinal_encoder(
                     self,
@@ -1522,11 +1524,13 @@ class TestTaskGraphsWithConcat(unittest.TestCase):
                     pipeline=rasl_trainable,
                     batches=batches,  # type: ignore
                     n_batches=n_batches,
+                    scoring=None,
                     unique_class_labels=unique_class_labels,
                     max_resident=3 * math.ceil(train_data_space / n_batches),
                     prio=prio,
                     incremental=False,
                     verbose=0,
+                    progress_callback=None,
                 )
                 _check_trained_ordinal_encoder(
                     self,
@@ -1727,11 +1731,13 @@ class TestTaskGraphsWithCategoricalConcat(unittest.TestCase):
                     pipeline=rasl_trainable,
                     batches=batches,  # type: ignore
                     n_batches=n_batches,
+                    scoring=None,
                     unique_class_labels=unique_class_labels,
                     max_resident=3 * math.ceil(train_data_space / n_batches),
                     prio=prio,
                     incremental=False,
                     verbose=0,
+                    progress_callback=None,
                 )
                 _check_trained_ordinal_encoder(
                     self,
@@ -1836,12 +1842,14 @@ class TestTaskGraphsSpark(unittest.TestCase):
             rasl_trained = fit_with_batches(
                 pipeline=self._make_rasl_trainable(),
                 batches=mockup_data_loader(train_X, train_y, n_batches, tgt),
+                scoring=None,
                 n_batches=n_batches,
                 unique_class_labels=unique_class_labels,
                 max_resident=None,
                 prio=PrioBatch(),
                 incremental=False,
                 verbose=0,
+                progress_callback=None,
             )
             _check_trained_ordinal_encoder(
                 self, sk_trained.steps[0][1], rasl_trained.steps[0][1].impl, tgt
@@ -2067,11 +2075,13 @@ class TestBatchedBaggingClassifier(unittest.TestCase):
                     pipeline=rasl_trainable,
                     batches=batches,
                     n_batches=n_batches,
+                    scoring=None,
                     unique_class_labels=unique_class_labels,
                     max_resident=3 * math.ceil(train_data_space / n_batches),
                     prio=prio,
                     incremental=False,
                     verbose=0,
+                    progress_callback=None,
                 )
                 predictions = rasl_trained.predict(test_X)
                 rasl_acc = accuracy_score(test_y, predictions)

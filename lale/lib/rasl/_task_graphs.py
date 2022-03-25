@@ -20,7 +20,19 @@ import sys
 import tempfile
 import time
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Type, Union, cast
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Type,
+    Union,
+    cast,
+)
 
 import graphviz
 import numpy as np
@@ -487,15 +499,20 @@ class _TaskGraph:
         return self.all_tasks[memo_key]
 
 
-def _create_tasks_batching(
+def _create_tasks_fit(
     pipeline: TrainablePipeline[TrainableIndividualOp],
     all_batch_ids: Tuple[str, ...],
+    need_metrics: bool,
     incremental: bool,
 ) -> Dict[_MemoKey, _Task]:
     tg = _TaskGraph(pipeline)
     for step_id in range(len(pipeline.steps_list())):
         task = tg.find_or_create(_TrainTask, step_id, all_batch_ids, None)
         task.deletable_output = False
+    if need_metrics:
+        for batch_id in all_batch_ids:
+            task = tg.find_or_create(_MetricTask, _DUMMY_SCORE_STEP, (batch_id,), None)
+            task.deletable_output = False
     while len(tg.fresh_tasks) > 0:
         task = tg.fresh_tasks.pop()
         if isinstance(task, _TrainTask):
@@ -555,6 +572,21 @@ def _create_tasks_batching(
                 task.preds.append(
                     tg.find_or_create(_ApplyTask, pred_step_id, task.batch_ids, None)
                 )
+        if isinstance(task, _MetricTask):
+            assert len(task.batch_ids) == 1
+            task.preds.append(
+                tg.find_or_create(_ApplyTask, _DUMMY_INPUT_STEP, task.batch_ids, None)
+            )
+            sink = pipeline.get_last()
+            assert sink is not None
+            task.preds.append(
+                tg.find_or_create(
+                    _ApplyTask,
+                    tg.step_ids[sink],
+                    task.batch_ids,
+                    None,
+                )
+            )
         for pred_task in task.preds:
             pred_task.succs.append(task)
     return tg.all_tasks
@@ -845,6 +877,7 @@ def _run_tasks_inner(
     cache: _BatchCache,
     prio: Prio,
     verbose: int,
+    progress_callback: Optional[Callable[[float], None]],
     call_depth: int,
 ) -> None:
     for task in tasks.values():
@@ -1013,6 +1046,8 @@ def _run_tasks_inner(
                 X, y_true = task.preds[0].batch.Xy  # type: ignore
                 y_pred = task.preds[1].batch.y  # type: ignore
                 task.mmonoid = scoring.to_monoid((y_true, y_pred, X))
+                if progress_callback is not None:
+                    progress_callback(scoring.from_monoid(task.mmonoid))
             else:
                 assert False, type(task)
         elif operation is _Operation.COMBINE:
@@ -1052,6 +1087,7 @@ def _run_tasks(
     max_resident: Optional[int],
     prio: Prio,
     verbose: int,
+    progress_callback: Optional[Callable[[float], None]],
     call_depth: int,
 ) -> None:
     with _BatchCache(tasks, max_resident, prio, verbose) as cache:
@@ -1065,6 +1101,7 @@ def _run_tasks(
             cache,
             prio,
             verbose,
+            progress_callback,
             call_depth + 1,
         )
 
@@ -1127,26 +1164,30 @@ def fit_with_batches(
     pipeline: TrainablePipeline[TrainableIndividualOp],
     batches: Iterable[_RawBatch],
     n_batches: int,
+    scoring: Optional[MetricMonoidFactory],
     unique_class_labels: List[Union[str, int, float]],
     max_resident: Optional[int],
     prio: Prio,
     incremental: bool,
     verbose: int,
+    progress_callback: Optional[Callable[[float], None]],
 ) -> TrainedPipeline[TrainedIndividualOp]:
     all_batch_ids = tuple(_batch_id("d", idx) for idx in range(n_batches))
-    tasks = _create_tasks_batching(pipeline, all_batch_ids, incremental)
+    need_metrics = scoring is not None
+    tasks = _create_tasks_fit(pipeline, all_batch_ids, need_metrics, incremental)
     if verbose >= 3:
         _visualize_tasks(tasks, pipeline, prio, call_depth=2, trace=None)
     _run_tasks(
         tasks,
         pipeline,
         batches,
-        None,
+        scoring,
         unique_class_labels,
         all_batch_ids,
         max_resident,
         prio,
         verbose,
+        progress_callback,
         call_depth=2,
     )
     trained_pipeline = _extract_trained_pipeline(
@@ -1206,6 +1247,7 @@ def cross_val_score(
         max_resident,
         prio,
         verbose,
+        None,
         call_depth=2,
     )
     scores = _extract_scores(pipeline, folds, n_batches_per_fold, scoring, tasks)
@@ -1247,6 +1289,7 @@ def cross_validate(
         max_resident,
         prio,
         verbose,
+        None,
         call_depth=2,
     )
     result: Dict[str, Union[List[float], List[TrainedPipeline]]] = {}
