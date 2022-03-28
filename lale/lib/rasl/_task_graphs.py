@@ -999,10 +999,19 @@ def _run_tasks_inner(
                     if all(isinstance(X, pd.DataFrame) for X in list_X):
                         input_X = pd.concat(list_X)
                         input_y = pd.concat(list_y)
-                    else:
-                        assert all(isinstance(X, SparkDataFrame) for X in list_X)
+                    elif all(isinstance(X, SparkDataFrame) for X in list_X):
                         input_X = functools.reduce(lambda a, b: a.union(b), list_X)  # type: ignore
                         input_y = functools.reduce(lambda a, b: a.union(b), list_y)  # type: ignore
+                    elif all(isinstance(X, np.ndarray) for X in list_X):
+                        input_X = np.concatenate(list_X)
+                        input_y = np.concatenate(list_y)
+                    else:
+                        raise ValueError(
+                            f"""Input of {type(list_X[0])} is not supported for
+                            fit on a non-incremental operator.
+                            Supported types are: pandas DataFrame, numpy ndarray, and spark DataFrame."""
+                        )
+
                 task.trained = trainable.fit(input_X, input_y)
         elif operation is _Operation.PARTIAL_FIT:
             assert isinstance(task, _TrainTask)

@@ -39,6 +39,7 @@ class _BatchingImpl:
         self.inmemory = inmemory
         self.num_epochs = num_epochs
         self.max_resident = max_resident
+        self.verbose = verbose
 
     def fit(self, X, y=None, classes=None):
         if self.operator is None:
@@ -74,7 +75,7 @@ class _BatchingImpl:
             max_resident=self.max_resident,
             prio=PrioResourceAware(),
             incremental=False,
-            verbose=0,
+            verbose=self.verbose,
         )
         return self
 
@@ -265,7 +266,9 @@ _hyperparams_schema = {
                 "inmemory": {
                     "type": "boolean",
                     "default": False,
-                    "description": "Whether all the computations are done in memory or intermediate outputs are serialized.",
+                    "description": """Whether all the computations are done in memory
+                    or intermediate outputs are serialized. Only applies to transform/predict.
+                    For fit, use the `max_resident` argument.""",
                 },
                 "num_epochs": {
                     "anyOf": [{"type": "integer"}, {"enum": [None]}],
