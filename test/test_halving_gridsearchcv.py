@@ -20,10 +20,10 @@ from lale.lib.sklearn import (
     PCA,
     KNeighborsClassifier,
     KNeighborsRegressor,
-    LinearRegression,
     LogisticRegression,
     MinMaxScaler,
     Normalizer,
+    RandomForestRegressor,
     StandardScaler,
 )
 
@@ -87,12 +87,12 @@ class TestAutoConfigureClassification(unittest.TestCase):
     def test_runtime_limit_hor(self):
         import time
 
-        planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
+        planned_pipeline = (MinMaxScaler | Normalizer) >> RandomForestRegressor
         from sklearn.datasets import load_boston
 
         X, y = load_boston(return_X_y=True)
 
-        max_opt_time = 0.5
+        max_opt_time = 2
         hor = HalvingGridSearchCV(
             estimator=planned_pipeline,
             cv=3,

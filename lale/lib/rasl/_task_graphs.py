@@ -196,16 +196,38 @@ class _Batch:
             self.space = 1  # place-holder value for Spark
 
     def spill(self, spill_dir: pathlib.Path) -> None:
-        assert isinstance(self.X, pd.DataFrame) and isinstance(self.y, pd.Series)
         name_X = spill_dir / f"X_{self}.pkl"
         name_y = spill_dir / f"y_{self}.pkl"
-        cast(pd.DataFrame, self.X).to_pickle(name_X)
-        cast(pd.Series, self.y).to_pickle(name_y)
+        if isinstance(self.X, pd.DataFrame):
+            cast(pd.DataFrame, self.X).to_pickle(name_X)
+        elif isinstance(self.X, np.ndarray):
+            np.save(name_X, self.X, allow_pickle=True)
+        else:
+            raise ValueError(
+                f"""Spilling of {type(self.X)} is not supported.
+            Supported types are: pandas DataFrame, numpy ndarray."""
+            )
+        if isinstance(self.y, pd.Series):
+            cast(pd.Series, self.y).to_pickle(name_y)
+        elif isinstance(self.y, np.ndarray):
+            np.save(name_y, self.y, allow_pickle=True)
+        else:
+            raise ValueError(
+                f"""Spilling of {type(self.y)} is not supported.
+            Supported types are: pandas DataFrame, pandas Series, and numpy ndarray."""
+            )
         self.X, self.y = name_X, name_y
 
     def load_spilled(self) -> None:
         assert isinstance(self.X, pathlib.Path) and isinstance(self.y, pathlib.Path)
-        data_X, data_y = pd.read_pickle(self.X), pd.read_pickle(self.y)
+        try:
+            data_X = pd.read_pickle(self.X)
+        except FileNotFoundError:
+            data_X = np.load(f"{self.X}" + ".npy", allow_pickle=True)
+        try:
+            data_y = pd.read_pickle(self.y)
+        except FileNotFoundError:
+            data_y = np.load(f"{self.y}" + ".npy", allow_pickle=True)
         self.X, self.y = data_X, data_y
 
     def delete_if_spilled(self) -> None:
@@ -231,6 +253,10 @@ class _Batch:
             return _BatchStatus.RESIDENT
         if isinstance(self.X, pathlib.Path) and isinstance(self.y, pathlib.Path):
             return _BatchStatus.SPILLED
+        if isinstance(self.X, np.ndarray) and isinstance(self.y, pd.Series):
+            return _BatchStatus.RESIDENT
+        if isinstance(self.X, np.ndarray) and isinstance(self.y, np.ndarray):
+            return _BatchStatus.RESIDENT
         assert False, (type(self.X), type(self.y))
 
 
@@ -1006,10 +1032,19 @@ def _run_tasks_inner(
                     if all(isinstance(X, pd.DataFrame) for X in list_X):
                         input_X = pd.concat(list_X)
                         input_y = pd.concat(list_y)
-                    else:
-                        assert all(isinstance(X, SparkDataFrame) for X in list_X)
+                    elif all(isinstance(X, SparkDataFrame) for X in list_X):
                         input_X = functools.reduce(lambda a, b: a.union(b), list_X)  # type: ignore
                         input_y = functools.reduce(lambda a, b: a.union(b), list_y)  # type: ignore
+                    elif all(isinstance(X, np.ndarray) for X in list_X):
+                        input_X = np.concatenate(list_X)
+                        input_y = np.concatenate(list_y)
+                    else:
+                        raise ValueError(
+                            f"""Input of {type(list_X[0])} is not supported for
+                            fit on a non-incremental operator.
+                            Supported types are: pandas DataFrame, numpy ndarray, and spark DataFrame."""
+                        )
+
                 task.trained = trainable.fit(input_X, input_y)
         elif operation is _Operation.PARTIAL_FIT:
             assert isinstance(task, _TrainTask)

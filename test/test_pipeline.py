@@ -42,7 +42,7 @@ class TestBatching(unittest.TestCase):
         pipeline = NoOp() >> Batching(
             operator=lale_sklearn.MinMaxScaler()
             >> lale_sklearn.MLPClassifier(random_state=42),
-            batch_size=112,
+            batch_size=56,
         )
         trained = pipeline.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
@@ -52,14 +52,18 @@ class TestBatching(unittest.TestCase):
         from sklearn.preprocessing import MinMaxScaler
 
         prep = MinMaxScaler()
-        trained_prep = prep.partial_fit(self.X_train, self.y_train)
+        trained_prep = prep.partial_fit(self.X_train[0:56, :], self.y_train[0:56])
+        trained_prep.partial_fit(self.X_train[56:, :], self.y_train[56:])
         X_transformed = trained_prep.transform(self.X_train)
 
         clf = MLPClassifier(random_state=42)
         import numpy as np
 
         trained_clf = clf.partial_fit(
-            X_transformed, self.y_train, classes=np.unique(self.y_train)
+            X_transformed[0:56, :], self.y_train[0:56], classes=np.unique(self.y_train)
+        )
+        trained_clf.partial_fit(
+            X_transformed[56:, :], self.y_train[56:], classes=np.unique(self.y_train)
         )
         predictions = trained_clf.predict(trained_prep.transform(self.X_test))
         sklearn_accuracy = accuracy_score(self.y_test, predictions)
@@ -73,7 +77,7 @@ class TestBatching(unittest.TestCase):
         from lale.lib.sklearn import MinMaxScaler, MLPClassifier
 
         pipeline = Batching(
-            operator=MinMaxScaler() >> MLPClassifier(random_state=42), batch_size=112
+            operator=MinMaxScaler() >> MLPClassifier(random_state=42), batch_size=56
         )
         trained = pipeline.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
@@ -83,14 +87,18 @@ class TestBatching(unittest.TestCase):
         from sklearn.preprocessing import MinMaxScaler
 
         prep = MinMaxScaler()
-        trained_prep = prep.partial_fit(self.X_train, self.y_train)
+        trained_prep = prep.partial_fit(self.X_train[0:56, :], self.y_train[0:56])
+        trained_prep.partial_fit(self.X_train[56:, :], self.y_train[56:])
         X_transformed = trained_prep.transform(self.X_train)
 
         clf = MLPClassifier(random_state=42)
         import numpy as np
 
         trained_clf = clf.partial_fit(
-            X_transformed, self.y_train, classes=np.unique(self.y_train)
+            X_transformed[0:56, :], self.y_train[0:56], classes=np.unique(self.y_train)
+        )
+        trained_clf.partial_fit(
+            X_transformed[56:, :], self.y_train[56:], classes=np.unique(self.y_train)
         )
         predictions = trained_clf.predict(trained_prep.transform(self.X_test))
         sklearn_accuracy = accuracy_score(self.y_test, predictions)
@@ -134,8 +142,7 @@ class TestBatching(unittest.TestCase):
 
     def test_no_partial_fit(self):
         pipeline = Batching(operator=NoOp() >> LogisticRegression())
-        with self.assertRaises(AttributeError):
-            _ = pipeline.fit(self.X_train, self.y_train)
+        _ = pipeline.fit(self.X_train, self.y_train)
 
     def test_fit4(self):
         import warnings
@@ -145,7 +152,7 @@ class TestBatching(unittest.TestCase):
 
         pipeline = Batching(
             operator=MinMaxScaler() >> MLPClassifier(random_state=42),
-            batch_size=112,
+            batch_size=56,
             inmemory=True,
         )
         trained = pipeline.fit(self.X_train, self.y_train)
@@ -156,14 +163,18 @@ class TestBatching(unittest.TestCase):
         from sklearn.preprocessing import MinMaxScaler
 
         prep = MinMaxScaler()
-        trained_prep = prep.partial_fit(self.X_train, self.y_train)
+        trained_prep = prep.partial_fit(self.X_train[0:56, :], self.y_train[0:56])
+        trained_prep.partial_fit(self.X_train[56:, :], self.y_train[56:])
         X_transformed = trained_prep.transform(self.X_train)
 
         clf = MLPClassifier(random_state=42)
         import numpy as np
 
         trained_clf = clf.partial_fit(
-            X_transformed, self.y_train, classes=np.unique(self.y_train)
+            X_transformed[0:56, :], self.y_train[0:56], classes=np.unique(self.y_train)
+        )
+        trained_clf.partial_fit(
+            X_transformed[56:, :], self.y_train[56:], classes=np.unique(self.y_train)
         )
         predictions = trained_clf.predict(trained_prep.transform(self.X_test))
         sklearn_accuracy = accuracy_score(self.y_test, predictions)

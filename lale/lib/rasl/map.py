@@ -66,7 +66,7 @@ def _new_column_name(name, expr):
                 to specify the new column name as the key, and the expression as the value."""
             )
 
-    if name is None or not name.strip():
+    if name is None or (isinstance(name, str) and not name.strip()):
         return infer_new_name(expr)
     else:
         return name
