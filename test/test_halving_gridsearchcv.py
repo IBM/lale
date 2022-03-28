@@ -87,11 +87,7 @@ class TestAutoConfigureClassification(unittest.TestCase):
     def test_runtime_limit_hor(self):
         import time
 
-        from lale.lib.sklearn import SelectKBest
-
-        planned_pipeline = (
-            (MinMaxScaler | Normalizer) >> RandomForestRegressor
-        )
+        planned_pipeline = (MinMaxScaler | Normalizer) >> RandomForestRegressor
         from sklearn.datasets import load_boston
 
         X, y = load_boston(return_X_y=True)
