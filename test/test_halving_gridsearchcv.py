@@ -90,13 +90,13 @@ class TestAutoConfigureClassification(unittest.TestCase):
         from lale.lib.sklearn import SelectKBest
 
         planned_pipeline = (
-            (MinMaxScaler | Normalizer) >> SelectKBest(k=5) >> RandomForestRegressor
+            (MinMaxScaler | Normalizer) >> RandomForestRegressor
         )
         from sklearn.datasets import load_boston
 
         X, y = load_boston(return_X_y=True)
 
-        max_opt_time = 0.5
+        max_opt_time = 2
         hor = HalvingGridSearchCV(
             estimator=planned_pipeline,
             cv=3,
