@@ -73,9 +73,9 @@ def pandas_collate_fn(batch):
                 return_y.append(item[1])
         else:
             if return_X is None:
-                return_X = [item[0].to_dict()]
+                return_X = [item.to_dict()]
             else:
-                return_X.append(item[0].to_dict())
+                return_X.append(item.to_dict())
     if return_y is not None:
         return (pd.DataFrame(return_X), pd.Series(return_y))
     else:
