@@ -30,6 +30,8 @@ class _BatchingImpl:
         inmemory=False,
         num_epochs=None,
         max_resident=None,
+        scoring=None,
+        progress_callback=None,
         verbose=0,
     ):
         self.operator = operator
@@ -39,6 +41,8 @@ class _BatchingImpl:
         self.inmemory = inmemory
         self.num_epochs = num_epochs
         self.max_resident = max_resident
+        self.scoring = scoring
+        self.progress_callback = progress_callback
         self.verbose = verbose
 
     def fit(self, X, y=None, classes=None):
@@ -75,6 +79,8 @@ class _BatchingImpl:
             max_resident=self.max_resident,
             prio=PrioResourceAware(),
             incremental=False,
+            scoring=self.scoring,
+            progress_callback=self.progress_callback,
             verbose=self.verbose,
         )
         return self
@@ -279,6 +285,16 @@ _hyperparams_schema = {
                     "anyOf": [{"type": "integer"}, {"enum": [None]}],
                     "default": None,
                     "description": "Amount of memory to be used in bytes.",
+                },
+                "scoring": {
+                    "anyOf": [{"laleType": "callable"}, {"enum": [None]}],
+                    "default": None,
+                    "description": "Batch-wise scoring metrics from `lale.lib.rasl`.",
+                },
+                "progress_callback": {
+                    "anyOf": [{"laleType": "callable"}, {"enum": [None]}],
+                    "default": None,
+                    "description": "Callback function to get performance metrics per batch.",
                 },
                 "verbose": {
                     "type": "integer",
