@@ -329,33 +329,36 @@ class TestDateTransformer(unittest.TestCase):
             X_train_transformed.shape[1], X_test_transformed.shape[1], f"Number of columns after transform is different.:{X_train_transformed.shape[1]}, {X_test_transformed.shape[1]}"
         )
 
-    # def test_02_all_options_without_headers(self):
-    #     transformer = DateTransformer(options=['all'])
-    #     X_train = transformer.fit_transform(self.data_2_train.values)
-    #     X_test = transformer.transform(self.data_2_test.values)
-    #     header_list = transformer.new_column_headers_list
-    #     print(f"New columns: {header_list}")
+    def test_02_all_options_without_headers(self):
+        transformer = lale.lib.autoai_libs.DateTransformer(options=['all'])
+        fitted_transformer = transformer.fit(self.X_train.values)
+        X_train = fitted_transformer.transform(self.X_train.values)
+        X_test = transformer.transform(self.X_test.values)
+        header_list = fitted_transformer.impl.new_column_headers_list
+        print(f"New columns: {header_list}")
 
-    #     self.assertEqual(X_train.shape[1], X_test.shape[1], msg="Shape after transform is different.")
+        self.assertEqual(X_train.shape[1], X_test.shape[1], msg="Shape after transform is different.")
 
-    # def test_03_specific_options_and_delete_source_columns(self):
-    #     transformer = DateTransformer(options=['bb', 'FloatTimestamp', 'DayOfWeek', 'Hour', 'Minute', 'aa'],
-    #                                 delete_source_columns=True,
-    #                                 column_headers_list=self.data_1_train.columns.values.tolist())
-    #     X_train = transformer.fit_transform(self.data_1_train.values)
-    #     X_test = transformer.transform(self.data_1_test.values)
-    #     header_list = transformer.new_column_headers_list
-    #     print(f"New columns: {header_list}")
+    def test_03_specific_options_and_delete_source_columns(self):
+        transformer = lale.lib.autoai_libs.DateTransformer(options=['bb', 'FloatTimestamp', 'DayOfWeek', 'Hour', 'Minute', 'aa'],
+                                    delete_source_columns=True,
+                                    column_headers_list=self.X_train.columns.values.tolist())
+        fitted_transformer = transformer.fit(self.X_train.values)
+        X_train = fitted_transformer.transform(self.X_train.values)
+        X_test = transformer.transform(self.X_test.values)
+        header_list = fitted_transformer.impl.new_column_headers_list
+        print(f"New columns: {header_list}")
 
-    #     self.assertEqual(X_train.shape[1], X_test.shape[1], msg="Shape after transform is different.")
+        self.assertEqual(X_train.shape[1], X_test.shape[1], msg="Shape after transform is different.")
 
-    # def test_04_option_Datetime_and_delete_source_columns(self):
-    #     transformer = DateTransformer(options=['Datetime'],
-    #                                 delete_source_columns=True,
-    #                                 column_headers_list=self.data_1_train.columns.values.tolist())
-    #     X_train = transformer.fit_transform(self.data_1_train.values)
-    #     X_test = transformer.transform(self.data_1_test.values)
-    #     header_list = transformer.new_column_headers_list
-    #     print(f"New columns: {header_list}")
+    def test_04_option_Datetime_and_delete_source_columns(self):
+        transformer = lale.lib.autoai_libs.DateTransformer(options=['Datetime'],
+                                    delete_source_columns=True,
+                                    column_headers_list=self.X_train.columns.values.tolist())
+        fitted_transformer = transformer.fit(self.X_train.values)
+        X_train = fitted_transformer.transform(self.X_train.values)
+        X_test = transformer.transform(self.X_test.values)
+        header_list = fitted_transformer.impl.new_column_headers_list
+        print(f"New columns: {header_list}")
 
-    #     self.assertEqual(X_train.shape[1], X_test.shape[1], msg="Shape after transform is different.")
+        self.assertEqual(X_train.shape[1], X_test.shape[1], msg="Shape after transform is different.")
