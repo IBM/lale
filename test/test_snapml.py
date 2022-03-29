@@ -128,7 +128,7 @@ class TestSnapMLClassifiers(unittest.TestCase):
                 _ = scorer(trained, self.test_X, self.test_y)
 
             trainable = lale.lib.snapml.BatchedTreeEnsembleClassifier(**params)
-            trained = trainable.partial_fit(self.train_X, self.train_y)
+            trained = trainable.partial_fit(self.train_X, self.train_y, classes=[0, 1])
             for metric in [
                 sklearn.metrics.accuracy_score,
                 sklearn.metrics.roc_auc_score,
