@@ -855,7 +855,23 @@ compress_strings = CompressStrings(
 )
 pipeline = numpy_column_selector >> compress_strings"""
         printed = lale.pretty_print.to_string(pipeline, combinators=True)
-        self._roundtrip(expected, printed)
+        try:
+            self._roundtrip(expected, printed)
+        except BaseException:
+            expected = """from autoai_libs.transformers.exportable import NumpyColumnSelector
+from autoai_libs.transformers.exportable import CompressStrings
+import lale
+
+lale.wrap_imported_operators()
+numpy_column_selector = NumpyColumnSelector(columns=[0, 2, 3, 5])
+compress_strings = CompressStrings(
+    compress_type="hash",
+    dtypes_list=["char_str", "char_str", "char_str", "char_str"],
+    missing_values_reference_list=("?", "", "-", float("nan")),
+    misslist_list=[[], [], [], []],
+)
+pipeline = numpy_column_selector >> compress_strings"""
+            self._roundtrip(expected, printed)
 
     def test_expression(self):
         from lale.expressions import it, mean

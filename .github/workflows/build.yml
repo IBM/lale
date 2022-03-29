@@ -36,7 +36,7 @@ jobs:
       run: pip install --upgrade --upgrade-strategy eager 'autoai-ts-libs'
     - name: Install autoai-libs for Python 3.7 and 3.8
       if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
-      run: pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ autoai-libs==1.13.3
+      run: pip install --upgrade --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ autoai-libs==1.13.3
     - name: Install autoai-libs from test pypi for Python 3.9.
       if: ${{ matrix.python-version == 3.9}}
       run: pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ autoai-libs==1.13.3
@@ -123,7 +123,7 @@ jobs:
       run: pip install 'autoai-ts-libs' 'scikit-learn==0.23.2'
     - name: Install autoai-libs from test pypi for Python 3.7 and 3.8
       if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
-      run: pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ autoai-libs==1.13.3
+      run: pip install --upgrade --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ autoai-libs==1.13.3
     - name: Install autoai-libs from test pypi for Python 3.9.
       if: ${{ matrix.python-version == 3.9}}
       run: pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ autoai-libs==1.13.3
