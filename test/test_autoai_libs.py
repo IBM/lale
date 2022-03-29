@@ -304,13 +304,10 @@ class TestAutoaiLibsText(unittest.TestCase):
 
 
 class TestDateTransformer(unittest.TestCase):
-    X_train = None
-    X_test = None
-
     @classmethod
-    def setUpClass(cls) -> None:
+    def setUpClass(cls):
         data = fetch_household_power_consumption()
-        data = data.iloc[:5000, [0,2,3,4,5]]
+        data = data.iloc[:5000, [0, 2, 3, 4, 5]]
         cls.X_train = data.iloc[-1000:]
         cls.X_test = data.iloc[:-1000]
 
@@ -326,39 +323,51 @@ class TestDateTransformer(unittest.TestCase):
         print(f"New columns: {header_list}, new shape: {X_train_transformed.shape}")
 
         self.assertEqual(
-            X_train_transformed.shape[1], X_test_transformed.shape[1], f"Number of columns after transform is different.:{X_train_transformed.shape[1]}, {X_test_transformed.shape[1]}"
+            X_train_transformed.shape[1],
+            X_test_transformed.shape[1],
+            f"Number of columns after transform is different.:{X_train_transformed.shape[1]}, {X_test_transformed.shape[1]}",
         )
 
     def test_02_all_options_without_headers(self):
-        transformer = lale.lib.autoai_libs.DateTransformer(options=['all'])
+        transformer = lale.lib.autoai_libs.DateTransformer(options=["all"])
         fitted_transformer = transformer.fit(self.X_train.values)
         X_train = fitted_transformer.transform(self.X_train.values)
         X_test = transformer.transform(self.X_test.values)
         header_list = fitted_transformer.impl.new_column_headers_list
         print(f"New columns: {header_list}")
 
-        self.assertEqual(X_train.shape[1], X_test.shape[1], msg="Shape after transform is different.")
+        self.assertEqual(
+            X_train.shape[1], X_test.shape[1], msg="Shape after transform is different."
+        )
 
     def test_03_specific_options_and_delete_source_columns(self):
-        transformer = lale.lib.autoai_libs.DateTransformer(options=['bb', 'FloatTimestamp', 'DayOfWeek', 'Hour', 'Minute', 'aa'],
-                                    delete_source_columns=True,
-                                    column_headers_list=self.X_train.columns.values.tolist())
+        transformer = lale.lib.autoai_libs.DateTransformer(
+            options=["FloatTimestamp", "DayOfWeek", "Hour", "Minute"],
+            delete_source_columns=True,
+            column_headers_list=self.X_train.columns.values.tolist(),
+        )
         fitted_transformer = transformer.fit(self.X_train.values)
         X_train = fitted_transformer.transform(self.X_train.values)
         X_test = transformer.transform(self.X_test.values)
         header_list = fitted_transformer.impl.new_column_headers_list
         print(f"New columns: {header_list}")
 
-        self.assertEqual(X_train.shape[1], X_test.shape[1], msg="Shape after transform is different.")
+        self.assertEqual(
+            X_train.shape[1], X_test.shape[1], msg="Shape after transform is different."
+        )
 
     def test_04_option_Datetime_and_delete_source_columns(self):
-        transformer = lale.lib.autoai_libs.DateTransformer(options=['Datetime'],
-                                    delete_source_columns=True,
-                                    column_headers_list=self.X_train.columns.values.tolist())
+        transformer = lale.lib.autoai_libs.DateTransformer(
+            options=["Datetime"],
+            delete_source_columns=True,
+            column_headers_list=self.X_train.columns.values.tolist(),
+        )
         fitted_transformer = transformer.fit(self.X_train.values)
         X_train = fitted_transformer.transform(self.X_train.values)
         X_test = transformer.transform(self.X_test.values)
         header_list = fitted_transformer.impl.new_column_headers_list
         print(f"New columns: {header_list}")
 
-        self.assertEqual(X_train.shape[1], X_test.shape[1], msg="Shape after transform is different.")
+        self.assertEqual(
+            X_train.shape[1], X_test.shape[1], msg="Shape after transform is different."
+        )
