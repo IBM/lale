@@ -4431,6 +4431,20 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             self._trained = new_pipeline
             return new_pipeline
 
+    def freeze_trained(self) -> "TrainedPipeline":
+        frozen_steps = []
+        frozen_map = {}
+        for liquid in self._steps:
+            frozen = liquid.freeze_trained()
+            frozen_map[liquid] = frozen
+            frozen_steps.append(frozen)
+        frozen_edges = [(frozen_map[x], frozen_map[y]) for x, y in self.edges()]
+        result = TrainedPipeline(
+            frozen_steps, frozen_edges, ordered=True, _lale_trained=True
+        )
+        assert result.is_frozen_trained()
+        return result
+
 
 TrainedOpType = TypeVar("TrainedOpType", bound=TrainedIndividualOp, covariant=True)  # type: ignore
 
@@ -4781,20 +4795,6 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
     def freeze_trainable(self) -> "TrainedPipeline":
         result = super(TrainedPipeline, self).freeze_trainable()
         return cast(TrainedPipeline, result)
-
-    def freeze_trained(self) -> "TrainedPipeline":
-        frozen_steps = []
-        frozen_map = {}
-        for liquid in self._steps:
-            frozen = liquid.freeze_trained()
-            frozen_map[liquid] = frozen
-            frozen_steps.append(frozen)
-        frozen_edges = [(frozen_map[x], frozen_map[y]) for x, y in self.edges()]
-        result = TrainedPipeline(
-            frozen_steps, frozen_edges, ordered=True, _lale_trained=True
-        )
-        assert result.is_frozen_trained()
-        return result
 
     def partial_fit(
         self, X, y=None, unsafe=False, classes=None, **fit_params
