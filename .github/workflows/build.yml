@@ -23,8 +23,7 @@ jobs:
         # This path is specific to Ubuntu
         path: ${{ env.pythonLocation }}
         # Look to see if there is a cache hit for the setup file
-        key: ${{ runner.os }}-pip-new2-${{ env.pythonLocation }}
-        #-${{ hashFiles('setup.py') }}
+        key: ${{ runner.os }}-pip-new2-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
         restore-keys: |
           ${{ runner.os }}-pip-new2
           ${{ runner.os }}-new2
@@ -64,7 +63,6 @@ jobs:
         - test/test_interoperability.py
         - test/test_optimizers.py
         - test/test_pipeline.py
-        - test/test_autoai_libs.py
         - test/test_autoai_output_consumption.py
         - test/test_autogen_lib.py
         - test/test_snapml.py
@@ -72,6 +70,9 @@ jobs:
         python-version: [3.7, 3.8, 3.9]
         setup-target: ['.[full,test]']
         include:
+        - test-case: test/test_autoai_libs.py
+          python-version: 3.8
+          setup-target: '.[test]'
         - test-case: test/test_autoai_ts_libs.py
           python-version: 3.8
           setup-target: '.[test]'
@@ -164,8 +165,7 @@ jobs:
         # This path is specific to Ubuntu
         path: ${{ env.pythonLocation }}
         # Look to see if there is a cache hit for the setup file
-        key: ${{ runner.os }}-pip-new2-${{ env.pythonLocation }}
-        #-${{ hashFiles('setup.py') }}
+        key: ${{ runner.os }}-pip-new2-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
         restore-keys: |
           ${{ runner.os }}-pip-new2
           ${{ runner.os }}-new2
