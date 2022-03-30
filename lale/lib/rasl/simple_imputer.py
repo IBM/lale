@@ -114,7 +114,7 @@ class _SimpleImputerImpl(MonoidableOperator[_SimpleImputerMonoid]):
         if add_indicator:
             raise ValueError("This implementation only supports `add_indicator=False`.")
         self._hyperparams["add_indicator"] = add_indicator
-        # the `indicator_`` property is always None as we do not support `add_indictor=True`
+        # the `indicator_`` property is always None as we do not support `add_indicator=True`
         self.indicator_ = None
 
     def to_monoid(self, v):
