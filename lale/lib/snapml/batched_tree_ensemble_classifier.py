@@ -63,7 +63,7 @@ class _BatchedTreeEnsembleClassifierImpl:
     def partial_fit(self, X, y, **fit_params):
         X = lale.datasets.data_schemas.strip_schema(X)
         y = lale.datasets.data_schemas.strip_schema(y)
-        self._wrapped_model.fit(X, y, **fit_params)
+        self._wrapped_model.partial_fit(X, y, **fit_params)
         return self
 
 
