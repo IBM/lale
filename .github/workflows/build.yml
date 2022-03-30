@@ -39,7 +39,7 @@ jobs:
       run: pip install --upgrade --upgrade-strategy eager --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ autoai-libs==1.13.3
     - name: Install autoai-libs from test pypi for Python 3.9.
       if: ${{ matrix.python-version == 3.9}}
-      run: pip install --upgrade --upgrade-strategy eager --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ autoai-libs==1.13.3
+      run: pip install --upgrade --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ autoai-libs==1.13.3
     - name: pre-commit checks
       uses: pre-commit/action@v2.0.0
 
@@ -126,7 +126,7 @@ jobs:
       run: pip install --upgrade --upgrade-strategy eager --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ autoai-libs==1.13.3
     - name: Install autoai-libs from test pypi for Python 3.9.
       if: ${{ matrix.python-version == 3.9}}
-      run: pip install --upgrade --upgrade-strategy eager --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ autoai-libs==1.13.3
+      run: pip install --upgrade --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ autoai-libs==1.13.3
     - name: Install deps for test_halving_gridsearchcv
       if: ${{ matrix.test-case == 'test/test_halving_gridsearchcv.py' }}
       run: pip install 'scikit-learn==0.24.1'
