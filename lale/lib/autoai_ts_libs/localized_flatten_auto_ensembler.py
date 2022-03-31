@@ -43,8 +43,11 @@ class _LocalizedFlattenAutoEnsemblerImpl:
         multivariate_column_encoding=False,
         store_lookback_history=False,
         n_jobs=-1,
+        look_ahead_fcolumns=None,
         estimator=None,
     ):
+        if look_ahead_fcolumns is None:
+            look_ahead_fcolumns = []
         self._hyperparams = {
             "feature_columns": feature_columns,
             "target_columns": target_columns,
@@ -66,6 +69,7 @@ class _LocalizedFlattenAutoEnsemblerImpl:
             "multivariate_column_encoding": multivariate_column_encoding,
             "store_lookback_history": store_lookback_history,
             "n_jobs": n_jobs,
+            "look_ahead_fcolumns": look_ahead_fcolumns,
             "estimator": estimator,
         }
         self._wrapped_model = model_to_be_wrapped(**self._hyperparams)
@@ -108,6 +112,7 @@ _hyperparams_schema = {
                 "multivariate_column_encoding",
                 "store_lookback_history",
                 "n_jobs",
+                "look_ahead_fcolumns",
                 "estimator",
             ],
             "relevantToOptimizer": [],
@@ -240,6 +245,14 @@ _hyperparams_schema = {
                         },
                     ],
                     "default": -1,
+                },
+                "look_ahead_fcolumns": {
+                    "description": """""",
+                    "anyOf": [
+                        {"type": "array", "items": {"type": "integer", "min": 0}},
+                        {"enum": [None]},
+                    ],
+                    "default": None,
                 },
                 "estimator": {
                     "description": "estimator object",

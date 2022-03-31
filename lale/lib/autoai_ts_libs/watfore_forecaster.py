@@ -149,7 +149,7 @@ rate new algorithms as they become initialized and/or subsequent updates are app
                         "autoforecaster",
                         "hw_additive",
                         "hw_multiplicative",
-                        "arimax_rsr"
+                        "arimax_rsr",
                     ],
                     "default": "hw",
                 },
