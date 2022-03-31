@@ -95,7 +95,8 @@ from .cat_encoder import CatEncoder
 from .cat_imputer import CatImputer
 from .column_selector import ColumnSelector
 from .compress_strings import CompressStrings
-from .date_transformer import DateTransformer
+
+# from .date_transformer import DateTransformer
 from .float32_transform import float32_transform
 from .float_str2_float import FloatStr2Float
 from .fs1 import FS1
