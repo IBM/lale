@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from functools import reduce
+from typing import Any, List, Optional, Tuple
 
 import pandas as pd
 
@@ -58,7 +59,7 @@ class _HashingEncoderMonoid(Monoid):
         self.n_samples_seen_ = n_samples_seen_
         self.feature_names = feature_names
 
-    def combine(self, other):
+    def combine(self, other: "_HashingEncoderMonoid"):
         assert list(self.feature_names) == list(other.feature_names)
         n_samples_seen_ = self.n_samples_seen_ + other.n_samples_seen_
         return _HashingEncoderMonoid(
@@ -71,7 +72,7 @@ class _HashingEncoderImpl(MonoidableOperator[_HashingEncoderMonoid]):
         self,
         *,
         n_components=8,
-        cols=None,
+        cols: Optional[List[str]] = None,
         # drop_invariant=False,
         # return_df=True,
         hash_method="md5",
@@ -119,11 +120,13 @@ class _HashingEncoderImpl(MonoidableOperator[_HashingEncoderMonoid]):
         encode = Map(columns=columns_cat, remainder="passthrough")
         return hash >> encode
 
-    def to_monoid(self, v):
+    def to_monoid(self, v: Tuple[Any, Any]):
         X, y = v
-        if self._hyperparams["cols"] is None:
-            self._hyperparams["cols"] = get_obj_cols(X)
         cols = self._hyperparams["cols"]
+        if cols is None:
+            cols = get_obj_cols(X)
+            self._hyperparams["cols"] = cols
+
         N = self._hyperparams["n_components"]
         feature_names_cat = [f"col_{i}" for i in range(N)]
         feature_names_num = [col for col in get_columns(X) if col not in cols]

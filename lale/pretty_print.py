@@ -67,7 +67,9 @@ class _CodeGenState:
 
 
 def hyperparams_to_string(
-    hps: JSON_TYPE, steps: Optional[Dict[str, str]] = None, gen: _CodeGenState = None
+    hps: JSON_TYPE,
+    steps: Optional[Dict[str, str]] = None,
+    gen: Optional[_CodeGenState] = None,
 ) -> str:
     def sklearn_module(value):
         module = value.__module__

@@ -54,7 +54,7 @@ class _column_distinct_count_data(Monoid):
         else:
             return len(self) > self.limit
 
-    def combine(self, other):
+    def combine(self, other: "_column_distinct_count_data"):
         if self.is_absorbing:
             return self
         elif other.is_absorbing:

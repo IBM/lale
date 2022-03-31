@@ -670,7 +670,7 @@ class TestGetParams(unittest.TestCase):
         clf = VotingClassifier(estimators=[("dtc", DecisionTreeClassifier())])
         params = clf.get_params(deep=False)
         filtered_params = self.remove_lale_params(params)
-        filtered_params["voting"] == "hard"
+        assert filtered_params["voting"] == "hard"
 
     def test_deep_planned_pipeline(self):
         op: Ops.PlannedPipeline = PCA >> LogisticRegression

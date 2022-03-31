@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import typing
+from typing import Any, Tuple
 
 import numpy as np
 
@@ -45,7 +46,7 @@ class _MinMaxScalerMonoid(Monoid):
         self.n_samples_seen_ = n_samples_seen_
         self.feature_names_in_ = feature_names_in_
 
-    def combine(self, other):
+    def combine(self, other: "_MinMaxScalerMonoid"):
         data_min_ = np.minimum(self.data_min_, other.data_min_)
         data_max_ = np.maximum(self.data_max_, other.data_max_)
         n_samples_seen_ = self.n_samples_seen_ + other.n_samples_seen_
@@ -111,7 +112,7 @@ class _MinMaxScalerImpl(MonoidableOperator[_MinMaxScalerMonoid]):
             ops.update({c: c_scaled})
         return Map(columns=ops)
 
-    def to_monoid(self, v) -> _MinMaxScalerMonoid:
+    def to_monoid(self, v: Tuple[Any, Any]) -> _MinMaxScalerMonoid:
         X, _ = v
         agg = {f"{c}_min": agg_min(it[c]) for c in get_columns(X)}
         agg.update({f"{c}_max": agg_max(it[c]) for c in get_columns(X)})

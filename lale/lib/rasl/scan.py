@@ -13,10 +13,12 @@
 # limitations under the License.
 
 import ast
+from typing import Optional
 
 import lale.docstrings
 import lale.operators
 from lale.datasets.data_schemas import get_table_name
+from lale.expressions import Expr
 from lale.helpers import _get_subscript_value
 
 
@@ -29,19 +31,22 @@ class _ScanImpl:
             self.table_name = _get_subscript_value(table._expr)
 
     @classmethod
-    def validate_hyperparams(cls, table=None, X=None, **hyperparams):
-        valid = isinstance(table._expr, (ast.Attribute, ast.Subscript))
-        if valid:
+    def validate_hyperparams(cls, table: Optional[Expr] = None, X=None, **hyperparams):
+        assert table is not None
+        if isinstance(table._expr, (ast.Attribute, ast.Subscript)):
             base = table._expr.value
-            valid = isinstance(base, ast.Name) and base.id == "it"
-        if valid and isinstance(table._expr, ast.Subscript):
-            sub = table._expr.slice
-            valid = isinstance(sub, ast.Constant) or (
-                isinstance(sub, ast.Index)
-                and isinstance(getattr(sub, "value", None), ast.Str)
-            )
-        if not valid:
-            raise ValueError("expected `it.table_name` or `it['table name']`")
+            if isinstance(base, ast.Name) and base.id == "it":
+                if isinstance(table._expr, ast.Subscript):
+                    sub = table._expr.slice
+                    if isinstance(sub, ast.Constant) or (
+                        isinstance(sub, ast.Index)
+                        and isinstance(getattr(sub, "value", None), ast.Str)
+                    ):
+                        return
+                else:
+                    return
+
+        raise ValueError("expected `it.table_name` or `it['table name']`")
 
     def transform(self, X):
         named_datasets = {get_table_name(d): d for d in X}

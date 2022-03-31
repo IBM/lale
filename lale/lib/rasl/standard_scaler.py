@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import typing
+from typing import Any, Tuple
 
 import numpy as np
 
@@ -36,7 +37,7 @@ class _StandardScalerMonoid(Monoid):
         self._sum1 = _sum1
         self._sum2 = _sum2
 
-    def combine(self, other):
+    def combine(self, other: "_StandardScalerMonoid"):
         assert list(self.feature_names_in_) == list(other.feature_names_in_)
         combined_feat = self.feature_names_in_
         combined_n_samples_seen = self.n_samples_seen_ + other.n_samples_seen_
@@ -120,7 +121,7 @@ class _StandardScalerImpl(MonoidableOperator[_StandardScalerMonoid]):
         )
         return result
 
-    def to_monoid(self, v):
+    def to_monoid(self, v: Tuple[Any, Any]):
         X, _ = v
         hyperparams = self._hyperparams
         feature_names_in = get_columns(X)

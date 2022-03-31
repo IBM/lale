@@ -52,7 +52,7 @@ class _ProjectMonoid(Monoid):
         self._columns = columns
         self._drop_columns = drop_columns
 
-    def combine(self, other):
+    def combine(self, other: "_ProjectMonoid"):
         c = self._columns.combine(other._columns)
         dc = self._drop_columns.combine(other._drop_columns)
         return _ProjectMonoid(c, dc)
@@ -66,7 +66,7 @@ class _StaticMonoid(Monoid):
     def __init__(self, v):
         self._v = v
 
-    def combine(self, other):
+    def combine(self, other: "_StaticMonoid"):
         assert self._v == other._v
         return self
 
@@ -87,7 +87,7 @@ class _StaticMonoidFactory(MonoidFactory[Any, List[column_index], _StaticMonoid]
 
         return _StaticMonoid(cl)
 
-    def from_monoid(self, v):
+    def from_monoid(self, v: _StaticMonoid):
         return v._v
 
 
@@ -108,7 +108,7 @@ class _CallableMonoidFactory(_DynamicMonoidFactory):
 
         return _StaticMonoid(c)
 
-    def from_monoid(self, v):
+    def from_monoid(self, v: _StaticMonoid):
         return v._v
 
 
@@ -125,7 +125,7 @@ class _SchemaMonoidFactory(_DynamicMonoidFactory):
 
         return _StaticMonoid(c)
 
-    def from_monoid(self, v):
+    def from_monoid(self, v: _StaticMonoid):
         return v._v
 
 
@@ -138,7 +138,7 @@ class _AllDataMonoidFactory(_CallableMonoidFactory):
         super().__init__(c)
 
 
-def get_column_factory(columns, kind):
+def get_column_factory(columns, kind) -> MonoidFactory:
     if columns is None:
         if kind == "passthrough":
             return _StaticMonoidFactory(None)

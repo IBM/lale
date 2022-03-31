@@ -3457,7 +3457,7 @@ def make_operator(
 
 
 def get_available_operators(
-    tag: str, more_tags: AbstractSet[str] = None
+    tag: str, more_tags: Optional[AbstractSet[str]] = None
 ) -> List[PlannedOperator]:
     singleton = set([tag])
     tags = singleton if (more_tags is None) else singleton.union(more_tags)
@@ -3472,11 +3472,15 @@ def get_available_operators(
     return [op for op in _all_available_operators if filter(op)]
 
 
-def get_available_estimators(tags: AbstractSet[str] = None) -> List[PlannedOperator]:
+def get_available_estimators(
+    tags: Optional[AbstractSet[str]] = None,
+) -> List[PlannedOperator]:
     return get_available_operators("estimator", tags)
 
 
-def get_available_transformers(tags: AbstractSet[str] = None) -> List[PlannedOperator]:
+def get_available_transformers(
+    tags: Optional[AbstractSet[str]] = None,
+) -> List[PlannedOperator]:
     return get_available_operators("transformer", tags)
 
 
@@ -5332,7 +5336,7 @@ def customize_schema(
 CloneOpType = TypeVar("CloneOpType", bound=Operator)
 
 
-def clone_op(op: CloneOpType, name: str = None) -> CloneOpType:
+def clone_op(op: CloneOpType, name: Optional[str] = None) -> CloneOpType:
     """Clone any operator."""
     from sklearn.base import clone
 

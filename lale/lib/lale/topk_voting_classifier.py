@@ -14,7 +14,7 @@
 
 import copy
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from hyperopt import STATUS_OK
 
@@ -32,15 +32,16 @@ class _TopKVotingClassifierImpl:
         self,
         estimator=None,
         optimizer=None,
-        args_to_optimizer: Dict[str, Any] = None,
+        args_to_optimizer: Optional[Dict[str, Any]] = None,
         k=10,
     ):
         self.estimator = estimator
         if self.estimator is None:
             raise ValueError("Estimator is a required argument.")
-        self.optimizer = optimizer
-        if self.optimizer is None:
+        if optimizer is None:
             self.optimizer = Hyperopt
+        else:
+            self.optimizer = optimizer
         if args_to_optimizer is None:
             self.args_to_optimizer = {}
         else:
