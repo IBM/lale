@@ -1841,7 +1841,7 @@ class TestMap(unittest.TestCase):
                 )
             elif tgt.startswith("spark"):
                 # Spark and Pandas have a different semantics for large numbers
-                self.assertEqual(transformed_df["pow_h_w"][1], 4 ** 50)
+                self.assertEqual(transformed_df["pow_h_w"][1], 4**50)
             else:
                 assert False
             self.assertEqual(transformed_df["pow_h_2"][1], df["height"][1] ** 2)

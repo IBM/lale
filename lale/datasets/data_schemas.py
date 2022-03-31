@@ -134,7 +134,6 @@ if spark_installed:
             df = super(self.__class__, self).toPandas(*args, **kwargs)
             return df.set_index(self.index_names)
 
-
 else:
 
     class SparkDataFrameWithIndex:  # type: ignore
@@ -263,19 +262,16 @@ def get_table_name(obj):
         except py4j.protocol.Py4JError:
             result = None
         return result
-    if (
-        isinstance(
-            obj,
-            (
-                NDArrayWithSchema,
-                SeriesWithSchema,
-                DataFrameWithSchema,
-                pd.core.groupby.DataFrameGroupBy,
-                pd.core.groupby.SeriesGroupBy,
-            ),
-        )
-        or (spark_installed and isinstance(obj, pyspark.sql.GroupedData))
-    ):
+    if isinstance(
+        obj,
+        (
+            NDArrayWithSchema,
+            SeriesWithSchema,
+            DataFrameWithSchema,
+            pd.core.groupby.DataFrameGroupBy,
+            pd.core.groupby.SeriesGroupBy,
+        ),
+    ) or (spark_installed and isinstance(obj, pyspark.sql.GroupedData)):
         return getattr(obj, "table_name", None)
     return None
 
