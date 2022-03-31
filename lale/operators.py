@@ -4392,6 +4392,14 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             This flag allows users to override the validation that throws an error when the
             the operators in the prefix of this pipeline are not tagged with `has_partial_transform`.
             Setting unsafe to True would perform the transform as if it was row-wise even in the case it may not be.
+        classes:
+            The total number of classes in the entire training dataset.
+        scoring:
+            Batch-wise scoring metrics from `lale.lib.rasl`.
+        progress_callback:
+            Callback function to get performance metrics.
+        verbose:
+            Verbosity level, higher values mean more information.
         fit_params:
             dict
             Additional keyword arguments to be passed to partial_fit of the estimator
@@ -4820,11 +4828,17 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             This flag allows users to override the validation that throws an error when the
             the operators in the prefix of this pipeline are not tagged with `has_partial_transform`.
             Setting unsafe to True would perform the transform as if it was row-wise even in the case it may not be.
+        classes:
+            The total number of classes in the entire training dataset.
+        scoring:
+            Batch-wise scoring metrics from `lale.lib.rasl`.
+        progress_callback:
+            Callback function to get performance metrics.
+        verbose:
+            Verbosity level, higher values mean more information.
         fit_params:
             dict
-            Additional keyword arguments to be passed to partial_fit of the estimator
-        classes:
-
+            Additional keyword arguments to be passed to partial_fit of the estimator.
         Returns
         -------
         TrainedPipeline :
@@ -4835,7 +4849,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
 
         data_loader = lale.helpers.create_data_loader(X=X, y=y, batch_size=len(y))
 
-        self = fit_with_batches(
+        self = fit_with_batches(  # type: ignore
             pipeline=self,
             batches=data_loader,  # type:ignore
             n_batches=1,

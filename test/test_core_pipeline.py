@@ -1040,9 +1040,7 @@ class TestPartialFit(unittest.TestCase):
         new_trained_pipeline = new_pipeline.partial_fit(
             self.X_train, self.y_train, classes=[0, 1, 2]
         )
-        new_pipeline.partial_fit(
-            self.X_train, self.y_train, classes=[0, 1, 2]
-        )
+        new_pipeline.partial_fit(self.X_train, self.y_train, classes=[0, 1, 2])
         new_trained_pipeline = new_trained_pipeline.partial_fit(
             self.X_test, self.y_test, classes=[0, 1, 2]
         )
