@@ -4412,24 +4412,9 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             return self._trained
         else:
             # This is the first time partial_fit is called on this pipeline,
-            # # we would not have a _trained obj, so convert the prefix to a trained pipeline
-            # # explicitly and do a transform and partial_fit as expected.
-            # sink_node = self._steps[-1]
-            # pipeline_prefix = self.remove_last()
-            # trained_pipeline_prefix = pipeline_prefix.convert_to_trained()
-            # transformed_output = trained_pipeline_prefix.transform(X, y)
-            # if isinstance(transformed_output, tuple):
-            #     transformed_X, transformed_y = transformed_output
-            # else:
-            #     transformed_X = transformed_output
-            #     transformed_y = y
-
-            # trained_sink_node = sink_node.partial_fit(
-            #     transformed_X, transformed_y, **fit_params
-            # )
             data_loader = lale.helpers.create_data_loader(X=X, y=y, batch_size=len(y))
 
-            new_pipeline = fit_with_batches(
+            self._trained = fit_with_batches(
                 pipeline=self,
                 batches=data_loader,  # type:ignore
                 n_batches=1,
@@ -4442,9 +4427,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                 verbose=verbose,
             )
 
-            # trained_pipeline_prefix >> trained_sink_node
-            self._trained = new_pipeline
-            return new_pipeline
+            return self._trained
 
     def freeze_trained(self) -> "TrainedPipeline":
         frozen_steps = []
