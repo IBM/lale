@@ -3868,16 +3868,22 @@ class BasePipeline(Operator, Generic[OpType]):
         for operator in self._steps:
             preds = self._preds[operator]
             if len(preds) == 0:
-                inputs = X
+                input_X, input_y = X, y
             else:
-                inputs = combine_schemas([outputs[pred] for pred in preds])
+                input_X = combine_schemas([outputs[pred][0] for pred in preds])
+                input_y = outputs[preds[0]][1]
             if validate:
-                operator.validate_schema(X=inputs, y=y)
-            output = operator.transform_schema(inputs)
-            outputs[operator] = output
+                operator.validate_schema(X=input_X, y=input_y)
+            if operator.has_method("transform_X_y"):
+                output_Xy = operator.output_schema_transform_X_y()
+                output_X, output_y = output_Xy["items"]
+            else:
+                output_X = operator.transform_schema(input_X)
+                output_y = input_y
+            outputs[operator] = output_X, output_y
         if not validate:
             sinks = self._find_sink_nodes()
-            pipeline_outputs = [outputs[sink] for sink in sinks]
+            pipeline_outputs = [outputs[sink][0] for sink in sinks]
             return combine_schemas(pipeline_outputs)
 
     def validate_schema(self, X, y=None):
@@ -4187,7 +4193,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                 trainable not in sink_nodes
             ):  # There is no need to transform/predict on the last node during fit
                 if trained.is_transformer():
-                    if input_y is not None and trained.has_method("transform_X_y"):
+                    if trained.has_method("transform_X_y"):
                         output = trained.transform_X_y(input_X, input_y)
                     else:
                         output = trained.transform(input_X), input_y
@@ -4552,7 +4558,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                         f"The sink node {type(operator.impl)} of the pipeline does not support {operator_method_name}"
                     )
             elif operator.is_transformer():
-                if input_y is not None and operator.has_method("transform_X_y"):
+                if operator.has_method("transform_X_y"):
                     output = operator.transform_X_y(input_X, input_y)
                 else:
                     output = operator.transform(input_X), input_y

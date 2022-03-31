@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2021, 2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,57 +16,38 @@ import pandas as pd
 
 import lale.docstrings
 import lale.operators
-from lale.helpers import _is_pandas_df, _is_spark_df
+
+from .project import Project
 
 
 class _SplitXyImpl:
-    def __init__(self, operator=None, label_name="y"):
-        self.operator = operator
+    def __init__(self, label_name="y"):
         self.label_name = label_name
+        self._project_X = None
+        self._project_y = None
 
-    def split_df(self, X):
-        if self.label_name not in X.columns:
-            return X, None
-        if _is_pandas_df(X):
-            y = pd.DataFrame(X[self.label_name])
-            X = X.drop(self.label_name, axis=1)
-        elif _is_spark_df(X):
-            X = (
-                X.toPandas()
-            )  # This operator is meant to be used with scikit-learn compatible pipelines, so converting to pandas.
-            return self.split_df(X)
-        else:
-            raise ValueError(
-                "Only Pandas or Spark dataframe are supported as inputs. Please check that pyspark is installed if you see this error for a Spark dataframe."
-            )
-        return X, y
-
-    def fit(self, X, y=None):
-        X, y = self.split_df(X)
-        op = self.operator
-        assert op is not None
-        self.trained_operator = op.fit(X, y)
-        return self
+    def _extract_y(self, X):
+        if self._project_y is None:
+            self._project_y = Project(columns=[self.label_name])
+        result = self._project_y.transform(X)
+        if isinstance(result, pd.DataFrame):
+            result = result.squeeze()
+        return result
 
     def transform(self, X):
-        X, y = self.split_df(X)
-        return self.trained_operator.transform(X, y)
+        if self._project_X is None:
+            self._project_X = Project(drop_columns=[self.label_name])
+        return self._project_X.transform(X)
 
-    def predict(self, X):
-        X, _ = self.split_df(X)
-        return self.trained_operator.predict(X)
+    def transform_X_y(self, X, y):
+        return self.transform(X), self._extract_y(X)
 
-    def predict_proba(self, X):
-        X, _ = self.split_df(X)
-        return self.trained_operator.predict_proba(X)
-
-    def decision_function(self, X):
-        X, _ = self.split_df(X)
-        return self.trained_operator.decision_function(X)
+    def viz_label(self) -> str:
+        return "SplitXy:\n" + self.label_name
 
 
 _hyperparams_schema = {
-    "description": "SplitXy operator separates the label field/column from the input dataframe X.",
+    "description": "The SplitXy operator separates the label field/column from the input dataframe X.",
     "allOf": [
         {
             "description": "This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters",
@@ -79,26 +60,9 @@ _hyperparams_schema = {
                     "default": "y",
                     "type": "string",
                 },
-                "operator": {
-                    "description": "The operator with which has to be applied over the separated dataframe X.",
-                    "laleType": "operator",
-                },
             },
         }
     ],
-}
-
-_input_fit_schema = {
-    "type": "object",
-    "required": ["X"],
-    "additionalProperties": True,
-    "properties": {
-        "X": {
-            "description": "Features; the outer array is over samples.",
-            "type": "array",
-            "items": {"type": "array", "items": {"laleType": "Any"}},
-        },
-    },
 }
 
 _input_transform_schema = {
@@ -116,61 +80,42 @@ _input_transform_schema = {
 
 _output_transform_schema = {
     "description": "Output data schema for transformed data.",
-    "laleType": "Any",
+    "type": "array",
+    "items": {"type": "array", "items": {"laleType": "Any"}},
 }
 
-_input_predict_schema = {
+_input_transform_X_y_schema = {
     "type": "object",
-    "required": ["X"],
-    "additionalProperties": True,
+    "required": ["X", "y"],
+    "additionalProperties": False,
     "properties": {
         "X": {
-            "description": "Features; the outer array is over samples.",
+            "description": "Input features; the outer array is over samples.",
             "type": "array",
             "items": {"type": "array", "items": {"laleType": "Any"}},
-        }
+        },
+        "y": {
+            "description": "Input labels; ignored.",
+            "laleType": "Any",
+        },
     },
 }
 
-_output_predict_schema = {
-    "description": "Output data schema for predictions.",
-    "laleType": "Any",
-}
-
-_input_predict_proba_schema = {
-    "type": "object",
-    "required": ["X"],
-    "additionalProperties": True,
-    "properties": {
-        "X": {
-            "description": "Features; the outer array is over samples.",
+_output_transform_X_y_schema = {
+    "type": "array",
+    "laleType": "tuple",
+    "items": [
+        {
+            "description": "X",
             "type": "array",
             "items": {"type": "array", "items": {"laleType": "Any"}},
-        }
-    },
-}
-
-_output_predict_proba_schema = {
-    "description": "Output data schema for predictions.",
-    "laleType": "Any",
-}
-
-_input_decision_function_schema = {
-    "type": "object",
-    "required": ["X"],
-    "additionalProperties": True,
-    "properties": {
-        "X": {
-            "description": "Features; the outer array is over samples.",
+        },
+        {
+            "description": "y",
             "type": "array",
-            "items": {"type": "array", "items": {"laleType": "Any"}},
-        }
-    },
-}
-
-_output_decision_function_schema = {
-    "description": "Output data schema for predictions.",
-    "laleType": "Any",
+            "items": {"laleType": "Any"},
+        },
+    ],
 }
 
 _combined_schemas = {
@@ -178,18 +123,13 @@ _combined_schemas = {
     "description": "Relational algebra SplitXy operator.",
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.rasl.split_xy.html",
     "type": "object",
-    "tags": {"pre": [], "op": ["estimator", "transformer"], "post": []},
+    "tags": {"pre": [], "op": ["transformer"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
-        "input_fit": _input_fit_schema,
         "input_transform": _input_transform_schema,
         "output_transform": _output_transform_schema,
-        "input_predict": _input_predict_schema,
-        "output_predict": _output_predict_schema,
-        "input_predict_proba": _input_predict_proba_schema,
-        "output_predict_proba": _output_predict_proba_schema,
-        "input_decision_function": _input_decision_function_schema,
-        "output_decision_function": _output_decision_function_schema,
+        "input_transform_X_y": _input_transform_X_y_schema,
+        "output_transform_X_y": _output_transform_X_y_schema,
     },
 }
 

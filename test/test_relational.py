@@ -2346,16 +2346,19 @@ class TestSplitXy(unittest.TestCase):
         }
 
     def test_split_transform(self):
-        pipeline = PCA()
         for _, df in self.tgt2datasets.items():
-            trainable = SplitXy(operator=pipeline, label_name="class")
+            trainable = SplitXy(label_name="class") >> Convert(astype="pandas") >> PCA()
             trained = trainable.fit(df)
             _ = trained.transform(df)
 
     def test_split_predict(self):
-        pipeline = PCA() >> LogisticRegression(random_state=42)
         for _, df in self.tgt2datasets.items():
-            trainable = SplitXy(operator=pipeline, label_name="class")
+            trainable = (
+                SplitXy(label_name="class")
+                >> Convert(astype="pandas")
+                >> PCA()
+                >> LogisticRegression(random_state=42)
+            )
             trained = trainable.fit(df)
             _ = trained.predict(df)
 
