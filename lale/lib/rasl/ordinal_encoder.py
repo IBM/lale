@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import typing
+from typing import Any, Tuple
 
 import numpy as np
 
@@ -34,7 +35,7 @@ class _OrdinalEncoderMonoid(Monoid):
         self.feature_names_in_ = feature_names_in_
         self.categories_ = categories_
 
-    def combine(self, other):
+    def combine(self, other: "_OrdinalEncoderMonoid"):
         n_samples_seen_ = self.n_samples_seen_ + other.n_samples_seen_
         assert list(self.feature_names_in_) == list(other.feature_names_in_)
         assert len(self.categories_) == len(other.categories_)
@@ -84,7 +85,7 @@ class _OrdinalEncoderImpl(MonoidableOperator[_OrdinalEncoderMonoid]):
     def feature_names_in_(self):
         return getattr(self._monoid, "feature_names_in_", None)
 
-    def from_monoid(self, lifted):
+    def from_monoid(self, lifted: _OrdinalEncoderMonoid):
         self._monoid = lifted
         self.n_features_in_ = len(lifted.feature_names_in_)
         self._transformer = None
@@ -109,7 +110,7 @@ class _OrdinalEncoderImpl(MonoidableOperator[_OrdinalEncoderMonoid]):
         )
         return result
 
-    def to_monoid(self, v):
+    def to_monoid(self, v: Tuple[Any, Any]):
         hyperparams = self._hyperparams
         X, _ = v
         n_samples_seen_ = count(X)

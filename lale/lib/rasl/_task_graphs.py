@@ -379,7 +379,7 @@ def _task_to_string(
     pipeline: TrainablePipeline,
     cls2label: Dict[str, str] = {},
     sep: str = "\n",
-    trace_id: int = None,
+    trace_id: Optional[int] = None,
 ) -> str:
     trace_id_s = "" if trace_id is None else f"{trace_id} "
     operation_s = task.get_operation(pipeline).name.lower()

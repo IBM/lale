@@ -14,6 +14,7 @@
 
 import numbers
 import typing
+from typing import Any, Tuple
 
 import numpy as np
 import pandas as pd
@@ -69,7 +70,7 @@ class _SimpleImputerMonoid(Monoid):
         self.lifted_statistics = lifted_statistics
         self.strategy = strategy
 
-    def combine(self, other):
+    def combine(self, other: "_SimpleImputerMonoid"):
         assert list(self.feature_names_in_) == list(other.feature_names_in_)
         if self.strategy == "constant":
             assert self.lifted_statistics.equals(other.lifted_statistics)
@@ -117,7 +118,7 @@ class _SimpleImputerImpl(MonoidableOperator[_SimpleImputerMonoid]):
         # the `indicator_`` property is always None as we do not support `add_indicator=True`
         self.indicator_ = None
 
-    def to_monoid(self, v):
+    def to_monoid(self, v: Tuple[Any, Any]):
         hyperparams = self._hyperparams
         X, _ = v
         feature_names_in_ = get_columns(X)

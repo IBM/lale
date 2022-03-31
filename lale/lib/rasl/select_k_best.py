@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import Any, Tuple
 
 import numpy as np
 
@@ -31,7 +32,7 @@ class _SelectKBestMonoid(Monoid):
         self.feature_names_in_ = feature_names_in_
         self.lifted_score_ = lifted_score_
 
-    def combine(self, other):
+    def combine(self, other: "_SelectKBestMonoid"):
         n_samples_seen_ = self.n_samples_seen_ + other.n_samples_seen_
         assert list(self.feature_names_in_) == list(other.feature_names_in_)
         feature_names_in_ = self.feature_names_in_
@@ -81,7 +82,7 @@ class _SelectKBestImpl(MonoidableOperator[_SelectKBestMonoid]):
         result = Map(columns={col: it[col] for col in kbest})
         return result
 
-    def to_monoid(self, v):
+    def to_monoid(self, v: Tuple[Any, Any]):
         X, y = v
         score_func = self._hyperparams["score_func"]
         n_samples_seen_ = count(X)

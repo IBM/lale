@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import Any, Iterable, List, Optional, Set
 
 import pandas as pd
 
@@ -92,14 +93,14 @@ class _JoinImpl:
         return left_name, left_key, right_name, right_key
 
     @classmethod
-    def validate_hyperparams(cls, pred=None, **hyperparams):
-        tables_encountered = set()
-
+    def validate_hyperparams(cls, pred: Optional[Iterable[Any]] = None, **hyperparams):
+        tables_encountered: Set[str] = set()
+        assert pred is not None
         for key in pred:
             if isinstance(key, list):
-                sub_list_tables = (
-                    list()
-                )  # use an ordered list to improve error messages
+                sub_list_tables: List[
+                    str
+                ] = list()  # use an ordered list to improve error messages
                 for sub_key in key:
                     (
                         left_table_name,

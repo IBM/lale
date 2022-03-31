@@ -14,6 +14,7 @@
 
 import copy
 import inspect
+from typing import Any, Tuple
 
 import pandas as pd
 import sklearn.base
@@ -30,7 +31,7 @@ class _BatchedBaggingClassifierMonoid(Monoid):
     def __init__(self, classifiers):
         self.classifiers = classifiers
 
-    def combine(self, other):
+    def combine(self, other: "_BatchedBaggingClassifierMonoid"):
         orig_classifiers = copy.copy(self.classifiers)
         orig_classifiers.extend(other.classifiers)
         return _BatchedBaggingClassifierMonoid(classifiers=orig_classifiers)
@@ -65,7 +66,7 @@ class _BatchedBaggingClassifierImpl(
         self._monoid = v
         self.classifiers_list = v.classifiers
 
-    def to_monoid(self, v) -> _BatchedBaggingClassifierMonoid:
+    def to_monoid(self, v: Tuple[Any, Any]) -> _BatchedBaggingClassifierMonoid:
         X, y = v
         trainable = self._hyperparams["base_estimator"]
         if isinstance(trainable, sklearn.base.BaseEstimator):

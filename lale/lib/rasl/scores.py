@@ -72,7 +72,7 @@ class FOnewayData(Monoid):
         self.sums_samples = sums_samples
         self.sums_alldata = sums_alldata
 
-    def combine(self, other):
+    def combine(self, other: "FOnewayData"):
         classes_a = self.classes
         n_samples_per_class_a = self.n_samples_per_class
         n_samples_a = self.n_samples
@@ -173,7 +173,7 @@ def _f_oneway_lift(X, y) -> FOnewayData:
     )
 
 
-def _f_oneway_lower(lifted):
+def _f_oneway_lower(lifted: FOnewayData):
     """Performs a 1-way ANOVA.
 
     Parameters
@@ -221,9 +221,9 @@ def _f_oneway_lower(lifted):
 class FClassif(ScoreMonoidFactory[FOnewayData]):
     """Compute the ANOVA F-value for the provided sample."""
 
-    def to_monoid(self, v):
+    def to_monoid(self, v: Tuple[Any, Any]) -> FOnewayData:
         X, y = v
         return _f_oneway_lift(X, y)
 
-    def from_monoid(self, lifted):
+    def from_monoid(self, lifted: FOnewayData):
         return _f_oneway_lower(lifted)
