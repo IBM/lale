@@ -96,7 +96,7 @@ class _SparkEvaluator(ast.NodeVisitor):
         elif isinstance(node.op, ast.Mod):
             self.result = v1 % v2
         elif isinstance(node.op, ast.Pow):
-            self.result = v1 ** v2
+            self.result = v1**v2
         elif isinstance(node.op, ast.BitAnd):
             self.result = v1 & v2
         elif isinstance(node.op, ast.BitOr):

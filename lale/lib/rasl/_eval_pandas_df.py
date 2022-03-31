@@ -74,7 +74,7 @@ class _PandasEvaluator(ast.NodeVisitor):
         elif isinstance(node.op, ast.Mod):
             self.result = v1 % v2  # type: ignore
         elif isinstance(node.op, ast.Pow):
-            self.result = v1 ** v2  # type: ignore
+            self.result = v1**v2  # type: ignore
         elif isinstance(node.op, ast.BitAnd):
             self.result = v1 & v2  # type: ignore
         elif isinstance(node.op, ast.BitOr):
