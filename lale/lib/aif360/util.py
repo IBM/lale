@@ -1311,7 +1311,7 @@ class _EqualOpportunityDifference(_AODorEODScorerFactory):
         tpr_priv1 = v.tru1_pred1_priv1 / np.float64(
             v.tru1_pred1_priv1 + v.tru1_pred0_priv1
         )
-        return tpr_priv0 - tpr_priv1
+        return tpr_priv0 - tpr_priv1  # type: ignore
 
 
 def equal_opportunity_difference(
