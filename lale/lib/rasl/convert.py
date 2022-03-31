@@ -80,7 +80,9 @@ class _ConvertImpl:
         return _convert(X, self.astype, "X")
 
     def transform_X_y(self, X, y):
-        return _convert(X, self.astype, "X"), _convert(y, self.astype, "y")
+        result_X = self.transform(X)
+        result_y = None if y is None else _convert(y, self.astype, "y")
+        return result_X, result_y
 
     def viz_label(self) -> str:
         return "Convert:\n" + self.astype
@@ -133,9 +135,14 @@ _input_transform_X_y_schema = {
             "items": {"type": "array", "items": {"laleType": "Any"}},
         },
         "y": {
-            "description": "Input labels as numpy, pandas, or PySpark.",
-            "type": "array",
-            "items": {"laleType": "Any"},
+            "anyOf": [
+                {"enum": [None]},
+                {
+                    "description": "Input labels as numpy, pandas, or PySpark.",
+                    "type": "array",
+                    "items": {"laleType": "Any"},
+                },
+            ],
         },
     },
 }
@@ -150,9 +157,14 @@ _output_transform_X_y_schema = {
             "items": {"type": "array", "items": {"laleType": "Any"}},
         },
         {
-            "description": "y",
-            "type": "array",
-            "items": {"laleType": "Any"},
+            "anyOf": [
+                {"enum": [None]},
+                {
+                    "description": "Input labels as numpy, pandas, or PySpark.",
+                    "type": "array",
+                    "items": {"laleType": "Any"},
+                },
+            ],
         },
     ],
 }
