@@ -23,7 +23,7 @@ import lale.docstrings
 import lale.operators
 
 
-class _BatchedTreeEnsembleClassifierImpl:
+class _BatchedTreeEnsembleRegressorImpl:
     def __init__(
         self,
         base_ensemble=None,
@@ -35,16 +35,16 @@ class _BatchedTreeEnsembleClassifierImpl:
             snapml_installed
         ), """Your Python environment does not have snapml installed. Install using: pip install snapml"""
         if base_ensemble is None:
-            from snapml import SnapBoostingMachineClassifier
+            from snapml import SnapBoostingMachineRegressor
 
-            base_ensemble = SnapBoostingMachineClassifier()
+            base_ensemble = SnapBoostingMachineRegressor()
         self._hyperparams = {
             "base_ensemble": base_ensemble,
             "max_sub_ensembles": max_sub_ensembles,
             "inner_lr_scaling": inner_lr_scaling,
             "outer_lr_scaling": outer_lr_scaling,
         }
-        self._wrapped_model = snapml.BatchedTreeEnsembleClassifier(**self._hyperparams)
+        self._wrapped_model = snapml.BatchedTreeEnsembleRegressor(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
         X = lale.datasets.data_schemas.strip_schema(X)
@@ -165,15 +165,15 @@ _output_predict_proba_schema = {
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": """`Batched Tree Ensemble Classifier`_ from `Snap ML`_.
+    "description": """`Batched Tree Ensemble Regressor`_ from `Snap ML`_.
 
-.. _`Batched Tree Ensemble Classifier`: https://snapml.readthedocs.io/en/latest/batched_tree_ensembles.html
+.. _`Batched Tree Ensemble Regressor`: https://snapml.readthedocs.io/en/latest/batched_tree_ensembles.html
 .. _`Snap ML`: https://www.zurich.ibm.com/snapml/
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.batched_tree_ensemble_classifier.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.batched_tree_ensemble_regressor.html",
     "import_from": "snapml",
     "type": "object",
-    "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
+    "tags": {"pre": [], "op": ["estimator", "regressor"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,
@@ -185,8 +185,8 @@ _combined_schemas = {
 }
 
 
-BatchedTreeEnsembleClassifier = lale.operators.make_operator(
-    _BatchedTreeEnsembleClassifierImpl, _combined_schemas
+BatchedTreeEnsembleRegressor = lale.operators.make_operator(
+    _BatchedTreeEnsembleRegressorImpl, _combined_schemas
 )
 
-lale.docstrings.set_docstrings(BatchedTreeEnsembleClassifier)
+lale.docstrings.set_docstrings(BatchedTreeEnsembleRegressor)

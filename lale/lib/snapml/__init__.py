@@ -31,12 +31,14 @@ Classifiers:
 
 Regressors:
 
+* lale.lib.snapml. `BatchedTreeEnsembleRegressor`_
 * lale.lib.snapml. `SnapBoostingMachineRegressor`_
 * lale.lib.snapml. `SnapDecisionTreeRegressor`_
 * lale.lib.snapml. `SnapLinearRegression`_
 * lale.lib.snapml. `SnapRandomForestRegressor`_
 
 .. _`BatchedTreeEnsembleClassifier`: lale.lib.snapml.batched_tree_ensemble_classifier.html
+.. _`BatchedTreeEnsembleRegressor`: lale.lib.snapml.batched_tree_ensemble_regressor.html
 .. _`SnapBoostingMachineClassifier`: lale.lib.snapml.snap_boosting_machine_classifier.html
 .. _`SnapBoostingMachineRegressor`: lale.lib.snapml.snap_boosting_machine_regressor.html
 .. _`SnapDecisionTreeClassifier`: lale.lib.snapml.snap_decision_tree_classifier.html
@@ -49,6 +51,7 @@ Regressors:
 """
 
 from .batched_tree_ensemble_classifier import BatchedTreeEnsembleClassifier
+from .batched_tree_ensemble_regressor import BatchedTreeEnsembleRegressor
 from .snap_boosting_machine_classifier import SnapBoostingMachineClassifier
 from .snap_boosting_machine_regressor import SnapBoostingMachineRegressor
 from .snap_decision_tree_classifier import SnapDecisionTreeClassifier
