@@ -44,6 +44,7 @@ else:
     install_requires = [
         "numpy",
         "black==19.10b0",
+        "click==8.0.4",
         "graphviz",
         "hyperopt<=0.2.5",
         "jsonschema",

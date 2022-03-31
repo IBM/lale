@@ -79,9 +79,6 @@ jobs:
         - test-case: test/test_autoai_libs.py
           python-version: 3.8
           setup-target: '.[full,test]'
-        - test-case: test/test_autoai_libs.py
-          python-version: 3.9
-          setup-target: '.[full,test]'
         - test-case: test/test_core_misc.py
           python-version: 3.7
           setup-target: '.[full,test]'
