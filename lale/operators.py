@@ -3874,15 +3874,16 @@ class BasePipeline(Operator, Generic[OpType]):
                 input_y = outputs[preds[0]][1]
             if validate:
                 operator.validate_schema(X=input_X, y=input_y)
-            output_X = operator.transform_schema(input_X)
             if operator.has_method("transform_X_y"):
-                output_y = operator.output_schema_transform_X_y()
+                output_Xy = operator.output_schema_transform_X_y()
+                output_X, output_y = output_Xy["items"]
             else:
+                output_X = operator.transform_schema(input_X)
                 output_y = input_y
             outputs[operator] = output_X, output_y
         if not validate:
             sinks = self._find_sink_nodes()
-            pipeline_outputs = [outputs[sink] for sink in sinks]
+            pipeline_outputs = [outputs[sink][0] for sink in sinks]
             return combine_schemas(pipeline_outputs)
 
     def validate_schema(self, X, y=None):
