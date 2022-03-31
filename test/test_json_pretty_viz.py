@@ -514,7 +514,21 @@ numpy_replace_unknown_values = NumpyReplaceUnknownValues(
     missing_values_reference_list=["", "-", "?", float("nan")],
 )
 pipeline = numpy_replace_unknown_values >> LR()"""
-        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+        try:
+            self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+        except BaseException:
+            expected = """from autoai_libs.transformers.exportable import NumpyReplaceUnknownValues
+    from sklearn.linear_model import LogisticRegression as LR
+    import lale
+
+    lale.wrap_imported_operators()
+    numpy_replace_unknown_values = NumpyReplaceUnknownValues(
+        filling_values=float("nan"),
+        filling_values_list=[float("nan")],
+        missing_values_reference_list=("", "-", "?", float("nan")),
+    )
+    pipeline = numpy_replace_unknown_values >> LR()"""
+            self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_autoai_libs_numpy_replace_unknown_values2(self):
         from lale.lib.autoai_libs import NumpyReplaceUnknownValues
@@ -550,7 +564,24 @@ custom_op = CustomOp(
     missing_values_reference_list=["", "-", "?", float("nan")],
 )
 pipeline = custom_op >> LR()"""
-        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+        try:
+            self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+        except BaseException:
+            expected = """from autoai_libs.transformers.exportable import (
+        NumpyReplaceUnknownValues as CustomOp,
+    )
+    from sklearn.linear_model import LogisticRegression as LR
+    import lale
+
+    lale.wrap_imported_operators()
+    custom_op = CustomOp(
+        filling_values=float("nan"),
+        filling_values_list=[float("nan")],
+        known_values_list=[[36, 45, 56, 67, 68, 75, 78, 89]],
+        missing_values_reference_list=("", "-", "?", float("nan")),
+    )
+    pipeline = custom_op >> LR()"""
+            self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_autoai_libs_tam_1(self):
         import autoai_libs.cognito.transforms.transform_extras
@@ -857,7 +888,23 @@ compress_strings = CompressStrings(
 )
 pipeline = numpy_column_selector >> compress_strings"""
         printed = lale.pretty_print.to_string(pipeline, combinators=True)
-        self._roundtrip(expected, printed)
+        try:
+            self._roundtrip(expected, printed)
+        except BaseException:
+            expected = """from autoai_libs.transformers.exportable import NumpyColumnSelector
+from autoai_libs.transformers.exportable import CompressStrings
+import lale
+
+lale.wrap_imported_operators()
+numpy_column_selector = NumpyColumnSelector(columns=[0, 2, 3, 5])
+compress_strings = CompressStrings(
+    compress_type="hash",
+    dtypes_list=["char_str", "char_str", "char_str", "char_str"],
+    missing_values_reference_list=("?", "", "-", float("nan")),
+    misslist_list=[[], [], [], []],
+)
+pipeline = numpy_column_selector >> compress_strings"""
+            self._roundtrip(expected, printed)
 
     def test_expression(self):
         from lale.expressions import it, mean
