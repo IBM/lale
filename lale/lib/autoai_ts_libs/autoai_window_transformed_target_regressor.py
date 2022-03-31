@@ -38,6 +38,7 @@ class _AutoaiWindowTransformedTargetRegressorImpl:
         estimator_prediction_type="forecast",
         time_column=-1,
         random_state=42,
+        use_target_columns=True,
     ):
         if regressor is None:
             nested_op = None
@@ -65,6 +66,7 @@ class _AutoaiWindowTransformedTargetRegressorImpl:
             "estimator_prediction_type": estimator_prediction_type,
             "time_column": time_column,
             "random_state": random_state,
+            "use_target_columns": use_target_columns,
         }
         self._wrapped_model = model_to_be_wrapped(**self._hyperparams)
 
@@ -97,6 +99,7 @@ _hyperparams_schema = {
                 "estimator_prediction_type",
                 "time_column",
                 "random_state",
+                "use_target_columns",
             ],
             "relevantToOptimizer": ["lookback_window"],
             "properties": {
@@ -178,6 +181,11 @@ The inverse function is used to return predictions to the same space of the orig
                     "description": "",  # TODO: document and refine type
                     "laleType": "Any",
                     "default": 42,
+                },
+                "use_target_columns": {
+                    "description": "",
+                    "type": "boolean",
+                    "default": True,
                 },
             },
         }
