@@ -20,7 +20,8 @@ import sklearn.datasets
 import sklearn.model_selection
 
 import lale.lib.autoai_libs
-from lale.datasets.uci import fetch_household_power_consumption
+
+# from lale.datasets.uci import fetch_household_power_consumption
 from lale.lib.autoai_libs import float32_transform
 from lale.lib.lale import Hyperopt
 from lale.lib.sklearn import LogisticRegression as LR
