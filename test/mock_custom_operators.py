@@ -63,7 +63,12 @@ _input_transform_X_y_schema_ir = {
             "type": "array",
             "items": {"type": "array", "items": {"type": "number"}},
         },
-        "y": {"type": "array", "items": {"type": "number"}},
+        "y": {
+            "anyOf": [
+                {"enum": [None]},
+                {"type": "array", "items": {"type": "number"}},
+            ],
+        },
     },
 }
 
@@ -76,7 +81,13 @@ _output_transform_X_y_schema_ir = {
             "type": "array",
             "items": {"type": "array", "items": {"type": "number"}},
         },
-        {"description": "y", "type": "array", "items": {"type": "number"}},
+        {
+            "description": "y",
+            "anyOf": [
+                {"enum": [None]},
+                {"type": "array", "items": {"type": "number"}},
+            ],
+        },
     ],
 }
 
