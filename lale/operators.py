@@ -3870,7 +3870,7 @@ class BasePipeline(Operator, Generic[OpType]):
             if len(preds) == 0:
                 input_X, input_y = X, y
             else:
-                input_X = combine_schemas([outputs[pred] for pred in preds])
+                input_X = combine_schemas([outputs[pred][0] for pred in preds])
                 input_y = outputs[preds[0]][1]
             if validate:
                 operator.validate_schema(X=input_X, y=input_y)
