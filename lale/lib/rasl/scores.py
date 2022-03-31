@@ -195,8 +195,8 @@ def _f_oneway_lower(lifted):
     sums_samples = lifted.sums_samples
     sums_alldata = lifted.sums_alldata
     n_classes = len(classes)
-    square_of_sums_alldata = sums_alldata ** 2
-    square_of_sums_args = {k: s ** 2 for k, s in sums_samples.items()}
+    square_of_sums_alldata = sums_alldata**2
+    square_of_sums_args = {k: s**2 for k, s in sums_samples.items()}
     sstot = ss_alldata - square_of_sums_alldata / float(n_samples)
     ssbn = 0.0
     for k in n_samples_per_class:
