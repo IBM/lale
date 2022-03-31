@@ -19,11 +19,11 @@ repos:
     hooks:
       - id: isort
         args: [--filter-files]
-  # Format the python code with black
-  - repo: https://github.com/psf/black
-    rev: 21.9b0
-    hooks:
-      - id: black
+  # # Format the python code with black
+  # - repo: https://github.com/psf/black
+  #   rev: 21.9b0
+  #   hooks:
+  #     - id: black
   # Lint the yaml files
   - repo: https://github.com/adrienverge/yamllint.git
     rev: v1.26.3
