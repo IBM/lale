@@ -29,8 +29,11 @@ class _IncreaseRowsImpl:
 
     def transform_X_y(self, X, y):
         output_X = self.transform(X)
-        subset_y = y[0 : self.n_rows]
-        output_y = np.concatenate((y, subset_y), axis=0)
+        if y is None:
+            output_y = None
+        else:
+            subset_y = y[0 : self.n_rows]
+            output_y = np.concatenate((y, subset_y), axis=0)
         return output_X, output_y
 
 
