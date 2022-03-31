@@ -130,7 +130,7 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
         "input_transform_X_y": _input_transform_X_y_schema,
         "output_transform_X_y": _output_transform_X_y_schema,
-     },
+    },
 }
 
 SplitXy = lale.operators.make_operator(_SplitXyImpl, _combined_schemas)
