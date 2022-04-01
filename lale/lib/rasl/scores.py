@@ -16,6 +16,7 @@ from typing import Any, Tuple, TypeVar
 
 import numpy as np
 from scipy import special
+from typing_extensions import Protocol
 
 from lale.expressions import count as agg_count
 from lale.expressions import it
@@ -33,7 +34,7 @@ _OutputType = Tuple[float, float]
 _M = TypeVar("_M", bound=ScoreMonoid)
 
 
-class ScoreMonoidFactory(MonoidFactory[_InputType, _OutputType, _M]):
+class ScoreMonoidFactory(MonoidFactory[_InputType, _OutputType, _M], Protocol):
     def score(self, X, y) -> Tuple[float, float]:
         return self.from_monoid(self.to_monoid((X, y)))
 

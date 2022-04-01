@@ -115,7 +115,7 @@ def multitable_train_test_split(
     if test_size > 0 and test_size < 1:
         num_test_rows = int(num_rows * test_size)
     else:
-        num_test_rows = test_size
+        num_test_rows = int(test_size)
     test_indices = random.choice(range(num_rows), num_test_rows, replace=False)
     train_indices = list(set([*range(num_rows)]) - set(test_indices.tolist()))
     assert len(test_indices) + len(train_indices) == num_rows

@@ -14,6 +14,7 @@
 from typing import Any, List, Optional
 
 import numpy as np
+from typing_extensions import Protocol
 
 import lale.datasets.data_schemas
 import lale.docstrings
@@ -91,7 +92,9 @@ class _StaticMonoidFactory(MonoidFactory[Any, List[column_index], _StaticMonoid]
         return v._v
 
 
-class _DynamicMonoidFactory(MonoidFactory[Any, List[column_index], _StaticMonoid]):
+class _DynamicMonoidFactory(
+    MonoidFactory[Any, List[column_index], _StaticMonoid], Protocol
+):
     pass
 
 

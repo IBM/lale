@@ -18,6 +18,7 @@ from typing import Dict, Iterable, Optional, Tuple, TypeVar, Union, cast
 
 import numpy as np
 import pandas as pd
+from typing_extensions import Protocol
 
 from lale.expressions import astype, count, it, sum
 from lale.helpers import spark_installed
@@ -53,7 +54,7 @@ else:
     ]
 
 
-class MetricMonoidFactory(MonoidFactory[_Batch_yyX, float, _M]):
+class MetricMonoidFactory(MonoidFactory[_Batch_yyX, float, _M], Protocol):
     @abstractmethod
     def to_monoid(self, v: _Batch_yyX) -> _M:
         pass
@@ -87,7 +88,7 @@ class MetricMonoidFactory(MonoidFactory[_Batch_yyX, float, _M]):
         return self.score_data_batched(predicted_batches)
 
 
-class _MetricMonoidMixin(MetricMonoidFactory[_M]):
+class _MetricMonoidMixin(MetricMonoidFactory[_M], Protocol):
     def score_data(
         self, y_true: pd.Series, y_pred: pd.Series, X: Optional[pd.DataFrame] = None
     ) -> float:

@@ -114,13 +114,12 @@ def always_validate_schema(value, schema: JSON_TYPE, subsample_array: bool = Tru
         The value was invalid for the schema.
     """
     json_value = lale.helpers.data_to_json(value, subsample_array)
+    sch: Any = lale.helpers.data_to_json(schema, False)
     try:
-        validator = _lale_validator(lale.helpers.data_to_json(schema, False))
+        validator = _lale_validator(sch)
         validator.validate(json_value)
     except Exception:
-        jsonschema.validate(
-            json_value, lale.helpers.data_to_json(schema, False), _lale_validator
-        )
+        jsonschema.validate(json_value, sch, _lale_validator)
 
 
 def validate_schema_directly(value, schema: JSON_TYPE, subsample_array: bool = True):
