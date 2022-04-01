@@ -23,10 +23,10 @@ jobs:
         # This path is specific to Ubuntu
         path: ${{ env.pythonLocation }}
         # Look to see if there is a cache hit for the setup file
-        key: ${{ runner.os }}-pip-new2-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
+        key: ${{ runner.os }}-pip-new3-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
         restore-keys: |
-          ${{ runner.os }}-pip-new2
-          ${{ runner.os }}-new2
+          ${{ runner.os }}-pip-new3
+          ${{ runner.os }}-new3
     - name: Install numpy
       run: pip install -U numpy
     - name: Install dependencies
@@ -121,10 +121,10 @@ jobs:
         # This path is specific to Ubuntu
         path: ${{ env.pythonLocation }}
         # Look to see if there is a cache hit for the setup file
-        key: ${{ runner.os }}-pip-new2-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
+        key: ${{ runner.os }}-pip-new3-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
         restore-keys: |
-          ${{ runner.os }}-pip-new2
-          ${{ runner.os }}-new2
+          ${{ runner.os }}-pip-new3
+          ${{ runner.os }}-new3
     - name: Install numpy
       run: pip install -U numpy
     - name: Install dependencies
@@ -225,10 +225,10 @@ jobs:
         # This path is specific to Ubuntu
         path: ${{ env.pythonLocation }}
         # Look to see if there is a cache hit for the setup file
-        key: ${{ runner.os }}-pip-new2-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
+        key: ${{ runner.os }}-pip-new3-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
         restore-keys: |
-          ${{ runner.os }}-pip-new2
-          ${{ runner.os }}-new2
+          ${{ runner.os }}-pip-new3
+          ${{ runner.os }}-new3
     - name: Install numpy
       run: pip install -U numpy
     - name: Install dependencies
@@ -287,10 +287,10 @@ jobs:
         # This path is specific to Ubuntu
         path: ${{ env.pythonLocation }}
         # Look to see if there is a cache hit for the setup file
-        key: ${{ runner.os }}-pip-new2-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
+        key: ${{ runner.os }}-pip-new3-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
         restore-keys: |
-          ${{ runner.os }}-pip-new2
-          ${{ runner.os }}-new2
+          ${{ runner.os }}-pip-new3
+          ${{ runner.os }}-new3
     - name: Install numpy
       run: pip install -U numpy
     - name: Install dependencies
@@ -331,10 +331,10 @@ jobs:
         # This path is specific to Ubuntu
         path: ${{ env.pythonLocation }}
         # Look to see if there is a cache hit for the setup file
-        key: ${{ runner.os }}-pip-new2-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
+        key: ${{ runner.os }}-pip-new3-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
         restore-keys: |
-          ${{ runner.os }}-pip-new2
-          ${{ runner.os }}-new2
+          ${{ runner.os }}-pip-new3
+          ${{ runner.os }}-new3
     - name: Install packages
       run: sudo apt-get install graphviz swig
     - name: Install numpy
@@ -373,10 +373,10 @@ jobs:
         # This path is specific to Ubuntu
         path: ${{ env.pythonLocation }}
         # Look to see if there is a cache hit for the setup file
-        key: ${{ runner.os }}-pip-new2-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
+        key: ${{ runner.os }}-pip-new3-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
         restore-keys: |
-          ${{ runner.os }}-pip-new2
-          ${{ runner.os }}-new2
+          ${{ runner.os }}-pip-new3
+          ${{ runner.os }}-new3
     - name: Install packages
       run: sudo apt-get install graphviz swig
     - name: Install numpy
