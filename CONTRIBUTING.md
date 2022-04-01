@@ -3,7 +3,10 @@
 Lale is an open-source project, and we appreciate your help!
 
 To make contributions to this GitHub repository, please submit a pull
-request (PR). In addition, we expect contributors to submit a
+request (PR).
+Please ensure that your new functionality is adequately
+covered by the regression test suite.
+In addition, we expect contributors to submit a
 "Developer's Certificate of Origin" by signing the following form:
 [DCO1.1.txt](https://github.com/IBM/lale/blob/master/DCO1.1.txt).
 
@@ -27,8 +30,9 @@ Italics in the visualization indicate parts you have to substitute:
 *feature* (the name of the feature branch you are working on), and
 *message* (a description of your commit).
 
-We have a pre-commit hook setup to help ensure that your code is properly formatted
-and passes various static checks.  We highly recommend that you enable it, or at least run the check
+We have a pre-commit hook setup to help ensure that your code is
+properly formatted and passes various static checks.
+We highly recommend that you enable it, or at least run the check
 before submitting a PR.  To do so, install the `pre-commit` python
 package (this is done automatically if you `pip install -e .[dev]`).
 Run `pre-commit install` in your `lale` repository to enable
