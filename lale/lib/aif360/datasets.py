@@ -14,6 +14,7 @@
 
 import logging
 import os
+import typing
 import urllib.request
 from enum import Enum
 
@@ -341,6 +342,7 @@ def _get_pandas_and_fairness_info_from_compas_dataset(dataset):
 def _get_dataframe_from_compas_csv(violent_recidivism=False):
     filename = _get_compas_filename(violent_recidivism=violent_recidivism)
     filepath = _get_compas_filepath(filename)
+    df: typing.Any = None
     try:
         df = pd.read_csv(filepath, index_col="id", na_values=[])
     except IOError as err:
@@ -1202,7 +1204,7 @@ def _fetch_meps_raw_df(panel, fiscal_year):
         "meps",
         filename,
     )
-
+    df: typing.Any = None
     try:
         df = pd.read_csv(filepath, sep=",", na_values=[])
     except IOError as err:

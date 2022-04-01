@@ -815,7 +815,7 @@ class _DIorSPDData(MetricMonoid):
         )
 
 
-class _DIorSPDScorerFactory(_AIF360ScorerFactory, MetricMonoidFactory[_DIorSPDData]):
+class _DIorSPDScorerFactory(_AIF360ScorerFactory):
     def to_monoid(self, batch: _Batch_yyX) -> _DIorSPDData:
         y_true, y_pred, X = batch
         assert y_pred is not None and X is not None, batch
@@ -888,7 +888,7 @@ class _AODorEODData(MetricMonoid):
         )
 
 
-class _AODorEODScorerFactory(_AIF360ScorerFactory, MetricMonoidFactory[_AODorEODData]):
+class _AODorEODScorerFactory(_AIF360ScorerFactory):
     def to_monoid(self, batch: _Batch_yyX) -> _AODorEODData:
         y_true, y_pred, X = batch
         assert y_pred is not None and X is not None, batch
@@ -1175,7 +1175,9 @@ accuracy_and_disparate_impact.__doc__ = (
 )
 
 
-class _AverageOddsDifference(_AODorEODScorerFactory):
+class _AverageOddsDifference(
+    _AODorEODScorerFactory, MetricMonoidFactory[_AODorEODData]
+):
     def __init__(
         self,
         favorable_labels: _FAV_LABELS_TYPE,
@@ -1237,7 +1239,7 @@ average_odds_difference.__doc__ = (
 )
 
 
-class _DisparateImpact(_DIorSPDScorerFactory):
+class _DisparateImpact(_DIorSPDScorerFactory, MetricMonoidFactory[_DIorSPDData]):
     def __init__(
         self,
         favorable_labels: _FAV_LABELS_TYPE,
@@ -1290,7 +1292,9 @@ def disparate_impact(
 disparate_impact.__doc__ = str(disparate_impact.__doc__) + _SCORER_DOCSTRING
 
 
-class _EqualOpportunityDifference(_AODorEODScorerFactory):
+class _EqualOpportunityDifference(
+    _AODorEODScorerFactory, MetricMonoidFactory[_AODorEODData]
+):
     def __init__(
         self,
         favorable_labels: _FAV_LABELS_TYPE,
@@ -1466,7 +1470,9 @@ r2_and_disparate_impact.__doc__ = (
 )
 
 
-class _StatisticalParityDifference(_DIorSPDScorerFactory):
+class _StatisticalParityDifference(
+    _DIorSPDScorerFactory, MetricMonoidFactory[_DIorSPDData]
+):
     def __init__(
         self,
         favorable_labels: _FAV_LABELS_TYPE,

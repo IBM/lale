@@ -1308,7 +1308,7 @@ class IndividualOp(Operator):
         # if we are given a class instance, we need to preserve it
         # so that get_params can return the same exact one that we got
         # this is important for scikit-learn's clone to work correctly
-        unwrapped = _WithoutGetParams.unwrap(_lale_impl)
+        unwrapped: Any = _WithoutGetParams.unwrap(_lale_impl)
         self._impl = unwrapped
         if inspect.isclass(unwrapped):
             self._impl_class_ = _lale_impl

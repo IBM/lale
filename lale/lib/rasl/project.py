@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Protocol
 
 import numpy as np
 
@@ -91,7 +91,9 @@ class _StaticMonoidFactory(MonoidFactory[Any, List[column_index], _StaticMonoid]
         return v._v
 
 
-class _DynamicMonoidFactory(MonoidFactory[Any, List[column_index], _StaticMonoid]):
+class _DynamicMonoidFactory(
+    MonoidFactory[Any, List[column_index], _StaticMonoid], Protocol
+):
     pass
 
 

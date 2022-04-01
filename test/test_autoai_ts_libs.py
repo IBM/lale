@@ -73,7 +73,7 @@ class TestAutoaiTSLibs(unittest.TestCase):
                 # raise ValueError('Size of Ground Truth and Predicted Values do not match!')
                 return None
 
-            pred_diff = 2.0 * np.abs(cast(float, y_true - y_pred))
+            pred_diff = 2.0 * np.abs(cast(float, y_true - y_pred))  # type: ignore
             divide = np.abs(y_true) + np.abs(y_pred)
             divide[divide < 1e-12] = 1.0
             scores = pred_diff / divide

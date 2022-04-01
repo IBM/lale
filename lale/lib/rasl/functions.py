@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import datetime
-from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar
+from typing import Any, Callable, Dict, Generic, List, Optional, Protocol, TypeVar
 
 import numpy as np
 
@@ -133,7 +133,7 @@ class DictMonoid(Generic[_D], Monoid):
         return all(v.is_absorbing for v in self._m.values())
 
 
-class ColumnSelector(MonoidFactory[_Batch, List[column_index], _D]):
+class ColumnSelector(MonoidFactory[_Batch, List[column_index], _D], Protocol):
     def __call__(self, df) -> List[column_index]:
         return self.from_monoid(self.to_monoid(df))
 

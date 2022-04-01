@@ -74,7 +74,7 @@ class MonoidFactory(Generic[_InputType, _OutputType, _M], Protocol):
         ...
 
 
-class MonoidableOperator(MonoidFactory[Any, None, _M]):
+class MonoidableOperator(MonoidFactory[Any, None, _M], Protocol):
     """
     This is a useful base class for operator implementations that support associative (monoid-based) fit.
     Given the implementation supplied :class:MonoidFactory methods, this class provides

@@ -49,7 +49,7 @@ def get_columns(df) -> List[column_index]:
 
 def select_col(df, col: column_index):
     if isinstance(df, np.ndarray):
-        return df[:, col]
+        return df[:, col]  # type: ignore
     elif _is_pandas_df(df):
         return df[col]
     elif _is_spark_df(df):
