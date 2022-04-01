@@ -40,6 +40,8 @@ jobs:
     - name: Install autoai-libs from test pypi for Python 3.9.
       if: ${{ matrix.python-version == 3.9}}
       run: pip install --upgrade --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ autoai-libs==1.13.2
+    - name: pip list packages
+      run: pip list
     - name: pre-commit checks
       uses: pre-commit/action@v2.0.0
 
@@ -131,13 +133,13 @@ jobs:
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Install deps for test_autoai_output_consumption
       if: ${{ matrix.test-case == 'test/test_autoai_output_consumption.py' }}
-      run: pip install 'scikit-learn==0.23.1' 'lightgbm==3.3.0'
+      run: pip install 'scikit-learn==0.23.1' 'lightgbm==3.3.0' 'scipy==1.5.2'
     - name: Install deps for test_lale_lib_versions
       if: ${{ matrix.test-case == 'test/test_lale_lib_versions.py' }}
       run: pip install 'scikit-learn==0.20.3' 'xgboost==0.90'
     - name: Install deps for test_autoai_ts_libs
       if: ${{ matrix.test-case == 'test/test_autoai_ts_libs.py' }}
-      run: pip install 'autoai-ts-libs' 'scikit-learn==0.23.2'
+      run: pip install 'autoai-ts-libs' 'scikit-learn==0.23.2' 'scipy==1.5.2'
     - name: Install autoai-libs from test pypi for Python 3.7 and 3.8
       if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
       run: pip install autoai-libs>=1.12.6
@@ -153,6 +155,8 @@ jobs:
     - name: Install deps for test_snapml
       if: ${{ matrix.test-case == 'test/test_snapml.py' }}
       run: pip install 'numpy>=1.20.1'
+    - name: pip list packages
+      run: pip list
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 
@@ -235,13 +239,13 @@ jobs:
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Install deps for test_autoai_output_consumption
       if: ${{ matrix.test-case == 'test/test_autoai_output_consumption.py' }}
-      run: pip install 'scikit-learn==0.23.1' 'lightgbm==3.3.0'
+      run: pip install 'scikit-learn==0.23.1' 'lightgbm==3.3.0' 'scipy==1.5.2'
     - name: Install deps for test_lale_lib_versions
       if: ${{ matrix.test-case == 'test/test_lale_lib_versions.py' }}
       run: pip install 'scikit-learn==0.20.3' 'xgboost==0.90'
     - name: Install deps for test_autoai_ts_libs
       if: ${{ matrix.test-case == 'test/test_autoai_ts_libs.py' }}
-      run: pip install 'autoai-ts-libs' 'scikit-learn==0.23.2'
+      run: pip install 'autoai-ts-libs' 'scikit-learn==0.23.2' 'scipy==1.5.2'
     - name: Install autoai-libs from test pypi for Python 3.7 and 3.8
       if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
       run: pip install --upgrade --upgrade-strategy eager --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ autoai-libs==1.13.2
@@ -257,6 +261,8 @@ jobs:
     - name: Install deps for test_snapml
       if: ${{ matrix.test-case == 'test/test_snapml.py' }}
       run: pip install 'numpy>=1.20.1'
+    - name: pip list packages
+      run: pip list
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 
@@ -299,6 +305,8 @@ jobs:
       run: pip install pytest
     - name: Install latest scikit-learn, xgboost, and lightgbm
       run: pip install --upgrade --upgrade-strategy eager scikit-learn xgboost lightgbm
+    - name: pip list packages
+      run: pip list
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 
@@ -341,6 +349,8 @@ jobs:
       run: pip install -U numpy
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
+    - name: pip list packages
+      run: pip list
     - name: Run test
       run: NOTEBOOK_CATEGORY=${{matrix.category}} py.test -v --capture=tee-sys ${{matrix.test-case}}
 
@@ -383,6 +393,8 @@ jobs:
       run: pip install -U numpy
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
+    - name: pip list packages
+      run: pip list
     - name: Run test
       run: NOTEBOOK_CATEGORY=${{matrix.category}} py.test -v --capture=tee-sys ${{matrix.test-case}}
 
@@ -412,6 +424,8 @@ jobs:
       run: pip install pytest
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
+    - name: pip list packages
+      run: pip list
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 
