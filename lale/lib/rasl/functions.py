@@ -13,9 +13,10 @@
 # limitations under the License.
 
 import datetime
-from typing import Any, Callable, Dict, Generic, List, Optional, Protocol, TypeVar
+from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar
 
 import numpy as np
+from typing_extensions import Protocol
 
 from ..dataframe import (
     column_index,

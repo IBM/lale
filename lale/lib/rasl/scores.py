@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Protocol, Tuple, TypeVar
+from typing import Any, Tuple, TypeVar
 
 import numpy as np
 from scipy import special
+from typing_extensions import Protocol
 
 from lale.expressions import count as agg_count
 from lale.expressions import it

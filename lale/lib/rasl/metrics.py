@@ -14,10 +14,11 @@
 
 import functools
 from abc import abstractmethod
-from typing import Dict, Iterable, Optional, Protocol, Tuple, TypeVar, Union, cast
+from typing import Dict, Iterable, Optional, Tuple, TypeVar, Union, cast
 
 import numpy as np
 import pandas as pd
+from typing_extensions import Protocol
 
 from lale.expressions import astype, count, it, sum
 from lale.helpers import spark_installed
