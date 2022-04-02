@@ -129,8 +129,6 @@ jobs:
           ${{ runner.os }}-new3
     - name: Install numpy
       run: pip install -U numpy
-    - name: Install latest scikit-learn
-      run: pip install --upgrade --upgrade-strategy eager scikit-learn
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Install deps for test_autoai_output_consumption
@@ -237,8 +235,6 @@ jobs:
           ${{ runner.os }}-new3
     - name: Install numpy
       run: pip install -U numpy
-    - name: Install latest scikit-learn
-      run: pip install --upgrade --upgrade-strategy eager scikit-learn
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Install deps for test_autoai_output_consumption
@@ -351,8 +347,6 @@ jobs:
       run: sudo apt-get install graphviz swig
     - name: Install numpy
       run: pip install -U numpy
-    - name: Install latest scikit-learn
-      run: pip install --upgrade --upgrade-strategy eager scikit-learn
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: pip list packages
@@ -397,8 +391,6 @@ jobs:
       run: sudo apt-get install graphviz swig
     - name: Install numpy
       run: pip install -U numpy
-    - name: Install latest scikit-learn
-      run: pip install --upgrade --upgrade-strategy eager scikit-learn
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: pip list packages
@@ -430,8 +422,6 @@ jobs:
       run: pip install -U numpy
     - name: Install pytest
       run: pip install pytest
-    - name: Install latest scikit-learn
-      run: pip install --upgrade --upgrade-strategy eager scikit-learn
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: pip list packages
