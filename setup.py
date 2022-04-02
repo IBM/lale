@@ -14,8 +14,6 @@
 
 import logging
 import os
-
-# import sys
 from datetime import datetime
 
 from setuptools import find_packages, setup
@@ -50,7 +48,7 @@ else:
         "jsonschema",
         "jsonsubschema>=0.0.6",
         "scikit-learn",
-        "scipy==1.5.2",
+        "scipy",
         "pandas",
         "decorator",
         "astunparse",
@@ -101,10 +99,6 @@ extras_require = {
         "BlackBoxAuditing",
     ],
 }
-
-# # Inserting tensorflow 1.x only for Python 3.7
-# if sys.version_info.minor == 7:
-#     extras_require["full"].append("tensorflow>=1.13.1,<2")
 
 setup(
     name="lale",
