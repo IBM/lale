@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -416,9 +416,49 @@ _combined_schemas = {
     },
 }
 
+
+class _LogisticRegressionImpl:
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
+        self._wrapped_model = sklearn.linear_model.LogisticRegression(
+            **self._hyperparams
+        )
+
+    def fit(self, X, y, **fit_params):
+        try:
+            self._wrapped_model.fit(X, y, **fit_params)
+        except AttributeError as e:  # incompatibility old sklearn vs. new scipy
+            import scipy
+
+            assert scipy.__version__ > "1.5.2", scipy.__version__
+            assert sklearn.__version__ <= "0.23.2", sklearn.__version__
+            assert str(e) == "'str' object has no attribute 'decode'", str(e)
+            assert self._wrapped_model.solver == "lbfgs", self._wrapped_model.solver
+            assert self._wrapped_model.max_iter < 1000, self._wrapped_model.max_iter
+            self._wrapped_model.max_iter = 1000
+            self._wrapped_model.fit(X, y, **fit_params)
+        return self
+
+    def predict(self, X):
+        return self._wrapped_model.predict(X)
+
+    def predict_proba(self, X):
+        return self._wrapped_model.predict_proba(X)
+
+    def predict_log_proba(self, X):
+        return self._wrapped_model.predict_log_proba(X)
+
+    def decision_function(self, X):
+        return self._wrapped_model.decision_function(X)
+
+    def score(self, X, y, sample_weight=None):
+        return self._wrapped_model.score(X, y, sample_weight)
+
+
 LogisticRegression = lale.operators.make_operator(
-    sklearn.linear_model.LogisticRegression, _combined_schemas
+    _LogisticRegressionImpl, _combined_schemas
 )
+
 
 if sklearn.__version__ >= "0.21":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.LogisticRegression.html
