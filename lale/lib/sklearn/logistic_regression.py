@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import logging
 import typing
 
 import sklearn
@@ -19,6 +21,9 @@ import sklearn.linear_model
 import lale.docstrings
 import lale.operators
 from lale.schemas import AnyOf, Enum, Float, Null
+
+logger = logging.getLogger(__name__)
+
 
 _input_fit_schema = {
     "type": "object",
@@ -430,13 +435,12 @@ class _LogisticRegressionImpl:
         except AttributeError as e:  # incompatibility old sklearn vs. new scipy
             import scipy
 
-            assert scipy.__version__ > "1.5.2", scipy.__version__
-            assert sklearn.__version__ <= "0.23.2", sklearn.__version__
-            assert str(e) == "'str' object has no attribute 'decode'", str(e)
-            assert self._wrapped_model.solver == "lbfgs", self._wrapped_model.solver
-            assert self._wrapped_model.max_iter < 1000, self._wrapped_model.max_iter
-            self._wrapped_model.max_iter = 1000
+            message = f'Caught AttributeError("{str(e)}") during LogisticRegression.fit(..) call, scipy version {scipy.__version__}, sklearn version {sklearn.__version__}, solver {self._wrapped_model.solver}, max_iter {self._wrapped_model.max_iter}. Retrying with solver "saga".'
+            logger.warning(message)
+            old_solver = self._wrapped_model.solver
+            self._wrapped_model.solver = "saga"
             self._wrapped_model.fit(X, y, **fit_params)
+            self._wrapped_model.solver = old_solver
         return self
 
     def predict(self, X):

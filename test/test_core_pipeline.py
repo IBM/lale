@@ -174,7 +174,7 @@ class TestCreation(unittest.TestCase):
     def test_compare_with_sklearn(self):
         tfm = PCA()
         clf = LogisticRegression(
-            LogisticRegression.enum.solver.lbfgs,
+            LogisticRegression.enum.solver.saga,
             LogisticRegression.enum.multi_class.auto,
         )
         trainable = lale.operators.make_pipeline(tfm, clf)
@@ -185,7 +185,7 @@ class TestCreation(unittest.TestCase):
         from sklearn.linear_model import LogisticRegression as SklearnLR
 
         sklearn_pipeline = sklearn.pipeline.make_pipeline(
-            SklearnPCA(), SklearnLR(solver="lbfgs", multi_class="auto")
+            SklearnPCA(), SklearnLR(solver="saga", multi_class="auto")
         )
         sklearn_pipeline.fit(digits.data, digits.target)
         predicted_sklearn = sklearn_pipeline.predict(digits.data)
