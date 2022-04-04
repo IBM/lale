@@ -428,7 +428,7 @@ class TestConcatFeatures(unittest.TestCase):
         pca = PCA(n_components=3, random_state=42, svd_solver="arpack")
         nys = Nystroem(n_components=10, random_state=42)
         concat = ConcatFeatures()
-        lr = LogisticRegression(random_state=42, C=0.1)
+        lr = LogisticRegression(random_state=42, C=0.1, solver="saga")
         trainable = (pca & nys) >> concat >> lr
         digits = sklearn.datasets.load_digits()
         X, y = sklearn.utils.shuffle(digits.data, digits.target, random_state=42)
@@ -451,7 +451,7 @@ class TestConcatFeatures(unittest.TestCase):
                 ("nys", SklearnNystroem(n_components=10, random_state=42)),
             ]
         )
-        lr = SklearnLR(random_state=42, C=0.1)
+        lr = SklearnLR(random_state=42, C=0.1, solver="saga")
         pipeline = make_pipeline(union, lr)
 
         scikit_cv_results = cross_val_score(pipeline, X, y, cv=5)

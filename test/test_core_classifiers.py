@@ -372,7 +372,10 @@ class TestStackingClassifier(unittest.TestCase):
         from lale.lib.lale import Hyperopt
         from lale.lib.sklearn import StackingClassifier
 
-        clf = StackingClassifier(estimators=[("base", LogisticRegression())])
+        clf = StackingClassifier(
+            estimators=[("base", LogisticRegression())],
+            final_estimator=LogisticRegression(),
+        )
         trained = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
         print(trained.to_json())
 
@@ -380,7 +383,10 @@ class TestStackingClassifier(unittest.TestCase):
         from lale.lib.lale import Hyperopt
         from lale.lib.sklearn import StackingClassifier
 
-        clf = StackingClassifier(estimators=[("base", PCA() >> LogisticRegression())])
+        clf = StackingClassifier(
+            estimators=[("base", PCA() >> LogisticRegression())],
+            final_estimator=LogisticRegression(),
+        )
         _ = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
 
     def test_pipeline_choice_with_hyperopt(self):
