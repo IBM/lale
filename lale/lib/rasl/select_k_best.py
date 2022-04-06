@@ -77,7 +77,7 @@ class _SelectKBestImpl(MonoidableOperator[_SelectKBestMonoid]):
         k = self._hyperparams["k"]
         scores = self.scores_.copy()
         scores[np.isnan(scores)] = np.finfo(scores.dtype).min
-        ind = np.sort(np.argpartition(scores, -k)[-k:])
+        ind = np.sort(np.argpartition(scores, -min(k, len(scores)))[-k:])
         kbest = self._monoid.feature_names_in_[ind]
         result = Map(columns={col: it[col] for col in kbest})
         return result
