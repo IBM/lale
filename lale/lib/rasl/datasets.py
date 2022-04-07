@@ -14,7 +14,6 @@
 
 from typing import Iterable, Tuple, Union, cast
 
-import arff
 import pandas as pd
 import sklearn.model_selection
 import sklearn.tree
@@ -37,11 +36,22 @@ if lale.helpers.spark_installed:
 else:
     _PandasOrSparkBatch = _PandasBatch  # type: ignore
 
+try:
+    import arff
+
+    liac_arff_installed = True
+except ModuleNotFoundError:
+    liac_arff_installed = False
+
 
 def arff_data_loader(
     file_name: str, label_name: str, rows_per_batch: int
 ) -> Iterable[_PandasBatch]:
     """Incrementally load the file and yield it one batch at a time."""
+    assert liac_arff_installed, """Package 'arff' not found. You can install it with
+    pip install 'liac-arff>=2.4.0'
+or with
+    pip install 'lale[full]'"""
     split_x_y = SplitXy(label_name=label_name)
 
     def make_batch():
