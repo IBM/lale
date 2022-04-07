@@ -20,7 +20,6 @@ import sklearn.tree
 
 import lale.helpers
 from lale.datasets import pandas2spark
-from lale.datasets.openml import openml_datasets
 
 from .split_xy import SplitXy
 
@@ -39,6 +38,8 @@ else:
 try:
     import arff
 
+    from lale.datasets.openml import openml_datasets
+
     liac_arff_installed = True
 except ModuleNotFoundError:
     liac_arff_installed = False
@@ -48,10 +49,7 @@ def arff_data_loader(
     file_name: str, label_name: str, rows_per_batch: int
 ) -> Iterable[_PandasBatch]:
     """Incrementally load the file and yield it one batch at a time."""
-    assert liac_arff_installed, """Package 'arff' not found. You can install it with
-    pip install 'liac-arff>=2.4.0'
-or with
-    pip install 'lale[full]'"""
+    assert liac_arff_installed
     split_x_y = SplitXy(label_name=label_name)
 
     def make_batch():
@@ -63,7 +61,6 @@ or with
 
     with open(file_name) as f:
         arff_dict = arff.load(f, return_type=arff.DENSE_GEN)
-        # TODO: column names, row indices
         column_names = [name for name, _ in arff_dict["attributes"]]
         row_list = []
         n_batches = 0
@@ -101,9 +98,9 @@ def mockup_data_loader(
 
 
 def openml_data_loader(dataset_name: str, n_batches: int) -> Iterable[_PandasBatch]:
+    assert liac_arff_installed
     metadata = openml_datasets.experiments_dict[dataset_name]
     label_name = cast(str, metadata["target"])
-    assert "n_rows" in metadata, f"Metadata for {dataset_name} n_rows missing."
     n_rows = cast(int, metadata["n_rows"])
     rows_per_batch = (n_rows + n_batches - 1) // n_batches
     file_name = openml_datasets.download_if_missing(dataset_name)
