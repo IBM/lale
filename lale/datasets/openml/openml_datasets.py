@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 
 import os
 import urllib.request
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -38,229 +38,187 @@ or with
     )
 
 download_data_dir = os.path.join(os.path.dirname(__file__), "download_data")
-experiments_dict: Dict[str, Dict[str, str]] = {}
+experiments_dict: Dict[str, Dict[str, Union[str, int]]] = {}
 
 # 1.25
-experiments_dict["vehicle"] = {}
-experiments_dict["vehicle"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/54/dataset_54_vehicle.arff"
-experiments_dict["vehicle"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/54/dataset_54_vehicle.arff"
-experiments_dict["vehicle"]["task_type"] = "classification"
-experiments_dict["vehicle"]["target"] = "class"
+experiments_dict["vehicle"] = {
+    "download_arff_url": "https://www.openml.org/data/download/54/dataset_54_vehicle.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/54/dataset_54_vehicle.arff",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 846,
+}
 
 # 1.3
-experiments_dict["blood-transfusion-service-center"] = {}
-experiments_dict["blood-transfusion-service-center"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/1586225/php0iVrYT"
-experiments_dict["blood-transfusion-service-center"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/1586225/php0iVrYT"
-experiments_dict["blood-transfusion-service-center"]["task_type"] = "classification"
-experiments_dict["blood-transfusion-service-center"]["target"] = "class"
+experiments_dict["blood-transfusion-service-center"] = {
+    "download_arff_url": "https://www.openml.org/data/download/1586225/php0iVrYT",
+    "download_csv_url": "https://www.openml.org/data/get_csv/1586225/php0iVrYT",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 748,
+}
 
 # 1.5
-experiments_dict["car"] = {}
-experiments_dict["car"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/18116966/php2jDIhh"
-experiments_dict["car"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/18116966/php2jDIhh"
-experiments_dict["car"]["task_type"] = "classification"
-experiments_dict["car"]["target"] = "class"
+experiments_dict["car"] = {
+    "download_arff_url": "https://www.openml.org/data/download/18116966/php2jDIhh",
+    "download_csv_url": "https://www.openml.org/data/get_csv/18116966/php2jDIhh",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 1728,
+}
 
 # 1.6
-experiments_dict["kc1"] = {}
-experiments_dict["kc1"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/53950/kc1.arff"
-experiments_dict["kc1"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/53950/kc1.arff"
-experiments_dict["kc1"]["task_type"] = "classification"
-experiments_dict["kc1"]["target"] = "defects"
+experiments_dict["kc1"] = {
+    "download_arff_url": "https://www.openml.org/data/download/53950/kc1.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/53950/kc1.arff",
+    "task_type": "classification",
+    "target": "defects",
+    "n_rows": 2109,
+}
 
 # 2.6
-experiments_dict["Australian"] = {}
-experiments_dict["Australian"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/18151910/phpelnJ6y"
-experiments_dict["Australian"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/18151910/phpelnJ6y"
-experiments_dict["Australian"]["task_type"] = "classification"
-experiments_dict["Australian"]["target"] = "a15"
+experiments_dict["Australian"] = {
+    "download_arff_url": "https://www.openml.org/data/download/18151910/phpelnJ6y",
+    "download_csv_url": "https://www.openml.org/data/get_csv/18151910/phpelnJ6y",
+    "task_type": "classification",
+    "target": "a15",
+    "n_rows": 690,
+}
 
 # 3.1
-experiments_dict["credit-g"] = {}
-experiments_dict["credit-g"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/31/dataset_31_credit-g.arff"
-experiments_dict["credit-g"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/31/dataset_31_credit-g.arff"
-experiments_dict["credit-g"]["task_type"] = "classification"
-experiments_dict["credit-g"]["target"] = "class"
+experiments_dict["credit-g"] = {
+    "download_arff_url": "https://www.openml.org/data/download/31/dataset_31_credit-g.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/31/dataset_31_credit-g.arff",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 1000,
+}
 
 # 3.4
-experiments_dict["phoneme"] = {}
-experiments_dict["phoneme"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/1592281/php8Mz7BG"
-experiments_dict["phoneme"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/1592281/php8Mz7BG"
-experiments_dict["phoneme"]["task_type"] = "classification"
-experiments_dict["phoneme"]["target"] = "class"
+experiments_dict["phoneme"] = {
+    "download_arff_url": "https://www.openml.org/data/download/1592281/php8Mz7BG",
+    "download_csv_url": "https://www.openml.org/data/get_csv/1592281/php8Mz7BG",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 5404,
+}
 
 # 3.6
-experiments_dict["kr-vs-kp"] = {}
-experiments_dict["kr-vs-kp"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/3/dataset_3_kr-vs-kp.arff"
-experiments_dict["kr-vs-kp"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/3/dataset_3_kr-vs-kp.arff"
-experiments_dict["kr-vs-kp"]["task_type"] = "classification"
-experiments_dict["kr-vs-kp"]["target"] = "class"
+experiments_dict["kr-vs-kp"] = {
+    "download_arff_url": "https://www.openml.org/data/download/3/dataset_3_kr-vs-kp.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/3/dataset_3_kr-vs-kp.arff",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 3196,
+}
 
 # 4.0
-experiments_dict["mfeat-factors"] = {}
-experiments_dict["mfeat-factors"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/12/dataset_12_mfeat-factors.arff"
-experiments_dict["mfeat-factors"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/12/dataset_12_mfeat-factors.arff"
-experiments_dict["mfeat-factors"]["task_type"] = "classification"
-experiments_dict["mfeat-factors"]["target"] = "class"
+experiments_dict["mfeat-factors"] = {
+    "download_arff_url": "https://www.openml.org/data/download/12/dataset_12_mfeat-factors.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/12/dataset_12_mfeat-factors.arff",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 2000,
+}
 
 # 5.9
-experiments_dict["cnae-9"] = {}
-experiments_dict["cnae-9"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/1586233/phpmcGu2X"
-experiments_dict["cnae-9"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/1586233/phpmcGu2X"
-experiments_dict["cnae-9"]["task_type"] = "classification"
-experiments_dict["cnae-9"]["target"] = "class"
+experiments_dict["cnae-9"] = {
+    "download_arff_url": "https://www.openml.org/data/download/1586233/phpmcGu2X",
+    "download_csv_url": "https://www.openml.org/data/get_csv/1586233/phpmcGu2X",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 1080,
+}
 
 # 8.1
-experiments_dict["sylvine"] = {}
-experiments_dict["sylvine"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/19335519/file7a97574fa9ae.arff"
-experiments_dict["sylvine"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/19335519/file7a97574fa9ae.arff"
-experiments_dict["sylvine"]["task_type"] = "classification"
-experiments_dict["sylvine"]["target"] = "class"
+experiments_dict["sylvine"] = {
+    "download_arff_url": "https://www.openml.org/data/download/19335519/file7a97574fa9ae.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/19335519/file7a97574fa9ae.arff",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 5124,
+}
 
 # 17
-experiments_dict["jungle_chess_2pcs_raw_endgame_complete"] = {}
-experiments_dict["jungle_chess_2pcs_raw_endgame_complete"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/18631418/jungle_chess_2pcs_raw_endgame_complete.arff"
-experiments_dict["jungle_chess_2pcs_raw_endgame_complete"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/18631418/jungle_chess_2pcs_raw_endgame_complete.arff"
-experiments_dict["jungle_chess_2pcs_raw_endgame_complete"][
-    "task_type"
-] = "classification"
-experiments_dict["jungle_chess_2pcs_raw_endgame_complete"]["target"] = "class"
+experiments_dict["jungle_chess_2pcs_raw_endgame_complete"] = {
+    "download_arff_url": "https://www.openml.org/data/download/18631418/jungle_chess_2pcs_raw_endgame_complete.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/18631418/jungle_chess_2pcs_raw_endgame_complete.arff",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 44819,
+}
 
 # 32
-experiments_dict["shuttle"] = {}
-experiments_dict["shuttle"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/4965262/shuttle.arff"
-experiments_dict["shuttle"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/4965262/shuttle.arff"
-experiments_dict["shuttle"]["task_type"] = "classification"
-experiments_dict["shuttle"]["target"] = "class"
+experiments_dict["shuttle"] = {
+    "download_arff_url": "https://www.openml.org/data/download/4965262/shuttle.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/4965262/shuttle.arff",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 58000,
+}
 
 # 55
-experiments_dict["jasmine"] = {}
-experiments_dict["jasmine"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/19335516/file79b563a1a18.arff"
-experiments_dict["jasmine"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/19335516/file79b563a1a18.arff"
-experiments_dict["jasmine"]["task_type"] = "classification"
-experiments_dict["jasmine"]["target"] = "class"
+experiments_dict["jasmine"] = {
+    "download_arff_url": "https://www.openml.org/data/download/19335516/file79b563a1a18.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/19335516/file79b563a1a18.arff",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 2984,
+}
 
 # 118
-experiments_dict["fabert"] = {}
-experiments_dict["fabert"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/19335687/file1c555f4ca44d.arff"
-experiments_dict["fabert"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/19335687/file1c555f4ca44d.arff"
-experiments_dict["fabert"]["task_type"] = "classification"
-experiments_dict["fabert"]["target"] = "class"
+experiments_dict["fabert"] = {
+    "download_arff_url": "https://www.openml.org/data/download/19335687/file1c555f4ca44d.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/19335687/file1c555f4ca44d.arff",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 8237,
+}
 
 # 226
-experiments_dict["helena"] = {}
-experiments_dict["helena"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/19335692/file1c556677f875.arff"
-experiments_dict["helena"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/19335692/file1c556677f875.arff"
-experiments_dict["helena"]["task_type"] = "classification"
-experiments_dict["helena"]["target"] = "class"
+experiments_dict["helena"] = {
+    "download_arff_url": "https://www.openml.org/data/download/19335692/file1c556677f875.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/19335692/file1c556677f875.arff",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 65196,
+}
 
 # 230
-experiments_dict["bank-marketing"] = {}
-experiments_dict["bank-marketing"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/1586218/phpkIxskf"
-experiments_dict["bank-marketing"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/1586218/phpkIxskf"
-experiments_dict["bank-marketing"]["task_type"] = "classification"
-experiments_dict["bank-marketing"]["target"] = "class"
+experiments_dict["bank-marketing"] = {
+    "download_arff_url": "https://www.openml.org/data/download/1586218/phpkIxskf",
+    "download_csv_url": "https://www.openml.org/data/get_csv/1586218/phpkIxskf",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 4521,
+}
 
 # 407
-experiments_dict["nomao"] = {}
-experiments_dict["nomao"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/1592278/phpDYCOet"
-experiments_dict["nomao"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/1592278/phpDYCOet"
-experiments_dict["nomao"]["task_type"] = "classification"
-experiments_dict["nomao"]["target"] = "class"
+experiments_dict["nomao"] = {
+    "download_arff_url": "https://www.openml.org/data/download/1592278/phpDYCOet",
+    "download_csv_url": "https://www.openml.org/data/get_csv/1592278/phpDYCOet",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 34465,
+}
 
 # 425
-experiments_dict["dilbert"] = {}
-experiments_dict["dilbert"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/19335686/file1c5552c0c4b0.arff"
-experiments_dict["dilbert"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/19335686/file1c5552c0c4b0.arff"
-experiments_dict["dilbert"]["task_type"] = "classification"
-experiments_dict["dilbert"]["target"] = "class"
+experiments_dict["dilbert"] = {
+    "download_arff_url": "https://www.openml.org/data/download/19335686/file1c5552c0c4b0.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/19335686/file1c5552c0c4b0.arff",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 10000,
+}
 
 # 442
-experiments_dict["numerai28.6"] = {}
-experiments_dict["numerai28.6"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/2160285/phpg2t68G"
-experiments_dict["numerai28.6"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/2160285/phpg2t68G"
-experiments_dict["numerai28.6"]["task_type"] = "classification"
-experiments_dict["numerai28.6"]["target"] = "attribute_21"
+experiments_dict["numerai28.6"] = {
+    "download_arff_url": "https://www.openml.org/data/download/2160285/phpg2t68G",
+    "download_csv_url": "https://www.openml.org/data/get_csv/2160285/phpg2t68G",
+    "task_type": "classification",
+    "target": "attribute_21",
+    "n_rows": 96320,
+}
 
 # 457
 experiments_dict["prnn_cushings"] = {
@@ -268,313 +226,258 @@ experiments_dict["prnn_cushings"] = {
     "target": "type",
     "download_arff_url": "https://www.openml.org/data/download/52569/prnn_cushings.arff",
     "download_csv_url": "https://www.openml.org/data/get_csv/52569/prnn_cushings.csv",
+    "n_rows": 27,
 }
 
 # 503
-experiments_dict["adult"] = {}
-experiments_dict["adult"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/1595261/phpMawTba"
-experiments_dict["adult"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/1595261/phpMawTba"
-experiments_dict["adult"]["task_type"] = "classification"
-experiments_dict["adult"]["target"] = "class"
+experiments_dict["adult"] = {
+    "download_arff_url": "https://www.openml.org/data/download/1595261/phpMawTba",
+    "download_csv_url": "https://www.openml.org/data/get_csv/1595261/phpMawTba",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 48842,
+}
 
 # 633
-experiments_dict["higgs"] = {}
-experiments_dict["higgs"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/2063675/phpZLgL9q"
-experiments_dict["higgs"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/2063675/phpZLgL9q"
-experiments_dict["higgs"]["task_type"] = "classification"
-experiments_dict["higgs"]["target"] = "class"
+experiments_dict["higgs"] = {
+    "download_arff_url": "https://www.openml.org/data/download/2063675/phpZLgL9q",
+    "download_csv_url": "https://www.openml.org/data/get_csv/2063675/phpZLgL9q",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 98050,
+}
 
 # 981
-experiments_dict["christine"] = {}
-experiments_dict["christine"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/19335515/file764d5d063390.arff"
-experiments_dict["christine"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/19335515/file764d5d063390.arff"
-experiments_dict["christine"]["task_type"] = "classification"
-experiments_dict["christine"]["target"] = "class"
+experiments_dict["christine"] = {
+    "download_arff_url": "https://www.openml.org/data/download/19335515/file764d5d063390.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/19335515/file764d5d063390.arff",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 5418,
+}
 
 # 1169
-experiments_dict["jannis"] = {}
-experiments_dict["jannis"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/19335691/file1c558ee247d.arff"
-experiments_dict["jannis"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/19335691/file1c558ee247d.arff"
-experiments_dict["jannis"]["task_type"] = "classification"
-experiments_dict["jannis"]["target"] = "class"
+experiments_dict["jannis"] = {
+    "download_arff_url": "https://www.openml.org/data/download/19335691/file1c558ee247d.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/19335691/file1c558ee247d.arff",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 83733,
+}
 
 # 1503
-experiments_dict["connect-4"] = {}
-experiments_dict["connect-4"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/4965243/connect-4.arff"
-experiments_dict["connect-4"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/4965243/connect-4.arff"
-experiments_dict["connect-4"]["task_type"] = "classification"
-experiments_dict["connect-4"]["target"] = "class"
+experiments_dict["connect-4"] = {
+    "download_arff_url": "https://www.openml.org/data/download/4965243/connect-4.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/4965243/connect-4.arff",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 67557,
+}
 
 # 1580
-experiments_dict["volkert"] = {}
-experiments_dict["volkert"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/19335689/file1c556e3db171.arff"
-experiments_dict["volkert"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/19335689/file1c556e3db171.arff"
-experiments_dict["volkert"]["task_type"] = "classification"
-experiments_dict["volkert"]["target"] = "class"
+experiments_dict["volkert"] = {
+    "download_arff_url": "https://www.openml.org/data/download/19335689/file1c556e3db171.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/19335689/file1c556e3db171.arff",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 58310,
+}
 
 # 2112
-experiments_dict["APSFailure"] = {}
-experiments_dict["APSFailure"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/19335511/aps_failure.arff"
-experiments_dict["APSFailure"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/19335511/aps_failure.arff"
-experiments_dict["APSFailure"]["task_type"] = "classification"
-experiments_dict["APSFailure"]["target"] = "class"
+experiments_dict["APSFailure"] = {
+    "download_arff_url": "https://www.openml.org/data/download/19335511/aps_failure.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/19335511/aps_failure.arff",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 76000,
+}
 
 # 3700
-experiments_dict["riccardo"] = {}
-experiments_dict["riccardo"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/19335534/file7b535210a7df.arff"
-experiments_dict["riccardo"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/19335534/file7b535210a7df.arff"
-experiments_dict["riccardo"]["task_type"] = "classification"
-experiments_dict["riccardo"]["target"] = "class"
+experiments_dict["riccardo"] = {
+    "download_arff_url": "https://www.openml.org/data/download/19335534/file7b535210a7df.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/19335534/file7b535210a7df.arff",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 20000,
+}
 
 # 3759
-experiments_dict["guillermo"] = {}
-experiments_dict["guillermo"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/19335532/file7b5323e77330.arff"
-experiments_dict["guillermo"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/19335532/file7b5323e77330.arff"
-experiments_dict["guillermo"]["task_type"] = "classification"
-experiments_dict["guillermo"]["target"] = "class"
+experiments_dict["guillermo"] = {
+    "download_arff_url": "https://www.openml.org/data/download/19335532/file7b5323e77330.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/19335532/file7b5323e77330.arff",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 20000,
+}
 
-experiments_dict["albert"] = {}
-experiments_dict["albert"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/19335520/file7b53746cbda2.arff"
-experiments_dict["albert"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/19335520/file7b53746cbda2.arff"
-experiments_dict["albert"]["task_type"] = "classification"
-experiments_dict["albert"]["target"] = "class"
+experiments_dict["albert"] = {
+    "download_arff_url": "https://www.openml.org/data/download/19335520/file7b53746cbda2.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/19335520/file7b53746cbda2.arff",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 425240,
+}
 
-experiments_dict["robert"] = {}
-experiments_dict["robert"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/19335688/file1c55384ec217.arff"
-experiments_dict["robert"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/19335688/file1c55384ec217.arff"
-experiments_dict["robert"]["task_type"] = "classification"
-experiments_dict["robert"]["target"] = "class"
+experiments_dict["robert"] = {
+    "download_arff_url": "https://www.openml.org/data/download/19335688/file1c55384ec217.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/19335688/file1c55384ec217.arff",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 10000,
+}
 
-experiments_dict["covertype"] = {}
-experiments_dict["covertype"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/1601911/phpQOf0wY"
-experiments_dict["covertype"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/1601911/phpQOf0wY"
-experiments_dict["covertype"]["task_type"] = "classification"
-experiments_dict["covertype"]["target"] = "class"
+experiments_dict["covertype"] = {
+    "download_arff_url": "https://www.openml.org/data/download/1601911/phpQOf0wY",
+    "download_csv_url": "https://www.openml.org/data/get_csv/1601911/phpQOf0wY",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 581012,
+}
 
 # This dataset doesn't work with the pre-processing pipeline coded below, as the SimpleImputer drops some columns
 # which have all missing values. There is no easy way to pass this info to the downstream ColumnTransformer.
 # experiments_dict['KDDCup09_appetency'] = {}
-# experiments_dict['KDDCup09_appetency']['download_arff_url'] = 'https://www.openml.org/data/download/53994/KDDCup09_appetency.arff'
-# experiments_dict['KDDCup09_appetency']['download_csv_url'] = 'https://www.openml.org/data/get_csv/53994/KDDCup09_appetency.arff'
-# experiments_dict['KDDCup09_appetency']['task_type'] = 'classification'
-# experiments_dict['KDDCup09_appetency']['target'] = 'appetency'
+#     'download_arff_url'] = 'https://www.openml.org/data/download/53994/KDDCup09_appetency.arff'
+#     'download_csv_url'] = 'https://www.openml.org/data/get_csv/53994/KDDCup09_appetency.arff'
+#     'task_type'] = 'classification'
+#     'target'] = 'appetency'
 
-experiments_dict["Amazon_employee_access"] = {}
-experiments_dict["Amazon_employee_access"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/1681098/phpmPOD5A"
-experiments_dict["Amazon_employee_access"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/1681098/phpmPOD5A"
-experiments_dict["Amazon_employee_access"]["task_type"] = "classification"
-experiments_dict["Amazon_employee_access"]["target"] = "target"
+experiments_dict["Amazon_employee_access"] = {
+    "download_arff_url": "https://www.openml.org/data/download/1681098/phpmPOD5A",
+    "download_csv_url": "https://www.openml.org/data/get_csv/1681098/phpmPOD5A",
+    "task_type": "classification",
+    "target": "target",
+    "n_rows": 32769,
+}
 
-experiments_dict["Fashion-MNIST"] = {}
-experiments_dict["Fashion-MNIST"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/18238735/phpnBqZGZ"
-experiments_dict["Fashion-MNIST"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/18238735/phpnBqZGZ"
-experiments_dict["Fashion-MNIST"]["task_type"] = "classification"
-experiments_dict["Fashion-MNIST"]["target"] = "class"
+experiments_dict["Fashion-MNIST"] = {
+    "download_arff_url": "https://www.openml.org/data/download/18238735/phpnBqZGZ",
+    "download_csv_url": "https://www.openml.org/data/get_csv/18238735/phpnBqZGZ",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 70000,
+}
 
-experiments_dict["dionis"] = {}
-experiments_dict["dionis"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/19335690/file1c55272d7b5b.arff"
-experiments_dict["dionis"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/19335690/file1c55272d7b5b.arff"
-experiments_dict["dionis"]["task_type"] = "classification"
-experiments_dict["dionis"]["target"] = "class"
+experiments_dict["dionis"] = {
+    "download_arff_url": "https://www.openml.org/data/download/19335690/file1c55272d7b5b.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/19335690/file1c55272d7b5b.arff",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 416188,
+}
 
-experiments_dict["MiniBooNE"] = {}
-experiments_dict["MiniBooNE"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/19335523/MiniBooNE.arff"
-experiments_dict["MiniBooNE"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/19335523/MiniBooNE.arff"
-experiments_dict["MiniBooNE"]["task_type"] = "classification"
-experiments_dict["MiniBooNE"]["target"] = "signal"
+experiments_dict["MiniBooNE"] = {
+    "download_arff_url": "https://www.openml.org/data/download/19335523/MiniBooNE.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/19335523/MiniBooNE.arff",
+    "task_type": "classification",
+    "target": "signal",
+    "n_rows": 130064,
+}
 
-experiments_dict["airlines"] = {}
-experiments_dict["airlines"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/66526/phpvcoG8S"
-experiments_dict["airlines"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/66526/phpvcoG8S"
-experiments_dict["airlines"]["task_type"] = "stream classification"
-experiments_dict["airlines"]["target"] = "class"
+experiments_dict["airlines"] = {
+    "download_arff_url": "https://www.openml.org/data/download/66526/phpvcoG8S",
+    "download_csv_url": "https://www.openml.org/data/get_csv/66526/phpvcoG8S",
+    "task_type": "stream classification",
+    "target": "class",
+    "n_rows": 539383,
+}
 
-experiments_dict["diabetes"] = {}
-experiments_dict["diabetes"]["dataset_url"] = "https://www.openml.org/d/37"
-experiments_dict["diabetes"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/37/dataset_37_diabetes.arff"
-experiments_dict["diabetes"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/37/dataset_37_diabetes.arff"
-experiments_dict["diabetes"]["task_type"] = "classification"
-experiments_dict["diabetes"]["target"] = "class"
+experiments_dict["diabetes"] = {
+    "dataset_url": "https://www.openml.org/d/37",
+    "download_arff_url": "https://www.openml.org/data/download/37/dataset_37_diabetes.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/37/dataset_37_diabetes.arff",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 768,
+}
 
-experiments_dict["spectf"] = {}
-experiments_dict["spectf"]["dataset_url"] = "https://www.openml.org/d/337"
-experiments_dict["spectf"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/52240/phpDQbeeh"
-experiments_dict["spectf"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/52240/phpDQbeeh"
-experiments_dict["spectf"]["task_type"] = "classification"
-experiments_dict["spectf"]["target"] = "overall_diagnosis"
+experiments_dict["spectf"] = {
+    "dataset_url": "https://www.openml.org/d/337",
+    "download_arff_url": "https://www.openml.org/data/download/52240/phpDQbeeh",
+    "download_csv_url": "https://www.openml.org/data/get_csv/52240/phpDQbeeh",
+    "task_type": "classification",
+    "target": "overall_diagnosis",
+    "n_rows": 267,
+}
 
-experiments_dict["hill-valley"] = {}
-experiments_dict["hill-valley"]["dataset_url"] = "https://www.openml.org/d/1479"
-experiments_dict["hill-valley"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/1590101/php3isjYz"
-experiments_dict["hill-valley"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/1590101/php3isjYz"
-experiments_dict["hill-valley"]["task_type"] = "classification"
-experiments_dict["hill-valley"]["target"] = "class"
+experiments_dict["hill-valley"] = {
+    "dataset_url": "https://www.openml.org/d/1479",
+    "download_arff_url": "https://www.openml.org/data/download/1590101/php3isjYz",
+    "download_csv_url": "https://www.openml.org/data/get_csv/1590101/php3isjYz",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 1212,
+}
 
-experiments_dict["breast-cancer"] = {}
-experiments_dict["breast-cancer"]["dataset_url"] = "https://www.openml.org/d/13"
-experiments_dict["breast-cancer"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/13/dataset_13_breast-cancer.arff"
-experiments_dict["breast-cancer"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/13/dataset_13_breast-cancer.arff"
-experiments_dict["breast-cancer"]["task_type"] = "classification"
-experiments_dict["breast-cancer"]["target"] = "class"
+experiments_dict["breast-cancer"] = {
+    "dataset_url": "https://www.openml.org/d/13",
+    "download_arff_url": "https://www.openml.org/data/download/13/dataset_13_breast-cancer.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/13/dataset_13_breast-cancer.arff",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 286,
+}
 
-experiments_dict["compas"] = {}
-experiments_dict["compas"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/21757035/compas.arff"
-experiments_dict["compas"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/21757035/compas.arff"
-experiments_dict["compas"]["task_type"] = "classification"
-experiments_dict["compas"]["target"] = "two_year_recid"
+experiments_dict["compas"] = {
+    "download_arff_url": "https://www.openml.org/data/download/21757035/compas.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/21757035/compas.arff",
+    "task_type": "classification",
+    "target": "two_year_recid",
+    "n_rows": 5278,
+}
 
-experiments_dict["ricci"] = {}
-experiments_dict["ricci"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/22044446/ricci_processed.arff"
-experiments_dict["ricci"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/22044446/ricci_processed.arff"
-experiments_dict["ricci"]["task_type"] = "classification"
-experiments_dict["ricci"]["target"] = "promotion"
+experiments_dict["ricci"] = {
+    "download_arff_url": "https://www.openml.org/data/download/22044446/ricci_processed.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/22044446/ricci_processed.arff",
+    "task_type": "classification",
+    "target": "promotion",
+    "n_rows": 118,
+}
 
-experiments_dict["SpeedDating"] = {}
-experiments_dict["SpeedDating"]["dataset_url"] = "https://www.openml.org/d/40536"
-experiments_dict["SpeedDating"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/13153954/speeddating.arff"
-experiments_dict["SpeedDating"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/13153954/speeddating.arff"
-experiments_dict["SpeedDating"]["task_type"] = "classification"
-experiments_dict["SpeedDating"]["target"] = "match"
+experiments_dict["SpeedDating"] = {
+    "dataset_url": "https://www.openml.org/d/40536",
+    "download_arff_url": "https://www.openml.org/data/download/13153954/speeddating.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/13153954/speeddating.arff",
+    "task_type": "classification",
+    "target": "match",
+    "n_rows": 8378,
+}
 
-experiments_dict["nursery"] = {}
-experiments_dict["nursery"]["dataset_url"] = "https://www.openml.org/d/26"
-experiments_dict["nursery"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/26/dataset_26_nursery.arff"
-experiments_dict["nursery"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/26/dataset_26_nursery.arff"
-experiments_dict["nursery"]["task_type"] = "classification"
-experiments_dict["nursery"]["target"] = "class"
+experiments_dict["nursery"] = {
+    "dataset_url": "https://www.openml.org/d/26",
+    "download_arff_url": "https://www.openml.org/data/download/26/dataset_26_nursery.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/26/dataset_26_nursery.arff",
+    "task_type": "classification",
+    "target": "class",
+    "n_rows": 12960,
+}
 
-experiments_dict["titanic"] = {}
-experiments_dict["titanic"]["dataset_url"] = "https://www.openml.org/d/40945"
-experiments_dict["titanic"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/16826755/phpMYEkMl"
-experiments_dict["titanic"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/16826755/phpMYEkMl"
-experiments_dict["titanic"]["task_type"] = "classification"
-experiments_dict["titanic"]["target"] = "survived"
+experiments_dict["titanic"] = {
+    "dataset_url": "https://www.openml.org/d/40945",
+    "download_arff_url": "https://www.openml.org/data/download/16826755/phpMYEkMl",
+    "download_csv_url": "https://www.openml.org/data/get_csv/16826755/phpMYEkMl",
+    "task_type": "classification",
+    "target": "survived",
+    "n_rows": 1309,
+}
 
-experiments_dict["tae"] = {}
-experiments_dict["tae"]["dataset_url"] = "https://www.openml.org/d/48"
-experiments_dict["tae"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/48/dataset_48_tae.arff"
-experiments_dict["tae"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/48/dataset_48_tae.arff"
-experiments_dict["tae"]["task_type"] = "classification"
-experiments_dict["tae"]["target"] = "class_attribute"
+experiments_dict["tae"] = {
+    "dataset_url": "https://www.openml.org/d/48",
+    "download_arff_url": "https://www.openml.org/data/download/48/dataset_48_tae.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/48/dataset_48_tae.arff",
+    "task_type": "classification",
+    "target": "class_attribute",
+    "n_rows": 151,
+}
 
-experiments_dict["airlines_delay"] = {}
-experiments_dict["airlines_delay"]["dataset_url"] = "https://www.openml.org/d/42728"
-experiments_dict["airlines_delay"][
-    "download_arff_url"
-] = "https://www.openml.org/data/download/22044760/airlines_train_regression_10000000.arff"
-experiments_dict["airlines_delay"][
-    "download_csv_url"
-] = "https://www.openml.org/data/get_csv/22044760/airlines_train_regression_10000000.arff"
-experiments_dict["airlines_delay"]["task_type"] = "regression"
-experiments_dict["airlines_delay"]["target"] = "depdelay"
+experiments_dict["airlines_delay"] = {
+    "dataset_url": "https://www.openml.org/d/42728",
+    "download_arff_url": "https://www.openml.org/data/download/22044760/airlines_train_regression_10000000.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/22044760/airlines_train_regression_10000000.arff",
+    "task_type": "regression",
+    "target": "depdelay",
+    "n_rows": 10000000,
+}
 
 
 def add_schemas(schema_orig, target_col, train_X, test_X, train_y, test_y):
@@ -647,6 +550,22 @@ def add_schemas(schema_orig, target_col, train_X, test_X, train_y, test_y):
 numeric_data_types_list = ["numeric", "integer", "real"]
 
 
+def download_if_missing(dataset_name, verbose=False):
+    file_name = os.path.join(download_data_dir, dataset_name + ".arff")
+    is_missing = not os.path.exists(file_name)
+    if verbose:
+        print(
+            f"download_if_missing('{dataset_name}'): is_missing {is_missing}, file_name '{file_name}'"
+        )
+    if is_missing:
+        if not os.path.exists(download_data_dir):
+            os.makedirs(download_data_dir)
+        url = cast(str, experiments_dict[dataset_name]["download_arff_url"])
+        urllib.request.urlretrieve(url, file_name)
+    assert os.path.exists(file_name)
+    return file_name
+
+
 def fetch(
     dataset_name,
     task_type,
@@ -656,8 +575,6 @@ def fetch(
     astype=None,
     seed=0,
 ):
-    if verbose:
-        print("Loading dataset:", dataset_name)
     # Check that the dataset name exists in experiments_dict
     try:
         if experiments_dict[dataset_name]["task_type"] != task_type.lower():
@@ -666,25 +583,12 @@ def fetch(
                     task_type, experiments_dict[dataset_name]["task_type"]
                 )
             )
-
     except KeyError:
         raise KeyError(
             "Dataset name {} not found in the supported datasets".format(dataset_name)
         )
-    data_file_name = os.path.join(download_data_dir, dataset_name + ".arff")
-    if verbose:
-        print(f"data file name: {data_file_name}")
-    if not os.path.exists(data_file_name):
-        # TODO: Download the data
-        if not os.path.exists(download_data_dir):
-            os.makedirs(download_data_dir)
-            if verbose:
-                print("created directory {}".format(download_data_dir))
-        urllib.request.urlretrieve(
-            experiments_dict[dataset_name]["download_arff_url"], data_file_name
-        )
 
-    assert os.path.exists(data_file_name)
+    data_file_name = download_if_missing(dataset_name, verbose)
     with open(data_file_name) as f:
         dataDictionary = arff.load(f)
         f.close()

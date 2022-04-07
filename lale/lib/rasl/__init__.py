@@ -75,6 +75,7 @@ Other Facilities
 * lale.lib.rasl. `is_associative`_
 * lale.lib.rasl. `is_incremental`_
 * lale.lib.rasl. `mockup_data_loader`_
+* lale.lib.rasl. `openml_data_loader`_
 * lale.lib.rasl. `r2_score`_
 
 .. _`Aggregate`: lale.lib.rasl.aggregate.html
@@ -119,6 +120,7 @@ Other Facilities
 .. _`is_associative`: lale.lib.rasl.is_associative.html
 .. _`is_incremental`: lale.lib.rasl.is_incremental.html
 .. _`mockup_data_loader`: lale.lib.rasl.mockup_data_loader.html
+.. _`openml_data_loader`: lale.lib.rasl.openml_data_loader.html
 .. _`r2_score`: lale.lib.rasl.r2_score.html
 
 """
@@ -133,7 +135,6 @@ from ._task_graphs import (
     fit_with_batches,
     is_associative,
     is_incremental,
-    mockup_data_loader,
 )
 from .aggregate import Aggregate
 from .alias import Alias
@@ -141,6 +142,7 @@ from .batched_bagging_classifier import BatchedBaggingClassifier
 from .batching import Batching
 from .concat_features import ConcatFeatures
 from .convert import Convert
+from .datasets import mockup_data_loader, openml_data_loader
 from .filter import Filter
 from .functions import categorical, date_time
 from .group_by import GroupBy
