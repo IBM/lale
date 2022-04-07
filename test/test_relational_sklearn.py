@@ -67,7 +67,7 @@ from lale.lib.rasl import cross_val_score as rasl_cross_val_score
 from lale.lib.rasl import cross_validate as rasl_cross_validate
 from lale.lib.rasl import fit_with_batches
 from lale.lib.rasl import get_scorer as rasl_get_scorer
-from lale.lib.rasl import mockup_data_loader
+from lale.lib.rasl import mockup_data_loader, openml_data_loader
 from lale.lib.rasl import r2_score as rasl_r2_score
 from lale.lib.sklearn import (
     DecisionTreeClassifier,
@@ -78,6 +78,21 @@ from lale.lib.sklearn import (
 from lale.operators import TrainedPipeline
 
 assert sklearn.__version__ >= "1.0", sklearn.__version__
+
+
+class TestDatasets(unittest.TestCase):
+    def test_openml_creditg_arff(self):
+        batches = openml_data_loader("credit-g", 3)
+        n_rows = 0
+        n_batches = 0
+        for bX, by in batches:
+            n_batches += 1
+            n_rows_batch, n_columns_batch = bX.shape
+            n_rows += n_rows_batch
+            self.assertEqual(n_rows_batch, len(by))
+            self.assertEqual(n_columns_batch, 20)
+        self.assertEqual(n_batches, 3)
+        self.assertEqual(n_rows, 1000)
 
 
 def _check_trained_min_max_scaler(test, op1, op2, msg):

@@ -22,8 +22,10 @@ import lale.operators
 import lale.type_checking
 from lale.expressions import it
 from lale.lib.dataframe import column_index, get_columns
-from lale.lib.rasl import Map, Monoid, MonoidFactory
 from lale.type_checking import is_schema, validate_is_schema
+
+from .map import Map
+from .monoid import Monoid, MonoidFactory
 
 
 def _columns_schema_to_list(X, schema) -> List[column_index]:

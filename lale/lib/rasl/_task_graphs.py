@@ -37,13 +37,10 @@ from typing import (
 import graphviz
 import numpy as np
 import pandas as pd
-import sklearn.model_selection
-import sklearn.tree
 
-import lale.helpers
 import lale.json_operator
 import lale.pretty_print
-from lale.datasets import pandas2spark
+from lale.helpers import spark_installed
 from lale.operators import (
     TrainableIndividualOp,
     TrainablePipeline,
@@ -53,6 +50,9 @@ from lale.operators import (
 
 from .metrics import MetricMonoid, MetricMonoidFactory
 from .monoid import Monoid, MonoidFactory
+
+if spark_installed:
+    from pyspark.sql.dataframe import DataFrame as SparkDataFrame
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
@@ -165,26 +165,8 @@ class _TrainTask(_Task):
         return self.trained
 
 
-if lale.helpers.spark_installed:
-    from pyspark.sql.dataframe import DataFrame as SparkDataFrame
-
-    _DataFrame = Union[pd.DataFrame, SparkDataFrame]
-    _Series = Union[pd.Series, SparkDataFrame]
-    _RawBatch = Union[
-        Tuple[pd.DataFrame, pd.Series],
-        Tuple[SparkDataFrame, SparkDataFrame],
-    ]
-else:
-    _DataFrame = pd.DataFrame  # type: ignore
-    _Series = pd.Series  # type: ignore
-    _RawBatch = Tuple[pd.DataFrame, pd.Series]  # type: ignore
-
-
 class _Batch:
-    X: Union[_DataFrame, pathlib.Path]
-    y: Union[_Series, pathlib.Path]
-
-    def __init__(self, X: _DataFrame, y: _Series, task: Optional["_ApplyTask"]):
+    def __init__(self, X, y, task: Optional["_ApplyTask"]):
         self.X = X
         self.y = y
         self.task = task
@@ -241,23 +223,15 @@ class _Batch:
         return f"{self.task.step_id}_{batch_id}_{self.task.held_out}"
 
     @property
-    def Xy(self) -> _RawBatch:
+    def Xy(self) -> Tuple[Any, Any]:
         assert self.status == _BatchStatus.RESIDENT
         return self.X, self.y
 
     @property
     def status(self) -> _BatchStatus:
-        if isinstance(self.X, pd.DataFrame) and isinstance(self.y, pd.Series):
-            return _BatchStatus.RESIDENT
-        if isinstance(self.X, SparkDataFrame) and isinstance(self.y, SparkDataFrame):
-            return _BatchStatus.RESIDENT
         if isinstance(self.X, pathlib.Path) and isinstance(self.y, pathlib.Path):
             return _BatchStatus.SPILLED
-        if isinstance(self.X, np.ndarray) and isinstance(self.y, pd.Series):
-            return _BatchStatus.RESIDENT
-        if isinstance(self.X, np.ndarray) and isinstance(self.y, np.ndarray):
-            return _BatchStatus.RESIDENT
-        assert False, (type(self.X), type(self.y))
+        return _BatchStatus.RESIDENT
 
 
 class _ApplyTask(_Task):
@@ -896,7 +870,7 @@ class _BatchCache:
 def _run_tasks_inner(
     tasks: Dict[_MemoKey, _Task],
     pipeline: TrainablePipeline[TrainableIndividualOp],
-    batches: Iterable[_RawBatch],
+    batches: Iterable[Tuple[Any, Any]],
     scoring: Optional[MetricMonoidFactory],
     unique_class_labels: List[Union[str, int, float]],
     all_batch_ids: Tuple[str, ...],
@@ -998,7 +972,7 @@ def _run_tasks_inner(
                 input_X = [cast(_Batch, pred.batch).X for pred in apply_preds]
                 # The assumption is that input_y is not changed by the preds, so we can
                 # use it from any one of them.
-                input_y = cast(_Series, cast(_Batch, apply_preds[0].batch).y)
+                input_y = cast(_Batch, apply_preds[0].batch).y
             no_spill_set = cast(Set[_Batch], set(t.batch for t in apply_preds))
             cache.ensure_space(cache.estimate_space(task), no_spill_set)
             if operation is _Operation.TRANSFORM:
@@ -1010,7 +984,12 @@ def _run_tasks_inner(
             else:
                 y_pred = trained.predict(input_X)
                 if isinstance(y_pred, np.ndarray):
-                    y_pred = pd.Series(y_pred, input_y.index, input_y.dtype, "y_pred")
+                    y_pred = pd.Series(
+                        y_pred,
+                        cast(pd.Series, input_y).index,
+                        cast(pd.Series, input_y).dtype,
+                        "y_pred",
+                    )
                 task.batch = _Batch(input_X, y_pred, task)
         elif operation is _Operation.FIT:
             assert isinstance(task, _TrainTask)
@@ -1032,7 +1011,9 @@ def _run_tasks_inner(
                     if all(isinstance(X, pd.DataFrame) for X in list_X):
                         input_X = pd.concat(list_X)
                         input_y = pd.concat(list_y)
-                    elif all(isinstance(X, SparkDataFrame) for X in list_X):
+                    elif spark_installed and all(
+                        isinstance(X, SparkDataFrame) for X in list_X
+                    ):
                         input_X = functools.reduce(lambda a, b: a.union(b), list_X)  # type: ignore
                         input_y = functools.reduce(lambda a, b: a.union(b), list_y)  # type: ignore
                     elif all(isinstance(X, np.ndarray) for X in list_X):
@@ -1115,7 +1096,7 @@ def _run_tasks_inner(
 def _run_tasks(
     tasks: Dict[_MemoKey, _Task],
     pipeline: TrainablePipeline[TrainableIndividualOp],
-    batches: Iterable[_RawBatch],
+    batches: Iterable[Tuple[Any, Any]],
     scoring: Optional[MetricMonoidFactory],
     unique_class_labels: List[Union[str, int, float]],
     all_batch_ids: Tuple[str, ...],
@@ -1139,24 +1120,6 @@ def _run_tasks(
             progress_callback,
             call_depth + 1,
         )
-
-
-def mockup_data_loader(
-    X: pd.DataFrame, y: pd.Series, n_splits: int, astype: str
-) -> Iterable[_RawBatch]:
-    if n_splits == 1:
-        return [(X, y)]
-    cv = sklearn.model_selection.KFold(n_splits)
-    estimator = sklearn.tree.DecisionTreeClassifier()
-    pandas_gen = (
-        lale.helpers.split_with_schemas(estimator, X, y, test, train)
-        for train, test in cv.split(X, y)
-    )  # generator expression returns object with __iter__() method
-    if astype == "pandas":
-        return pandas_gen
-    elif astype == "spark":
-        return ((pandas2spark(X), pandas2spark(y)) for X, y in pandas_gen)
-    raise ValueError(f"expected astype in ['pandas', 'spark'], got {astype}")
 
 
 def _clear_tasks_dict(tasks: Dict[_MemoKey, _Task]):
@@ -1197,7 +1160,7 @@ def _extract_trained_pipeline(
 
 def fit_with_batches(
     pipeline: TrainablePipeline[TrainableIndividualOp],
-    batches: Iterable[_RawBatch],
+    batches: Iterable[Tuple[Any, Any]],
     n_batches: int,
     scoring: Optional[MetricMonoidFactory],
     unique_class_labels: List[Union[str, int, float]],
@@ -1251,7 +1214,7 @@ def _extract_scores(
 
 def cross_val_score(
     pipeline: TrainablePipeline[TrainableIndividualOp],
-    batches: Iterable[_RawBatch],
+    batches: Iterable[Tuple[Any, Any]],
     n_batches: int,
     n_folds: int,
     n_batches_per_fold: int,
@@ -1292,7 +1255,7 @@ def cross_val_score(
 
 def cross_validate(
     pipeline: TrainablePipeline[TrainableIndividualOp],
-    batches: Iterable[_RawBatch],
+    batches: Iterable[Tuple[Any, Any]],
     n_batches: int,
     n_folds: int,
     n_batches_per_fold: int,
