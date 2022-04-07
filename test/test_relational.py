@@ -1069,71 +1069,73 @@ class TestJoin(unittest.TestCase):
             pred=[it.info.idx == it.main.idx, it.info.idx == it.t1.idx],
             join_type="inner",
         )
-        df1 = pandas2spark(
-            _set_index_name(self.tgt2datasets["pandas"]["df1"], "idx"), with_index=True
-        )
-        df2 = pandas2spark(
-            _set_index_name(self.tgt2datasets["pandas"]["df2"], "idx"), with_index=True
-        )
-        df3 = pandas2spark(
-            _set_index_name(self.tgt2datasets["pandas"]["df3"], "idx"), with_index=True
-        )
-        transformed_df = trainable.transform([df1, df2, df3])
-        transformed_df = _ensure_pandas(transformed_df)
-        transformed_df = transformed_df.sort_values(by="TrainId").reset_index(drop=True)
-        self.assertEqual(transformed_df.shape, (3, 8))
-        self.assertEqual(transformed_df["col5"][1], "Cold")
+        df1 = _set_index_name(self.tgt2datasets["pandas"]["df1"], "idx")
+        df2 = _set_index_name(self.tgt2datasets["pandas"]["df2"], "idx")
+        df3 = _set_index_name(self.tgt2datasets["pandas"]["df3"], "idx")
+        for tgt in [ "spark-with-index" ]:
+            if tgt == "spark-with-index":
+                df1 = pandas2spark(df1, with_index=True)
+                df2 = pandas2spark(df2, with_index=True)
+                df3 = pandas2spark(df3, with_index=True)
+            transformed_df = trainable.transform([df1, df2, df3])
+            transformed_df = _ensure_pandas(transformed_df)
+            self.assertEqual(transformed_df.index.name, "idx", tgt)
+            transformed_df = transformed_df.sort_values(by="TrainId").reset_index(drop=True)
+            self.assertEqual(transformed_df.shape, (3, 8), tgt)
+            self.assertEqual(transformed_df["col5"][1], "Cold", tgt)
+
 
     def test_join_one_index_right(self):
         trainable = Join(
             pred=[it.info.TrainId == it.main.train_id, it.info.TrainId == it.t1.tid],
             join_type="inner",
         )
-        df1 = pandas2spark(
-            _set_index(self.tgt2datasets["pandas"]["df1"], "train_id"),
-            with_index=True,
-        )
-        df2 = pandas2spark(self.tgt2datasets["pandas"]["df2"])
-        df3 = pandas2spark(self.tgt2datasets["pandas"]["df3"])
-        transformed_df = trainable.transform([df1, df2, df3])
-        transformed_df = _ensure_pandas(transformed_df)
-        transformed_df = transformed_df.sort_values(by="TrainId").reset_index(drop=True)
-        self.assertEqual(transformed_df.shape, (3, 7))
-        self.assertEqual(transformed_df["col5"][1], "Cold")
+        df1 = _set_index(self.tgt2datasets["pandas"]["df1"], "train_id")
+        df2 = self.tgt2datasets["pandas"]["df2"]
+        df3 = self.tgt2datasets["pandas"]["df3"]
+        for tgt in [ "spark-with-index" ]:
+            if tgt == "spark-with-index":
+                df1 = pandas2spark(df1, with_index=True)
+                df2 = pandas2spark(df2, with_index=True)
+                df3 = pandas2spark(df3)
+            transformed_df = trainable.transform([df1, df2, df3])
+            transformed_df = _ensure_pandas(transformed_df)
+            transformed_df = transformed_df.sort_values(by="TrainId").reset_index(drop=True)
+            self.assertEqual(transformed_df.shape, (3, 7))
+            self.assertEqual(transformed_df["col5"][1], "Cold")
 
     def test_join_one_index_left(self):
         trainable = Join(
             pred=[it.main.train_id == it.info.TrainId, it.info.TrainId == it.t1.tid],
             join_type="inner",
         )
-        df1 = pandas2spark(
-            _set_index(self.tgt2datasets["pandas"]["df1"], "train_id"),
-            with_index=True,
-        )
-        df2 = pandas2spark(self.tgt2datasets["pandas"]["df2"])
-        df3 = pandas2spark(self.tgt2datasets["pandas"]["df3"])
-        transformed_df = trainable.transform([df1, df2, df3])
-        transformed_df = _ensure_pandas(transformed_df)
-        transformed_df = transformed_df.sort_values(by="TrainId").reset_index(drop=True)
-        self.assertEqual(transformed_df.shape, (3, 7))
-        self.assertEqual(transformed_df["col5"][1], "Cold")
+        df1 = _set_index(self.tgt2datasets["pandas"]["df1"], "train_id")
+        df2 = self.tgt2datasets["pandas"]["df2"]
+        df3 = self.tgt2datasets["pandas"]["df3"]
+        for tgt in [ "spark-with-index" ]:
+            if tgt == "spark-with-index":
+                df1 = pandas2spark(df1, with_index=True)
+                df2 = pandas2spark(df2, with_index=True)
+                df3 = pandas2spark(df3)
+            transformed_df = trainable.transform([df1, df2, df3])
+            transformed_df = _ensure_pandas(transformed_df)
+            transformed_df = transformed_df.sort_values(by="TrainId").reset_index(drop=True)
+            self.assertEqual(transformed_df.shape, (3, 7))
+            self.assertEqual(transformed_df["col5"][1], "Cold")
 
     def test_join_index_multiple_names(self):
         trainable = Join(
             pred=[it.info.TrainId == it.main.train_id, it.info.TrainId == it.t1.tid],
             join_type="inner",
         )
-        df1 = pandas2spark(
-            _set_index(self.tgt2datasets["pandas"]["df1"], "train_id"),
-            with_index=True,
-        )
-        df2 = pandas2spark(
-            _set_index(self.tgt2datasets["pandas"]["df2"], "TrainId"),
-            with_index=True,
-        )
-        df3 = pandas2spark(
-            _set_index(self.tgt2datasets["pandas"]["df3"], "tid"), with_index=True
-        )
+        df1 = _set_index(self.tgt2datasets["pandas"]["df1"], "train_id")
+        df2 = _set_index(self.tgt2datasets["pandas"]["df2"], "TrainId")
+        df3 = _set_index(self.tgt2datasets["pandas"]["df3"], "tid")
+        for tgt in [ "spark-with-index" ]:
+            if tgt == "spark-with-index":
+                df1 = pandas2spark(df1, with_index=True)
+                df2 = pandas2spark(df2, with_index=True)
+                df3 = pandas2spark(df3, with_index=True)
         transformed_df = trainable.transform([df1, df2, df3])
         transformed_df = _ensure_pandas(transformed_df)
         transformed_df = transformed_df.sort_values(by="TrainId").reset_index(drop=True)
