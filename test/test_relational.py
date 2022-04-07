@@ -540,7 +540,7 @@ class TestAggregate(unittest.TestCase):
         targets = ["pandas", "spark", "spark-with-index"]
         cls.tgt2datasets = {tgt: fetch_go_sales_dataset(tgt) for tgt in targets}
 
-    def test_sales_not_grouped(self):
+    def test_sales_not_grouped_single_col(self):
         pipeline = Scan(table=it.go_daily_sales) >> Aggregate(
             columns={
                 "min_method_code": min(it["Order method code"]),
@@ -566,6 +566,38 @@ class TestAggregate(unittest.TestCase):
             )
             self.assertEqual(result.loc[0, "mode_method_code"], 5, tgt)
             self.assertEqual(result.loc[0, "median_method_code"], 5, tgt)
+
+    def test_sales_not_grouped_single_func(self):
+        pipeline = Aggregate(
+            columns={
+                "max_method_code": max(it["Order method code"]),
+                "max_method_type": max(it["Order method type"]),
+            }
+        )
+        for tgt, datasets in self.tgt2datasets.items():
+            result = pipeline.transform(datasets[2])
+            if tgt.startswith("spark"):
+                result = result.toPandas()
+            self.assertEqual(result.shape, (1, 2), tgt)
+            self.assertEqual(result.loc[0, "max_method_code"], 12, tgt)
+            self.assertEqual(result.loc[0, "max_method_type"], "Web", tgt)
+
+    def test_sales_multi_col_not_grouped(self):
+        pipeline = Aggregate(
+            columns={
+                "min_method_code": min(it["Order method code"]),
+                "max_method_code": max(it["Order method code"]),
+                "max_method_type": max(it["Order method type"]),
+            }
+        )
+        for tgt, datasets in self.tgt2datasets.items():
+            result = pipeline.transform(datasets[2])
+            if tgt.startswith("spark"):
+                result = result.toPandas()
+            self.assertEqual(result.shape, (1, 3), tgt)
+            self.assertEqual(result.loc[0, "min_method_code"], 1, tgt)
+            self.assertEqual(result.loc[0, "max_method_code"], 12, tgt)
+            self.assertEqual(result.loc[0, "max_method_type"], "Web", tgt)
 
     def test_sales_onekey_grouped(self):
         pipeline = (
@@ -599,6 +631,52 @@ class TestAggregate(unittest.TestCase):
             )
             # self.assertEqual(result.loc[row.index[0], "mode_method_code"], 5, tgt)
             self.assertEqual(result.loc[row.index[0], "median_method_code"], 5, tgt)
+            self.assertEqual(result.index.name, "Retailer code", tgt)
+
+    def test_sales_onekey_grouped_single_col(self):
+        pipeline = (
+            Scan(table=it.go_daily_sales)
+            >> GroupBy(by=[it["Retailer code"]])
+            >> Aggregate(
+                columns={
+                    "min_method_code": min(it["Order method code"]),
+                    "max_method_code": max(it["Order method code"]),
+                    "method_codes": collect_set(it["Order method code"]),
+                    "median_method_code": median(it["Order method code"]),
+                }
+            )
+        )
+        for tgt, datasets in self.tgt2datasets.items():
+            result = pipeline.transform(datasets)
+            if tgt.startswith("spark"):
+                result = result.toPandas()
+            self.assertEqual(result.shape, (289, 4))
+            self.assertEqual(result.loc[1201, "min_method_code"], 2, tgt)
+            self.assertEqual(result.loc[1201, "max_method_code"], 6, tgt)
+            self.assertEqual(
+                sorted(result.loc[1201, "method_codes"]), [2, 3, 4, 5, 6], tgt
+            )
+            self.assertEqual(result.loc[1201, "median_method_code"], 5, tgt)
+            self.assertEqual(result.index.name, "Retailer code", tgt)
+
+    def test_sales_onekey_grouped_single_func(self):
+        pipeline = (
+            Scan(table=it.go_daily_sales)
+            >> GroupBy(by=[it["Retailer code"]])
+            >> Aggregate(
+                columns={
+                    "min_method_code": min(it["Order method code"]),
+                    "min_quantity": min(it["Quantity"]),
+                }
+            )
+        )
+        for tgt, datasets in self.tgt2datasets.items():
+            result = pipeline.transform(datasets)
+            if tgt.startswith("spark"):
+                result = result.toPandas()
+            self.assertEqual(result.shape, (289, 2))
+            self.assertEqual(result.loc[1201, "min_method_code"], 2, tgt)
+            self.assertEqual(result.loc[1201, "min_quantity"], 1, tgt)
             self.assertEqual(result.index.name, "Retailer code", tgt)
 
     def test_products_onekey_grouped(self):
