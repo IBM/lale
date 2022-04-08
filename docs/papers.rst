@@ -5,7 +5,7 @@ Papers
 "Pipeline Combinators for Gradual AutoML".
 Guillaume Baudart, Martin Hirzel, Kiran Kate, Parikshit Ram, Avraham Shinnar, and Jason Tsay.
 Conference on Neural Information Processing Systems (NeurIPS), December 2021.
-https://papers.nips.cc/paper/2021/hash/a3b36cb25e2e0b93b5f334ffb4e4064e-Abstract.html
+https://proceedings.neurips.cc/paper/2021/file/a3b36cb25e2e0b93b5f334ffb4e4064e-Paper.pdf
 
 **This is the preferred citation for the Lale project.**
 
@@ -16,7 +16,37 @@ https://papers.nips.cc/paper/2021/hash/a3b36cb25e2e0b93b5f334ffb4e4064e-Abstract
       author = "Baudart, Guillaume and Hirzel, Martin and Kate, Kiran and Ram, Parikshit and Shinnar, Avraham and Tsay, Jason",
       booktitle = "Advances in Neural Information Processing Systems (NeurIPS)",
       year = 2021,
-      month = dec }
+      month = dec,
+      url = "https://proceedings.neurips.cc/paper/2021/file/a3b36cb25e2e0b93b5f334ffb4e4064e-Paper.pdf" }
+
+"The Raise of Machine Learning Hyperparameter Constraints in Python Code".
+Ingkarat Rak-amnouykit, Ana Milanova, Guillaume Baudart, Martin Hirzel, and Julian Dolby.
+International Symposium on Software Testing and Analysis (ISSTA), July 2022. 
+
+.. code:: BibTeX
+
+    @InProceedings{rakamnouykit_et_al_2022,
+      title = "The Raise of Machine Learning Hyperparameter Constraints in {Python} Code",
+      author = "Rak-amnouykit, Ingkarat and Milanova, Ana and Baudart, Guillaume and Hirzel, Martin and Dolby, Julian",
+      booktitle = "International Symposium on Software Testing and Analysis (ISSTA)",
+      year = 2022,
+      month = jul }
+
+"An Empirical Study of Modular Bias Mitigators and Ensembles".
+Michael Feffer, Martin Hirzel, Samuel C. Hoffman, Kiran Kate, Parikshit Ram, and Avraham Shinnar.
+arXiv:2202.00751 [cs.LG], February 2022.
+https://arxiv.org/abs/2202.00751
+
+.. code:: BibTeX
+
+    @Article{feffer_et_al_2022,
+      title = "An Empirical Study of Modular Bias Mitigators and Ensembles",
+      author = "Feffer, Michael and Hirzel, Martin and Hoffman, Samuel C. and Kate, Kiran and Ram, Parikshit and Shinnar, Avraham",
+      journal = "CoRR",
+      volume = "abs/2202.00751",
+      year = 2022,
+      month = feb,
+      url = "https://arxiv.org/abs/2202.00751" }
 
 "RASL: Relational Algebra in Scikit-Learn Pipelines".
 Chirag Sahni, Kiran Kate, Avraham Shinnar, Hoang Thanh Lam, and Martin Hirzel.
@@ -113,7 +143,7 @@ https://arxiv.org/abs/2006.16984
       year = 2020,
       url = "https://arxiv.org/abs/2006.16984" }
 
-"A semi-supervised Deep Learning Algorithm for Abnormal EEG Identification".
+"A Semi-supervised Deep Learning Algorithm for Abnormal EEG Identification".
 Subhrajit Roy, Kiran Kate, and Martin Hirzel.
 Machine Learning for Health Workshop at NeurIPS (ML4H), December 2019.
 https://arxiv.org/abs/1903.07822v2
@@ -121,7 +151,7 @@ https://arxiv.org/abs/1903.07822v2
 .. code:: BibTeX
 
     @InProceedings{roy_kate_hirzel_2019,
-      title = "A semi-supervised Deep Learning Algorithm for Abnormal {EEG} Identification",
+      title = "A Semi-supervised Deep Learning Algorithm for Abnormal {EEG} Identification",
       author = "Roy, Subhrajit and Kate, Kiran and Hirzel, Martin",
       booktitle = "Machine Learning for Health Workshop at NeurIPS (ML4H)",
       month = dec,
