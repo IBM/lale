@@ -366,10 +366,6 @@ class TestConcatFeatures(unittest.TestCase):
             self.assertEqual(list(transformed[c]), list(expected[c]))
 
     def test_init_fit_predict_spark(self):
-
-        from lale.datasets import pandas2spark
-        from lale.datasets.util import spark_installed
-
         if spark_installed:
             trainable_cf = ConcatFeatures()
             A = [[11, 12, 13], [21, 22, 23], [31, 32, 33]]
@@ -394,10 +390,6 @@ class TestConcatFeatures(unittest.TestCase):
                 self.assertEqual(list(transformed[c]), list(expected[c]))
 
     def test_init_fit_predict_spark_pandas(self):
-
-        from lale.datasets import pandas2spark
-        from lale.datasets.util import spark_installed
-
         if spark_installed:
             trainable_cf = ConcatFeatures()
             A = [[11, 12, 13], [21, 22, 23], [31, 32, 33]]
