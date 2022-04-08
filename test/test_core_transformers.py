@@ -22,7 +22,9 @@ import pandas as pd
 import lale.lib.lale
 import lale.lib.sklearn
 import lale.type_checking
+from lale.datasets import pandas2spark
 from lale.datasets.data_schemas import add_table_name, get_table_name
+from lale.datasets.util import spark_installed
 from lale.lib.lale import ConcatFeatures
 from lale.lib.sklearn import (
     NMF,
@@ -328,12 +330,13 @@ class TestConcatFeatures(unittest.TestCase):
         trainable_cf = ConcatFeatures()
         A = [[11, 12, 13], [21, 22, 23], [31, 32, 33]]
         B = [[14, 15], [24, 25], [34, 35]]
-        A = pd.DataFrame(A, columns=["a", "b", "c"])
-        B = pd.DataFrame(B, columns=["d", "e"])
+        A = pd.DataFrame(A, columns=["a", "b", "c"]).rename_axis(index="idx")
+        B = pd.DataFrame(B, columns=["d", "e"]).rename_axis(index="idx")
         A = add_table_name(A, "A")
         B = add_table_name(B, "B")
         trained_cf = trainable_cf.fit(X=[A, B])
         transformed = trained_cf.transform([A, B])
+        self.assertEqual(transformed.index.name, "idx")
         expected = [
             [11, 12, 13, 14, 15],
             [21, 22, 23, 24, 25],
@@ -363,23 +366,20 @@ class TestConcatFeatures(unittest.TestCase):
             self.assertEqual(list(transformed[c]), list(expected[c]))
 
     def test_init_fit_predict_spark(self):
-
-        from lale.datasets import pandas2spark
-        from lale.datasets.util import spark_installed
-
         if spark_installed:
             trainable_cf = ConcatFeatures()
             A = [[11, 12, 13], [21, 22, 23], [31, 32, 33]]
             B = [[14, 15], [24, 25], [34, 35]]
             A = pd.DataFrame(A, columns=["a", "b", "c"])
             B = pd.DataFrame(B, columns=["d", "e"])
-            A = pandas2spark(A, with_index=True)
+            A = pandas2spark(A.rename_axis(index="idx"), with_index=True)
             B = pandas2spark(B.rename_axis(index="idx"), with_index=True)
             A = add_table_name(A, "A")
             B = add_table_name(B, "B")
 
             trained_cf = trainable_cf.fit(X=[A, B])
             transformed = trained_cf.transform([A, B]).toPandas()
+            self.assertEqual(transformed.index.name, "idx")
             expected = [
                 [11, 12, 13, 14, 15],
                 [21, 22, 23, 24, 25],
@@ -390,10 +390,6 @@ class TestConcatFeatures(unittest.TestCase):
                 self.assertEqual(list(transformed[c]), list(expected[c]))
 
     def test_init_fit_predict_spark_pandas(self):
-
-        from lale.datasets import pandas2spark
-        from lale.datasets.util import spark_installed
-
         if spark_installed:
             trainable_cf = ConcatFeatures()
             A = [[11, 12, 13], [21, 22, 23], [31, 32, 33]]

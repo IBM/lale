@@ -540,7 +540,7 @@ class TestAggregate(unittest.TestCase):
         targets = ["pandas", "spark", "spark-with-index"]
         cls.tgt2datasets = {tgt: fetch_go_sales_dataset(tgt) for tgt in targets}
 
-    def test_sales_not_grouped(self):
+    def test_sales_not_grouped_single_col(self):
         pipeline = Scan(table=it.go_daily_sales) >> Aggregate(
             columns={
                 "min_method_code": min(it["Order method code"]),
@@ -566,6 +566,38 @@ class TestAggregate(unittest.TestCase):
             )
             self.assertEqual(result.loc[0, "mode_method_code"], 5, tgt)
             self.assertEqual(result.loc[0, "median_method_code"], 5, tgt)
+
+    def test_sales_not_grouped_single_func(self):
+        pipeline = Aggregate(
+            columns={
+                "max_method_code": max(it["Order method code"]),
+                "max_method_type": max(it["Order method type"]),
+            }
+        )
+        for tgt, datasets in self.tgt2datasets.items():
+            result = pipeline.transform(datasets[2])
+            if tgt.startswith("spark"):
+                result = result.toPandas()
+            self.assertEqual(result.shape, (1, 2), tgt)
+            self.assertEqual(result.loc[0, "max_method_code"], 12, tgt)
+            self.assertEqual(result.loc[0, "max_method_type"], "Web", tgt)
+
+    def test_sales_multi_col_not_grouped(self):
+        pipeline = Aggregate(
+            columns={
+                "min_method_code": min(it["Order method code"]),
+                "max_method_code": max(it["Order method code"]),
+                "max_method_type": max(it["Order method type"]),
+            }
+        )
+        for tgt, datasets in self.tgt2datasets.items():
+            result = pipeline.transform(datasets[2])
+            if tgt.startswith("spark"):
+                result = result.toPandas()
+            self.assertEqual(result.shape, (1, 3), tgt)
+            self.assertEqual(result.loc[0, "min_method_code"], 1, tgt)
+            self.assertEqual(result.loc[0, "max_method_code"], 12, tgt)
+            self.assertEqual(result.loc[0, "max_method_type"], "Web", tgt)
 
     def test_sales_onekey_grouped(self):
         pipeline = (
@@ -599,6 +631,52 @@ class TestAggregate(unittest.TestCase):
             )
             # self.assertEqual(result.loc[row.index[0], "mode_method_code"], 5, tgt)
             self.assertEqual(result.loc[row.index[0], "median_method_code"], 5, tgt)
+            self.assertEqual(result.index.name, "Retailer code", tgt)
+
+    def test_sales_onekey_grouped_single_col(self):
+        pipeline = (
+            Scan(table=it.go_daily_sales)
+            >> GroupBy(by=[it["Retailer code"]])
+            >> Aggregate(
+                columns={
+                    "min_method_code": min(it["Order method code"]),
+                    "max_method_code": max(it["Order method code"]),
+                    "method_codes": collect_set(it["Order method code"]),
+                    "median_method_code": median(it["Order method code"]),
+                }
+            )
+        )
+        for tgt, datasets in self.tgt2datasets.items():
+            result = pipeline.transform(datasets)
+            if tgt.startswith("spark"):
+                result = result.toPandas()
+            self.assertEqual(result.shape, (289, 4))
+            self.assertEqual(result.loc[1201, "min_method_code"], 2, tgt)
+            self.assertEqual(result.loc[1201, "max_method_code"], 6, tgt)
+            self.assertEqual(
+                sorted(result.loc[1201, "method_codes"]), [2, 3, 4, 5, 6], tgt
+            )
+            self.assertEqual(result.loc[1201, "median_method_code"], 5, tgt)
+            self.assertEqual(result.index.name, "Retailer code", tgt)
+
+    def test_sales_onekey_grouped_single_func(self):
+        pipeline = (
+            Scan(table=it.go_daily_sales)
+            >> GroupBy(by=[it["Retailer code"]])
+            >> Aggregate(
+                columns={
+                    "min_method_code": min(it["Order method code"]),
+                    "min_quantity": min(it["Quantity"]),
+                }
+            )
+        )
+        for tgt, datasets in self.tgt2datasets.items():
+            result = pipeline.transform(datasets)
+            if tgt.startswith("spark"):
+                result = result.toPandas()
+            self.assertEqual(result.shape, (289, 2))
+            self.assertEqual(result.loc[1201, "min_method_code"], 2, tgt)
+            self.assertEqual(result.loc[1201, "min_quantity"], 1, tgt)
             self.assertEqual(result.index.name, "Retailer code", tgt)
 
     def test_products_onekey_grouped(self):
@@ -991,71 +1069,78 @@ class TestJoin(unittest.TestCase):
             pred=[it.info.idx == it.main.idx, it.info.idx == it.t1.idx],
             join_type="inner",
         )
-        df1 = pandas2spark(
-            _set_index_name(self.tgt2datasets["pandas"]["df1"], "idx"), with_index=True
-        )
-        df2 = pandas2spark(
-            _set_index_name(self.tgt2datasets["pandas"]["df2"], "idx"), with_index=True
-        )
-        df3 = pandas2spark(
-            _set_index_name(self.tgt2datasets["pandas"]["df3"], "idx"), with_index=True
-        )
-        transformed_df = trainable.transform([df1, df2, df3])
-        transformed_df = _ensure_pandas(transformed_df)
-        transformed_df = transformed_df.sort_values(by="TrainId").reset_index(drop=True)
-        self.assertEqual(transformed_df.shape, (3, 8))
-        self.assertEqual(transformed_df["col5"][1], "Cold")
+        df1 = _set_index_name(self.tgt2datasets["pandas"]["df1"], "idx")
+        df2 = _set_index_name(self.tgt2datasets["pandas"]["df2"], "idx")
+        df3 = _set_index_name(self.tgt2datasets["pandas"]["df3"], "idx")
+        for tgt in ["spark-with-index"]:
+            if tgt == "spark-with-index":
+                df1 = pandas2spark(df1, with_index=True)
+                df2 = pandas2spark(df2, with_index=True)
+                df3 = pandas2spark(df3, with_index=True)
+            transformed_df = trainable.transform([df1, df2, df3])
+            transformed_df = _ensure_pandas(transformed_df)
+            self.assertEqual(transformed_df.index.name, "idx", tgt)
+            transformed_df = transformed_df.sort_values(by="TrainId").reset_index(
+                drop=True
+            )
+            self.assertEqual(transformed_df.shape, (3, 8), tgt)
+            self.assertEqual(transformed_df["col5"][1], "Cold", tgt)
 
     def test_join_one_index_right(self):
         trainable = Join(
             pred=[it.info.TrainId == it.main.train_id, it.info.TrainId == it.t1.tid],
             join_type="inner",
         )
-        df1 = pandas2spark(
-            _set_index(self.tgt2datasets["pandas"]["df1"], "train_id"),
-            with_index=True,
-        )
-        df2 = pandas2spark(self.tgt2datasets["pandas"]["df2"])
-        df3 = pandas2spark(self.tgt2datasets["pandas"]["df3"])
-        transformed_df = trainable.transform([df1, df2, df3])
-        transformed_df = _ensure_pandas(transformed_df)
-        transformed_df = transformed_df.sort_values(by="TrainId").reset_index(drop=True)
-        self.assertEqual(transformed_df.shape, (3, 7))
-        self.assertEqual(transformed_df["col5"][1], "Cold")
+        df1 = _set_index(self.tgt2datasets["pandas"]["df1"], "train_id")
+        df2 = self.tgt2datasets["pandas"]["df2"]
+        df3 = self.tgt2datasets["pandas"]["df3"]
+        for tgt in ["spark-with-index"]:
+            if tgt == "spark-with-index":
+                df1 = pandas2spark(df1, with_index=True)
+                df2 = pandas2spark(df2, with_index=True)
+                df3 = pandas2spark(df3)
+            transformed_df = trainable.transform([df1, df2, df3])
+            transformed_df = _ensure_pandas(transformed_df)
+            transformed_df = transformed_df.sort_values(by="TrainId").reset_index(
+                drop=True
+            )
+            self.assertEqual(transformed_df.shape, (3, 7))
+            self.assertEqual(transformed_df["col5"][1], "Cold")
 
     def test_join_one_index_left(self):
         trainable = Join(
             pred=[it.main.train_id == it.info.TrainId, it.info.TrainId == it.t1.tid],
             join_type="inner",
         )
-        df1 = pandas2spark(
-            _set_index(self.tgt2datasets["pandas"]["df1"], "train_id"),
-            with_index=True,
-        )
-        df2 = pandas2spark(self.tgt2datasets["pandas"]["df2"])
-        df3 = pandas2spark(self.tgt2datasets["pandas"]["df3"])
-        transformed_df = trainable.transform([df1, df2, df3])
-        transformed_df = _ensure_pandas(transformed_df)
-        transformed_df = transformed_df.sort_values(by="TrainId").reset_index(drop=True)
-        self.assertEqual(transformed_df.shape, (3, 7))
-        self.assertEqual(transformed_df["col5"][1], "Cold")
+        df1 = _set_index(self.tgt2datasets["pandas"]["df1"], "train_id")
+        df2 = self.tgt2datasets["pandas"]["df2"]
+        df3 = self.tgt2datasets["pandas"]["df3"]
+        for tgt in ["spark-with-index"]:
+            if tgt == "spark-with-index":
+                df1 = pandas2spark(df1, with_index=True)
+                df2 = pandas2spark(df2, with_index=True)
+                df3 = pandas2spark(df3)
+            transformed_df = trainable.transform([df1, df2, df3])
+            transformed_df = _ensure_pandas(transformed_df)
+            transformed_df = transformed_df.sort_values(by="TrainId").reset_index(
+                drop=True
+            )
+            self.assertEqual(transformed_df.shape, (3, 7))
+            self.assertEqual(transformed_df["col5"][1], "Cold")
 
     def test_join_index_multiple_names(self):
         trainable = Join(
             pred=[it.info.TrainId == it.main.train_id, it.info.TrainId == it.t1.tid],
             join_type="inner",
         )
-        df1 = pandas2spark(
-            _set_index(self.tgt2datasets["pandas"]["df1"], "train_id"),
-            with_index=True,
-        )
-        df2 = pandas2spark(
-            _set_index(self.tgt2datasets["pandas"]["df2"], "TrainId"),
-            with_index=True,
-        )
-        df3 = pandas2spark(
-            _set_index(self.tgt2datasets["pandas"]["df3"], "tid"), with_index=True
-        )
+        df1 = _set_index(self.tgt2datasets["pandas"]["df1"], "train_id")
+        df2 = _set_index(self.tgt2datasets["pandas"]["df2"], "TrainId")
+        df3 = _set_index(self.tgt2datasets["pandas"]["df3"], "tid")
+        for tgt in ["spark-with-index"]:
+            if tgt == "spark-with-index":
+                df1 = pandas2spark(df1, with_index=True)
+                df2 = pandas2spark(df2, with_index=True)
+                df3 = pandas2spark(df3, with_index=True)
         transformed_df = trainable.transform([df1, df2, df3])
         transformed_df = _ensure_pandas(transformed_df)
         transformed_df = transformed_df.sort_values(by="TrainId").reset_index(drop=True)
