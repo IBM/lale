@@ -14,8 +14,11 @@
 
 import itertools
 import math
+import os.path
 import re
+import tempfile
 import unittest
+import urllib.request
 from typing import Any, Dict, cast
 
 import jsonschema
@@ -65,7 +68,7 @@ from lale.lib.rasl import accuracy_score as rasl_accuracy_score
 from lale.lib.rasl import categorical
 from lale.lib.rasl import cross_val_score as rasl_cross_val_score
 from lale.lib.rasl import cross_validate as rasl_cross_validate
-from lale.lib.rasl import fit_with_batches
+from lale.lib.rasl import csv_data_loader, fit_with_batches
 from lale.lib.rasl import get_scorer as rasl_get_scorer
 from lale.lib.rasl import mockup_data_loader, openml_data_loader
 from lale.lib.rasl import r2_score as rasl_r2_score
@@ -83,16 +86,37 @@ assert sklearn.__version__ >= "1.0", sklearn.__version__
 class TestDatasets(unittest.TestCase):
     def test_openml_creditg_arff(self):
         batches = openml_data_loader("credit-g", 3)
-        n_rows = 0
-        n_batches = 0
+        n_rows_found = 0
+        n_batches_found = 0
         for bX, by in batches:
-            n_batches += 1
+            n_batches_found += 1
             n_rows_batch, n_columns_batch = bX.shape
-            n_rows += n_rows_batch
+            n_rows_found += n_rows_batch
             self.assertEqual(n_rows_batch, len(by))
             self.assertEqual(n_columns_batch, 20)
-        self.assertEqual(n_batches, 3)
-        self.assertEqual(n_rows, 1000)
+        self.assertEqual(n_batches_found, 3)
+        self.assertEqual(n_rows_found, 1000)
+
+    def test_autoai_creditg_csv(self):
+        with tempfile.TemporaryDirectory() as tmpdir_name:
+            url = "https://raw.githubusercontent.com/pmservice/wml-sample-models/master/autoai/credit-risk-prediction/data/german_credit_data_biased_training.csv"
+            file_name = os.path.join(tmpdir_name, "credit-g.csv")
+            urllib.request.urlretrieve(url, file_name)
+            assert os.path.exists(file_name)
+            n_rows = 5000
+            n_batches = 3
+            rows_per_batch = (n_rows + n_batches - 1) // n_batches
+            batches = csv_data_loader(file_name, "Risk", rows_per_batch)
+            n_rows_found = 0
+            n_batches_found = 0
+            for bX, by in batches:
+                n_batches_found += 1
+                n_rows_batch, n_columns_batch = bX.shape
+                n_rows_found += n_rows_batch
+                self.assertEqual(n_rows_batch, len(by))
+                self.assertEqual(n_columns_batch, 20)
+            self.assertEqual(n_batches_found, n_batches)
+            self.assertEqual(n_rows_found, n_rows)
 
 
 def _check_trained_min_max_scaler(test, op1, op2, msg):

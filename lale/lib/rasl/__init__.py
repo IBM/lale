@@ -53,12 +53,24 @@ Estimators
 
 * lale.lib.rasl. `BatchedBaggingClassifier`_
 
-Functions:
-==========
+Functions
+=========
 
 * lale.lib.rasl. `categorical`_
 * lale.lib.rasl. `date_time`_
 * lale.lib.rasl. `SparkExplainer`_
+
+Data Loaders
+============
+* lale.lib.rasl. `csv_data_loader`_
+* lale.lib.rasl. `mockup_data_loader`_
+* lale.lib.rasl. `openml_data_loader`_
+
+Metrics
+=======
+* lale.lib.rasl. `accuracy_score`_
+* lale.lib.rasl. `get_scorer`_
+* lale.lib.rasl. `r2_score`_
 
 Other Facilities
 ================
@@ -67,16 +79,11 @@ Other Facilities
 * lale.lib.rasl. `PrioBatch`_
 * lale.lib.rasl. `PrioResourceAware`_
 * lale.lib.rasl. `PrioStep`_
-* lale.lib.rasl. `accuracy_score`_
 * lale.lib.rasl. `cross_val_score`_
 * lale.lib.rasl. `cross_validate`_
 * lale.lib.rasl. `fit_with_batches`_
-* lale.lib.rasl. `get_scorer`_
 * lale.lib.rasl. `is_associative`_
 * lale.lib.rasl. `is_incremental`_
-* lale.lib.rasl. `mockup_data_loader`_
-* lale.lib.rasl. `openml_data_loader`_
-* lale.lib.rasl. `r2_score`_
 
 .. _`Aggregate`: lale.lib.rasl.aggregate.html
 .. _`Alias`: lale.lib.rasl.alias.html
@@ -88,6 +95,7 @@ Other Facilities
 .. _`Project`: lale.lib.rasl.project.html
 .. _`Relational`: lale.lib.rasl.relational.html
 
+.. _`BatchedBaggingClassifier`: lale.lib.rasl.batched_bagging_classifier.html
 .. _`Batching`: lale.lib.rasl.batching.html
 .. _`ConcatFeatures`: lale.lib.rasl.concat_features.html
 .. _`Convert`: lale.lib.rasl.convert.html
@@ -119,8 +127,9 @@ Other Facilities
 .. _`get_scorer`: lale.lib.rasl.get_scorer.html
 .. _`is_associative`: lale.lib.rasl.is_associative.html
 .. _`is_incremental`: lale.lib.rasl.is_incremental.html
-.. _`mockup_data_loader`: lale.lib.rasl.mockup_data_loader.html
-.. _`openml_data_loader`: lale.lib.rasl.openml_data_loader.html
+.. _`csv_data_loader`: lale.lib.rasl.datasets.html#lale.lib.rasl.datasets.csv_data_loader
+.. _`mockup_data_loader`: lale.lib.rasl.datasets.html#lale.lib.rasl.datasets.mockup_data_loader
+.. _`openml_data_loader`: lale.lib.rasl.datasets.html#lale.lib.rasl.datasets.openml_data_loader
 .. _`r2_score`: lale.lib.rasl.r2_score.html
 
 """
@@ -142,7 +151,7 @@ from .batched_bagging_classifier import BatchedBaggingClassifier
 from .batching import Batching
 from .concat_features import ConcatFeatures
 from .convert import Convert
-from .datasets import mockup_data_loader, openml_data_loader
+from .datasets import csv_data_loader, mockup_data_loader, openml_data_loader
 from .filter import Filter
 from .functions import categorical, date_time
 from .group_by import GroupBy
