@@ -48,7 +48,7 @@ except ModuleNotFoundError:
 def arff_data_loader(
     file_name: str, label_name: str, rows_per_batch: int
 ) -> Iterable[_PandasBatch]:
-    """Incrementally load the file and yield it one batch at a time."""
+    """Incrementally load an ARFF file and yield it one (X, y) batch at a time."""
     assert liac_arff_installed
     split_x_y = SplitXy(label_name=label_name)
 
@@ -74,12 +74,23 @@ def arff_data_loader(
         yield make_batch()
 
 
+def csv_data_loader(
+    file_name: str, label_name: str, rows_per_batch: int
+) -> Iterable[_PandasBatch]:
+    """Incrementally load an CSV file and yield it one (X, y) batch at a time."""
+    split_x_y = SplitXy(label_name=label_name)
+    with pd.read_csv(file_name, chunksize=rows_per_batch) as reader:
+        for df in reader:
+            X, y = split_x_y.transform_X_y(df, None)
+            yield X, y
+
+
 def mockup_data_loader(
     X: pd.DataFrame, y: pd.Series, n_batches: int, astype: str
 ) -> Iterable[_PandasOrSparkBatch]:
     """Split (X, y) into batches to emulate loading them incrementally.
 
-    Intended for testing purposes, because if X and y are already
+    Only intended for testing purposes, because if X and y are already
     materialized in-memory, there is little reason to batch them.
     """
     if n_batches == 1:
@@ -98,6 +109,7 @@ def mockup_data_loader(
 
 
 def openml_data_loader(dataset_name: str, n_batches: int) -> Iterable[_PandasBatch]:
+    """Download the OpenML dataset, incrementally load it, and yield it one (X,y) batch at a time."""
     assert liac_arff_installed
     metadata = openml_datasets.experiments_dict[dataset_name]
     label_name = cast(str, metadata["target"])
