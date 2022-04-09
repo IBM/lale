@@ -1227,6 +1227,17 @@ class TestMap(unittest.TestCase):
             self.assertEqual(df["status"][3], transformed_df["new_status"][3], tgt)
             self.assertEqual(len(transformed_df.columns), 2, tgt)
 
+    def test_transform_identity_map_implicit_name(self):
+        trainable = Map(columns=[identity(it.gender), identity(it["status"])])
+        for tgt, datasets in self.tgt2datasets.items():
+            df = datasets["df"]
+            trained = trainable.fit(df)
+            transformed_df = trained.transform(df)
+            df, transformed_df = _ensure_pandas(df), _ensure_pandas(transformed_df)
+            self.assertEqual(df["gender"][0], transformed_df["gender"][0], tgt)
+            self.assertEqual(df["status"][3], transformed_df["status"][3], tgt)
+            self.assertEqual(len(transformed_df.columns), 2, tgt)
+
     def test_transform_identity_map_passthrough(self):
         trainable = Map(
             columns={

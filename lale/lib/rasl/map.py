@@ -22,9 +22,9 @@ import lale.operators
 from lale.datasets.data_schemas import add_table_name, forward_metadata, get_table_name
 from lale.expressions import _it_column
 from lale.helpers import (
-    _is_ast_attribute,
     _is_ast_call,
     _is_ast_name,
+    _is_ast_subs_or_attr,
     _is_pandas_df,
     _is_spark_df,
     _is_spark_with_index,
@@ -49,6 +49,11 @@ def _new_column_name(name, expr):
             and _is_ast_name(expr._expr.func)
             and expr._expr.func.id
             in [
+                "identity",
+                "isnan",
+                "isnotnan",
+                "isnull",
+                "isnotnull",
                 "replace",
                 "day_of_month",
                 "day_of_week",
@@ -57,9 +62,9 @@ def _new_column_name(name, expr):
                 "minute",
                 "month",
             ]
-            and _is_ast_attribute(expr._expr.args[0])
+            and _is_ast_subs_or_attr(expr._expr.args[0])
         ):
-            return expr._expr.args[0].attr
+            return _it_column(expr._expr.args[0])
         else:
             raise ValueError(
                 """New name of the column to be renamed cannot be None or empty. You may want to use a dictionary
