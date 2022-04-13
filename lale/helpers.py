@@ -575,6 +575,12 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
     def find_lale_wrapper(sklearn_obj):
         from .operator_wrapper import get_lale_wrapper_modules
 
+        # currently needed for backwards compatibility
+        try:
+            import autoai_ts_libs.lale  # type: ignore  # noqa:F401
+        except ImportError:
+            pass
+
         module_names = get_lale_wrapper_modules()
 
         lale_wrapper_found = False
