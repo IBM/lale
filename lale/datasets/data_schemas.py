@@ -625,6 +625,7 @@ def _to_schema(obj) -> JSON_TYPE:
         raise ValueError(f"to_schema(obj), type {type(obj)}, value {obj}")
     return result
 
+
 def to_schema(obj) -> JSON_TYPE:
     result = _to_schema(obj)
     lale.type_checking.validate_is_schema(result)
