@@ -612,14 +612,14 @@ def to_schema(obj) -> JSON_TYPE:
         result = _torch_tensor_to_schema(obj)
     elif is_liac_arff(obj):
         result = _liac_arff_to_schema(obj)
-    elif lale.type_checking.is_schema(obj):
-        result = obj
-        # Does not need to validate again the schema
-        return result  # type: ignore
     elif isinstance(obj, list):
         result = _list_tensor_to_schema(obj)
     elif _is_spark_df(obj):
         result = _dataframe_to_schema(obj.toPandas())
+    elif lale.type_checking.is_schema(obj):
+        result = obj
+        # Does not need to validate again the schema
+        return result  # type: ignore
     if result is None:
         raise ValueError(f"to_schema(obj), type {type(obj)}, value {obj}")
     lale.type_checking.validate_is_schema(result)

@@ -266,37 +266,40 @@ class _ProjectImpl:
         # else:
         #     raise TypeError(f"type {type(X)}")
         s_X = lale.datasets.data_schemas.to_schema(X)
-        s_result = self.transform_schema(s_X)
+        s_result = self._transform_schema_nocheck(s_X)
         result = lale.datasets.data_schemas.add_schema(result, s_result, recalc=True)
         result = lale.datasets.data_schemas.add_table_name(
             result, lale.datasets.data_schemas.get_table_name(X)
         )
         return result
 
+    def _transform_schema_nocheck(self, s_X):
+        if hasattr(self, "_fit_columns"):
+            return self._transform_schema_fit_columns(s_X)
+        keep_cols = self._columns
+        drop_cols = self._drop_columns
+        known_keep_cols = False
+        known_drop_cols = False
+        if keep_cols is None:
+            known_keep_cols = True
+        elif isinstance(keep_cols, _SchemaMonoidFactory):
+            kc = keep_cols._c
+            keep_cols = kc
+            known_keep_cols = True
+        if drop_cols is None:
+            known_drop_cols = True
+        elif isinstance(drop_cols, _SchemaMonoidFactory):
+            dc = drop_cols._c
+            drop_cols = dc
+            known_drop_cols = True
+        if known_keep_cols and known_drop_cols:
+            return self._transform_schema_schema(s_X, keep_cols, drop_cols)
+        return s_X
+
     def transform_schema(self, s_X):
         """Used internally by Lale for type-checking downstream operators."""
         if is_schema(s_X):
-            if hasattr(self, "_fit_columns"):
-                return self._transform_schema_fit_columns(s_X)
-            keep_cols = self._columns
-            drop_cols = self._drop_columns
-            known_keep_cols = False
-            known_drop_cols = False
-            if keep_cols is None:
-                known_keep_cols = True
-            elif isinstance(keep_cols, _SchemaMonoidFactory):
-                kc = keep_cols._c
-                keep_cols = kc
-                known_keep_cols = True
-            if drop_cols is None:
-                known_drop_cols = True
-            elif isinstance(drop_cols, _SchemaMonoidFactory):
-                dc = drop_cols._c
-                drop_cols = dc
-                known_drop_cols = True
-            if known_keep_cols and known_drop_cols:
-                return self._transform_schema_schema(s_X, keep_cols, drop_cols)
-            return s_X
+            return self._transform_schema_nocheck(s_X)
         else:
             X = lale.datasets.data_schemas.add_schema(s_X)
             assert X is not None
