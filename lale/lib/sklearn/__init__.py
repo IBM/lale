@@ -219,9 +219,13 @@ if sklearn_version >= "0.21":
     from .stacking_regressor import StackingRegressor
     from .voting_regressor import VotingRegressor
 
+from lale import register_lale_wrapper_modules
+
 from .standard_scaler import StandardScaler
 from .svc import SVC
 from .svr import SVR
 from .tfidf_vectorizer import TfidfVectorizer
 from .variance_threshold import VarianceThreshold
 from .voting_classifier import VotingClassifier
+
+register_lale_wrapper_modules(__name__)

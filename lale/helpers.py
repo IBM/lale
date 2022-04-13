@@ -566,6 +566,13 @@ def create_instance_from_hyperopt_search_space(
         assert False, f"Unknown operator type: {type(lale_object)}"
 
 
+_lale_wrapper_modules: Set[str] = set()
+
+
+def register_lale_wrapper_modules(m: str) -> None:
+    _lale_wrapper_modules.add(m)
+
+
 def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=False):
     # For all pipeline steps, identify equivalent lale wrappers if present,
     # if not, call make operator on sklearn classes and create a lale pipeline.
@@ -573,20 +580,7 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
     # fitted is True. This is achieved using the is_hyperparam flag.
 
     def find_lale_wrapper(sklearn_obj):
-        module_names = [
-            "lale.lib.sklearn",
-            "lale.lib.autoai_libs",
-            "lale.lib.xgboost",
-            "lale.lib.lightgbm",
-            "lale.lib.snapml",
-        ]
-
-        try:
-            import autoai_ts_libs  # type: ignore # noqa
-
-            module_names.append("lale.lib.autoai_ts_libs")
-        except ImportError:
-            pass
+        module_names = _lale_wrapper_modules
 
         lale_wrapper_found = False
         class_name = sklearn_obj.__class__.__name__

@@ -73,6 +73,8 @@ Operators
 """
 from sklearn.experimental import enable_iterative_imputer  # noqa
 
+from lale import register_lale_wrapper_modules
+
 from .auto_regression import AutoRegression
 from .autoai_ts_pipeline import AutoaiTSPipeline
 from .autoai_window_transformed_target_regressor import (
@@ -100,3 +102,10 @@ from .watfore_forecaster import WatForeForecaster
 from .window_standard_row_mean_center_mts import WindowStandardRowMeanCenterMTS
 from .window_standard_row_mean_center_uts import WindowStandardRowMeanCenterUTS
 from .window_transformer_mts import WindowTransformerMTS
+
+try:
+    import autoai_ts_libs  # type: ignore # noqa
+
+    register_lale_wrapper_modules(__name__)
+except ImportError:
+    pass

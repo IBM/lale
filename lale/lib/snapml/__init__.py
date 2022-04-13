@@ -50,6 +50,8 @@ Regressors:
 .. _`SnapSVMClassifier`: lale.lib.snapml.snap_svm_classifier.html
 """
 
+from lale import register_lale_wrapper_modules
+
 from .batched_tree_ensemble_classifier import BatchedTreeEnsembleClassifier
 from .batched_tree_ensemble_regressor import BatchedTreeEnsembleRegressor
 from .snap_boosting_machine_classifier import SnapBoostingMachineClassifier
@@ -61,3 +63,5 @@ from .snap_logistic_regression import SnapLogisticRegression
 from .snap_random_forest_classifier import SnapRandomForestClassifier
 from .snap_random_forest_regressor import SnapRandomForestRegressor
 from .snap_svm_classifier import SnapSVMClassifier
+
+register_lale_wrapper_modules(__name__)
