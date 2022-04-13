@@ -30,5 +30,4 @@ if __LALE_SETUP__:  # type: ignore
     # process.
 else:
     # all other code will go here.
-    from .helpers import register_lale_wrapper_modules
-    from .operator_wrapper import wrap_imported_operators
+    from .operator_wrapper import register_lale_wrapper_modules, wrap_imported_operators
