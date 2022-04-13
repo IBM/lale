@@ -29,7 +29,7 @@ from .monoid import Monoid, MonoidFactory
 
 
 def _columns_schema_to_list(X, schema) -> List[column_index]:
-    s_all = lale.datasets.data_schemas.to_schema(X)
+    s_all = lale.datasets.data_schemas._to_schema(X)
     s_row = s_all["items"]
     n_columns = s_row["minItems"]
     assert n_columns == s_row["maxItems"]
@@ -265,7 +265,7 @@ class _ProjectImpl:
         #         result = X[self._fit_columns]
         # else:
         #     raise TypeError(f"type {type(X)}")
-        s_X = lale.datasets.data_schemas.to_schema(X)
+        s_X = lale.datasets.data_schemas._to_schema(X)
         s_result = self._transform_schema_nocheck(s_X)
         result = lale.datasets.data_schemas.add_schema(result, s_result, recalc=True)
         result = lale.datasets.data_schemas.add_table_name(
@@ -307,7 +307,7 @@ class _ProjectImpl:
             return self._transform_schema_fit_columns(X.json_schema)
 
     def _transform_schema_fit_columns(self, s_X):
-        s_X = lale.datasets.data_schemas.to_schema(s_X)
+        s_X = lale.datasets.data_schemas._to_schema(s_X)
         s_row = s_X["items"]
         s_cols = s_row["items"]
         n_columns = len(self._fit_columns)
@@ -341,7 +341,7 @@ class _ProjectImpl:
                     return False
             return True
 
-        s_X = lale.datasets.data_schemas.to_schema(s_X)
+        s_X = lale.datasets.data_schemas._to_schema(s_X)
         s_row = s_X["items"]
         s_cols = s_row["items"]
         if isinstance(s_cols, dict):

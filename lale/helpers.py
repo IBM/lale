@@ -224,7 +224,7 @@ def split_with_schemas(estimator, all_X, all_y, indices, train_indices=None):
 
 def fold_schema(X, y, cv=1, is_classifier=True):
     def fold_schema_aux(data, n_rows):
-        orig_schema = lale.datasets.data_schemas.to_schema(data)
+        orig_schema = lale.datasets.data_schemas._to_schema(data)
         aux_result = {**orig_schema, "minItems": n_rows, "maxItems": n_rows}
         return aux_result
 
@@ -1147,6 +1147,10 @@ def _is_pandas_df(df):
     return isinstance(df, pd.DataFrame)
 
 
+def _is_pandas(df):
+    return isinstance(df, (pd.Series, pd.DataFrame))
+
+
 def _is_spark_df(df):
     if spark_installed:
         return isinstance(df, spark_df)
@@ -1164,7 +1168,7 @@ def _is_spark_with_index(df):
 def _ensure_pandas(df) -> pd.DataFrame:
     if _is_spark_df(df):
         return df.toPandas()
-    assert _is_pandas_df(df), type(df)
+    assert _is_pandas(df), type(df)
     return df
 
 
