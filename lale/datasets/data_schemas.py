@@ -460,9 +460,10 @@ def _dataframe_to_schema(df) -> JSON_TYPE:
     ):
         return df.json_schema
     n_rows, n_columns = df.shape
-    assert n_columns == len(df.columns) and n_columns == len(df.dtypes)
+    df_dtypes = df.dtypes
+    assert n_columns == len(df.columns) and n_columns == len(df_dtypes)
     items = [
-        {"description": str(col), **_dtype_to_schema(df.dtypes[col])}
+        {"description": str(col), **_dtype_to_schema(df_dtypes[col])}
         for col in df.columns
     ]
     result = {
@@ -596,7 +597,7 @@ def liac_arff_to_schema(larff) -> JSON_TYPE:
     return result
 
 
-def to_schema(obj) -> JSON_TYPE:
+def _to_schema(obj) -> JSON_TYPE:
     result = None
     if obj is None:
         result = {"enum": [None]}
@@ -622,5 +623,9 @@ def to_schema(obj) -> JSON_TYPE:
         return result  # type: ignore
     if result is None:
         raise ValueError(f"to_schema(obj), type {type(obj)}, value {obj}")
+    return result
+
+def to_schema(obj) -> JSON_TYPE:
+    result = _to_schema(obj)
     lale.type_checking.validate_is_schema(result)
     return result
