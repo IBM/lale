@@ -26,5 +26,9 @@ Operators:
 .. _`XGBRegressor`: lale.lib.xgboost.xgb_regressor.html
 """
 
+from lale import register_lale_wrapper_modules
+
 from .xgb_classifier import XGBClassifier
 from .xgb_regressor import XGBRegressor
+
+register_lale_wrapper_modules(__name__)

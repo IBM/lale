@@ -14,6 +14,7 @@
 
 import inspect
 import logging
+from typing import Set
 
 from lale.operators import Operator, clone_op, get_op_from_lale_lib
 
@@ -57,3 +58,30 @@ def wrap_imported_operators(exclude_classes=None):
     _wrap_operators_in_symtab(calling_frame.f_globals, exclude_classes)
     if calling_frame.f_code.co_name == "<module>":  # for testing with exec()
         _wrap_operators_in_symtab(calling_frame.f_locals, exclude_classes)
+
+
+_lale_wrapper_modules: Set[str] = set()
+
+
+def register_lale_wrapper_modules(m: str) -> None:
+    """Register a module with lale's import system
+    so that :meth:`lale.helpers.import_from_sklearn_pipeline` will look for replacement classes in that module.
+
+        Example: (in `__init__.py` file for the module):
+
+    .. code-block:: python
+
+        from lale import register_lale_wrapper_modules
+
+        register_lale_wrapper_modules(__name__)
+
+    Parameters
+    ----------
+    m : [str]
+        The module name
+    """
+    _lale_wrapper_modules.add(m)
+
+
+def get_lale_wrapper_modules() -> Set[str]:
+    return _lale_wrapper_modules

@@ -27,5 +27,9 @@ Operators:
 .. _`LGBMRegressor`: lale.lib.lightgbm.lgbm_regressor.html
 """
 
+from lale import register_lale_wrapper_modules
+
 from .lgbm_classifier import LGBMClassifier
 from .lgbm_regressor import LGBMRegressor
+
+register_lale_wrapper_modules(__name__)

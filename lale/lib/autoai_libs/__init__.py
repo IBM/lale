@@ -90,6 +90,8 @@ Feature transformation:
 .. _`FS2`: lale.lib.autoai_libs.fs2.html
 """
 
+from lale import register_lale_wrapper_modules
+
 from .boolean2float import boolean2float
 from .cat_encoder import CatEncoder
 from .cat_imputer import CatImputer
@@ -117,3 +119,5 @@ from .text_transformer import TextTransformer
 from .tgen import TGen
 from .util import wrap_pipeline_segments
 from .word2vec_transformer import Word2VecTransformer
+
+register_lale_wrapper_modules(__name__)
