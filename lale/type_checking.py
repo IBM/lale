@@ -32,17 +32,23 @@ as the right side succeed. This is specified using ``{'laleType': 'Any'}``.
 
 import functools
 import inspect
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, overload
+from typing import Any, Dict, List, Optional, Tuple, overload
 
 import jsonschema
 import jsonschema.exceptions
 import jsonschema.validators
 import jsonsubschema
+import numpy.random
+import sklearn.base
 
+import lale.datasets.data_schemas
+import lale.expressions
 import lale.helpers
-
-if TYPE_CHECKING:
-    import lale.operators
+import lale.operators
+from lale.settings import (
+    disable_data_schema_validation,
+    disable_hyperparams_schema_validation,
+)
 
 JSON_TYPE = Dict[str, Any]
 
@@ -57,10 +63,6 @@ def _validate_lale_type(validator, laleType, instance, schema):
                 f"expected {laleType}, got {type(instance)}"
             )
     elif laleType == "operator":
-        import sklearn.base
-
-        import lale.operators
-
         if not (
             isinstance(instance, lale.operators.Operator)
             or isinstance(instance, sklearn.base.BaseEstimator)
@@ -73,15 +75,11 @@ def _validate_lale_type(validator, laleType, instance, schema):
                 f"expected {laleType}, got {type(instance)}"
             )
     elif laleType == "expression":
-        import lale.expressions
-
         if not isinstance(instance, lale.expressions.Expr):
             yield jsonschema.exceptions.ValidationError(
                 f"expected {laleType}, got {type(instance)}"
             )
     elif laleType == "numpy.random.RandomState":
-        import numpy.random
-
         if not isinstance(instance, numpy.random.RandomState):
             yield jsonschema.exceptions.ValidationError(
                 f"expected {laleType}, got {type(instance)}"
@@ -141,8 +139,6 @@ def validate_schema_directly(value, schema: JSON_TYPE, subsample_array: bool = T
     jsonschema.ValidationError
         The value was invalid for the schema.
     """
-    from lale.settings import disable_hyperparams_schema_validation
-
     if disable_hyperparams_schema_validation:
         return True  # if schema validation is disabled, always return as valid
     return always_validate_schema(value, schema, subsample_array=subsample_array)
@@ -160,8 +156,6 @@ _validator = jsonschema.Draft4Validator(_json_meta_schema())
 
 def validate_is_schema(value: Dict[str, Any]):
     # only checking hyperparams schema validation flag because it is likely to be true and this call is cheap.
-    from lale.settings import disable_hyperparams_schema_validation
-
     if disable_hyperparams_schema_validation:
         return True
 
@@ -279,12 +273,9 @@ def validate_schema(lhs: Any, super_schema: JSON_TYPE):
     SubschemaError
         The lhs had a schema that was not a subschema of super_schema.
     """
-    from lale.settings import disable_data_schema_validation
-
     if disable_data_schema_validation:
         return True  # If schema validation is disabled, always return as valid
     sub_schema: Optional[JSON_TYPE]
-    import lale.datasets.data_schemas
 
     try:
         sub_schema = lale.datasets.data_schemas._to_schema(lhs)

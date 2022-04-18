@@ -176,6 +176,14 @@ from typing import (
     overload,
 )
 
+from sklearn.base import clone
+
+from lale.settings import (
+    disable_data_schema_validation,
+    disable_hyperparams_schema_validation,
+    set_disable_hyperparams_schema_validation,
+)
+
 if sys.version_info >= (3, 8):
     from typing import Literal  # raises a mypy error for <3.8
 else:
@@ -625,8 +633,6 @@ class Operator(metaclass=AbstractVisitorMeta):
         """Return a copy of this operator, with the same hyper-parameters but without training data
         This behaves the same as calling sklearn.base.clone(self)
         """
-        from sklearn.base import clone
-
         cp = clone(self)
         return cp
 
@@ -1350,8 +1356,6 @@ class IndividualOp(Operator):
             return found_ops
 
     def _check_schemas(self):
-        from lale.settings import disable_hyperparams_schema_validation
-
         if disable_hyperparams_schema_validation:
             return
 
@@ -2207,8 +2211,6 @@ class IndividualOp(Operator):
     MAX_FIX_SUGGESTIONS: int = 3
 
     def _validate_hyperparams(self, hp_explicit, hp_all, hp_schema, class_):
-        from lale.settings import disable_hyperparams_schema_validation
-
         if disable_hyperparams_schema_validation:
             return
 
@@ -2330,8 +2332,6 @@ class IndividualOp(Operator):
                 self._validate_input_schema("y", y, method)
 
     def _validate_input_schema(self, arg_name: str, arg, method: str):
-        from lale.settings import disable_data_schema_validation
-
         if disable_data_schema_validation:
             return arg
 
@@ -2373,8 +2373,6 @@ class IndividualOp(Operator):
         return arg
 
     def _validate_output_schema(self, result, method):
-        from lale.settings import disable_data_schema_validation
-
         if disable_data_schema_validation:
             return result
 
@@ -2404,8 +2402,6 @@ class IndividualOp(Operator):
         return result
 
     def transform_schema(self, s_X) -> JSON_TYPE:
-        from lale.settings import disable_data_schema_validation
-
         if disable_data_schema_validation:
             return {}
         elif self.is_transformer():
@@ -2651,8 +2647,6 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         return result
 
     def _validate_hyperparam_data_constraints(self, X, y=None):
-        from lale.settings import disable_hyperparams_schema_validation
-
         if disable_hyperparams_schema_validation:
             return True
         hp_schema = self.hyperparam_schema()
@@ -2951,8 +2945,6 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         return result
 
     def transform_schema(self, s_X):
-        from lale.settings import disable_data_schema_validation
-
         if disable_data_schema_validation:
             return {}
         if self.has_method("transform_schema"):
@@ -3864,7 +3856,9 @@ class BasePipeline(Operator, Generic[OpType]):
                     "type": "array",
                     "minItems": n_datasets,
                     "maxItems": n_datasets,
-                    "items": [lale.datasets.data_schemas.to_schema(i) for i in schemas],
+                    "items": [
+                        lale.datasets.data_schemas._to_schema(i) for i in schemas
+                    ],
                 }
             return result
 
@@ -3894,8 +3888,6 @@ class BasePipeline(Operator, Generic[OpType]):
         self._validate_or_transform_schema(X, y, validate=True)
 
     def transform_schema(self, s_X):
-        from lale.settings import disable_data_schema_validation
-
         if disable_data_schema_validation:
             return {}
         else:
@@ -4977,8 +4969,6 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
             step.validate_schema(X, y)
 
     def transform_schema(self, s_X):
-        from lale.settings import disable_data_schema_validation
-
         if disable_data_schema_validation:
             return {}
         else:
@@ -5258,11 +5248,6 @@ def customize_schema(
     op = copy.deepcopy(op)
     methods = ["fit", "transform", "predict", "predict_proba", "decision_function"]
     # explicitly enable the hyperparams schema check because it is important
-    from lale.settings import (
-        disable_hyperparams_schema_validation,
-        set_disable_hyperparams_schema_validation,
-    )
-
     existing_disable_hyperparams_schema_validation = (
         disable_hyperparams_schema_validation
     )
@@ -5338,8 +5323,6 @@ CloneOpType = TypeVar("CloneOpType", bound=Operator)
 
 def clone_op(op: CloneOpType, name: Optional[str] = None) -> CloneOpType:
     """Clone any operator."""
-    from sklearn.base import clone
-
     nop = clone(op)
     if name:
         nop._set_name(name)
