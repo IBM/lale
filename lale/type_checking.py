@@ -287,7 +287,7 @@ def validate_schema(lhs: Any, super_schema: JSON_TYPE):
     import lale.datasets.data_schemas
 
     try:
-        sub_schema = lale.datasets.data_schemas.to_schema(lhs)
+        sub_schema = lale.datasets.data_schemas._to_schema(lhs)
     except ValueError:
         sub_schema = None
     if sub_schema is None:

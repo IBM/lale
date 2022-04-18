@@ -103,12 +103,13 @@ class _AggregateImpl:
                         "Expected plain group-by column access it['{old_col_name}'], found function '{agg_func_name}'"
                     )
                 return idx.get_level_values(old_col_name)
+            X_old_col = X[old_col_name]
             if self.exclude_value is not None:
-                return X[~X[old_col_name].isin([self.exclude_value])][old_col_name].agg(
+                return X_old_col[~X_old_col.isin([self.exclude_value])].agg(
                     agg_func_name
                 )
             else:
-                return X[old_col_name].agg(agg_func_name)
+                return X_old_col.agg(agg_func_name)
 
         aggregated_columns = {
             new_col_name: eval_agg_pandas(old_col_name, agg_func_name)
