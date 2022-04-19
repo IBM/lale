@@ -54,10 +54,10 @@ def wrap_imported_operators(exclude_classes=None):
             alias names if they are used while importing.
             by default None
     """
-    calling_frame = inspect.stack()[1][0]
-    _wrap_operators_in_symtab(calling_frame.f_globals, exclude_classes)
-    if calling_frame.f_code.co_name == "<module>":  # for testing with exec()
-        _wrap_operators_in_symtab(calling_frame.f_locals, exclude_classes)
+    calling_frame = inspect.currentframe().f_back  # type: ignore
+    _wrap_operators_in_symtab(calling_frame.f_globals, exclude_classes)  # type: ignore
+    if calling_frame.f_code.co_name == "<module>":  # type: ignore # for testing with exec()
+        _wrap_operators_in_symtab(calling_frame.f_locals, exclude_classes)  # type: ignore
 
 
 _lale_wrapper_modules: Set[str] = set()
