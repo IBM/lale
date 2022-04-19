@@ -738,7 +738,7 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
             "description": """(Deprecated) Use the label encoder from scikit-learn to encode the labels.
             For new code, we recommend that you set this parameter to False.""",
             "type": "boolean",
-            "default": True,
+            "default": True if xgboost.__version__ < "1.6" else False,
         },
         missing={
             "anyOf": [
