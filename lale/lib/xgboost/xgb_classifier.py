@@ -782,4 +782,254 @@ available choices are [cpu_predictor, gpu_predictor].""",
         set_as_available=True,
     )
 
+if xgboost_installed and xgboost.__version__ >= "1.6":
+    # https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn
+    XGBClassifier = XGBClassifier.customize_schema(
+        monotone_constraints={
+            "description": "Constraint of variable monotonicity.",
+            "anyOf": [{"enum": [None]}, {"type": "string"}],
+            "default": None,
+        },
+        interaction_constraints={
+            "description": "Constraints for interaction representing permitted interactions. The constraints must be specified in the form of a nest list, e.g. [[0, 1], [2, 3, 4]], where each inner list is a group of indices of features that are allowed to interact with each other.",
+            "anyOf": [{"enum": [None]}, {"type": "string"}],
+            "default": None,
+        },
+        num_parallel_tree={
+            "description": "Used for boosting random forest.",
+            "anyOf": [{"enum": [None]}, {"type": "integer"}],
+            "default": None,
+        },
+        validate_parameters={
+            "description": "Give warnings for unknown parameter.",
+            "anyOf": [{"enum": [None]}, {"type": "boolean"}, {"type": "integer"}],
+            "default": None,
+        },
+        gpu_id={
+            "description": "Device ordinal.",
+            "anyOf": [
+                {"type": "integer"},
+                {"enum": [None]},
+            ],
+            "default": None,
+        },
+        max_depth={
+            "description": "Maximum tree depth for base learners.",
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "minimum": 0,
+                    "distribution": "uniform",
+                    "minimumForOptimizer": 1,
+                    "maximumForOptimizer": 7,
+                },
+                {"enum": [None], "forOptimizer": False},
+            ],
+            "default": None,
+        },
+        learning_rate={
+            "description": """Boosting learning rate (xgb's "eta")""",
+            "anyOf": [
+                {
+                    "type": "number",
+                    "distribution": "loguniform",
+                    "minimumForOptimizer": 0.02,
+                    "maximumForOptimizer": 1,
+                },
+                {"enum": [None], "forOptimizer": False},
+            ],
+            "default": None,
+        },
+        booster={
+            "description": "Specify which booster to use.",
+            "enum": ["gbtree", "gblinear", "dart", None],
+            "default": None,
+        },
+        tree_method={
+            "description": """Specify which tree method to use.
+Default to auto. If this parameter is set to default, XGBoost will choose the most conservative option available.
+Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
+            "enum": ["auto", "exact", "approx", "hist", "gpu_hist", None],
+            "default": None,
+        },
+        gamma={
+            "description": "Minimum loss reduction required to make a further partition on a leaf node of the tree.",
+            "anyOf": [
+                {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximumForOptimizer": 1.0,
+                },
+                {"enum": [None], "forOptimizer": False},
+            ],
+            "default": None,
+        },
+        min_child_weight={
+            "description": "Minimum sum of instance weight(hessian) needed in a child.",
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "distribution": "uniform",
+                    "minimumForOptimizer": 2,
+                    "maximumForOptimizer": 20,
+                },
+                {"enum": [None], "forOptimizer": False},
+            ],
+            "default": None,
+        },
+        max_delta_step={
+            "description": "Maximum delta step we allow each tree's weight estimation to be.",
+            "anyOf": [{"enum": [None]}, {"type": "integer"}],
+            "default": None,
+        },
+        subsample={
+            "description": "Subsample ratio of the training instance.",
+            "anyOf": [
+                {
+                    "type": "number",
+                    "minimum": 0,
+                    "exclusiveMinimum": True,
+                    "distribution": "uniform",
+                    "minimumForOptimizer": 0.01,
+                    "maximumForOptimizer": 1.0,
+                },
+                {"enum": [None], "forOptimizer": False},
+            ],
+            "default": None,
+        },
+        colsample_bytree={
+            "description": "Subsample ratio of columns when constructing each tree.",
+            "anyOf": [
+                {
+                    "type": "number",
+                    "minimum": 0,
+                    "exclusiveMinimum": True,
+                    "maximum": 1,
+                    "distribution": "uniform",
+                    "minimumForOptimizer": 0.1,
+                    "maximumForOptimizer": 1.0,
+                },
+                {"enum": [None], "forOptimizer": False},
+            ],
+            "default": None,
+        },
+        colsample_bylevel={
+            "description": "Subsample ratio of columns for each split, in each level.",
+            "anyOf": [
+                {
+                    "type": "number",
+                    "minimum": 0,
+                    "exclusiveMinimum": True,
+                    "maximum": 1,
+                    "distribution": "uniform",
+                    "minimumForOptimizer": 0.1,
+                    "maximumForOptimizer": 1.0,
+                },
+                {"enum": [None], "forOptimizer": False},
+            ],
+            "default": None,
+        },
+        colsample_bynode={
+            "description": "Subsample ratio of columns for each split.",
+            "anyOf": [
+                {
+                    "type": "number",
+                    "minimum": 0,
+                    "exclusiveMinimum": True,
+                    "maximum": 1,
+                },
+                {"enum": [None], "forOptimizer": False},
+            ],
+            "default": None,
+        },
+        reg_alpha={
+            "description": "L1 regularization term on weights",
+            "anyOf": [
+                {
+                    "type": "number",
+                    "distribution": "uniform",
+                    "minimumForOptimizer": 0,
+                    "maximumForOptimizer": 1,
+                },
+                {"enum": [None], "forOptimizer": False},
+            ],
+            "default": None,
+        },
+        reg_lambda={
+            "description": "L2 regularization term on weights",
+            "anyOf": [
+                {
+                    "type": "number",
+                    "distribution": "uniform",
+                    "minimumForOptimizer": 0.1,
+                    "maximumForOptimizer": 1,
+                },
+                {"enum": [None], "forOptimizer": False},
+            ],
+            "default": None,
+        },
+        scale_pos_weight={
+            "description": "Balancing of positive and negative weights.",
+            "anyOf": [
+                {"type": "number"},
+                {"enum": [None], "forOptimizer": False},
+            ],
+            "default": None,
+        },
+        base_score={
+            "description": "The initial prediction score of all instances, global bias.",
+            "anyOf": [
+                {"type": "number"},
+                {"enum": [None], "forOptimizer": False},
+            ],
+            "default": None,
+        },
+        importance_type={
+            "description": "The feature importance type for the feature_importances_ property.",
+            "enum": ["gain", "weight", "cover", "total_gain", "total_cover", None],
+            "default": "gain",
+        },
+        use_label_encoder={
+            "description": """(Deprecated) Use the label encoder from scikit-learn to encode the labels.
+            For new code, we recommend that you set this parameter to False.""",
+            "type": "boolean",
+            "default": False,
+        },
+        missing={
+            "anyOf": [
+                {
+                    "type": "number",
+                },
+                {
+                    "enum": [None, np.NaN],
+                },
+            ],
+            "default": np.NaN,
+            "description": "Value in the data which needs to be present as a missing value. If"
+            " If None, defaults to np.nan.",
+        },
+        verbosity={
+            "description": "The degree of verbosity.",
+            "anyOf": [{"type": "integer"}, {"enum": [None]}],
+            "default": None,
+            "minimum": 0,
+            "maximum": 3,
+        },
+        enable_categorical={
+            "type": "boolean",
+            "description": """Experimental support for categorical data.
+Do not set to true unless you are interested in development.
+Only valid when gpu_hist and dataframe are used.""",
+            "default": False,
+        },
+        predictor={
+            "anyOf": [{"type": "string"}, {"enum": [None]}],
+            "description": """Force XGBoost to use specific predictor,
+available choices are [cpu_predictor, gpu_predictor].""",
+            "default": None,
+        },
+        set_as_available=True,
+    )
+
+
 lale.docstrings.set_docstrings(XGBClassifier)
