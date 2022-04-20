@@ -4377,7 +4377,16 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         return TrainedPipeline(trained_steps, trained_edges, _lale_trained=True)
 
     def partial_fit(
-        self, X, y=None, unsafe=False, **fit_params
+        self,
+        X,
+        y=None,
+        freeze_trained_prefix=True,
+        unsafe=False,
+        classes=None,
+        scoring=None,
+        progress_callback=None,
+        verbose=0,
+        **fit_params,
     ) -> "TrainedPipeline[TrainedIndividualOp]":
         """partial_fit for a pipeline.
         This method assumes that all but the last node of a pipeline are frozen_trained and
@@ -4389,11 +4398,23 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             Features; see partial_fit schema of the last node.
         y:
             Labels/target
+        freeze_trained_prefix:
+            If True, all but the last node are freeze_trained and only
+            the last node is partial_fit.
+            Default, True.
         unsafe:
             boolean.
             This flag allows users to override the validation that throws an error when the
             the operators in the prefix of this pipeline are not tagged with `has_partial_transform`.
             Setting unsafe to True would perform the transform as if it was row-wise even in the case it may not be.
+        classes:
+            The total number of classes in the entire training dataset.
+        scoring:
+            Batch-wise scoring metrics from `lale.lib.rasl`.
+        progress_callback:
+            Callback function to get performance metrics.
+        verbose:
+            Verbosity level, higher values mean more information.
         fit_params:
             dict
             Additional keyword arguments to be passed to partial_fit of the estimator
@@ -4404,16 +4425,8 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             A partially trained pipeline, which can be trained further by other calls to partial_fit
 
         """
-        estimator_only = True
+        from lale.lib.rasl import PrioResourceAware, fit_with_batches
 
-        for operator in self._steps[:-1]:
-            if not operator.is_frozen_trained():
-                estimator_only = False
-        if not estimator_only:
-            raise ValueError(
-                """partial_fit is only supported on pipelines when all but the last node are frozen_trained and
-        only the last node needs to be fit using its partial_fit method."""
-            )
         if hasattr(self, "_trained"):
             # This is the case where partial_fit has been called before,
             # so the partially fit pipeline is stored in _trained.
@@ -4421,25 +4434,21 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             self._trained = self._trained.partial_fit(X, y, **fit_params)
             return self._trained
         else:
-            # if this is the first time partial_fit is called on this pipeline,
-            # we would not have a _trained obj, so convert the prefix to a trained pipeline
-            # explicitly and do a transform and partial_fit as expected.
-            sink_node = self._steps[-1]
-            pipeline_prefix = self.remove_last()
-            trained_pipeline_prefix = pipeline_prefix.convert_to_trained()
-            transformed_output = trained_pipeline_prefix.transform(X, y)
-            if isinstance(transformed_output, tuple):
-                transformed_X, transformed_y = transformed_output
-            else:
-                transformed_X = transformed_output
-                transformed_y = y
-
-            trained_sink_node = sink_node.partial_fit(
-                transformed_X, transformed_y, **fit_params
+            # This is the first time partial_fit is called on this pipeline,
+            self._trained = fit_with_batches(
+                pipeline=self,
+                batches=iter([(X, y)]),
+                n_batches=1,
+                unique_class_labels=classes,
+                max_resident=None,
+                prio=PrioResourceAware(),
+                incremental=False,
+                scoring=scoring,
+                progress_callback=progress_callback,
+                verbose=verbose,
             )
-            new_pipeline = trained_pipeline_prefix >> trained_sink_node
-            self._trained = new_pipeline
-            return new_pipeline
+
+            return self._trained
 
     def freeze_trained(self) -> "TrainedPipeline":
         frozen_steps = []
@@ -4807,7 +4816,16 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         return cast(TrainedPipeline, result)
 
     def partial_fit(
-        self, X, y=None, unsafe=False, classes=None, **fit_params
+        self,
+        X,
+        y=None,
+        freeze_trained_prefix=True,
+        unsafe=False,
+        classes=None,
+        scoring=None,
+        progress_callback=None,
+        verbose=0,
+        **fit_params,
     ) -> "TrainedPipeline[TrainedIndividualOp]":
         """partial_fit for a pipeline.
         This method assumes that all but the last node of a pipeline are frozen_trained and
@@ -4819,46 +4837,48 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             Features; see partial_fit schema of the last node.
         y:
             Labels/target
+        freeze_trained_prefix:
+            If True, all but the last node are freeze_trained and only
+            the last node is partial_fit.
+            Default, True.
         unsafe:
             boolean.
             This flag allows users to override the validation that throws an error when the
             the operators in the prefix of this pipeline are not tagged with `has_partial_transform`.
             Setting unsafe to True would perform the transform as if it was row-wise even in the case it may not be.
+        classes:
+            The total number of classes in the entire training dataset.
+        scoring:
+            Batch-wise scoring metrics from `lale.lib.rasl`.
+        progress_callback:
+            Callback function to get performance metrics.
+        verbose:
+            Verbosity level, higher values mean more information.
         fit_params:
             dict
-            Additional keyword arguments to be passed to partial_fit of the estimator
-        classes:
-
+            Additional keyword arguments to be passed to partial_fit of the estimator.
         Returns
         -------
         TrainedPipeline :
             A partially trained pipeline, which can be trained further by other calls to partial_fit
 
         """
-        estimator_only = True
+        from lale.lib.rasl import PrioResourceAware, fit_with_batches
 
-        for operator in self._steps[:-1]:
-            if not operator.is_frozen_trained():
-                estimator_only = False
-        if not estimator_only:
-            raise ValueError(
-                """partial_fit is only supported on pipelines when all but the last node are frozen_trained and
-        only the last node needs to be fit using its partial_fit method."""
-            )
+        self = fit_with_batches(
+            pipeline=self,
+            batches=iter([(X, y)]),
+            n_batches=1,
+            unique_class_labels=classes,
+            max_resident=None,
+            prio=PrioResourceAware(),
+            incremental=False,
+            scoring=scoring,
+            progress_callback=progress_callback,
+            verbose=verbose,
+        )
 
-        sink_node = self._steps[-1]
-        self.remove_last(inplace=True)
-        transformed_output = self.transform(X, y)
-        if isinstance(transformed_output, tuple):
-            transformed_X, transformed_y = transformed_output
-        else:
-            transformed_X = transformed_output
-            transformed_y = y
-        trained_sink_node = sink_node.partial_fit(
-            transformed_X, transformed_y, **fit_params
-        )  # note: no classes being passed here as we assume the trained pipeline is obtained after a call to partial_fit
-        new_pipeline = self >> trained_sink_node
-        return new_pipeline
+        return self
 
 
 OperatorChoiceType = TypeVar("OperatorChoiceType", bound=Operator, covariant=True)
