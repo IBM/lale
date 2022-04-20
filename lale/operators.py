@@ -4370,6 +4370,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         self,
         X,
         y=None,
+        freeze_trained_prefix=True,
         unsafe=False,
         classes=None,
         scoring=None,
@@ -4387,6 +4388,10 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             Features; see partial_fit schema of the last node.
         y:
             Labels/target
+        freeze_trained_prefix:
+            If True, all but the last node are freeze_trained and only
+            the last node is partial_fit.
+            Default, True.
         unsafe:
             boolean.
             This flag allows users to override the validation that throws an error when the
@@ -4420,11 +4425,9 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             return self._trained
         else:
             # This is the first time partial_fit is called on this pipeline,
-            data_loader = lale.helpers.create_data_loader(X=X, y=y, batch_size=len(y))
-
             self._trained = fit_with_batches(
                 pipeline=self,
-                batches=data_loader,  # type:ignore
+                batches=iter([(X, y)]),
                 n_batches=1,
                 unique_class_labels=classes,
                 max_resident=None,
@@ -4806,6 +4809,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         self,
         X,
         y=None,
+        freeze_trained_prefix=True,
         unsafe=False,
         classes=None,
         scoring=None,
@@ -4823,6 +4827,10 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             Features; see partial_fit schema of the last node.
         y:
             Labels/target
+        freeze_trained_prefix:
+            If True, all but the last node are freeze_trained and only
+            the last node is partial_fit.
+            Default, True.
         unsafe:
             boolean.
             This flag allows users to override the validation that throws an error when the
@@ -4847,11 +4855,9 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         """
         from lale.lib.rasl import PrioResourceAware, fit_with_batches
 
-        data_loader = lale.helpers.create_data_loader(X=X, y=y, batch_size=len(y))
-
-        self = fit_with_batches(  # type: ignore
+        self = fit_with_batches(
             pipeline=self,
-            batches=data_loader,  # type:ignore
+            batches=iter([(X, y)]),
             n_batches=1,
             unique_class_labels=classes,
             max_resident=None,
