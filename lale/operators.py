@@ -4855,7 +4855,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         """
         from lale.lib.rasl import PrioResourceAware, fit_with_batches
 
-        self = fit_with_batches(
+        self = fit_with_batches(  # type:ignore
             pipeline=self,
             batches=iter([(X, y)]),
             n_batches=1,

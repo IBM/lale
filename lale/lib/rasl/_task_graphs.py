@@ -136,16 +136,28 @@ class _TrainTask(_Task):
     def get_operation(
         self, pipeline: TrainablePipeline[TrainableIndividualOp]
     ) -> _Operation:
-        any_pred_train = any(isinstance(p, _TrainTask) for p in self.preds)
-        any_succ_train = any(isinstance(s, _TrainTask) for s in self.succs)
-        if not any_pred_train and not any_succ_train:
-            return _Operation.FIT
+        # any_pred_train = any(isinstance(p, _TrainTask) for p in self.preds)
+        # any_succ_train = any(isinstance(s, _TrainTask) for s in self.succs)
+        # if not any_pred_train and not any_succ_train:
+        #     return _Operation.FIT
+        # step = pipeline.steps_list()[self.step_id]
+        # if is_associative(step):
+        #     if len(self.batch_ids) == 1:
+        #         return _Operation.TO_MONOID
+        #     return _Operation.COMBINE
+        # return _Operation.PARTIAL_FIT
         step = pipeline.steps_list()[self.step_id]
         if is_associative(step):
+            any_pred_train = any(isinstance(p, _TrainTask) for p in self.preds)
+            any_succ_train = any(isinstance(s, _TrainTask) for s in self.succs)
+            if not any_pred_train and not any_succ_train:
+                return _Operation.FIT
             if len(self.batch_ids) == 1:
                 return _Operation.TO_MONOID
             return _Operation.COMBINE
-        return _Operation.PARTIAL_FIT
+        elif is_incremental(step):
+            return _Operation.PARTIAL_FIT
+        return _Operation.FIT
 
     def get_trained(
         self, pipeline: TrainablePipeline[TrainableIndividualOp]
