@@ -46,3 +46,20 @@ class BadClassifier:
 
     def predict(self, X):
         assert False, "Bad predict method."
+
+
+class CustomOrigOperator:
+    def __init__(self):
+        pass
+
+    def fit(self, X, y=None, **kwargs):
+        return self
+
+    def predict(self, X, **predict_params):
+        self._predict_params = predict_params
+
+    @classmethod
+    def _get_lale_operator(cls):
+        from .mock_custom_operators import CustomOrigOperator
+
+        return CustomOrigOperator
