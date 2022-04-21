@@ -4876,9 +4876,14 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         else:
             transformed_X = transformed_output
             transformed_y = y
-        trained_sink_node = sink_node.partial_fit(
-            transformed_X, transformed_y, classes=classes, **fit_params
-        )
+        try:
+            trained_sink_node = sink_node.partial_fit(
+                transformed_X, transformed_y, classes=classes, **fit_params
+            )
+        except TypeError:  # occurs when `classes` is not expected
+            trained_sink_node = sink_node.partial_fit(
+                transformed_X, transformed_y, **fit_params
+            )
         trained_pipeline = pipeline_prefix >> trained_sink_node
         return trained_pipeline
 
