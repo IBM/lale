@@ -14,7 +14,7 @@
 
 import unittest
 from test import EnableSchemaValidation
-from test.mock_module import UnknownOp
+from test.mock_module import CustomOrigOperator, UnknownOp
 
 import numpy as np
 from lightgbm import LGBMClassifier as baz
@@ -418,11 +418,14 @@ class TestCustomSchema(unittest.TestCase):
             lale.wrap_imported_operators(exclude_classes=["foo"])
             from sklearn.decomposition import PCA as sklearn_pca
 
+            from lale.operators import PlannedIndividualOp
+
             op_obj = foo()
             self.assertIsInstance(op_obj, sklearn_pca)
             self.assertEqual(bar._schemas, XGBClassifier._schemas)  # type: ignore
             self.assertEqual(baz._schemas, LGBMClassifier._schemas)  # type: ignore
             self.assertEqual(foobar._schemas, Lars._schemas)
+            self.assertIsInstance(CustomOrigOperator, PlannedIndividualOp)
         finally:
             for sym, obj in old_globals.items():
                 globals()[sym] = obj

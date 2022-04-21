@@ -3365,6 +3365,7 @@ def get_op_from_lale_lib(impl_class) -> Optional[IndividualOp]:
     assert inspect.isclass(impl_class)
     assert not issubclass(impl_class, Operator)
     assert hasattr(impl_class, "predict") or hasattr(impl_class, "transform")
+    result = None
     if impl_class.__module__.startswith("lale.lib"):
         assert impl_class.__name__.endswith("Impl"), impl_class.__name__
         assert impl_class.__name__.startswith("_"), impl_class.__name__
@@ -3381,7 +3382,10 @@ def get_op_from_lale_lib(impl_class) -> Optional[IndividualOp]:
                 module = importlib.import_module("lale.lib.autogen")
                 result = getattr(module, impl_class.__name__)
             except (ModuleNotFoundError, AttributeError):
-                result = None
+                if hasattr(impl_class, "_get_lale_operator"):
+                    result = impl_class._get_lale_operator()  # type:ignore
+                else:
+                    result = None
     if result is not None:
         result._check_schemas()
     return result

@@ -17,6 +17,8 @@ import sklearn.linear_model
 
 import lale.operators
 
+from .mock_module import CustomOrigOperator as model_to_be_wrapped
+
 
 class _IncreaseRowsImpl:
     def __init__(self, n_rows=5):
@@ -295,3 +297,5 @@ _combined_schemas_cp = {
 CustomParamsCheckerOp = lale.operators.make_operator(
     _CustomParamsCheckerOpImpl, _combined_schemas_cp
 )
+
+CustomOrigOperator = lale.operators.make_operator(model_to_be_wrapped, {})
