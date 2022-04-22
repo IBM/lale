@@ -31,7 +31,7 @@ def _wrap_operators_in_symtab(symtab, exclude_classes=None):
             if exclude_classes is not None:
                 if name in exclude_classes:
                     continue
-            operator = get_op_from_lale_lib(impl)
+            operator = get_op_from_lale_lib(impl, get_lale_wrapper_modules())
             if operator is None:
                 # symtab[name] = make_operator(impl=impl, name=name)
                 logger.info(f"Lale:Not wrapping unknown operator:{name}")
@@ -85,3 +85,18 @@ def register_lale_wrapper_modules(m: str) -> None:
 
 def get_lale_wrapper_modules() -> Set[str]:
     return _lale_wrapper_modules
+
+
+try:
+    import autoai_ts_libs.lale  # type: ignore  # noqa:F401
+except ImportError:
+    pass
+
+for m in [
+    "lale.lib.sklearn",
+    "lale.lib.autoai_libs",
+    "lale.lib.xgboost",
+    "lale.lib.lightgbm",
+    "lale.lib.snapml",
+]:
+    register_lale_wrapper_modules(m)

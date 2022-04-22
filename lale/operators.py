@@ -3361,7 +3361,7 @@ def make_pretrained_operator(
     return x
 
 
-def get_op_from_lale_lib(impl_class) -> Optional[IndividualOp]:
+def get_op_from_lale_lib(impl_class, wrapper_modules=None) -> Optional[IndividualOp]:
     assert inspect.isclass(impl_class)
     assert not issubclass(impl_class, Operator)
     assert hasattr(impl_class, "predict") or hasattr(impl_class, "transform")
@@ -3382,10 +3382,16 @@ def get_op_from_lale_lib(impl_class) -> Optional[IndividualOp]:
                 module = importlib.import_module("lale.lib.autogen")
                 result = getattr(module, impl_class.__name__)
             except (ModuleNotFoundError, AttributeError):
-                if hasattr(impl_class, "_get_lale_operator"):
-                    result = impl_class._get_lale_operator()  # type:ignore
-                else:
-                    result = None
+                if wrapper_modules is not None:
+                    try:
+                        for wrapper_module in wrapper_modules:
+                            module = importlib.import_module(wrapper_module)
+                            result = getattr(module, impl_class.__name__)
+                    except (ModuleNotFoundError, AttributeError):
+                        if hasattr(impl_class, "_get_lale_operator"):
+                            result = impl_class._get_lale_operator()  # type:ignore
+                        else:
+                            result = None
     if result is not None:
         result._check_schemas()
     return result
