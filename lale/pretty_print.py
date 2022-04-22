@@ -625,7 +625,12 @@ def _operator_jsn_to_string(
                 external_wrapper_modules_set |= {module}
                 external_wrapper_modules_list.append(module)
         if combinators:
-            result += f"\nlale.wrap_imported_operators({external_wrapper_modules_list})"
+            if len(external_wrapper_modules_list) > 0:
+                result += (
+                    f"\nlale.wrap_imported_operators({external_wrapper_modules_list})"
+                )
+            else:
+                result += "\nlale.wrap_imported_operators()"
         result += "\n"
         result += "\n".join(gen.assigns)
     else:
