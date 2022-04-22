@@ -5249,11 +5249,6 @@ def customize_schema(
     PlannedIndividualOp
         Copy of the operator with a customized schema
     """
-    from lale.settings import (
-        disable_hyperparams_schema_validation,
-        set_disable_hyperparams_schema_validation,
-    )
-
     op_index = -1
     try:
         op_index = _all_available_operators.index(op)
@@ -5263,6 +5258,11 @@ def customize_schema(
     op = copy.deepcopy(op)
     methods = ["fit", "transform", "predict", "predict_proba", "decision_function"]
     # explicitly enable the hyperparams schema check because it is important
+    from lale.settings import (
+        disable_hyperparams_schema_validation,
+        set_disable_hyperparams_schema_validation,
+    )
+
     existing_disable_hyperparams_schema_validation = (
         disable_hyperparams_schema_validation
     )
