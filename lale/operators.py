@@ -3864,9 +3864,7 @@ class BasePipeline(Operator, Generic[OpType]):
                     "type": "array",
                     "minItems": n_datasets,
                     "maxItems": n_datasets,
-                    "items": [
-                        lale.datasets.data_schemas.to_schema(i) for i in schemas
-                    ],
+                    "items": [lale.datasets.data_schemas.to_schema(i) for i in schemas],
                 }
             return result
 
