@@ -55,6 +55,10 @@ def wrap_imported_operators(exclude_classes=None, wrapper_modules=None):
             by default None
     """
     calling_frame = inspect.stack()[1][0]
+    if wrapper_modules is not None:
+        wrapper_modules.extend(get_lale_wrapper_modules())
+    else:
+        wrapper_modules = get_lale_wrapper_modules()
     _wrap_operators_in_symtab(
         calling_frame.f_globals, exclude_classes, wrapper_modules=wrapper_modules
     )

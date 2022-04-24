@@ -244,16 +244,21 @@ def _get_module_name(op_label: str, op_name: str, class_name: str) -> str:
     return mod
 
 
-def _get_wrapper_module_if_external(module_name, op_name, lale_op_class_name):
+def _get_wrapper_module_if_external(impl_class_name):
     # If the lale operator was not found in the list of libraries registered with
     # lale, return the operator's i.e. wrapper's module name
     # This is pass to `wrap_imported_operators` in the output of `pretty_print`.
-    module = importlib.import_module(module_name)
-    if hasattr(module, op_name):
-        wrapped_model = getattr(module, op_name)
+    impl_name = impl_class_name[impl_class_name.rfind(".") + 1 :]
+    impl_module_name = impl_class_name[: impl_class_name.rfind(".")]
+    module = importlib.import_module(impl_module_name)
+    if hasattr(module, impl_name):
+        wrapped_model = getattr(module, impl_name)
         wrapper = lale.operators.get_op_from_lale_lib(wrapped_model)
         if wrapper is None:
-            return lale_op_class_name[: lale_op_class_name.rfind(".")]
+            # TODO: The assumption here is that the operator is created in the same
+            # module as where the impl is defined.
+            # Do we have a better way to know where `make_operator` is called from instead?
+            return impl_module_name
         else:
             return None
     return None
@@ -518,9 +523,7 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
         else:
             import_stmt = f"from {module_name} import {op_name} as {label}"
         gen.imports.append(import_stmt)
-        external_module_name = _get_wrapper_module_if_external(
-            module_name, op_name, class_name
-        )
+        external_module_name = _get_wrapper_module_if_external(class_name)
         if external_module_name is not None:
             gen.external_wrapper_modules.append(external_module_name)
         printed_steps = {
