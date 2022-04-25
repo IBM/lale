@@ -70,7 +70,7 @@ class _MinMaxScalerImpl(MonoidableOperator[_MinMaxScalerMonoid]):
 
     def transform(self, X):
         if self._transformer is None:
-            self._transformer = self._build_transformer(X)
+            self._transformer = self._build_transformer()
         X_new = self._transformer.transform(X)
         return forward_metadata(X, X_new)
 
@@ -99,14 +99,14 @@ class _MinMaxScalerImpl(MonoidableOperator[_MinMaxScalerMonoid]):
         self.min_ = range_min - v.data_min_ * self.scale_
         self._transformer = None
 
-    def _build_transformer(self, X):
+    def _build_transformer(self):
         range_min, range_max = self._hyperparams["feature_range"]
         ops = {}
         dmin = self.data_min_
         assert dmin is not None
         dmax = self.data_max_
         assert dmax is not None
-        for i, c in enumerate(get_columns(X)):
+        for i, c in enumerate(self.feature_names_in_):
             c_std = (it[c] - dmin[i]) / (dmax[i] - dmin[i])
             c_scaled = c_std * (range_max - range_min) + range_min
             ops.update({c: c_scaled})
@@ -114,22 +114,23 @@ class _MinMaxScalerImpl(MonoidableOperator[_MinMaxScalerMonoid]):
 
     def to_monoid(self, v: Tuple[Any, Any]) -> _MinMaxScalerMonoid:
         X, _ = v
-        agg = {f"{c}_min": agg_min(it[c]) for c in get_columns(X)}
-        agg.update({f"{c}_max": agg_max(it[c]) for c in get_columns(X)})
+        X_cols = get_columns(X)
+        agg = {f"{c}_min": agg_min(it[c]) for c in X_cols}
+        agg.update({f"{c}_max": agg_max(it[c]) for c in X_cols})
         aggregate = Aggregate(columns=agg)
         data_min_max = aggregate.transform(X)
         if _is_spark_df(X):
             data_min_max = data_min_max.toPandas()
-        n = len(get_columns(X))
+        n = len(X_cols)
         data_min_ = np.zeros(shape=(n))
         data_max_ = np.zeros(shape=(n))
-        for i, c in enumerate(get_columns(X)):
+        for i, c in enumerate(X_cols):
             data_min_[i] = data_min_max[f"{c}_min"]
             data_max_[i] = data_min_max[f"{c}_max"]
         data_min_ = np.array(data_min_)
         data_max_ = np.array(data_max_)
         n_samples_seen_ = count(X)
-        feature_names_in_ = get_columns(X)
+        feature_names_in_ = X_cols
         return _MinMaxScalerMonoid(
             data_min_=data_min_,
             data_max_=data_max_,

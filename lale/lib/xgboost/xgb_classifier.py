@@ -782,4 +782,16 @@ available choices are [cpu_predictor, gpu_predictor].""",
         set_as_available=True,
     )
 
+if xgboost_installed and xgboost.__version__ >= "1.6":
+    # https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn
+    XGBClassifier = XGBClassifier.customize_schema(
+        use_label_encoder={
+            "description": """(Deprecated) Use the label encoder from scikit-learn to encode the labels.
+            For new code, we recommend that you set this parameter to False.""",
+            "type": "boolean",
+            "default": False,
+        },
+    )
+
+
 lale.docstrings.set_docstrings(XGBClassifier)

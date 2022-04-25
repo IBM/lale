@@ -1102,3 +1102,52 @@ class TestPartialFit(unittest.TestCase):
         self.assertEqual(new_trained_pipeline, new_pipeline._trained)
         _ = new_trained_pipeline.predict(self.X_test)
         new_pipeline.partial_fit(self.X_train, self.y_train, classes=[0, 1, 2])
+
+    def test_call_on_trainable_with_freeze_trained_prefix(self):
+        trainable_pipeline = StandardScaler()
+        trained_pipeline = trainable_pipeline.fit(self.X_train, self.y_train)
+        new_pipeline = trained_pipeline >> SGDClassifier()
+        new_pipeline.partial_fit(self.X_train, self.y_train, classes=[0, 1, 2])
+        new_pipeline.pretty_print()
+        new_trained_pipeline = new_pipeline.partial_fit(
+            self.X_test, self.y_test, classes=[0, 1, 2]
+        )
+        self.assertEqual(new_trained_pipeline, new_pipeline._trained)
+        _ = new_trained_pipeline.predict(self.X_test)
+        new_pipeline.partial_fit(self.X_train, self.y_train, classes=[0, 1, 2])
+
+    def test_call_on_trainable_with_freeze_trained_prefix_false(self):
+        trainable_pipeline = StandardScaler()
+        trained_pipeline = trainable_pipeline.fit(self.X_train, self.y_train)
+        new_pipeline = trained_pipeline >> SGDClassifier()
+        with self.assertRaises(ValueError):
+            new_pipeline.partial_fit(
+                self.X_train,
+                self.y_train,
+                freeze_trained_prefix=False,
+                classes=[0, 1, 2],
+            )
+
+    def test_call_on_trained_with_freeze_trained_prefix(self):
+        trainable_pipeline = StandardScaler() >> SGDClassifier()
+        trained_pipeline = trainable_pipeline.fit(self.X_train, self.y_train)
+        new_pipeline = trained_pipeline
+        new_pipeline.partial_fit(self.X_train, self.y_train, classes=[0, 1, 2])
+        new_pipeline.pretty_print()
+        new_trained_pipeline = new_pipeline.partial_fit(
+            self.X_test, self.y_test, classes=[0, 1, 2]
+        )
+        _ = new_trained_pipeline.predict(self.X_test)
+        new_pipeline.partial_fit(self.X_train, self.y_train, classes=[0, 1, 2])
+
+    def test_call_on_trained_with_freeze_trained_prefix_false(self):
+        trainable_pipeline = StandardScaler() >> SGDClassifier()
+        trained_pipeline = trainable_pipeline.fit(self.X_train, self.y_train)
+        new_pipeline = trained_pipeline
+        with self.assertRaises(ValueError):
+            new_pipeline.partial_fit(
+                self.X_train,
+                self.y_train,
+                freeze_trained_prefix=False,
+                classes=[0, 1, 2],
+            )

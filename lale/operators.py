@@ -3375,10 +3375,11 @@ def make_pretrained_operator(
     return x
 
 
-def get_op_from_lale_lib(impl_class) -> Optional[IndividualOp]:
+def get_op_from_lale_lib(impl_class, wrapper_modules=None) -> Optional[IndividualOp]:
     assert inspect.isclass(impl_class)
     assert not issubclass(impl_class, Operator)
     assert hasattr(impl_class, "predict") or hasattr(impl_class, "transform")
+    result = None
     if impl_class.__module__.startswith("lale.lib"):
         assert impl_class.__name__.endswith("Impl"), impl_class.__name__
         assert impl_class.__name__.startswith("_"), impl_class.__name__
@@ -3395,7 +3396,17 @@ def get_op_from_lale_lib(impl_class) -> Optional[IndividualOp]:
                 module = importlib.import_module("lale.lib.autogen")
                 result = getattr(module, impl_class.__name__)
             except (ModuleNotFoundError, AttributeError):
-                result = None
+                if wrapper_modules is not None:
+                    for wrapper_module in wrapper_modules:
+                        try:
+                            module = importlib.import_module(wrapper_module)
+                            result = getattr(module, impl_class.__name__)
+                            if result is not None:
+                                break
+                        except (ModuleNotFoundError, AttributeError):
+                            pass
+                    else:
+                        result = None
     if result is not None:
         result._check_schemas()
     return result
@@ -4390,11 +4401,13 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         return TrainedPipeline(trained_steps, trained_edges, _lale_trained=True)
 
     def partial_fit(
-        self, X, y=None, unsafe=False, **fit_params
+        self, X, y=None, freeze_trained_prefix=True, unsafe=False, **fit_params
     ) -> "TrainedPipeline[TrainedIndividualOp]":
         """partial_fit for a pipeline.
         This method assumes that all but the last node of a pipeline are frozen_trained and
         only the last node needs to be fit using its partial_fit method.
+        If that is not the case, and `freeze_trained_prefix` is True, it freezes the prefix
+        of the pipeline except the last node if they are trained.
 
         Parameters
         ----------
@@ -4402,6 +4415,9 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             Features; see partial_fit schema of the last node.
         y:
             Labels/target
+        freeze_trained_prefix:
+            If True, all but the last node are freeze_trained and only
+            the last node is partial_fit.
         unsafe:
             boolean.
             This flag allows users to override the validation that throws an error when the
@@ -4422,10 +4438,11 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         for operator in self._steps[:-1]:
             if not operator.is_frozen_trained():
                 estimator_only = False
-        if not estimator_only:
+        if not estimator_only and not freeze_trained_prefix:
             raise ValueError(
                 """partial_fit is only supported on pipelines when all but the last node are frozen_trained and
-        only the last node needs to be fit using its partial_fit method."""
+            only the last node needs to be fit using its partial_fit method. The parameter `freeze_trained_prefix`
+            can be set to True if the prefix is trained and needs to be frozen during partial_fit."""
             )
         if hasattr(self, "_trained"):
             # This is the case where partial_fit has been called before,
@@ -4439,7 +4456,10 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             # explicitly and do a transform and partial_fit as expected.
             sink_node = self._steps[-1]
             pipeline_prefix = self.remove_last()
+            if not estimator_only and freeze_trained_prefix:
+                pipeline_prefix = pipeline_prefix.freeze_trained()
             trained_pipeline_prefix = pipeline_prefix.convert_to_trained()
+
             transformed_output = trained_pipeline_prefix.transform(X, y)
             if isinstance(transformed_output, tuple):
                 transformed_X, transformed_y = transformed_output
@@ -4818,11 +4838,19 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         return cast(TrainedPipeline, result)
 
     def partial_fit(
-        self, X, y=None, unsafe=False, classes=None, **fit_params
+        self,
+        X,
+        y=None,
+        freeze_trained_prefix=True,
+        unsafe=False,
+        classes=None,
+        **fit_params,
     ) -> "TrainedPipeline[TrainedIndividualOp]":
         """partial_fit for a pipeline.
         This method assumes that all but the last node of a pipeline are frozen_trained and
         only the last node needs to be fit using its partial_fit method.
+        If that is not the case, and `freeze_trained_prefix` is True, it freezes the prefix
+        of the pipeline except the last node if they are trained.
 
         Parameters
         ----------
@@ -4830,6 +4858,9 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             Features; see partial_fit schema of the last node.
         y:
             Labels/target
+        freeze_trained_prefix:
+            If True, all but the last node are freeze_trained and only
+            the last node is partial_fit.
         unsafe:
             boolean.
             This flag allows users to override the validation that throws an error when the
@@ -4851,25 +4882,32 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         for operator in self._steps[:-1]:
             if not operator.is_frozen_trained():
                 estimator_only = False
-        if not estimator_only:
+        if not estimator_only and not freeze_trained_prefix:
             raise ValueError(
                 """partial_fit is only supported on pipelines when all but the last node are frozen_trained and
-        only the last node needs to be fit using its partial_fit method."""
+            only the last node needs to be fit using its partial_fit method. The parameter `freeze_trained_prefix`
+            can be set to True if the prefix is trained and needs to be frozen during partial_fit."""
             )
-
         sink_node = self._steps[-1]
-        self.remove_last(inplace=True)
-        transformed_output = self.transform(X, y)
+        pipeline_prefix = self.remove_last()
+        if not estimator_only and freeze_trained_prefix:
+            pipeline_prefix = pipeline_prefix.freeze_trained()
+        transformed_output = pipeline_prefix.transform(X, y)
         if isinstance(transformed_output, tuple):
             transformed_X, transformed_y = transformed_output
         else:
             transformed_X = transformed_output
             transformed_y = y
-        trained_sink_node = sink_node.partial_fit(
-            transformed_X, transformed_y, **fit_params
-        )  # note: no classes being passed here as we assume the trained pipeline is obtained after a call to partial_fit
-        new_pipeline = self >> trained_sink_node
-        return new_pipeline
+        try:
+            trained_sink_node = sink_node.partial_fit(
+                transformed_X, transformed_y, classes=classes, **fit_params
+            )
+        except TypeError:  # occurs when `classes` is not expected
+            trained_sink_node = sink_node.partial_fit(
+                transformed_X, transformed_y, **fit_params
+            )
+        trained_pipeline = pipeline_prefix >> trained_sink_node
+        return trained_pipeline
 
 
 OperatorChoiceType = TypeVar("OperatorChoiceType", bound=Operator, covariant=True)
