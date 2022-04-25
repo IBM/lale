@@ -54,7 +54,14 @@ def wrap_imported_operators(exclude_classes=None, wrapper_modules=None):
             alias names if they are used while importing.
             by default None
     """
-    calling_frame = inspect.stack()[1][0]
+    current_frame = inspect.currentframe()
+    assert (
+        current_frame is not None
+    ), "Try to use inspect.stack()[1][0] to get the calling frame"
+    calling_frame = current_frame.f_back
+    assert (
+        calling_frame is not None
+    ), "Try to use inspect.stack()[1][0] to get the calling frame"
     if wrapper_modules is not None:
         wrapper_modules.extend(get_lale_wrapper_modules())
     else:
