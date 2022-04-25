@@ -1079,11 +1079,25 @@ MockClassifier = lale.operators.make_operator(_MockClassifierImpl)
                 expected = f"""from {module_name} import MockClassifier as MockClf
 import lale
 
-lale.wrap_imported_operators()
+lale.wrap_imported_operators(["{module_name}"])
 pipeline = MockClf(int_hp=42)"""
                 self._roundtrip(expected, pipeline.pretty_print())
             finally:
                 sys.path = old_pythonpath
+
+    def test_nonlib_operator(self):
+        from test.mock_custom_operators import CustomOrigOperator
+
+        from lale.lib.sklearn import LogisticRegression
+
+        pipeline = CustomOrigOperator() >> LogisticRegression()
+        expected = """from test.mock_module import CustomOrigOperator
+from sklearn.linear_model import LogisticRegression
+import lale
+
+lale.wrap_imported_operators(["test.mock_module"])
+pipeline = CustomOrigOperator() >> LogisticRegression()"""
+        self._roundtrip(expected, pipeline.pretty_print())
 
 
 class TestToAndFromJSON(unittest.TestCase):

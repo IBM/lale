@@ -415,7 +415,9 @@ class TestCustomSchema(unittest.TestCase):
             from lale.lib.lightgbm import LGBMClassifier
             from lale.lib.xgboost import XGBClassifier
 
-            lale.wrap_imported_operators(exclude_classes=["foo"])
+            lale.wrap_imported_operators(
+                exclude_classes=["foo"], wrapper_modules=["test.mock_custom_operators"]
+            )
             from sklearn.decomposition import PCA as sklearn_pca
 
             from lale.operators import PlannedIndividualOp

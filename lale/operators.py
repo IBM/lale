@@ -3383,15 +3383,16 @@ def get_op_from_lale_lib(impl_class, wrapper_modules=None) -> Optional[Individua
                 result = getattr(module, impl_class.__name__)
             except (ModuleNotFoundError, AttributeError):
                 if wrapper_modules is not None:
-                    try:
-                        for wrapper_module in wrapper_modules:
+                    for wrapper_module in wrapper_modules:
+                        try:
                             module = importlib.import_module(wrapper_module)
                             result = getattr(module, impl_class.__name__)
-                    except (ModuleNotFoundError, AttributeError):
-                        if hasattr(impl_class, "_get_lale_operator"):
-                            result = impl_class._get_lale_operator()  # type:ignore
-                        else:
-                            result = None
+                            if result is not None:
+                                break
+                        except (ModuleNotFoundError, AttributeError):
+                            pass
+                    else:
+                        result = None
     if result is not None:
         result._check_schemas()
     return result

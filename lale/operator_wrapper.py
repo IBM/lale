@@ -21,7 +21,7 @@ from lale.operators import Operator, clone_op, get_op_from_lale_lib
 logger = logging.getLogger(__name__)
 
 
-def _wrap_operators_in_symtab(symtab, exclude_classes=None):
+def _wrap_operators_in_symtab(symtab, exclude_classes=None, wrapper_modules=None):
     for name, impl in symtab.items():
         if (
             inspect.isclass(impl)
@@ -31,7 +31,7 @@ def _wrap_operators_in_symtab(symtab, exclude_classes=None):
             if exclude_classes is not None:
                 if name in exclude_classes:
                     continue
-            operator = get_op_from_lale_lib(impl, get_lale_wrapper_modules())
+            operator = get_op_from_lale_lib(impl, wrapper_modules)
             if operator is None:
                 # symtab[name] = make_operator(impl=impl, name=name)
                 logger.info(f"Lale:Not wrapping unknown operator:{name}")
@@ -43,7 +43,7 @@ def _wrap_operators_in_symtab(symtab, exclude_classes=None):
                     logger.info(f"Lale:Wrapped known operator:{name}")
 
 
-def wrap_imported_operators(exclude_classes=None):
+def wrap_imported_operators(exclude_classes=None, wrapper_modules=None):
     """Wrap the currently imported operators from the symbol table
     to their lale wrappers.
 
@@ -55,9 +55,17 @@ def wrap_imported_operators(exclude_classes=None):
             by default None
     """
     calling_frame = inspect.stack()[1][0]
-    _wrap_operators_in_symtab(calling_frame.f_globals, exclude_classes)
+    if wrapper_modules is not None:
+        wrapper_modules.extend(get_lale_wrapper_modules())
+    else:
+        wrapper_modules = get_lale_wrapper_modules()
+    _wrap_operators_in_symtab(
+        calling_frame.f_globals, exclude_classes, wrapper_modules=wrapper_modules
+    )
     if calling_frame.f_code.co_name == "<module>":  # for testing with exec()
-        _wrap_operators_in_symtab(calling_frame.f_locals, exclude_classes)
+        _wrap_operators_in_symtab(
+            calling_frame.f_locals, exclude_classes, wrapper_modules=wrapper_modules
+        )
 
 
 _lale_wrapper_modules: Set[str] = set()
