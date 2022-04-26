@@ -43,38 +43,39 @@ except ImportError:
 
 
 def _new_column_name(name, expr):
-    def infer_new_name(expr):
-        if (
-            _is_ast_call(expr._expr)
-            and _is_ast_name(expr._expr.func)
-            and expr._expr.func.id
-            in [
-                "identity",
-                "isnan",
-                "isnotnan",
-                "isnull",
-                "isnotnull",
-                "replace",
-                "day_of_month",
-                "day_of_week",
-                "day_of_year",
-                "hour",
-                "minute",
-                "month",
-            ]
-            and _is_ast_subs_or_attr(expr._expr.args[0])
-        ):
-            return _it_column(expr._expr.args[0])
-        else:
-            raise ValueError(
-                """New name of the column to be renamed cannot be None or empty. You may want to use a dictionary
-                to specify the new column name as the key, and the expression as the value."""
-            )
-
     if name is None or (isinstance(name, str) and not name.strip()):
-        return infer_new_name(expr)
+        return _infer_new_name(expr)
     else:
         return name
+
+
+def _infer_new_name(expr):
+    if (
+        _is_ast_call(expr._expr)
+        and _is_ast_name(expr._expr.func)
+        and expr._expr.func.id
+        in [
+            "identity",
+            "isnan",
+            "isnotnan",
+            "isnull",
+            "isnotnull",
+            "replace",
+            "day_of_month",
+            "day_of_week",
+            "day_of_year",
+            "hour",
+            "minute",
+            "month",
+        ]
+        and _is_ast_subs_or_attr(expr._expr.args[0])
+    ):
+        return _it_column(expr._expr.args[0])
+    else:
+        raise ValueError(
+            """New name of the column to be renamed cannot be None or empty. You may want to use a dictionary
+            to specify the new column name as the key, and the expression as the value."""
+        )
 
 
 def _validate(X, expr):
