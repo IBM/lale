@@ -37,10 +37,13 @@ from typing import (
 import graphviz
 import numpy as np
 import pandas as pd
+import sklearn.model_selection
+import sklearn.tree
 
+import lale.helpers
 import lale.json_operator
 import lale.pretty_print
-from lale.helpers import spark_installed
+from lale.datasets import pandas2spark
 from lale.operators import (
     TrainableIndividualOp,
     TrainablePipeline,
@@ -51,7 +54,7 @@ from lale.operators import (
 from .metrics import MetricMonoid, MetricMonoidFactory
 from .monoid import Monoid, MonoidFactory
 
-if spark_installed:
+if lale.helpers.spark_installed:
     from pyspark.sql.dataframe import DataFrame as SparkDataFrame
 
 logger = logging.getLogger(__name__)
@@ -62,12 +65,14 @@ _BatchStatus = enum.Enum("BatchStatus", "RESIDENT SPILLED")
 _TaskStatus = enum.Enum("_TaskStatus", "FRESH READY WAITING DONE")
 
 _Operation = enum.Enum(
-    "_Operation", "SCAN TRANSFORM PREDICT FIT PARTIAL_FIT TO_MONOID COMBINE"
+    "_Operation", "SCAN SPLIT TRANSFORM PREDICT FIT PARTIAL_FIT TO_MONOID COMBINE"
 )
 
 _DUMMY_INPUT_STEP = -1
 
 _DUMMY_SCORE_STEP = sys.maxsize
+
+_DUMMY_ALL_FOLDS = "_"
 
 
 def is_pretrained(op: TrainableIndividualOp) -> bool:
@@ -236,14 +241,16 @@ class _Batch:
 
 class _ApplyTask(_Task):
     batch: Optional[_Batch]
+    splits: Optional[List[Tuple[List[int], List[int]]]]
 
     def __init__(self, step_id: int, batch_ids: Tuple[str, ...], held_out: str):
         super().__init__(step_id, batch_ids, held_out)
         self.batch = None
+        self.splits = None  # for cross validation with scan tasks
 
     def get_operation(self, pipeline: TrainablePipeline) -> _Operation:
         if self.step_id == _DUMMY_INPUT_STEP:
-            return _Operation.SCAN
+            return _Operation.SCAN if len(self.preds) == 0 else _Operation.SPLIT
         step = pipeline.steps_list()[self.step_id]
         return _Operation.TRANSFORM if step.is_transformer() else _Operation.PREDICT
 
@@ -259,6 +266,15 @@ class _MetricTask(_Task):
         if len(self.batch_ids) == 1:
             return _Operation.TO_MONOID
         return _Operation.COMBINE
+
+
+def _task_type_prio(task: _Task) -> int:
+    if isinstance(task, _TrainTask):
+        return 0
+    if isinstance(task, _ApplyTask):
+        return 1
+    assert isinstance(task, _MetricTask), type(task)
+    return 2
 
 
 class Prio(ABC):
@@ -292,7 +308,7 @@ class PrioStep(Prio):
             task.step_id,
             len(task.batch_ids),
             task.batch_ids,
-            0 if isinstance(task, _TrainTask) else 1,
+            _task_type_prio(task),
         )
         assert len(result) == self.arity
         return result
@@ -307,7 +323,7 @@ class PrioBatch(Prio):
             len(task.batch_ids),
             task.batch_ids,
             task.step_id,
-            0 if isinstance(task, _TrainTask) else 1,
+            _task_type_prio(task),
         )
         assert len(result) == self.arity
         return result
@@ -328,7 +344,7 @@ class PrioResourceAware(Prio):
             non_res,
             task.batch_ids,
             task.step_id,
-            0 if isinstance(task, _TrainTask) else 1,
+            _task_type_prio(task),
         )
         assert len(result) == self.arity
         return result
@@ -594,21 +610,21 @@ def _create_tasks_fit(
 
 def _batch_ids_except(
     folds: List[str],
-    n_batches_per_fold: int,
+    n_batches: int,
     held_out: Optional[str],
 ) -> Tuple[str, ...]:
     return tuple(
         _batch_id(fold, idx)
         for fold in folds
         if fold != held_out
-        for idx in range(n_batches_per_fold)
+        for idx in range(n_batches)
     )
 
 
 def _create_tasks_cross_val(
     pipeline: TrainablePipeline[TrainableIndividualOp],
     folds: List[str],
-    n_batches_per_fold: int,
+    n_batches: int,
     same_fold: bool,
     keep_estimator: bool,
 ) -> Dict[_MemoKey, _Task]:
@@ -618,7 +634,7 @@ def _create_tasks_cross_val(
         task = tg.find_or_create(
             _MetricTask,
             _DUMMY_SCORE_STEP,
-            tuple(_batch_id(held_out, idx) for idx in range(n_batches_per_fold)),
+            tuple(_batch_id(held_out, idx) for idx in range(n_batches)),
             held_out,
         )
         task.deletable_output = False
@@ -628,7 +644,7 @@ def _create_tasks_cross_val(
                 task = tg.find_or_create(
                     _TrainTask,
                     step_id,
-                    _batch_ids_except(folds, n_batches_per_fold, held_out),
+                    _batch_ids_except(folds, n_batches, held_out),
                     held_out,
                 )
                 task.deletable_output = False
@@ -694,24 +710,38 @@ def _create_tasks_cross_val(
                                     _ApplyTask, pred_step_id, (batch_id,), held_out
                                 )
                             )
-        if isinstance(task, _ApplyTask) and task.step_id != _DUMMY_INPUT_STEP:
-            task.preds.append(
-                tg.find_or_create(
-                    _TrainTask,
-                    task.step_id,
-                    _batch_ids_except(folds, n_batches_per_fold, task.held_out),
-                    None,
-                )
-            )
-            for pred_step_id in tg.step_id_preds[task.step_id]:
+        if isinstance(task, _ApplyTask):
+            if task.step_id == _DUMMY_INPUT_STEP:
+                assert len(task.batch_ids) == 1 and task.held_out is None
+                batch_id = task.batch_ids[0]
+                if _get_fold(batch_id) != _DUMMY_ALL_FOLDS:
+                    task.preds.append(
+                        tg.find_or_create(
+                            _ApplyTask,
+                            task.step_id,
+                            (_batch_id(_DUMMY_ALL_FOLDS, _get_idx(batch_id)),),
+                            None,
+                        )
+                    )
+            else:
                 task.preds.append(
                     tg.find_or_create(
-                        _ApplyTask,
-                        pred_step_id,
-                        task.batch_ids,
-                        None if pred_step_id == _DUMMY_INPUT_STEP else task.held_out,
+                        _TrainTask,
+                        task.step_id,
+                        _batch_ids_except(folds, n_batches, task.held_out),
+                        None,
                     )
                 )
+                for pred_step_id in tg.step_id_preds[task.step_id]:
+                    if pred_step_id == _DUMMY_INPUT_STEP:
+                        pred_held_out = None
+                    else:
+                        pred_held_out = task.held_out
+                    task.preds.append(
+                        tg.find_or_create(
+                            _ApplyTask, pred_step_id, task.batch_ids, pred_held_out
+                        )
+                    )
         if isinstance(task, _MetricTask):
             if len(task.batch_ids) == 1:
                 task.preds.append(
@@ -872,6 +902,7 @@ def _run_tasks_inner(
     pipeline: TrainablePipeline[TrainableIndividualOp],
     batches: Iterable[Tuple[Any, Any]],
     scoring: Optional[MetricMonoidFactory],
+    cv,
     unique_class_labels: List[Union[str, int, float]],
     all_batch_ids: Tuple[str, ...],
     cache: _BatchCache,
@@ -957,6 +988,30 @@ def _run_tasks_inner(
             cache.ensure_space(cache.estimate_space(task), set())
             X, y = next(batches_iterator)
             task.batch = _Batch(X, y, task)
+        elif operation is _Operation.SPLIT:
+            assert isinstance(task, _ApplyTask)
+            assert len(task.batch_ids) == 1 and len(task.preds) == 1
+            batch_id = task.batch_ids[0]
+            scan_pred = cast(_ApplyTask, task.preds[0])
+            cache.load_input_batches(task)
+            assert scan_pred.batch is not None
+            cache.ensure_space(cache.estimate_space(task), {scan_pred.batch})
+            input_X, input_y = scan_pred.batch.Xy
+            is_sparky = lale.helpers.spark_installed and isinstance(
+                input_X, SparkDataFrame
+            )
+            if is_sparky:  # TODO: use Spark native split instead
+                input_X, input_y = input_X.toPandas(), input_y.toPandas.squeeze()
+            if scan_pred.splits is None:
+                scan_pred.splits = list(cv.split(input_X, input_y))
+            train, test = scan_pred.splits[ord(_get_fold(batch_id)) - ord("d")]
+            dummy_estimator = sklearn.tree.DecisionTreeClassifier()
+            output_X, output_y = lale.helpers.split_with_schemas(
+                dummy_estimator, input_X, input_y, test, train
+            )
+            if is_sparky:  # TODO: use Spark native split instead
+                output_X, output_y = pandas2spark(output_X), pandas2spark(output_y)
+            task.batch = _Batch(output_X, output_y, task)
         elif operation in [_Operation.TRANSFORM, _Operation.PREDICT]:
             assert isinstance(task, _ApplyTask)
             assert len(task.batch_ids) == 1
@@ -1011,7 +1066,7 @@ def _run_tasks_inner(
                     if all(isinstance(X, pd.DataFrame) for X in list_X):
                         input_X = pd.concat(list_X)
                         input_y = pd.concat(list_y)
-                    elif spark_installed and all(
+                    elif lale.helpers.spark_installed and all(
                         isinstance(X, SparkDataFrame) for X in list_X
                     ):
                         input_X = functools.reduce(lambda a, b: a.union(b), list_X)  # type: ignore
@@ -1098,6 +1153,7 @@ def _run_tasks(
     pipeline: TrainablePipeline[TrainableIndividualOp],
     batches: Iterable[Tuple[Any, Any]],
     scoring: Optional[MetricMonoidFactory],
+    cv,
     unique_class_labels: List[Union[str, int, float]],
     all_batch_ids: Tuple[str, ...],
     max_resident: Optional[int],
@@ -1112,6 +1168,7 @@ def _run_tasks(
             pipeline,
             batches,
             scoring,
+            cv,
             unique_class_labels,
             all_batch_ids,
             cache,
@@ -1137,11 +1194,11 @@ def _clear_tasks_dict(tasks: Dict[_MemoKey, _Task]):
 def _extract_trained_pipeline(
     pipeline: TrainablePipeline[TrainableIndividualOp],
     folds: List[str],
-    n_batches_per_fold: int,
+    n_batches: int,
     tasks: Dict[_MemoKey, _Task],
     held_out: Optional[str],
 ) -> TrainedPipeline:
-    batch_ids = _batch_ids_except(folds, n_batches_per_fold, held_out)
+    batch_ids = _batch_ids_except(folds, n_batches, held_out)
 
     def extract_trained_step(step_id: int) -> TrainedIndividualOp:
         task = cast(_TrainTask, tasks[(_TrainTask, step_id, batch_ids, held_out)])
@@ -1170,7 +1227,7 @@ def fit_with_batches(
     verbose: int,
     progress_callback: Optional[Callable[[float], None]],
 ) -> TrainedPipeline[TrainedIndividualOp]:
-    all_batch_ids = tuple(_batch_id("d", idx) for idx in range(n_batches))
+    all_batch_ids = tuple(_batch_id(_DUMMY_ALL_FOLDS, idx) for idx in range(n_batches))
     need_metrics = scoring is not None
     tasks = _create_tasks_fit(pipeline, all_batch_ids, need_metrics, incremental)
     if verbose >= 3:
@@ -1180,6 +1237,7 @@ def fit_with_batches(
         pipeline,
         batches,
         scoring,
+        None,
         unique_class_labels,
         all_batch_ids,
         max_resident,
@@ -1189,7 +1247,7 @@ def fit_with_batches(
         call_depth=2,
     )
     trained_pipeline = _extract_trained_pipeline(
-        pipeline, ["d"], n_batches, tasks, None
+        pipeline, [_DUMMY_ALL_FOLDS], n_batches, tasks, None
     )
     _clear_tasks_dict(tasks)
     return trained_pipeline
@@ -1198,12 +1256,12 @@ def fit_with_batches(
 def _extract_scores(
     pipeline: TrainablePipeline[TrainableIndividualOp],
     folds: List[str],
-    n_batches_per_fold: int,
+    n_batches: int,
     scoring: MetricMonoidFactory,
     tasks: Dict[_MemoKey, _Task],
 ) -> List[float]:
     def extract_score(held_out: str) -> float:
-        batch_ids = tuple(_batch_id(held_out, idx) for idx in range(n_batches_per_fold))
+        batch_ids = tuple(_batch_id(held_out, idx) for idx in range(n_batches))
         task = tasks[(_MetricTask, _DUMMY_SCORE_STEP, batch_ids, held_out)]
         assert isinstance(task, _MetricTask) and task.mmonoid is not None
         return scoring.from_monoid(task.mmonoid)
@@ -1216,23 +1274,20 @@ def cross_val_score(
     pipeline: TrainablePipeline[TrainableIndividualOp],
     batches: Iterable[Tuple[Any, Any]],
     n_batches: int,
-    n_folds: int,
-    n_batches_per_fold: int,
     scoring: MetricMonoidFactory,
+    cv,
     unique_class_labels: List[Union[str, int, float]],
     max_resident: Optional[int],
     prio: Prio,
     same_fold: bool,
     verbose: int,
 ) -> List[float]:
-    assert n_batches == n_folds * n_batches_per_fold
-    folds = [chr(ord("d") + i) for i in range(n_folds)]
+    cv = sklearn.model_selection.check_cv(cv)
+    folds = [chr(ord("d") + i) for i in range(cv.get_n_splits())]
     all_batch_ids = tuple(
-        _batch_id(fold, idx) for fold in folds for idx in range(n_batches_per_fold)
+        _batch_id(fold, idx) for fold in folds for idx in range(n_batches)
     )
-    tasks = _create_tasks_cross_val(
-        pipeline, folds, n_batches_per_fold, same_fold, False
-    )
+    tasks = _create_tasks_cross_val(pipeline, folds, n_batches, same_fold, False)
     if verbose >= 3:
         _visualize_tasks(tasks, pipeline, prio, call_depth=2, trace=None)
     _run_tasks(
@@ -1240,6 +1295,7 @@ def cross_val_score(
         pipeline,
         batches,
         scoring,
+        cv,
         unique_class_labels,
         all_batch_ids,
         max_resident,
@@ -1248,7 +1304,7 @@ def cross_val_score(
         None,
         call_depth=2,
     )
-    scores = _extract_scores(pipeline, folds, n_batches_per_fold, scoring, tasks)
+    scores = _extract_scores(pipeline, folds, n_batches, scoring, tasks)
     _clear_tasks_dict(tasks)
     return scores
 
@@ -1257,9 +1313,8 @@ def cross_validate(
     pipeline: TrainablePipeline[TrainableIndividualOp],
     batches: Iterable[Tuple[Any, Any]],
     n_batches: int,
-    n_folds: int,
-    n_batches_per_fold: int,
     scoring: MetricMonoidFactory,
+    cv,
     unique_class_labels: List[Union[str, int, float]],
     max_resident: Optional[int],
     prio: Prio,
@@ -1267,13 +1322,13 @@ def cross_validate(
     return_estimator: bool,
     verbose: int,
 ) -> Dict[str, Union[List[float], List[TrainedPipeline]]]:
-    assert n_batches == n_folds * n_batches_per_fold
-    folds = [chr(ord("d") + i) for i in range(n_folds)]
+    cv = sklearn.model_selection.check_cv(cv)
+    folds = [chr(ord("d") + i) for i in range(cv.get_n_splits())]
     all_batch_ids = tuple(
-        _batch_id(fold, idx) for fold in folds for idx in range(n_batches_per_fold)
+        _batch_id(fold, idx) for fold in folds for idx in range(n_batches)
     )
     tasks = _create_tasks_cross_val(
-        pipeline, folds, n_batches_per_fold, same_fold, return_estimator
+        pipeline, folds, n_batches, same_fold, return_estimator
     )
     if verbose >= 3:
         _visualize_tasks(tasks, pipeline, prio, call_depth=2, trace=None)
@@ -1282,6 +1337,7 @@ def cross_validate(
         pipeline,
         batches,
         scoring,
+        cv,
         unique_class_labels,
         all_batch_ids,
         max_resident,
@@ -1291,14 +1347,10 @@ def cross_validate(
         call_depth=2,
     )
     result: Dict[str, Union[List[float], List[TrainedPipeline]]] = {}
-    result["test_score"] = _extract_scores(
-        pipeline, folds, n_batches_per_fold, scoring, tasks
-    )
+    result["test_score"] = _extract_scores(pipeline, folds, n_batches, scoring, tasks)
     if return_estimator:
         result["estimator"] = [
-            _extract_trained_pipeline(
-                pipeline, folds, n_batches_per_fold, tasks, held_out
-            )
+            _extract_trained_pipeline(pipeline, folds, n_batches, tasks, held_out)
             for held_out in folds
         ]
     _clear_tasks_dict(tasks)
