@@ -1001,7 +1001,7 @@ def _run_tasks_inner(
                 input_X, SparkDataFrame
             )
             if is_sparky:  # TODO: use Spark native split instead
-                input_X, input_y = input_X.toPandas(), input_y.toPandas.squeeze()
+                input_X, input_y = input_X.toPandas(), input_y.toPandas().squeeze()
             if scan_pred.splits is None:
                 scan_pred.splits = list(cv.split(input_X, input_y))
             train, test = scan_pred.splits[ord(_get_fold(batch_id)) - ord("d")]
