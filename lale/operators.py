@@ -4456,17 +4456,6 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                 pipeline_prefix = pipeline_prefix.freeze_trained()
             trained_pipeline_prefix = pipeline_prefix.convert_to_trained()
             pipeline = trained_pipeline_prefix >> sink_node
-            # transformed_output = trained_pipeline_prefix.transform(X, y)
-            # if isinstance(transformed_output, tuple):
-            #     transformed_X, transformed_y = transformed_output
-            # else:
-            #     transformed_X = transformed_output
-            #     transformed_y = y
-
-            # trained_sink_node = sink_node.partial_fit(
-            #     transformed_X, transformed_y, **fit_params
-            # )
-            # This is the first time partial_fit is called on this pipeline,
             self._trained = fit_with_batches(
                 pipeline=pipeline,
                 batches=iter([(X, y)]),
