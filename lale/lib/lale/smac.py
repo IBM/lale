@@ -18,8 +18,7 @@ import traceback
 
 import numpy as np
 from sklearn.metrics import check_scoring, log_loss
-from sklearn.model_selection import train_test_split
-from sklearn.model_selection._split import check_cv
+from sklearn.model_selection import check_cv, train_test_split
 
 import lale.docstrings
 import lale.helpers

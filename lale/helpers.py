@@ -573,25 +573,7 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
     # fitted is True. This is achieved using the is_hyperparam flag.
 
     def find_lale_wrapper(sklearn_obj):
-        from .operator_wrapper import (
-            get_lale_wrapper_modules,
-            register_lale_wrapper_modules,
-        )
-
-        # currently needed for backwards compatibility
-        try:
-            import autoai_ts_libs.lale  # type: ignore  # noqa:F401
-        except ImportError:
-            pass
-
-        for m in [
-            "lale.lib.sklearn",
-            "lale.lib.autoai_libs",
-            "lale.lib.xgboost",
-            "lale.lib.lightgbm",
-            "lale.lib.snapml",
-        ]:
-            register_lale_wrapper_modules(m)
+        from .operator_wrapper import get_lale_wrapper_modules
 
         module_names = get_lale_wrapper_modules()
 

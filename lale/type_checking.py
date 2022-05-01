@@ -32,17 +32,19 @@ as the right side succeed. This is specified using ``{'laleType': 'Any'}``.
 
 import functools
 import inspect
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, overload
+from typing import Any, Dict, List, Optional, Tuple, overload
 
 import jsonschema
 import jsonschema.exceptions
 import jsonschema.validators
 import jsonsubschema
+import numpy.random
+import sklearn.base
 
+import lale.datasets.data_schemas
+import lale.expressions
 import lale.helpers
-
-if TYPE_CHECKING:
-    import lale.operators
+import lale.operators
 
 JSON_TYPE = Dict[str, Any]
 
@@ -57,10 +59,6 @@ def _validate_lale_type(validator, laleType, instance, schema):
                 f"expected {laleType}, got {type(instance)}"
             )
     elif laleType == "operator":
-        import sklearn.base
-
-        import lale.operators
-
         if not (
             isinstance(instance, lale.operators.Operator)
             or isinstance(instance, sklearn.base.BaseEstimator)
@@ -73,15 +71,11 @@ def _validate_lale_type(validator, laleType, instance, schema):
                 f"expected {laleType}, got {type(instance)}"
             )
     elif laleType == "expression":
-        import lale.expressions
-
         if not isinstance(instance, lale.expressions.Expr):
             yield jsonschema.exceptions.ValidationError(
                 f"expected {laleType}, got {type(instance)}"
             )
     elif laleType == "numpy.random.RandomState":
-        import numpy.random
-
         if not isinstance(instance, numpy.random.RandomState):
             yield jsonschema.exceptions.ValidationError(
                 f"expected {laleType}, got {type(instance)}"
@@ -284,7 +278,6 @@ def validate_schema(lhs: Any, super_schema: JSON_TYPE):
     if disable_data_schema_validation:
         return True  # If schema validation is disabled, always return as valid
     sub_schema: Optional[JSON_TYPE]
-    import lale.datasets.data_schemas
 
     try:
         sub_schema = lale.datasets.data_schemas._to_schema(lhs)

@@ -15,8 +15,10 @@
 from typing import Any, List, Optional, Tuple, Type, Union
 
 import numpy as np
-import pandas as pd
-import scipy.sparse
+from numpy import issubdtype, ndarray
+from pandas import DataFrame, Series
+from pandas.core.groupby import DataFrameGroupBy, SeriesGroupBy
+from scipy.sparse import csr_matrix
 
 import lale.type_checking
 from lale.helpers import _is_spark_df
@@ -24,6 +26,7 @@ from lale.type_checking import JSON_TYPE
 
 try:
     import torch
+    from torch import Tensor
 
     torch_installed = True
 except ImportError:
@@ -31,7 +34,8 @@ except ImportError:
 
 try:
     import py4j.protocol
-    import pyspark.sql
+    from pyspark.sql import DataFrame as SparkDataFrame
+    from pyspark.sql import GroupedData as SparkGroupedData
 
     spark_installed = True
 except ImportError:
@@ -40,7 +44,7 @@ except ImportError:
 
 # See instructions for subclassing numpy ndarray:
 # https://docs.scipy.org/doc/numpy/user/basics.subclassing.html
-class NDArrayWithSchema(np.ndarray):
+class NDArrayWithSchema(ndarray):
     def __new__(
         cls,
         shape,
@@ -68,8 +72,8 @@ class NDArrayWithSchema(np.ndarray):
 
 # See instructions for subclassing pandas DataFrame:
 # https://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending-subclassing-pandas
-class DataFrameWithSchema(pd.DataFrame):
-    _internal_names = pd.DataFrame._internal_names + ["json_schema", "table_name"]
+class DataFrameWithSchema(DataFrame):
+    _internal_names = DataFrame._internal_names + ["json_schema", "table_name"]
     _internal_names_set = set(_internal_names)
 
     @property
@@ -77,8 +81,8 @@ class DataFrameWithSchema(pd.DataFrame):
         return DataFrameWithSchema
 
 
-class SeriesWithSchema(pd.Series):
-    _internal_names = pd.DataFrame._internal_names + [
+class SeriesWithSchema(Series):
+    _internal_names = DataFrame._internal_names + [
         "json_schema",
         "table_name",
         "folds_for_monoid",
@@ -99,7 +103,7 @@ if spark_installed:
         else:
             return name
 
-    class SparkDataFrameWithIndex(pyspark.sql.DataFrame):  # type: ignore
+    class SparkDataFrameWithIndex(SparkDataFrame):  # type: ignore
         def __init__(self, df, index_names=None):
             if index_names is not None and len(index_names) == 1:
                 index_name = index_names[0]
@@ -158,15 +162,15 @@ def add_schema(obj, schema=None, raise_on_failure=False, recalc=False) -> Any:
         return None
     if isinstance(obj, NDArrayWithSchema):
         result = obj
-    elif isinstance(obj, np.ndarray):
+    elif isinstance(obj, ndarray):
         result = obj.view(NDArrayWithSchema)
     elif isinstance(obj, SeriesWithSchema):
         result = obj
-    elif isinstance(obj, pd.Series):
+    elif isinstance(obj, Series):
         result = SeriesWithSchema(obj)
     elif isinstance(obj, DataFrameWithSchema):
         result = obj
-    elif isinstance(obj, pd.DataFrame):
+    elif isinstance(obj, DataFrame):
         result = DataFrameWithSchema(obj)
     elif is_list_tensor(obj):
         obj = np.array(obj)
@@ -187,7 +191,7 @@ def add_schema(obj, schema=None, raise_on_failure=False, recalc=False) -> Any:
 
 
 def add_schema_adjusting_n_rows(obj, schema):
-    assert isinstance(obj, (np.ndarray, pd.DataFrame, pd.Series)), type(obj)
+    assert isinstance(obj, (ndarray, DataFrame, Series)), type(obj)
     assert schema.get("type", None) == "array", schema
     n_rows = obj.shape[0]
     mod_schema = {**schema, "minItems": n_rows, "maxItems": n_rows}
@@ -200,7 +204,7 @@ def add_table_name(obj, name) -> Any:
         return None
     if name is None:
         return obj
-    if spark_installed and isinstance(obj, pyspark.sql.DataFrame):
+    if spark_installed and isinstance(obj, SparkDataFrame):
         # alias method documentation: https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.sql.DataFrame.alias.html
         # Python class DataFrame with method alias(self, alias): https://github.com/apache/spark/blob/master/python/pyspark/sql/dataframe.py
         # Scala type DataFrame: https://github.com/apache/spark/blob/master/sql/core/src/main/scala/org/apache/spark/sql/package.scala
@@ -215,28 +219,26 @@ def add_table_name(obj, name) -> Any:
         result = obj.view(NDArrayWithSchema)
         if hasattr(obj, "json_schema"):
             result.json_schema = obj.json_schema
-    elif isinstance(obj, np.ndarray):
+    elif isinstance(obj, ndarray):
         result = obj.view(NDArrayWithSchema)
     elif isinstance(obj, SeriesWithSchema):
         result = obj.copy(deep=False)
         if hasattr(obj, "json_schema"):
             result.json_schema = obj.json_schema
-    elif isinstance(obj, pd.Series):
+    elif isinstance(obj, Series):
         result = SeriesWithSchema(obj)
     elif isinstance(obj, DataFrameWithSchema):
         result = obj.copy(deep=False)
         if hasattr(obj, "json_schema"):
             result.json_schema = obj.json_schema
-    elif isinstance(obj, pd.DataFrame):
+    elif isinstance(obj, DataFrame):
         result = DataFrameWithSchema(obj)
     elif is_list_tensor(obj):
         obj = np.array(obj)
         result = obj.view(NDArrayWithSchema)
-    elif isinstance(
-        obj, (pd.core.groupby.DataFrameGroupBy, pd.core.groupby.SeriesGroupBy)
-    ):
+    elif isinstance(obj, (DataFrameGroupBy, SeriesGroupBy)):
         result = obj
-    elif spark_installed and isinstance(obj, pyspark.sql.GroupedData):
+    elif spark_installed and isinstance(obj, SparkGroupedData):
         result = obj
     else:
         raise ValueError(f"unexpected type(obj) {type(obj)}")
@@ -245,7 +247,7 @@ def add_table_name(obj, name) -> Any:
 
 
 def get_table_name(obj):
-    if spark_installed and isinstance(obj, pyspark.sql.DataFrame):
+    if spark_installed and isinstance(obj, SparkDataFrame):
         # Python class DataFrame with field self._jdf: https://github.com/apache/spark/blob/master/python/pyspark/sql/dataframe.py
         # Scala type DataFrame: https://github.com/apache/spark/blob/master/sql/core/src/main/scala/org/apache/spark/sql/package.scala
         # Scala class DataSet with field queryExecution: https://github.com/apache/spark/blob/master/sql/core/src/main/scala/org/apache/spark/sql/Dataset.scala
@@ -268,10 +270,10 @@ def get_table_name(obj):
             NDArrayWithSchema,
             SeriesWithSchema,
             DataFrameWithSchema,
-            pd.core.groupby.DataFrameGroupBy,
-            pd.core.groupby.SeriesGroupBy,
+            DataFrameGroupBy,
+            SeriesGroupBy,
         ),
-    ) or (spark_installed and isinstance(obj, pyspark.sql.GroupedData)):
+    ) or (spark_installed and isinstance(obj, SparkGroupedData)):
         return getattr(obj, "table_name", None)
     return None
 
@@ -285,8 +287,8 @@ def get_index_name(obj):
         (
             SeriesWithSchema,
             DataFrameWithSchema,
-            pd.core.groupby.DataFrameGroupBy,
-            pd.core.groupby.SeriesGroupBy,
+            DataFrameGroupBy,
+            SeriesGroupBy,
         ),
     ):
         result = obj.index.name
@@ -302,8 +304,8 @@ def get_index_names(obj):
         (
             SeriesWithSchema,
             DataFrameWithSchema,
-            pd.core.groupby.DataFrameGroupBy,
-            pd.core.groupby.SeriesGroupBy,
+            DataFrameGroupBy,
+            SeriesGroupBy,
         ),
     ):
         result = obj.index.names
@@ -320,13 +322,13 @@ def forward_metadata(old, new):
 def strip_schema(obj):
     if isinstance(obj, NDArrayWithSchema):
         result = np.array(obj)
-        assert type(result) == np.ndarray
+        assert type(result) == ndarray
     elif isinstance(obj, SeriesWithSchema):
-        result = pd.Series(obj)
-        assert type(result) == pd.Series
+        result = Series(obj)
+        assert type(result) == Series
     elif isinstance(obj, DataFrameWithSchema):
-        result = pd.DataFrame(obj)
-        assert type(result) == pd.DataFrame
+        result = DataFrame(obj)
+        assert type(result) == DataFrame
     else:
         result = obj
     return result
@@ -334,15 +336,15 @@ def strip_schema(obj):
 
 def _dtype_to_schema(typ) -> JSON_TYPE:
     result: JSON_TYPE
-    if typ is bool or np.issubdtype(typ, np.bool_):
+    if typ is bool or issubdtype(typ, np.bool_):
         result = {"type": "boolean"}
-    elif np.issubdtype(typ, np.unsignedinteger):
+    elif issubdtype(typ, np.unsignedinteger):
         result = {"type": "integer", "minimum": 0}
-    elif np.issubdtype(typ, np.integer):
+    elif issubdtype(typ, np.integer):
         result = {"type": "integer"}
-    elif np.issubdtype(typ, np.number):
+    elif issubdtype(typ, np.number):
         result = {"type": "number"}
-    elif np.issubdtype(typ, np.string_) or np.issubdtype(typ, np.unicode_):
+    elif issubdtype(typ, np.string_) or issubdtype(typ, np.unicode_):
         result = {"type": "string"}
     elif isinstance(typ, np.dtype):
         if typ.fields:
@@ -350,7 +352,7 @@ def _dtype_to_schema(typ) -> JSON_TYPE:
             result = {"type": "object", "properties": props}
         elif typ.shape:
             result = _shape_and_dtype_to_schema(typ.shape, typ.subdtype)
-        elif np.issubdtype(typ, np.object_):
+        elif issubdtype(typ, np.object_):
             result = {"type": "string"}
         else:
             assert False, f"unexpected dtype {typ}"
@@ -422,7 +424,7 @@ def list_tensor_to_schema(ls) -> Optional[JSON_TYPE]:
 
 
 def _ndarray_to_schema(array) -> JSON_TYPE:
-    assert isinstance(array, np.ndarray)
+    assert isinstance(array, ndarray)
     if (
         isinstance(array, NDArrayWithSchema)
         and hasattr(array, "json_schema")
@@ -439,7 +441,7 @@ def ndarray_to_schema(array) -> JSON_TYPE:
 
 
 def _csr_matrix_to_schema(matrix) -> JSON_TYPE:
-    assert isinstance(matrix, scipy.sparse.csr_matrix)
+    assert isinstance(matrix, csr_matrix)
     result = _shape_and_dtype_to_schema(matrix.shape, matrix.dtype)
     result["isSparse"] = {}  # true schema
     return result
@@ -452,7 +454,7 @@ def csr_matrix_to_schema(matrix) -> JSON_TYPE:
 
 
 def _dataframe_to_schema(df) -> JSON_TYPE:
-    assert isinstance(df, pd.DataFrame)
+    assert isinstance(df, DataFrame)
     if (
         isinstance(df, DataFrameWithSchema)
         and hasattr(df, "json_schema")
@@ -487,7 +489,7 @@ def dataframe_to_schema(df) -> JSON_TYPE:
 
 
 def _series_to_schema(series) -> JSON_TYPE:
-    assert isinstance(series, pd.Series)
+    assert isinstance(series, Series)
     if (
         isinstance(series, SeriesWithSchema)
         and hasattr(series, "json_schema")
@@ -515,7 +517,7 @@ def _torch_tensor_to_schema(tensor) -> JSON_TYPE:
     pip install torch
 or with
     pip install 'lale[full]'"""
-    assert isinstance(tensor, torch.Tensor)
+    assert isinstance(tensor, Tensor)
     result: JSON_TYPE
     # https://pytorch.org/docs/stable/tensor_attributes.html#torch-dtype
     if tensor.dtype == torch.bool:
@@ -601,15 +603,15 @@ def _to_schema(obj) -> JSON_TYPE:
     result = None
     if obj is None:
         result = {"enum": [None]}
-    elif isinstance(obj, np.ndarray):
+    elif isinstance(obj, ndarray):
         result = _ndarray_to_schema(obj)
-    elif isinstance(obj, scipy.sparse.csr_matrix):
+    elif isinstance(obj, csr_matrix):
         result = _csr_matrix_to_schema(obj)
-    elif isinstance(obj, pd.DataFrame):
+    elif isinstance(obj, DataFrame):
         result = _dataframe_to_schema(obj)
-    elif isinstance(obj, pd.Series):
+    elif isinstance(obj, Series):
         result = _series_to_schema(obj)
-    elif torch_installed and isinstance(obj, torch.Tensor):
+    elif torch_installed and isinstance(obj, Tensor):
         result = _torch_tensor_to_schema(obj)
     elif is_liac_arff(obj):
         result = _liac_arff_to_schema(obj)

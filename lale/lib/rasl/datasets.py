@@ -93,14 +93,16 @@ def mockup_data_loader(
     Only intended for testing purposes, because if X and y are already
     materialized in-memory, there is little reason to batch them.
     """
+    pandas_gen: Iterable[_PandasBatch]
     if n_batches == 1:
-        return [(X, y)]
-    cv = sklearn.model_selection.KFold(n_batches)
-    estimator = sklearn.tree.DecisionTreeClassifier()
-    pandas_gen = (
-        lale.helpers.split_with_schemas(estimator, X, y, test, train)
-        for train, test in cv.split(X, y)
-    )
+        pandas_gen = [(X, y)]
+    else:
+        cv = sklearn.model_selection.KFold(n_batches)
+        estimator = sklearn.tree.DecisionTreeClassifier()
+        pandas_gen = (
+            lale.helpers.split_with_schemas(estimator, X, y, test, train)
+            for train, test in cv.split(X, y)
+        )
     if astype == "pandas":
         return pandas_gen
     elif astype == "spark":

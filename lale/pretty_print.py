@@ -40,12 +40,14 @@ _black78 = black.FileMode(line_length=78)
 class _CodeGenState:
     imports: List[str]
     assigns: List[str]
+    external_wrapper_modules: List[str]
 
     def __init__(
         self, names: Set[str], combinators: bool, customize_schema: bool, astype: str
     ):
         self.imports = []
         self.assigns = []
+        self.external_wrapper_modules = []
         self.combinators = combinators
         self.customize_schema = customize_schema
         self.astype = astype
@@ -240,6 +242,26 @@ def _get_module_name(op_label: str, op_name: str, class_name: str) -> str:
         if "import_from" in op._schemas:
             mod = op._schemas["import_from"]
     return mod
+
+
+def _get_wrapper_module_if_external(impl_class_name):
+    # If the lale operator was not found in the list of libraries registered with
+    # lale, return the operator's i.e. wrapper's module name
+    # This is pass to `wrap_imported_operators` in the output of `pretty_print`.
+    impl_name = impl_class_name[impl_class_name.rfind(".") + 1 :]
+    impl_module_name = impl_class_name[: impl_class_name.rfind(".")]
+    module = importlib.import_module(impl_module_name)
+    if hasattr(module, impl_name):
+        wrapped_model = getattr(module, impl_name)
+        wrapper = lale.operators.get_op_from_lale_lib(wrapped_model)
+        if wrapper is None:
+            # TODO: The assumption here is that the operator is created in the same
+            # module as where the impl is defined.
+            # Do we have a better way to know where `make_operator` is called from instead?
+            return impl_module_name
+        else:
+            return None
+    return None
 
 
 def _op_kind(op: JSON_TYPE) -> str:
@@ -501,6 +523,9 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
         else:
             import_stmt = f"from {module_name} import {op_name} as {label}"
         gen.imports.append(import_stmt)
+        external_module_name = _get_wrapper_module_if_external(class_name)
+        if external_module_name is not None:
+            gen.external_wrapper_modules.append(external_module_name)
         printed_steps = {
             step_uid: _operator_jsn_to_string_rec(step_uid, step_val, gen)
             for step_uid, step_val in jsn.get("steps", {}).items()
@@ -596,8 +621,19 @@ def _operator_jsn_to_string(
                 imports_set |= {imp}
                 imports_list.append(imp)
         result = "\n".join(imports_list)
+        external_wrapper_modules_set: Set[str] = set()
+        external_wrapper_modules_list: List[str] = []
+        for module in gen.external_wrapper_modules:
+            if module not in external_wrapper_modules_set:
+                external_wrapper_modules_set |= {module}
+                external_wrapper_modules_list.append(module)
         if combinators:
-            result += "\nlale.wrap_imported_operators()"
+            if len(external_wrapper_modules_list) > 0:
+                result += (
+                    f"\nlale.wrap_imported_operators({external_wrapper_modules_list})"
+                )
+            else:
+                result += "\nlale.wrap_imported_operators()"
         result += "\n"
         result += "\n".join(gen.assigns)
     else:

@@ -176,6 +176,8 @@ from typing import (
     overload,
 )
 
+from sklearn.base import clone
+
 if sys.version_info >= (3, 8):
     from typing import Literal  # raises a mypy error for <3.8
 else:
@@ -196,14 +198,22 @@ except ImportError as e:
         raise e
 
 import lale.datasets.data_schemas
-import lale.helpers
 import lale.json_operator
 import lale.pretty_print
-import lale.type_checking
 from lale import schema2enums as enum_gen
+from lale.datasets.data_schemas import (
+    NDArrayWithSchema,
+    _to_schema,
+    add_schema,
+    strip_schema,
+)
 from lale.helpers import (
+    append_batch,
     are_hyperparameters_equal,
+    assignee_name,
+    fold_schema,
     get_name_and_index,
+    is_empty_dict,
     is_numeric_structure,
     make_degen_indexed_name,
     make_indexed_name,
@@ -211,10 +221,24 @@ from lale.helpers import (
     partition_sklearn_choice_params,
     partition_sklearn_params,
     structure_type_name,
+    to_graphviz,
+    val_wrapper,
 )
 from lale.json_operator import JSON_TYPE
 from lale.schemas import Schema
 from lale.search.PGO import remove_defaults_dict
+from lale.type_checking import (
+    SubschemaError,
+    get_default_schema,
+    has_data_constraints,
+    is_subschema,
+    join_schemas,
+    replace_data_constraints,
+    validate_is_schema,
+    validate_method,
+    validate_schema,
+    validate_schema_directly,
+)
 from lale.util.VisitorMeta import AbstractVisitorMeta
 
 logger = logging.getLogger(__name__)
@@ -386,7 +410,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         Digraph
             Digraph object from the graphviz package.
         """
-        return lale.helpers.to_graphviz(self, ipython_display, call_depth=2)
+        return to_graphviz(self, ipython_display, call_depth=2)
 
     def pretty_print(
         self,
@@ -625,8 +649,6 @@ class Operator(metaclass=AbstractVisitorMeta):
         """Return a copy of this operator, with the same hyper-parameters but without training data
         This behaves the same as calling sklearn.base.clone(self)
         """
-        from sklearn.base import clone
-
         cp = clone(self)
         return cp
 
@@ -1303,7 +1325,7 @@ class IndividualOp(Operator):
         if _lale_schemas:
             self._schemas = _lale_schemas
         else:
-            self._schemas = lale.type_checking.get_default_schema(_lale_impl)
+            self._schemas = get_default_schema(_lale_impl)
 
         # if we are given a class instance, we need to preserve it
         # so that get_params can return the same exact one that we got
@@ -1355,7 +1377,7 @@ class IndividualOp(Operator):
         if disable_hyperparams_schema_validation:
             return
 
-        lale.type_checking.validate_is_schema(self._schemas)
+        validate_is_schema(self._schemas)
         from lale.pretty_print import json_to_string
 
         assert (
@@ -1587,7 +1609,7 @@ class IndividualOp(Operator):
 
             if k in hyperparams:
                 raise ValueError("Duplicate argument {}.".format(k))
-            v = lale.helpers.val_wrapper.unwrap(v)
+            v = val_wrapper.unwrap(v)
             if isinstance(v, enumeration.Enum):
                 k2, v2 = self._enum_to_strings(v)
                 if k != k2:
@@ -2197,7 +2219,7 @@ class IndividualOp(Operator):
                 new_values = dict(replacements)
                 fixed_hp = {**hp_all, **new_values}
                 try:
-                    lale.type_checking.validate_schema_directly(fixed_hp, hp_schema)
+                    validate_schema_directly(fixed_hp, hp_schema)
                     found = True
                     yield new_values
                 except jsonschema.ValidationError:
@@ -2213,10 +2235,10 @@ class IndividualOp(Operator):
             return
 
         try:
-            lale.type_checking.validate_schema_directly(hp_all, hp_schema)
+            validate_schema_directly(hp_all, hp_schema)
         except jsonschema.ValidationError as e_orig:
             e = e_orig if e_orig.parent is None else e_orig.parent
-            lale.type_checking.validate_is_schema(e.schema)
+            validate_is_schema(e.schema)
             schema = lale.pretty_print.to_string(e.schema)
 
             defaults = self.get_defaults()
@@ -2236,9 +2258,7 @@ class IndividualOp(Operator):
                 )
 
                 try:
-                    lale.type_checking.validate_schema_directly(
-                        trimmed_hp_all, hp_schema
-                    )
+                    validate_schema_directly(trimmed_hp_all, hp_schema)
                     trimmed_valid = True
                 except jsonschema.ValidationError:
                     pass
@@ -2335,7 +2355,7 @@ class IndividualOp(Operator):
         if disable_data_schema_validation:
             return arg
 
-        if not lale.helpers.is_empty_dict(arg):
+        if not is_empty_dict(arg):
             if method == "fit" or method == "partial_fit":
                 schema = self.input_schema_fit()
             elif method == "transform":
@@ -2355,11 +2375,11 @@ class IndividualOp(Operator):
             else:
                 raise ValueError(f"Unexpected method argument: {method}")
             if "properties" in schema and arg_name in schema["properties"]:
-                arg = lale.datasets.data_schemas.add_schema(arg)
+                arg = add_schema(arg)
                 try:
                     sup: JSON_TYPE = schema["properties"][arg_name]
-                    lale.type_checking.validate_schema(arg, sup)
-                except lale.type_checking.SubschemaError as e:
+                    validate_schema(arg, sup)
+                except SubschemaError as e:
                     sub_str: str = lale.pretty_print.json_to_string(e.sub)
                     sup_str: str = lale.pretty_print.json_to_string(e.sup)
                     raise ValueError(
@@ -2395,9 +2415,9 @@ class IndividualOp(Operator):
         else:
             raise ValueError(f"Unexpected method argument: {method}")
 
-        result = lale.datasets.data_schemas.add_schema(result)
+        result = add_schema(result)
         try:
-            lale.type_checking.validate_schema(result, schema)
+            validate_schema(result, schema)
         except Exception as e:
             print(f"{self.name()}.{method}() invalid result: {e}")
             raise ValueError(f"{self.name()}.{method}() invalid result: {e}") from e
@@ -2431,9 +2451,7 @@ class IndividualOp(Operator):
                 req = schema_fit.get("required", None)
                 return req is not None and "y" in req
             else:
-                return lale.type_checking.is_subschema(
-                    schema_fit, _is_supervised_schema
-                )
+                return is_subschema(schema_fit, _is_supervised_schema)
         return default_if_missing
 
     def is_classifier(self) -> bool:
@@ -2513,7 +2531,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
 
         s_1 = self.hyperparam_schema()
         s_2 = fix_hyperparams(s_1)
-        s_3 = lale.type_checking.replace_data_constraints(s_2, data_schema)
+        s_3 = replace_data_constraints(s_2, data_schema)
         return s_3
 
     def freeze_trainable(self) -> "TrainableIndividualOp":
@@ -2657,15 +2675,13 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             return True
         hp_schema = self.hyperparam_schema()
         if not hasattr(self, "__has_data_constraints"):
-            has_dc = lale.type_checking.has_data_constraints(hp_schema)
+            has_dc = has_data_constraints(hp_schema)
             self.__has_data_constraints = has_dc
         if self.__has_data_constraints:
             hp_explicit = self.hyperparams()
             hp_all = self._get_params_all()
-            data_schema = lale.helpers.fold_schema(X, y)
-            hp_schema_2 = lale.type_checking.replace_data_constraints(
-                hp_schema, data_schema
-            )
+            data_schema = fold_schema(X, y)
+            hp_schema_2 = replace_data_constraints(hp_schema, data_schema)
             self._validate_hyperparams(
                 hp_explicit, hp_all, hp_schema_2, self.impl_class
             )
@@ -3143,10 +3159,8 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         # logger.info("%s enter predict %s", time.asctime(), self.name())
         result = self._predict(X, **predict_params)
         # logger.info("%s exit  predict %s", time.asctime(), self.name())
-        if isinstance(result, lale.datasets.data_schemas.NDArrayWithSchema):
-            return lale.datasets.data_schemas.strip_schema(
-                result
-            )  # otherwise scorers return zero-dim array
+        if isinstance(result, NDArrayWithSchema):
+            return strip_schema(result)  # otherwise scorers return zero-dim array
         return result
 
     @if_delegate_has_method(delegate="_impl")
@@ -3361,7 +3375,7 @@ def make_pretrained_operator(
     return x
 
 
-def get_op_from_lale_lib(impl_class) -> Optional[IndividualOp]:
+def get_op_from_lale_lib(impl_class, wrapper_modules=None) -> Optional[IndividualOp]:
     assert inspect.isclass(impl_class)
     assert not issubclass(impl_class, Operator)
     assert hasattr(impl_class, "predict") or hasattr(impl_class, "transform")
@@ -3382,10 +3396,17 @@ def get_op_from_lale_lib(impl_class) -> Optional[IndividualOp]:
                 module = importlib.import_module("lale.lib.autogen")
                 result = getattr(module, impl_class.__name__)
             except (ModuleNotFoundError, AttributeError):
-                if hasattr(impl_class, "_get_lale_operator"):
-                    result = impl_class._get_lale_operator()  # type:ignore
-                else:
-                    result = None
+                if wrapper_modules is not None:
+                    for wrapper_module in wrapper_modules:
+                        try:
+                            module = importlib.import_module(wrapper_module)
+                            result = getattr(module, impl_class.__name__)
+                            if result is not None:
+                                break
+                        except (ModuleNotFoundError, AttributeError):
+                            pass
+                    else:
+                        result = None
     if result is not None:
         result._check_schemas()
     return result
@@ -3400,7 +3421,7 @@ def make_operator(
     impl, schemas=None, name: Optional[str] = None, set_as_available: bool = True
 ) -> PlannedIndividualOp:
     if name is None:
-        name = lale.helpers.assignee_name(level=2)
+        name = assignee_name(level=2)
         if name is None:
             if inspect.isclass(impl):
                 n: str = impl.__name__
@@ -3868,7 +3889,7 @@ class BasePipeline(Operator, Generic[OpType]):
                     "type": "array",
                     "minItems": n_datasets,
                     "maxItems": n_datasets,
-                    "items": [lale.datasets.data_schemas.to_schema(i) for i in schemas],
+                    "items": [_to_schema(i) for i in schemas],
                 }
             return result
 
@@ -3908,7 +3929,7 @@ class BasePipeline(Operator, Generic[OpType]):
     def input_schema_fit(self) -> JSON_TYPE:
         sources = self._find_source_nodes()
         pipeline_inputs = [source.input_schema_fit() for source in sources]
-        result = lale.type_checking.join_schemas(*pipeline_inputs)
+        result = join_schemas(*pipeline_inputs)
         return result
 
     def is_supervised(self) -> bool:
@@ -3965,7 +3986,7 @@ class BasePipeline(Operator, Generic[OpType]):
                                 node, element, value._impl_instance()._wrapped_model
                             )
 
-                    stripped = lale.datasets.data_schemas.strip_schema(value)
+                    stripped = strip_schema(value)
                     if value is stripped:
                         continue
                     setattr(node, element, stripped)
@@ -4070,8 +4091,7 @@ class BasePipeline(Operator, Generic[OpType]):
     def get_defaults(self) -> Dict[str, Any]:
 
         defaults_list: Iterable[Dict[str, Any]] = (
-            lale.helpers.nest_HPparams(s.name(), s.get_defaults())
-            for s in self.steps_list()
+            nest_HPparams(s.name(), s.get_defaults()) for s in self.steps_list()
         )
 
         # TODO: could this just be dict(defaults_list)
@@ -4154,8 +4174,8 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
 
     def fit(self, X, y=None, **fit_params) -> "TrainedPipeline[TrainedIndividualOp]":
         # filtered_fit_params = _fixup_hyperparams_dict(fit_params)
-        X = lale.datasets.data_schemas.add_schema(X)
-        y = lale.datasets.data_schemas.add_schema(y)
+        X = add_schema(X)
+        y = add_schema(y)
         self.validate_schema(X, y)
         trained_steps: List[TrainedIndividualOp] = []
         outputs: Dict[Operator, Tuple[Any, Any]] = {}
@@ -4509,10 +4529,8 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
 
     def predict(self, X, **predict_params) -> Any:
         result = self._predict(X, **predict_params)
-        if isinstance(result, lale.datasets.data_schemas.NDArrayWithSchema):
-            return lale.datasets.data_schemas.strip_schema(
-                result
-            )  # otherwise scorers return zero-dim array
+        if isinstance(result, NDArrayWithSchema):
+            return strip_schema(result)  # otherwise scorers return zero-dim array
         return result
 
     def transform(self, X, y=None) -> Any:
@@ -4759,11 +4777,11 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                             batch_output = trained._predict(X=inputs)
                 if trained == sink_node:
                     if isinstance(batch_output, tuple):
-                        output = lale.helpers.append_batch(
+                        output = append_batch(
                             output, (batch_output[0], batch_output[1])
                         )
                     else:
-                        output = lale.helpers.append_batch(output, batch_output)
+                        output = append_batch(output, batch_output)
                 outputs[operator] = batch_output
                 operator_idx += 1
 
@@ -4956,7 +4974,7 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
 
     def __init__(self, steps, name: Optional[str] = None) -> None:
         if name is None or name == "":
-            name = lale.helpers.assignee_name(level=2)
+            name = assignee_name(level=2)
         if name is None or name == "":
             name = "OperatorChoice"
 
@@ -5014,12 +5032,12 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
             return {}
         else:
             transformed_schemas = [st.transform_schema(s_X) for st in self.steps_list()]
-            result = lale.type_checking.join_schemas(*transformed_schemas)
+            result = join_schemas(*transformed_schemas)
             return result
 
     def input_schema_fit(self) -> JSON_TYPE:
         pipeline_inputs = [s.input_schema_fit() for s in self.steps_list()]
-        result = lale.type_checking.join_schemas(*pipeline_inputs)
+        result = join_schemas(*pipeline_inputs)
         return result
 
     def is_frozen_trainable(self) -> bool:
@@ -5232,7 +5250,7 @@ def make_choice(
 
 def _fixup_hyperparams_dict(d):
     d1 = remove_defaults_dict(d)
-    d2 = {k: lale.helpers.val_wrapper.unwrap(v) for k, v in d1.items()}
+    d2 = {k: val_wrapper.unwrap(v) for k, v in d1.items()}
     return d2
 
 
@@ -5301,7 +5319,7 @@ def customize_schema(
 
     if schemas is not None:
         schemas.schema["$schema"] = "http://json-schema.org/draft-04/schema#"
-        lale.type_checking.validate_is_schema(schemas.schema)
+        validate_is_schema(schemas.schema)
         op._schemas = schemas.schema
     else:
         if relevantToOptimizer is not None:
@@ -5332,11 +5350,11 @@ def customize_schema(
             if value is not None and isinstance(value, Schema):
                 value = value.schema
             if value is not None:
-                lale.type_checking.validate_is_schema(value)
+                validate_is_schema(value)
             if arg in [p + n for p in ["input_", "output_"] for n in methods]:
                 # multiple input types (e.g., fit, predict)
                 assert value is not None
-                lale.type_checking.validate_method(op, arg)
+                validate_method(op, arg)
                 op._schemas["properties"][arg] = value
             elif value is None:
                 scm = op._schemas["properties"]["hyperparams"]["allOf"][0]
@@ -5369,8 +5387,6 @@ CloneOpType = TypeVar("CloneOpType", bound=Operator)
 
 def clone_op(op: CloneOpType, name: Optional[str] = None) -> CloneOpType:
     """Clone any operator."""
-    from sklearn.base import clone
-
     nop = clone(op)
     if name:
         nop._set_name(name)

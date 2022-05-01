@@ -23,12 +23,12 @@ import scipy.sparse
 import lale.docstrings
 import lale.operators
 import lale.pretty_print
-import lale.type_checking
 from lale.datasets.data_schemas import add_table_name, get_index_names, get_table_name
 from lale.expressions import it
 from lale.helpers import _is_spark_df
 from lale.json_operator import JSON_TYPE
 from lale.lib.rasl.join import Join
+from lale.type_checking import is_subschema, join_schemas, validate_is_schema
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
@@ -149,7 +149,7 @@ class _ConcatFeaturesImpl:
             arr_1d_num = {"type": "array", "items": {"type": "number"}}
             arr_2d_num = {"type": "array", "items": arr_1d_num}
             s_decision_func = {"anyOf": [arr_1d_num, arr_2d_num]}
-            if lale.type_checking.is_subschema(s_decision_func, s_dataset):
+            if is_subschema(s_decision_func, s_dataset):
                 s_dataset = arr_2d_num
             assert "items" in s_dataset, lale.pretty_print.to_string(s_dataset)
             s_rows = s_dataset["items"]
@@ -161,24 +161,20 @@ class _ConcatFeaturesImpl:
                     if elem_schema is None:
                         elem_schema = s_cols
                     else:
-                        elem_schema = lale.type_checking.join_schemas(
-                            elem_schema, s_cols
-                        )
+                        elem_schema = join_schemas(elem_schema, s_cols)
                 else:
                     min_c, max_c = len(s_cols), len(s_cols)
                     for s_col in s_cols:
                         if elem_schema is None:
                             elem_schema = s_col
                         else:
-                            elem_schema = lale.type_checking.join_schemas(
-                                elem_schema, s_col
-                            )
+                            elem_schema = join_schemas(elem_schema, s_col)
                 min_cols, max_cols = add_ranges(min_cols, max_cols, min_c, max_c)
             else:
                 if elem_schema is None:
                     elem_schema = s_rows
                 else:
-                    elem_schema = lale.type_checking.join_schemas(elem_schema, s_rows)
+                    elem_schema = join_schemas(elem_schema, s_rows)
                 min_cols, max_cols = add_ranges(min_cols, max_cols, 1, 1)
         s_result = {
             "$schema": "http://json-schema.org/draft-04/schema#",
@@ -187,7 +183,7 @@ class _ConcatFeaturesImpl:
         }
         if max_cols != "unbounded":
             s_result["items"]["maxItems"] = max_cols
-        lale.type_checking.validate_is_schema(s_result)
+        validate_is_schema(s_result)
         return s_result
 
 
