@@ -101,12 +101,13 @@ def register_lale_wrapper_modules(m: str) -> None:
 def get_lale_wrapper_modules() -> Set[str]:
     return _lale_wrapper_modules
 
+
 for m in [
     "lale.lib.sklearn",
     "lale.lib.autoai_libs",
     "lale.lib.xgboost",
     "lale.lib.lightgbm",
     "lale.lib.snapml",
-    "autoai_ts_libs.lale"
+    "autoai_ts_libs.lale",
 ]:
     register_lale_wrapper_modules(m)
