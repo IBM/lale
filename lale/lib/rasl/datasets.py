@@ -115,6 +115,5 @@ def openml_data_loader(dataset_name: str, batch_size: int) -> Iterable[_PandasBa
     assert liac_arff_installed
     metadata = openml_datasets.experiments_dict[dataset_name]
     label_name = cast(str, metadata["target"])
-    n_rows = cast(int, metadata["n_rows"])
     file_name = openml_datasets.download_if_missing(dataset_name)
     return arff_data_loader(file_name, label_name, batch_size)
