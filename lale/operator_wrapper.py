@@ -102,16 +102,12 @@ def get_lale_wrapper_modules() -> Set[str]:
     return _lale_wrapper_modules
 
 
-try:
-    import autoai_ts_libs.lale  # type: ignore  # noqa:F401
-except ImportError:
-    pass
-
 for m in [
     "lale.lib.sklearn",
     "lale.lib.autoai_libs",
     "lale.lib.xgboost",
     "lale.lib.lightgbm",
     "lale.lib.snapml",
+    "autoai_ts_libs.lale",
 ]:
     register_lale_wrapper_modules(m)
