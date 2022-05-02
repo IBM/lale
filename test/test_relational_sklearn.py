@@ -85,7 +85,7 @@ assert sklearn.__version__ >= "1.0", sklearn.__version__
 
 class TestDatasets(unittest.TestCase):
     def test_openml_creditg_arff(self):
-        batches = openml_data_loader("credit-g", 3)
+        batches = openml_data_loader("credit-g", 340)
         n_rows_found = 0
         n_batches_found = 0
         for bX, by in batches:

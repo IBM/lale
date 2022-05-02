@@ -110,12 +110,10 @@ def mockup_data_loader(
     raise ValueError(f"expected astype in ['pandas', 'spark'], got {astype}")
 
 
-def openml_data_loader(dataset_name: str, n_batches: int) -> Iterable[_PandasBatch]:
+def openml_data_loader(dataset_name: str, batch_size: int) -> Iterable[_PandasBatch]:
     """Download the OpenML dataset, incrementally load it, and yield it one (X,y) batch at a time."""
     assert liac_arff_installed
     metadata = openml_datasets.experiments_dict[dataset_name]
     label_name = cast(str, metadata["target"])
-    n_rows = cast(int, metadata["n_rows"])
-    rows_per_batch = (n_rows + n_batches - 1) // n_batches
     file_name = openml_datasets.download_if_missing(dataset_name)
-    return arff_data_loader(file_name, label_name, rows_per_batch)
+    return arff_data_loader(file_name, label_name, batch_size)
