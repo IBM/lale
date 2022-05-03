@@ -1232,7 +1232,6 @@ class TestTaskGraphs(unittest.TestCase):
                 rasl_trained = fit_with_batches(
                     pipeline=rasl_trainable,
                     batches=batches,
-                    n_batches=n_batches,
                     scoring=None,
                     unique_class_labels=unique_class_labels,
                     max_resident=3 * math.ceil(train_data_space / n_batches),
@@ -1268,7 +1267,6 @@ class TestTaskGraphs(unittest.TestCase):
             rasl_scores = rasl_cross_val_score(
                 pipeline=self._make_rasl_trainable("rfc"),
                 batches=mockup_data_loader(X, y, n_batches, "pandas"),
-                n_batches=n_batches,
                 scoring=rasl_get_scorer("accuracy"),
                 cv=KFold(3),
                 unique_class_labels=list(y.unique()),
@@ -1296,7 +1294,6 @@ class TestTaskGraphs(unittest.TestCase):
             rasl_scores = rasl_cross_val_score(
                 pipeline=self._make_rasl_trainable("rfc"),
                 batches=mockup_data_loader(X, y, n_batches, "pandas"),
-                n_batches=n_batches,
                 scoring=disparate_impact_scorer,
                 cv=KFold(3),
                 unique_class_labels=list(y.unique()),
@@ -1324,7 +1321,6 @@ class TestTaskGraphs(unittest.TestCase):
             rasl_scr = rasl_cross_validate(
                 pipeline=self._make_rasl_trainable("rfc"),
                 batches=mockup_data_loader(X, y, n_batches, "pandas"),
-                n_batches=n_batches,
                 scoring=rasl_get_scorer("accuracy"),
                 cv=KFold(3),
                 unique_class_labels=list(y.unique()),
@@ -1481,7 +1477,6 @@ class TestTaskGraphsWithConcat(unittest.TestCase):
                 rasl_trained = fit_with_batches(
                     pipeline=rasl_trainable,
                     batches=batches,  # type: ignore
-                    n_batches=n_batches,
                     scoring=None,
                     unique_class_labels=unique_class_labels,
                     max_resident=3 * math.ceil(train_data_space / n_batches),
@@ -1516,7 +1511,6 @@ class TestTaskGraphsWithConcat(unittest.TestCase):
             rasl_scores = rasl_cross_val_score(
                 pipeline=self._make_rasl_trainable("rfc"),
                 batches=mockup_data_loader(X, y, n_batches, "pandas"),
-                n_batches=n_batches,
                 scoring=rasl_get_scorer("accuracy"),
                 cv=KFold(3),
                 unique_class_labels=list(y.unique()),
@@ -1659,7 +1653,6 @@ class TestTaskGraphsWithCategoricalConcat(unittest.TestCase):
                 rasl_trained = fit_with_batches(
                     pipeline=rasl_trainable,
                     batches=batches,  # type: ignore
-                    n_batches=n_batches,
                     scoring=None,
                     unique_class_labels=unique_class_labels,
                     max_resident=3 * math.ceil(train_data_space / n_batches),
@@ -1694,7 +1687,6 @@ class TestTaskGraphsWithCategoricalConcat(unittest.TestCase):
             rasl_scores = rasl_cross_val_score(
                 pipeline=self._make_rasl_trainable("rfc"),
                 batches=mockup_data_loader(X, y, n_batches, "pandas"),
-                n_batches=n_batches,
                 scoring=rasl_get_scorer("accuracy"),
                 cv=KFold(3),
                 unique_class_labels=list(y.unique()),
@@ -1743,7 +1735,6 @@ class TestTaskGraphsSpark(unittest.TestCase):
                 pipeline=self._make_rasl_trainable(),
                 batches=mockup_data_loader(train_X, train_y, n_batches, tgt),
                 scoring=None,
-                n_batches=n_batches,
                 unique_class_labels=unique_class_labels,
                 max_resident=None,
                 prio=PrioBatch(),
@@ -1773,7 +1764,6 @@ class TestTaskGraphsSpark(unittest.TestCase):
             rasl_scores = rasl_cross_val_score(
                 pipeline=self._make_rasl_trainable(),
                 batches=mockup_data_loader(X, y, n_batches, tgt),
-                n_batches=n_batches,
                 scoring=rasl_get_scorer("accuracy"),
                 cv=KFold(3),
                 unique_class_labels=unique_class_labels,
@@ -1802,7 +1792,6 @@ class TestTaskGraphsSpark(unittest.TestCase):
             rasl_scores = rasl_cross_validate(
                 pipeline=self._make_rasl_trainable(),
                 batches=mockup_data_loader(X, y, n_batches, tgt),
-                n_batches=n_batches,
                 scoring=rasl_get_scorer("accuracy"),
                 cv=KFold(3),
                 unique_class_labels=unique_class_labels,
@@ -1972,7 +1961,6 @@ class TestBatchedBaggingClassifier(unittest.TestCase):
                 rasl_trained = fit_with_batches(
                     pipeline=rasl_trainable,
                     batches=batches,
-                    n_batches=n_batches,
                     scoring=None,
                     unique_class_labels=unique_class_labels,
                     max_resident=3 * math.ceil(train_data_space / n_batches),
@@ -1996,7 +1984,6 @@ class TestBatchedBaggingClassifier(unittest.TestCase):
             _ = rasl_cross_val_score(
                 pipeline=self._make_rasl_trainable("bagging_monoid"),
                 batches=mockup_data_loader(train_X, train_y, n_batches, "pandas"),
-                n_batches=n_batches,
                 scoring=rasl_get_scorer("accuracy"),
                 cv=KFold(3),
                 unique_class_labels=list(train_y.unique()),
