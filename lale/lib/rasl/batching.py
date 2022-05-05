@@ -82,7 +82,7 @@ class _BatchingImpl:
             unique_class_labels=classes,
             max_resident=self.max_resident,
             prio=PrioResourceAware(),
-            incremental=False,
+            partial_transform=False,
             scoring=self.scoring,
             progress_callback=self.progress_callback,
             verbose=self.verbose,

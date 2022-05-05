@@ -1236,7 +1236,7 @@ class TestTaskGraphs(unittest.TestCase):
                     unique_class_labels=unique_class_labels,
                     max_resident=3 * math.ceil(train_data_space / n_batches),
                     prio=prio,
-                    incremental=False,
+                    partial_transform=False,
                     verbose=0,
                     progress_callback=None,
                 )
@@ -1481,7 +1481,7 @@ class TestTaskGraphsWithConcat(unittest.TestCase):
                     unique_class_labels=unique_class_labels,
                     max_resident=3 * math.ceil(train_data_space / n_batches),
                     prio=prio,
-                    incremental=False,
+                    partial_transform=False,
                     verbose=0,
                     progress_callback=None,
                 )
@@ -1657,7 +1657,7 @@ class TestTaskGraphsWithCategoricalConcat(unittest.TestCase):
                     unique_class_labels=unique_class_labels,
                     max_resident=3 * math.ceil(train_data_space / n_batches),
                     prio=prio,
-                    incremental=False,
+                    partial_transform=False,
                     verbose=0,
                     progress_callback=None,
                 )
@@ -1738,7 +1738,7 @@ class TestTaskGraphsSpark(unittest.TestCase):
                 unique_class_labels=unique_class_labels,
                 max_resident=None,
                 prio=PrioBatch(),
-                incremental=False,
+                partial_transform=False,
                 verbose=0,
                 progress_callback=None,
             )
@@ -1965,7 +1965,7 @@ class TestBatchedBaggingClassifier(unittest.TestCase):
                     unique_class_labels=unique_class_labels,
                     max_resident=3 * math.ceil(train_data_space / n_batches),
                     prio=prio,
-                    incremental=False,
+                    partial_transform=False,
                     verbose=0,
                     progress_callback=None,
                 )
