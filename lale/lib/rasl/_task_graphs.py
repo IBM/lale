@@ -101,6 +101,76 @@ def _get_idx(batch_id: str) -> int:
     return _ALL_BATCHES if batch_id[1] == "*" else int(batch_id[1:])
 
 
+class _Batch:
+    def __init__(self, X, y, task: Optional["_ApplyTask"]):
+        self.X = X
+        self.y = y
+        self.task = task
+        if isinstance(X, pd.DataFrame) and isinstance(y, pd.Series):
+            space_X = int(cast(pd.DataFrame, X).memory_usage().sum())
+            space_y = cast(pd.Series, y).memory_usage()
+            self.space = space_X + space_y
+        else:
+            self.space = 1  # place-holder value for Spark
+
+    def spill(self, spill_dir: pathlib.Path) -> None:
+        name_X = spill_dir / f"X_{self}.pkl"
+        name_y = spill_dir / f"y_{self}.pkl"
+        if isinstance(self.X, pd.DataFrame):
+            cast(pd.DataFrame, self.X).to_pickle(name_X)
+        elif isinstance(self.X, np.ndarray):
+            np.save(name_X, self.X, allow_pickle=True)
+        else:
+            raise ValueError(
+                f"""Spilling of {type(self.X)} is not supported.
+            Supported types are: pandas DataFrame, numpy ndarray."""
+            )
+        if isinstance(self.y, pd.Series):
+            cast(pd.Series, self.y).to_pickle(name_y)
+        elif isinstance(self.y, np.ndarray):
+            np.save(name_y, self.y, allow_pickle=True)
+        else:
+            raise ValueError(
+                f"""Spilling of {type(self.y)} is not supported.
+            Supported types are: pandas DataFrame, pandas Series, and numpy ndarray."""
+            )
+        self.X, self.y = name_X, name_y
+
+    def load_spilled(self) -> None:
+        assert isinstance(self.X, pathlib.Path) and isinstance(self.y, pathlib.Path)
+        try:
+            data_X = pd.read_pickle(self.X)
+        except FileNotFoundError:
+            data_X = np.load(f"{self.X}" + ".npy", allow_pickle=True)
+        try:
+            data_y = pd.read_pickle(self.y)
+        except FileNotFoundError:
+            data_y = np.load(f"{self.y}" + ".npy", allow_pickle=True)
+        self.X, self.y = data_X, data_y
+
+    def delete_if_spilled(self) -> None:
+        if isinstance(self.X, pathlib.Path) and isinstance(self.y, pathlib.Path):
+            self.X.unlink()
+            self.y.unlink()
+
+    def __str__(self) -> str:
+        assert self.task is not None
+        assert len(self.task.batch_ids) == 1 and not self.task.has_all_batches()
+        batch_id = self.task.batch_ids[0]
+        return f"{self.task.step_id}_{batch_id}_{self.task.held_out}"
+
+    @property
+    def Xy(self) -> Tuple[Any, Any]:
+        assert self.status == _BatchStatus.RESIDENT
+        return self.X, self.y
+
+    @property
+    def status(self) -> _BatchStatus:
+        if isinstance(self.X, pathlib.Path) and isinstance(self.y, pathlib.Path):
+            return _BatchStatus.SPILLED
+        return _BatchStatus.RESIDENT
+
+
 _MemoKey = Tuple[Type["_Task"], int, Tuple[str, ...], Optional[str]]
 
 
@@ -200,76 +270,6 @@ class _TrainTask(_Task):
             else:
                 assert False, self.trained
         return self.trained
-
-
-class _Batch:
-    def __init__(self, X, y, task: Optional["_ApplyTask"]):
-        self.X = X
-        self.y = y
-        self.task = task
-        if isinstance(X, pd.DataFrame) and isinstance(y, pd.Series):
-            space_X = int(cast(pd.DataFrame, X).memory_usage().sum())
-            space_y = cast(pd.Series, y).memory_usage()
-            self.space = space_X + space_y
-        else:
-            self.space = 1  # place-holder value for Spark
-
-    def spill(self, spill_dir: pathlib.Path) -> None:
-        name_X = spill_dir / f"X_{self}.pkl"
-        name_y = spill_dir / f"y_{self}.pkl"
-        if isinstance(self.X, pd.DataFrame):
-            cast(pd.DataFrame, self.X).to_pickle(name_X)
-        elif isinstance(self.X, np.ndarray):
-            np.save(name_X, self.X, allow_pickle=True)
-        else:
-            raise ValueError(
-                f"""Spilling of {type(self.X)} is not supported.
-            Supported types are: pandas DataFrame, numpy ndarray."""
-            )
-        if isinstance(self.y, pd.Series):
-            cast(pd.Series, self.y).to_pickle(name_y)
-        elif isinstance(self.y, np.ndarray):
-            np.save(name_y, self.y, allow_pickle=True)
-        else:
-            raise ValueError(
-                f"""Spilling of {type(self.y)} is not supported.
-            Supported types are: pandas DataFrame, pandas Series, and numpy ndarray."""
-            )
-        self.X, self.y = name_X, name_y
-
-    def load_spilled(self) -> None:
-        assert isinstance(self.X, pathlib.Path) and isinstance(self.y, pathlib.Path)
-        try:
-            data_X = pd.read_pickle(self.X)
-        except FileNotFoundError:
-            data_X = np.load(f"{self.X}" + ".npy", allow_pickle=True)
-        try:
-            data_y = pd.read_pickle(self.y)
-        except FileNotFoundError:
-            data_y = np.load(f"{self.y}" + ".npy", allow_pickle=True)
-        self.X, self.y = data_X, data_y
-
-    def delete_if_spilled(self) -> None:
-        if isinstance(self.X, pathlib.Path) and isinstance(self.y, pathlib.Path):
-            self.X.unlink()
-            self.y.unlink()
-
-    def __str__(self) -> str:
-        assert self.task is not None
-        assert len(self.task.batch_ids) == 1 and not self.task.has_all_batches()
-        batch_id = self.task.batch_ids[0]
-        return f"{self.task.step_id}_{batch_id}_{self.task.held_out}"
-
-    @property
-    def Xy(self) -> Tuple[Any, Any]:
-        assert self.status == _BatchStatus.RESIDENT
-        return self.X, self.y
-
-    @property
-    def status(self) -> _BatchStatus:
-        if isinstance(self.X, pathlib.Path) and isinstance(self.y, pathlib.Path):
-            return _BatchStatus.SPILLED
-        return _BatchStatus.RESIDENT
 
 
 class _ApplyTask(_Task):
@@ -484,12 +484,12 @@ class _TaskGraph:
         self,
         pipeline: TrainablePipeline[TrainableIndividualOp],
         folds: List[str],
-        incremental: bool,
+        partial_transform: bool,
         same_fold: bool,
     ):
         self.pipeline = pipeline
         self.folds = folds
-        self.incremental = incremental
+        self.partial_transform = partial_transform
         self.same_fold = same_fold
         self.step_ids = {step: i for i, step in enumerate(pipeline.steps_list())}
         self.step_id_preds = {
@@ -693,16 +693,52 @@ def _backward_chain_tasks(
                     )
             else:
                 if is_associative(step):
-                    for batch_id in task.expand_batches(n_batches_scanned):
-                        pred_batch_ids = (batch_id,)
-                        task.add_pred(
-                            tg.find_or_create(
-                                _TrainTask,
-                                task.step_id,
-                                pred_batch_ids,
-                                train_pred_ho(task, pred_batch_ids),
+                    if tg.partial_transform:
+                        if task.has_all_batches():
+                            if n_batches_scanned > 0:
+                                expanded_batch_ids = task.expand_batches(
+                                    n_batches_scanned
+                                )
+                                last_combine_task = tg.find_or_create(
+                                    _TrainTask,
+                                    task.step_id,
+                                    expanded_batch_ids,
+                                    train_pred_ho(task, expanded_batch_ids),
+                                )
+                                last_combine_task.deletable_output = False
+                                if end_of_scanned_batches:
+                                    task.add_pred(last_combine_task)
+                        else:
+                            if len(task.batch_ids) > 1:
+                                pred_batch_ids = task.batch_ids[:-1]
+                                task.add_pred(
+                                    tg.find_or_create(
+                                        _TrainTask,
+                                        task.step_id,
+                                        pred_batch_ids,
+                                        train_pred_ho(task, pred_batch_ids),
+                                    )
+                                )
+                                pred_batch_ids = task.batch_ids[-1:]
+                                task.add_pred(
+                                    tg.find_or_create(
+                                        _TrainTask,
+                                        task.step_id,
+                                        pred_batch_ids,
+                                        train_pred_ho(task, pred_batch_ids),
+                                    )
+                                )
+                    else:
+                        for batch_id in task.expand_batches(n_batches_scanned):
+                            pred_batch_ids = (batch_id,)
+                            task.add_pred(
+                                tg.find_or_create(
+                                    _TrainTask,
+                                    task.step_id,
+                                    pred_batch_ids,
+                                    train_pred_ho(task, pred_batch_ids),
+                                )
                             )
-                        )
                 elif is_incremental(step):
                     if task.has_all_batches():
                         if n_batches_scanned > 0:
@@ -763,7 +799,7 @@ def _backward_chain_tasks(
                         )
                     )
             else:
-                if tg.incremental:
+                if tg.partial_transform:
                     fit_upto = _get_idx(task.batch_ids[0])
                     if end_of_scanned_batches and fit_upto == n_batches_scanned - 1:
                         pred_batch_ids = _batch_ids_except(tg.folds, task.held_out)
@@ -828,10 +864,10 @@ def _create_tasks(
     folds: List[str],
     need_metrics: bool,
     keep_estimator: bool,
-    incremental: bool,
+    partial_transform: bool,
     same_fold: bool,
 ) -> _TaskGraph:
-    tg = _TaskGraph(pipeline, folds, incremental, same_fold)
+    tg = _TaskGraph(pipeline, folds, partial_transform, same_fold)
     _create_initial_tasks(tg, need_metrics, keep_estimator)
     _backward_chain_tasks(tg, 0, False)
     return tg
@@ -1274,13 +1310,15 @@ def fit_with_batches(
     unique_class_labels: List[Union[str, int, float]],
     max_resident: Optional[int],
     prio: Prio,
-    incremental: bool,
+    partial_transform: bool,
     verbose: int,
     progress_callback: Optional[Callable[[float], None]],
 ) -> TrainedPipeline[TrainedIndividualOp]:
     need_metrics = scoring is not None
     folds = ["d"]
-    with _create_tasks(pipeline, folds, need_metrics, True, incremental, False) as tg:
+    with _create_tasks(
+        pipeline, folds, need_metrics, True, partial_transform, False
+    ) as tg:
         _run_tasks(
             tg,
             batches,
