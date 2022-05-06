@@ -1167,6 +1167,42 @@ class TestStandardScaler(unittest.TestCase):
             self.assertEqual(sk_predicted.tolist(), rasl_predicted.tolist(), tgt)
 
 
+class _BatchTestingKFold:
+    def __init__(self, n_batches, n_splits):
+        self.n_batches = n_batches
+        self.n_splits = n_splits
+
+    def get_n_splits(self, X=None, y=None, groups=None):
+        return self.n_splits
+
+    def split(self, X, y=None, groups=None):
+        # re-arrange batched data [[d0,e0,f0], [d1,e1,f1], [d2,e2,f2]]
+        # into non-batched data [d0+d1+d2, e0+e1+e2, f0+f1+f2]
+        result = [([], []) for _ in range(self.n_splits)]
+        cv = KFold(self.n_splits)
+        batches = mockup_data_loader(X, y, self.n_batches, "pandas")
+        for idx, (bX, by) in enumerate(batches):
+            for fold, (_, test) in enumerate(cv.split(bX, by)):
+                remapped = bX.index[test]
+                for f in range(self.n_splits):
+                    if f != fold:
+                        assert set(result[f][0]).isdisjoint(set(remapped))
+                        result[f][0].extend(remapped)
+                assert set(result[fold][1]).isdisjoint(set(remapped))
+                result[fold][1].extend(remapped)
+        return result
+
+
+class _BatchTestingCallback:
+    def __init__(self):
+        self.n_calls = 0
+
+    def __call__(self, score, n_batches_scanned, end_of_scanned_batches):
+        self.n_calls += 1
+        assert self.n_calls == n_batches_scanned, (self.n_calls, n_batches_scanned)
+        assert not end_of_scanned_batches
+
+
 class TestTaskGraphs(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -1253,76 +1289,132 @@ class TestTaskGraphs(unittest.TestCase):
                     (n_batches, type(prio)),
                 )
 
+    def test_partial_transform(self):
+        train_X, train_y, _ = self.creditg
+        unique_class_labels = list(train_y.unique())
+        for n_batches in [1, 3]:
+            batches = mockup_data_loader(train_X, train_y, n_batches, "pandas")
+            rasl_trainable = self._make_rasl_trainable("sgd")
+            progress_callback = _BatchTestingCallback()
+            _ = fit_with_batches(
+                pipeline=rasl_trainable,
+                batches=batches,
+                scoring=rasl_get_scorer("accuracy"),
+                unique_class_labels=unique_class_labels,
+                max_resident=None,
+                prio=PrioBatch(),
+                partial_transform=True,
+                verbose=0,
+                progress_callback=progress_callback,
+            )
+            self.assertEqual(progress_callback.n_calls, n_batches)
+
+    @unittest.skip("TODO: make sure SGD partial_fit i happens before scan i+1")
+    def test_prefix_freeze_trained(self):
+        train_X, train_y, _ = self.creditg
+        unique_class_labels = list(train_y.unique())
+        n_batches = 3
+        batches = mockup_data_loader(train_X, train_y, n_batches, "pandas")
+        first_batch = next(iter(batches))
+        trainable1 = self._make_rasl_trainable("sgd")
+        prefix1, suffix1 = trainable1.remove_last(), trainable1.get_last()
+        prefix2 = fit_with_batches(
+            pipeline=prefix1,
+            batches=[first_batch],
+            scoring=None,
+            unique_class_labels=unique_class_labels,
+            max_resident=None,
+            prio=PrioBatch(),
+            partial_transform=False,
+            verbose=0,
+            progress_callback=None,
+        )
+        trainable2 = prefix2.freeze_trained() >> suffix1
+        progress_callback = _BatchTestingCallback()
+        _ = fit_with_batches(
+            pipeline=trainable2,
+            batches=batches,
+            scoring=rasl_get_scorer("accuracy"),
+            unique_class_labels=unique_class_labels,
+            max_resident=None,
+            prio=PrioBatch(),
+            partial_transform=False,
+            verbose=0,
+            progress_callback=progress_callback,
+        )
+        self.assertEqual(progress_callback.n_calls, n_batches - 1)
+
     def test_cross_val_score_accuracy(self):
         X, y, _ = self.creditg
-        with self.assertWarnsRegex(DeprecationWarning, "trainable operator"):
-            sk_scores = sk_cross_val_score(
-                estimator=self._make_sk_trainable("rfc"),
-                X=X,
-                y=y,
-                scoring=make_scorer(sk_accuracy_score),
-                cv=KFold(3),
-            )
+        n_splits = 3
         for n_batches in [1, 3]:
+            with self.assertWarnsRegex(DeprecationWarning, "trainable operator"):
+                sk_scores = sk_cross_val_score(
+                    estimator=self._make_sk_trainable("rfc"),
+                    X=X,
+                    y=y,
+                    scoring=make_scorer(sk_accuracy_score),
+                    cv=_BatchTestingKFold(n_batches, n_splits),
+                )
             rasl_scores = rasl_cross_val_score(
                 pipeline=self._make_rasl_trainable("rfc"),
                 batches=mockup_data_loader(X, y, n_batches, "pandas"),
                 scoring=rasl_get_scorer("accuracy"),
-                cv=KFold(3),
+                cv=KFold(n_splits),
                 unique_class_labels=list(y.unique()),
                 max_resident=None,
                 prio=PrioBatch(),
                 same_fold=True,
                 verbose=0,
             )
-            if n_batches == 1:
-                for sk_s, rasl_s in zip(sk_scores, rasl_scores):
-                    self.assertAlmostEqual(sk_s, rasl_s)
+            for sk_s, rasl_s in zip(sk_scores, rasl_scores):
+                self.assertAlmostEqual(sk_s, rasl_s, msg=n_batches)
 
     def test_cross_val_score_disparate_impact(self):
         X, y, fairness_info = self.creditg
         disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
-        with self.assertWarnsRegex(DeprecationWarning, "trainable operator"):
-            sk_scores = sk_cross_val_score(
-                estimator=self._make_sk_trainable("rfc"),
-                X=X,
-                y=y,
-                scoring=disparate_impact_scorer,
-                cv=KFold(3),
-            )
+        n_splits = 3
         for n_batches in [1, 3]:
+            with self.assertWarnsRegex(DeprecationWarning, "trainable operator"):
+                sk_scores = sk_cross_val_score(
+                    estimator=self._make_sk_trainable("rfc"),
+                    X=X,
+                    y=y,
+                    scoring=disparate_impact_scorer,
+                    cv=_BatchTestingKFold(n_batches, n_splits),
+                )
             rasl_scores = rasl_cross_val_score(
                 pipeline=self._make_rasl_trainable("rfc"),
                 batches=mockup_data_loader(X, y, n_batches, "pandas"),
                 scoring=disparate_impact_scorer,
-                cv=KFold(3),
+                cv=KFold(n_splits),
                 unique_class_labels=list(y.unique()),
                 max_resident=None,
                 prio=PrioBatch(),
                 same_fold=True,
                 verbose=0,
             )
-            if n_batches == 1:
-                for sk_s, rasl_s in zip(sk_scores, rasl_scores):
-                    self.assertAlmostEqual(sk_s, rasl_s, msg=n_batches)
+            for sk_s, rasl_s in zip(sk_scores, rasl_scores):
+                self.assertAlmostEqual(sk_s, rasl_s, msg=n_batches)
 
     def test_cross_validate(self):
         X, y, _ = self.creditg
-        with self.assertWarnsRegex(DeprecationWarning, "trainable operator"):
-            sk_scr = sk_cross_validate(
-                estimator=self._make_sk_trainable("rfc"),
-                X=X,
-                y=y,
-                scoring=make_scorer(sk_accuracy_score),
-                cv=KFold(3),
-                return_estimator=True,
-            )
+        n_splits = 3
         for n_batches in [1, 3]:
+            with self.assertWarnsRegex(DeprecationWarning, "trainable operator"):
+                sk_scr = sk_cross_validate(
+                    estimator=self._make_sk_trainable("rfc"),
+                    X=X,
+                    y=y,
+                    scoring=make_scorer(sk_accuracy_score),
+                    cv=_BatchTestingKFold(n_batches, n_splits),
+                    return_estimator=True,
+                )
             rasl_scr = rasl_cross_validate(
                 pipeline=self._make_rasl_trainable("rfc"),
                 batches=mockup_data_loader(X, y, n_batches, "pandas"),
                 scoring=rasl_get_scorer("accuracy"),
-                cv=KFold(3),
+                cv=KFold(n_splits),
                 unique_class_labels=list(y.unique()),
                 max_resident=None,
                 prio=PrioBatch(),
@@ -1330,22 +1422,21 @@ class TestTaskGraphs(unittest.TestCase):
                 return_estimator=True,
                 verbose=0,
             )
-            if n_batches == 1:
-                for sk_s, rasl_s in zip(sk_scr["test_score"], rasl_scr["test_score"]):
-                    self.assertAlmostEqual(cast(float, sk_s), cast(float, rasl_s))
-                for sk_e, rasl_e in zip(sk_scr["estimator"], rasl_scr["estimator"]):
-                    _check_trained_ordinal_encoder(
-                        self,
-                        sk_e.steps[0][1],
-                        cast(TrainedPipeline, rasl_e).steps[0][1].impl,
-                        n_batches,
-                    )
-                    _check_trained_min_max_scaler(
-                        self,
-                        sk_e.steps[1][1],
-                        cast(TrainedPipeline, rasl_e).steps[1][1].impl,
-                        n_batches,
-                    )
+            for sk_s, rasl_s in zip(sk_scr["test_score"], rasl_scr["test_score"]):
+                self.assertAlmostEqual(cast(float, sk_s), cast(float, rasl_s))
+            for sk_e, rasl_e in zip(sk_scr["estimator"], rasl_scr["estimator"]):
+                _check_trained_ordinal_encoder(
+                    self,
+                    sk_e.steps[0][1],
+                    cast(TrainedPipeline, rasl_e).steps[0][1].impl,
+                    n_batches,
+                )
+                _check_trained_min_max_scaler(
+                    self,
+                    sk_e.steps[1][1],
+                    cast(TrainedPipeline, rasl_e).steps[1][1].impl,
+                    n_batches,
+                )
 
 
 class TestTaskGraphsWithConcat(unittest.TestCase):

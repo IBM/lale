@@ -1011,7 +1011,7 @@ def _run_tasks_inner(
     cache: _BatchCache,
     prio: Prio,
     verbose: int,
-    progress_callback: Optional[Callable[[float], None]],
+    progress_callback: Optional[Callable[[float, int, bool], None]],
     call_depth: int,
 ) -> None:
     for task in tg.all_tasks.values():
@@ -1103,6 +1103,7 @@ def _run_tasks_inner(
                 )
             except StopIteration:
                 end_of_scanned_batches = True
+                assert n_batches_scanned >= 1
             for task_with_ab in tg.tasks_with_all_batches:
                 if task_with_ab.status is _TaskStatus.WAITING:
                     task_with_ab.status = _TaskStatus.FRESH
@@ -1210,7 +1211,10 @@ def _run_tasks_inner(
         elif operation is _Operation.PARTIAL_FIT:
             assert isinstance(task, _TrainTask)
             if task.has_all_batches():
-                assert len(task.preds) == 1
+                assert len(task.preds) == 1, (
+                    _task_to_string(task, tg.pipeline, sep=" "),
+                    len(task.preds),
+                )
                 train_pred = cast(_TrainTask, task.preds[0])
                 task.trained = train_pred.get_trained(tg.pipeline)
             else:
@@ -1248,7 +1252,11 @@ def _run_tasks_inner(
                 y_pred = task.preds[1].batch.y  # type: ignore
                 task.mmonoid = scoring.to_monoid((y_true, y_pred, X))
                 if progress_callback is not None:
-                    progress_callback(scoring.from_monoid(task.mmonoid))
+                    progress_callback(
+                        scoring.from_monoid(task.mmonoid),
+                        n_batches_scanned,
+                        end_of_scanned_batches,
+                    )
             else:
                 assert False, type(task)
         elif operation is _Operation.COMBINE:
@@ -1285,9 +1293,11 @@ def _run_tasks(
     max_resident: Optional[int],
     prio: Prio,
     verbose: int,
-    progress_callback: Optional[Callable[[float], None]],
+    progress_callback: Optional[Callable[[float, int, bool], None]],
     call_depth: int,
 ) -> None:
+    if scoring is None and progress_callback is not None:
+        logger.warn("progress_callback only gets called if scoring is not None")
     with _BatchCache(tg.all_tasks, max_resident, prio, verbose) as cache:
         _run_tasks_inner(
             tg,
@@ -1312,7 +1322,7 @@ def fit_with_batches(
     prio: Prio,
     partial_transform: bool,
     verbose: int,
-    progress_callback: Optional[Callable[[float], None]],
+    progress_callback: Optional[Callable[[float, int, bool], None]],
 ) -> TrainedPipeline[TrainedIndividualOp]:
     need_metrics = scoring is not None
     folds = ["d"]
