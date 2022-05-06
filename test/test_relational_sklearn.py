@@ -1193,6 +1193,16 @@ class _BatchTestingKFold:
         return result
 
 
+class _BatchTestingCallback:
+    def __init__(self):
+        self.n_calls = 0
+
+    def __call__(self, score, n_batches_scanned, end_of_scanned_batches):
+        self.n_calls += 1
+        assert self.n_calls == n_batches_scanned, (self.n_calls, n_batches_scanned)
+        assert not end_of_scanned_batches
+
+
 class TestTaskGraphs(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -1278,6 +1288,61 @@ class TestTaskGraphs(unittest.TestCase):
                     rasl_trained.steps[1][1].impl,
                     (n_batches, type(prio)),
                 )
+
+    def test_partial_transform(self):
+        train_X, train_y, _ = self.creditg
+        unique_class_labels = list(train_y.unique())
+        for n_batches in [1, 3]:
+            batches = mockup_data_loader(train_X, train_y, n_batches, "pandas")
+            rasl_trainable = self._make_rasl_trainable("sgd")
+            progress_callback = _BatchTestingCallback()
+            _ = fit_with_batches(
+                pipeline=rasl_trainable,
+                batches=batches,
+                scoring=rasl_get_scorer("accuracy"),
+                unique_class_labels=unique_class_labels,
+                max_resident=None,
+                prio=PrioBatch(),
+                partial_transform=True,
+                verbose=0,
+                progress_callback=progress_callback,
+            )
+            self.assertEqual(progress_callback.n_calls, n_batches)
+
+    @unittest.skip("TODO: make sure SGD partial_fit i happens before scan i+1")
+    def test_prefix_freeze_trained(self):
+        train_X, train_y, _ = self.creditg
+        unique_class_labels = list(train_y.unique())
+        n_batches = 3
+        batches = mockup_data_loader(train_X, train_y, n_batches, "pandas")
+        first_batch = next(iter(batches))
+        trainable1 = self._make_rasl_trainable("sgd")
+        prefix1, suffix1 = trainable1.remove_last(), trainable1.get_last()
+        prefix2 = fit_with_batches(
+            pipeline=prefix1,
+            batches=[first_batch],
+            scoring=None,
+            unique_class_labels=unique_class_labels,
+            max_resident=None,
+            prio=PrioBatch(),
+            partial_transform=False,
+            verbose=0,
+            progress_callback=None,
+        )
+        trainable2 = prefix2.freeze_trained() >> suffix1
+        progress_callback = _BatchTestingCallback()
+        _ = fit_with_batches(
+            pipeline=trainable2,
+            batches=batches,
+            scoring=rasl_get_scorer("accuracy"),
+            unique_class_labels=unique_class_labels,
+            max_resident=None,
+            prio=PrioBatch(),
+            partial_transform=False,
+            verbose=0,
+            progress_callback=progress_callback,
+        )
+        self.assertEqual(progress_callback.n_calls, n_batches - 1)
 
     def test_cross_val_score_accuracy(self):
         X, y, _ = self.creditg
