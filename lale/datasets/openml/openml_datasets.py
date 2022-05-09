@@ -479,6 +479,15 @@ experiments_dict["airlines_delay"] = {
     "n_rows": 10000000,
 }
 
+experiments_dict["kddcup99full"] = {
+    "dataset_url": "https://www.openml.org/d/42728",
+    "download_arff_url": "https://www.openml.org/data/download/53993/KDDCup99_full.arff",
+    "download_csv_url": "https://www.openml.org/data/download/53993/KDDCup99_full.arff",
+    "task_type": "classification",
+    "target": "label",
+    "n_rows": 4898431,
+}
+
 
 def add_schemas(schema_orig, target_col, train_X, test_X, train_y, test_y):
     from lale.datasets.data_schemas import add_schema
