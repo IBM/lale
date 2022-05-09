@@ -101,6 +101,76 @@ def _get_idx(batch_id: str) -> int:
     return _ALL_BATCHES if batch_id[1] == "*" else int(batch_id[1:])
 
 
+class _Batch:
+    def __init__(self, X, y, task: Optional["_ApplyTask"]):
+        self.X = X
+        self.y = y
+        self.task = task
+        if isinstance(X, pd.DataFrame) and isinstance(y, pd.Series):
+            space_X = int(cast(pd.DataFrame, X).memory_usage().sum())
+            space_y = cast(pd.Series, y).memory_usage()
+            self.space = space_X + space_y
+        else:
+            self.space = 1  # place-holder value for Spark
+
+    def spill(self, spill_dir: pathlib.Path) -> None:
+        name_X = spill_dir / f"X_{self}.pkl"
+        name_y = spill_dir / f"y_{self}.pkl"
+        if isinstance(self.X, pd.DataFrame):
+            cast(pd.DataFrame, self.X).to_pickle(name_X)
+        elif isinstance(self.X, np.ndarray):
+            np.save(name_X, self.X, allow_pickle=True)
+        else:
+            raise ValueError(
+                f"""Spilling of {type(self.X)} is not supported.
+            Supported types are: pandas DataFrame, numpy ndarray."""
+            )
+        if isinstance(self.y, pd.Series):
+            cast(pd.Series, self.y).to_pickle(name_y)
+        elif isinstance(self.y, np.ndarray):
+            np.save(name_y, self.y, allow_pickle=True)
+        else:
+            raise ValueError(
+                f"""Spilling of {type(self.y)} is not supported.
+            Supported types are: pandas DataFrame, pandas Series, and numpy ndarray."""
+            )
+        self.X, self.y = name_X, name_y
+
+    def load_spilled(self) -> None:
+        assert isinstance(self.X, pathlib.Path) and isinstance(self.y, pathlib.Path)
+        try:
+            data_X = pd.read_pickle(self.X)
+        except FileNotFoundError:
+            data_X = np.load(f"{self.X}" + ".npy", allow_pickle=True)
+        try:
+            data_y = pd.read_pickle(self.y)
+        except FileNotFoundError:
+            data_y = np.load(f"{self.y}" + ".npy", allow_pickle=True)
+        self.X, self.y = data_X, data_y
+
+    def delete_if_spilled(self) -> None:
+        if isinstance(self.X, pathlib.Path) and isinstance(self.y, pathlib.Path):
+            self.X.unlink()
+            self.y.unlink()
+
+    def __str__(self) -> str:
+        assert self.task is not None
+        assert len(self.task.batch_ids) == 1 and not self.task.has_all_batches()
+        batch_id = self.task.batch_ids[0]
+        return f"{self.task.step_id}_{batch_id}_{self.task.held_out}"
+
+    @property
+    def Xy(self) -> Tuple[Any, Any]:
+        assert self.status == _BatchStatus.RESIDENT
+        return self.X, self.y
+
+    @property
+    def status(self) -> _BatchStatus:
+        if isinstance(self.X, pathlib.Path) and isinstance(self.y, pathlib.Path):
+            return _BatchStatus.SPILLED
+        return _BatchStatus.RESIDENT
+
+
 _MemoKey = Tuple[Type["_Task"], int, Tuple[str, ...], Optional[str]]
 
 
@@ -200,76 +270,6 @@ class _TrainTask(_Task):
             else:
                 assert False, self.trained
         return self.trained
-
-
-class _Batch:
-    def __init__(self, X, y, task: Optional["_ApplyTask"]):
-        self.X = X
-        self.y = y
-        self.task = task
-        if isinstance(X, pd.DataFrame) and isinstance(y, pd.Series):
-            space_X = int(cast(pd.DataFrame, X).memory_usage().sum())
-            space_y = cast(pd.Series, y).memory_usage()
-            self.space = space_X + space_y
-        else:
-            self.space = 1  # place-holder value for Spark
-
-    def spill(self, spill_dir: pathlib.Path) -> None:
-        name_X = spill_dir / f"X_{self}.pkl"
-        name_y = spill_dir / f"y_{self}.pkl"
-        if isinstance(self.X, pd.DataFrame):
-            cast(pd.DataFrame, self.X).to_pickle(name_X)
-        elif isinstance(self.X, np.ndarray):
-            np.save(name_X, self.X, allow_pickle=True)
-        else:
-            raise ValueError(
-                f"""Spilling of {type(self.X)} is not supported.
-            Supported types are: pandas DataFrame, numpy ndarray."""
-            )
-        if isinstance(self.y, pd.Series):
-            cast(pd.Series, self.y).to_pickle(name_y)
-        elif isinstance(self.y, np.ndarray):
-            np.save(name_y, self.y, allow_pickle=True)
-        else:
-            raise ValueError(
-                f"""Spilling of {type(self.y)} is not supported.
-            Supported types are: pandas DataFrame, pandas Series, and numpy ndarray."""
-            )
-        self.X, self.y = name_X, name_y
-
-    def load_spilled(self) -> None:
-        assert isinstance(self.X, pathlib.Path) and isinstance(self.y, pathlib.Path)
-        try:
-            data_X = pd.read_pickle(self.X)
-        except FileNotFoundError:
-            data_X = np.load(f"{self.X}" + ".npy", allow_pickle=True)
-        try:
-            data_y = pd.read_pickle(self.y)
-        except FileNotFoundError:
-            data_y = np.load(f"{self.y}" + ".npy", allow_pickle=True)
-        self.X, self.y = data_X, data_y
-
-    def delete_if_spilled(self) -> None:
-        if isinstance(self.X, pathlib.Path) and isinstance(self.y, pathlib.Path):
-            self.X.unlink()
-            self.y.unlink()
-
-    def __str__(self) -> str:
-        assert self.task is not None
-        assert len(self.task.batch_ids) == 1 and not self.task.has_all_batches()
-        batch_id = self.task.batch_ids[0]
-        return f"{self.task.step_id}_{batch_id}_{self.task.held_out}"
-
-    @property
-    def Xy(self) -> Tuple[Any, Any]:
-        assert self.status == _BatchStatus.RESIDENT
-        return self.X, self.y
-
-    @property
-    def status(self) -> _BatchStatus:
-        if isinstance(self.X, pathlib.Path) and isinstance(self.y, pathlib.Path):
-            return _BatchStatus.SPILLED
-        return _BatchStatus.RESIDENT
 
 
 class _ApplyTask(_Task):
@@ -395,9 +395,7 @@ class PrioResourceAware(Prio):
 
 
 def _step_id_to_string(
-    step_id: int,
-    pipeline: TrainablePipeline,
-    cls2label: Dict[str, str] = {},
+    step_id: int, pipeline: TrainablePipeline, cls2label: Dict[str, str] = {}
 ) -> str:
     if step_id == _DUMMY_INPUT_STEP:
         return "INP"
@@ -484,12 +482,12 @@ class _TaskGraph:
         self,
         pipeline: TrainablePipeline[TrainableIndividualOp],
         folds: List[str],
-        incremental: bool,
+        partial_transform: Union[bool, str],
         same_fold: bool,
     ):
         self.pipeline = pipeline
         self.folds = folds
-        self.incremental = incremental
+        self.partial_transform = partial_transform
         self.same_fold = same_fold
         self.step_ids = {step: i for i, step in enumerate(pipeline.steps_list())}
         self.step_id_preds = {
@@ -646,13 +644,16 @@ def _create_initial_tasks(
                     _batch_ids_except(tg.folds, held_out),
                     held_out,
                 )
+                assert isinstance(task, _TrainTask)
                 task.deletable_output = False
+                trainable = tg.pipeline.steps_list()[task.step_id]
+                if is_pretrained(trainable):
+                    task.trained = cast(TrainedIndividualOp, trainable)
+                    task.status = _TaskStatus.DONE
 
 
 def _backward_chain_tasks(
-    tg: _TaskGraph,
-    n_batches_scanned: int,
-    end_of_scanned_batches: bool,
+    tg: _TaskGraph, n_batches_scanned: int, end_of_scanned_batches: bool
 ) -> None:
     def apply_pred_ho(task, pred_batch_id, pred_step_id):
         assert isinstance(task, _TrainTask), type(task)
@@ -693,16 +694,52 @@ def _backward_chain_tasks(
                     )
             else:
                 if is_associative(step):
-                    for batch_id in task.expand_batches(n_batches_scanned):
-                        pred_batch_ids = (batch_id,)
-                        task.add_pred(
-                            tg.find_or_create(
-                                _TrainTask,
-                                task.step_id,
-                                pred_batch_ids,
-                                train_pred_ho(task, pred_batch_ids),
+                    if tg.partial_transform in ["score", True]:
+                        if task.has_all_batches():
+                            if n_batches_scanned > 0:
+                                expanded_batch_ids = task.expand_batches(
+                                    n_batches_scanned
+                                )
+                                last_combine_task = tg.find_or_create(
+                                    _TrainTask,
+                                    task.step_id,
+                                    expanded_batch_ids,
+                                    train_pred_ho(task, expanded_batch_ids),
+                                )
+                                last_combine_task.deletable_output = False
+                                if end_of_scanned_batches:
+                                    task.add_pred(last_combine_task)
+                        else:
+                            if len(task.batch_ids) > 1:
+                                pred_batch_ids = task.batch_ids[:-1]
+                                task.add_pred(
+                                    tg.find_or_create(
+                                        _TrainTask,
+                                        task.step_id,
+                                        pred_batch_ids,
+                                        train_pred_ho(task, pred_batch_ids),
+                                    )
+                                )
+                                pred_batch_ids = task.batch_ids[-1:]
+                                task.add_pred(
+                                    tg.find_or_create(
+                                        _TrainTask,
+                                        task.step_id,
+                                        pred_batch_ids,
+                                        train_pred_ho(task, pred_batch_ids),
+                                    )
+                                )
+                    else:
+                        for batch_id in task.expand_batches(n_batches_scanned):
+                            pred_batch_ids = (batch_id,)
+                            task.add_pred(
+                                tg.find_or_create(
+                                    _TrainTask,
+                                    task.step_id,
+                                    pred_batch_ids,
+                                    train_pred_ho(task, pred_batch_ids),
+                                )
                             )
-                        )
                 elif is_incremental(step):
                     if task.has_all_batches():
                         if n_batches_scanned > 0:
@@ -763,7 +800,11 @@ def _backward_chain_tasks(
                         )
                     )
             else:
-                if tg.incremental:
+                if (
+                    tg.partial_transform is True
+                    or tg.partial_transform == "score"
+                    and all(isinstance(s, _MetricTask) for s in task.succs)
+                ):
                     fit_upto = _get_idx(task.batch_ids[0])
                     if end_of_scanned_batches and fit_upto == n_batches_scanned - 1:
                         pred_batch_ids = _batch_ids_except(tg.folds, task.held_out)
@@ -817,10 +858,11 @@ def _backward_chain_tasks(
                     )
         else:
             assert False, type(task)
-        if task.can_be_ready(end_of_scanned_batches):
-            task.status = _TaskStatus.READY
-        else:
-            task.status = _TaskStatus.WAITING
+        if task.status is not _TaskStatus.DONE:
+            if task.can_be_ready(end_of_scanned_batches):
+                task.status = _TaskStatus.READY
+            else:
+                task.status = _TaskStatus.WAITING
 
 
 def _create_tasks(
@@ -828,10 +870,10 @@ def _create_tasks(
     folds: List[str],
     need_metrics: bool,
     keep_estimator: bool,
-    incremental: bool,
+    partial_transform: Union[bool, str],
     same_fold: bool,
 ) -> _TaskGraph:
-    tg = _TaskGraph(pipeline, folds, incremental, same_fold)
+    tg = _TaskGraph(pipeline, folds, partial_transform, same_fold)
     _create_initial_tasks(tg, need_metrics, keep_estimator)
     _backward_chain_tasks(tg, 0, False)
     return tg
@@ -853,13 +895,22 @@ def _analyze_run_trace(stats: _RunStats, trace: List[_TraceRecord]) -> _RunStats
         else:
             assert False, type(record.task)
         critical_count = 1 + max(
-            (memo_key2critical_count[p.memo_key()] for p in record.task.preds),
+            (
+                memo_key2critical_count[p.memo_key()]
+                for p in record.task.preds
+                if p in memo_key2critical_count
+            ),
             default=0,
         )
         stats.critical_count = max(critical_count, stats.critical_count)
         memo_key2critical_count[record.task.memo_key()] = critical_count
         critical_time = record.time + max(
-            (memo_key2critical_time[p.memo_key()] for p in record.task.preds), default=0
+            (
+                memo_key2critical_time[p.memo_key()]
+                for p in record.task.preds
+                if p in memo_key2critical_time
+            ),
+            default=0,
         )
         stats.critical_time = max(critical_time, stats.critical_time)
         memo_key2critical_time[record.task.memo_key()] = critical_time
@@ -975,11 +1026,11 @@ def _run_tasks_inner(
     cache: _BatchCache,
     prio: Prio,
     verbose: int,
-    progress_callback: Optional[Callable[[float], None]],
+    progress_callback: Optional[Callable[[float, int, bool], None]],
     call_depth: int,
 ) -> None:
     for task in tg.all_tasks.values():
-        assert task.status in [_TaskStatus.READY, _TaskStatus.WAITING]
+        assert task.status is not _TaskStatus.FRESH
     n_batches_scanned = 0
     end_of_scanned_batches = False
     ready_keys = {k for k, t in tg.all_tasks.items() if t.status is _TaskStatus.READY}
@@ -1067,6 +1118,7 @@ def _run_tasks_inner(
                 )
             except StopIteration:
                 end_of_scanned_batches = True
+                assert n_batches_scanned >= 1
             for task_with_ab in tg.tasks_with_all_batches:
                 if task_with_ab.status is _TaskStatus.WAITING:
                     task_with_ab.status = _TaskStatus.FRESH
@@ -1143,7 +1195,8 @@ def _run_tasks_inner(
             trainable = tg.pipeline.steps_list()[task.step_id]
             if is_pretrained(trainable):
                 assert len(task.preds) == 0
-                task.trained = cast(TrainedIndividualOp, trainable)
+                if task.trained is None:
+                    task.trained = cast(TrainedIndividualOp, trainable)
             else:
                 cache.load_input_batches(task)
                 if len(task.preds) == 1:
@@ -1174,7 +1227,10 @@ def _run_tasks_inner(
         elif operation is _Operation.PARTIAL_FIT:
             assert isinstance(task, _TrainTask)
             if task.has_all_batches():
-                assert len(task.preds) == 1
+                assert len(task.preds) == 1, (
+                    _task_to_string(task, tg.pipeline, sep=" "),
+                    len(task.preds),
+                )
                 train_pred = cast(_TrainTask, task.preds[0])
                 task.trained = train_pred.get_trained(tg.pipeline)
             else:
@@ -1212,7 +1268,11 @@ def _run_tasks_inner(
                 y_pred = task.preds[1].batch.y  # type: ignore
                 task.mmonoid = scoring.to_monoid((y_true, y_pred, X))
                 if progress_callback is not None:
-                    progress_callback(scoring.from_monoid(task.mmonoid))
+                    progress_callback(
+                        scoring.from_monoid(task.mmonoid),
+                        n_batches_scanned,
+                        end_of_scanned_batches,
+                    )
             else:
                 assert False, type(task)
         elif operation is _Operation.COMBINE:
@@ -1249,9 +1309,11 @@ def _run_tasks(
     max_resident: Optional[int],
     prio: Prio,
     verbose: int,
-    progress_callback: Optional[Callable[[float], None]],
+    progress_callback: Optional[Callable[[float, int, bool], None]],
     call_depth: int,
 ) -> None:
+    if scoring is None and progress_callback is not None:
+        logger.warn("progress_callback only gets called if scoring is not None")
     with _BatchCache(tg.all_tasks, max_resident, prio, verbose) as cache:
         _run_tasks_inner(
             tg,
@@ -1274,13 +1336,16 @@ def fit_with_batches(
     unique_class_labels: List[Union[str, int, float]],
     max_resident: Optional[int],
     prio: Prio,
-    incremental: bool,
+    partial_transform: Union[bool, str],
     verbose: int,
-    progress_callback: Optional[Callable[[float], None]],
+    progress_callback: Optional[Callable[[float, int, bool], None]],
 ) -> TrainedPipeline[TrainedIndividualOp]:
+    assert partial_transform in [False, "score", True]
     need_metrics = scoring is not None
     folds = ["d"]
-    with _create_tasks(pipeline, folds, need_metrics, True, incremental, False) as tg:
+    with _create_tasks(
+        pipeline, folds, need_metrics, True, partial_transform, False
+    ) as tg:
         _run_tasks(
             tg,
             batches,
