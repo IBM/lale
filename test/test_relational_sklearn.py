@@ -1309,17 +1309,15 @@ class TestTaskGraphs(unittest.TestCase):
             )
             self.assertEqual(progress_callback.n_calls, n_batches)
 
-    @unittest.skip("TODO: make sure SGD partial_fit i happens before scan i+1")
-    def test_prefix_freeze_trained(self):
+    def test_frozen_prefix(self):
         train_X, train_y, _ = self.creditg
         unique_class_labels = list(train_y.unique())
         n_batches = 3
         batches = mockup_data_loader(train_X, train_y, n_batches, "pandas")
         first_batch = next(iter(batches))
         trainable1 = self._make_rasl_trainable("sgd")
-        prefix1, suffix1 = trainable1.remove_last(), trainable1.get_last()
-        prefix2 = fit_with_batches(
-            pipeline=prefix1,
+        trained1 = fit_with_batches(
+            pipeline=trainable1,
             batches=[first_batch],
             scoring=None,
             unique_class_labels=unique_class_labels,
@@ -1329,7 +1327,10 @@ class TestTaskGraphs(unittest.TestCase):
             verbose=0,
             progress_callback=None,
         )
-        trainable2 = prefix2.freeze_trained() >> suffix1
+        prefix2 = trained1.remove_last().freeze_trained()
+        suffix2 = trained1.get_last()
+        trainable2 = prefix2 >> suffix2
+        assert isinstance(trainable2, TrainedPipeline)
         progress_callback = _BatchTestingCallback()
         _ = fit_with_batches(
             pipeline=trainable2,
@@ -1338,7 +1339,7 @@ class TestTaskGraphs(unittest.TestCase):
             unique_class_labels=unique_class_labels,
             max_resident=None,
             prio=PrioBatch(),
-            partial_transform=False,
+            partial_transform="score",
             verbose=0,
             progress_callback=progress_callback,
         )

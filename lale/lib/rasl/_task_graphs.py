@@ -395,9 +395,7 @@ class PrioResourceAware(Prio):
 
 
 def _step_id_to_string(
-    step_id: int,
-    pipeline: TrainablePipeline,
-    cls2label: Dict[str, str] = {},
+    step_id: int, pipeline: TrainablePipeline, cls2label: Dict[str, str] = {}
 ) -> str:
     if step_id == _DUMMY_INPUT_STEP:
         return "INP"
@@ -484,7 +482,7 @@ class _TaskGraph:
         self,
         pipeline: TrainablePipeline[TrainableIndividualOp],
         folds: List[str],
-        partial_transform: bool,
+        partial_transform: Union[bool, str],
         same_fold: bool,
     ):
         self.pipeline = pipeline
@@ -646,13 +644,16 @@ def _create_initial_tasks(
                     _batch_ids_except(tg.folds, held_out),
                     held_out,
                 )
+                assert isinstance(task, _TrainTask)
                 task.deletable_output = False
+                trainable = tg.pipeline.steps_list()[task.step_id]
+                if is_pretrained(trainable):
+                    task.trained = cast(TrainedIndividualOp, trainable)
+                    task.status = _TaskStatus.DONE
 
 
 def _backward_chain_tasks(
-    tg: _TaskGraph,
-    n_batches_scanned: int,
-    end_of_scanned_batches: bool,
+    tg: _TaskGraph, n_batches_scanned: int, end_of_scanned_batches: bool
 ) -> None:
     def apply_pred_ho(task, pred_batch_id, pred_step_id):
         assert isinstance(task, _TrainTask), type(task)
@@ -693,7 +694,7 @@ def _backward_chain_tasks(
                     )
             else:
                 if is_associative(step):
-                    if tg.partial_transform:
+                    if tg.partial_transform in ["score", True]:
                         if task.has_all_batches():
                             if n_batches_scanned > 0:
                                 expanded_batch_ids = task.expand_batches(
@@ -799,7 +800,11 @@ def _backward_chain_tasks(
                         )
                     )
             else:
-                if tg.partial_transform:
+                if (
+                    tg.partial_transform is True
+                    or tg.partial_transform == "score"
+                    and all(isinstance(s, _MetricTask) for s in task.succs)
+                ):
                     fit_upto = _get_idx(task.batch_ids[0])
                     if end_of_scanned_batches and fit_upto == n_batches_scanned - 1:
                         pred_batch_ids = _batch_ids_except(tg.folds, task.held_out)
@@ -853,10 +858,11 @@ def _backward_chain_tasks(
                     )
         else:
             assert False, type(task)
-        if task.can_be_ready(end_of_scanned_batches):
-            task.status = _TaskStatus.READY
-        else:
-            task.status = _TaskStatus.WAITING
+        if task.status is not _TaskStatus.DONE:
+            if task.can_be_ready(end_of_scanned_batches):
+                task.status = _TaskStatus.READY
+            else:
+                task.status = _TaskStatus.WAITING
 
 
 def _create_tasks(
@@ -864,7 +870,7 @@ def _create_tasks(
     folds: List[str],
     need_metrics: bool,
     keep_estimator: bool,
-    partial_transform: bool,
+    partial_transform: Union[bool, str],
     same_fold: bool,
 ) -> _TaskGraph:
     tg = _TaskGraph(pipeline, folds, partial_transform, same_fold)
@@ -889,13 +895,22 @@ def _analyze_run_trace(stats: _RunStats, trace: List[_TraceRecord]) -> _RunStats
         else:
             assert False, type(record.task)
         critical_count = 1 + max(
-            (memo_key2critical_count[p.memo_key()] for p in record.task.preds),
+            (
+                memo_key2critical_count[p.memo_key()]
+                for p in record.task.preds
+                if p in memo_key2critical_count
+            ),
             default=0,
         )
         stats.critical_count = max(critical_count, stats.critical_count)
         memo_key2critical_count[record.task.memo_key()] = critical_count
         critical_time = record.time + max(
-            (memo_key2critical_time[p.memo_key()] for p in record.task.preds), default=0
+            (
+                memo_key2critical_time[p.memo_key()]
+                for p in record.task.preds
+                if p in memo_key2critical_time
+            ),
+            default=0,
         )
         stats.critical_time = max(critical_time, stats.critical_time)
         memo_key2critical_time[record.task.memo_key()] = critical_time
@@ -1015,7 +1030,7 @@ def _run_tasks_inner(
     call_depth: int,
 ) -> None:
     for task in tg.all_tasks.values():
-        assert task.status in [_TaskStatus.READY, _TaskStatus.WAITING]
+        assert task.status is not _TaskStatus.FRESH
     n_batches_scanned = 0
     end_of_scanned_batches = False
     ready_keys = {k for k, t in tg.all_tasks.items() if t.status is _TaskStatus.READY}
@@ -1180,7 +1195,8 @@ def _run_tasks_inner(
             trainable = tg.pipeline.steps_list()[task.step_id]
             if is_pretrained(trainable):
                 assert len(task.preds) == 0
-                task.trained = cast(TrainedIndividualOp, trainable)
+                if task.trained is None:
+                    task.trained = cast(TrainedIndividualOp, trainable)
             else:
                 cache.load_input_batches(task)
                 if len(task.preds) == 1:
@@ -1320,10 +1336,11 @@ def fit_with_batches(
     unique_class_labels: List[Union[str, int, float]],
     max_resident: Optional[int],
     prio: Prio,
-    partial_transform: bool,
+    partial_transform: Union[bool, str],
     verbose: int,
     progress_callback: Optional[Callable[[float, int, bool], None]],
 ) -> TrainedPipeline[TrainedIndividualOp]:
+    assert partial_transform in [False, "score", True]
     need_metrics = scoring is not None
     folds = ["d"]
     with _create_tasks(
