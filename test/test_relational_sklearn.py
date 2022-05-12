@@ -52,7 +52,7 @@ from lale.datasets.data_schemas import (
     get_index_name,
 )
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
-from lale.expressions import it
+from lale.expressions import astype, it
 from lale.helpers import _ensure_pandas, create_data_loader
 from lale.lib.rasl import BatchedBaggingClassifier, ConcatFeatures, Convert
 from lale.lib.rasl import HashingEncoder as RaslHashingEncoder
@@ -192,6 +192,19 @@ class TestMinMaxScaler(unittest.TestCase):
             self.assertAlmostEqual(sk_transformed[20, 0], rasl_transformed.iloc[20, 0])
             self.assertAlmostEqual(sk_transformed[20, 1], rasl_transformed.iloc[20, 1])
             self.assertAlmostEqual(sk_transformed[20, 2], rasl_transformed.iloc[20, 2])
+
+    def test_zero_scale(self):
+        pandas_data = pd.DataFrame({"a": [0.5]})
+        sk_scaler = SkMinMaxScaler()
+        sk_trained = sk_scaler.fit(pandas_data)
+        sk_transformed = sk_trained.transform(pandas_data)
+        rasl_scaler = RaslMinMaxScaler()
+        for tgt, _ in self.tgt2datasets.items():
+            data = Convert(astype=tgt).transform(pandas_data)
+            rasl_trained = rasl_scaler.fit(data)
+            rasl_transformed = rasl_trained.transform(data)
+            rasl_transformed = _ensure_pandas(rasl_transformed)
+            self.assertAlmostEqual(sk_transformed[0, 0], rasl_transformed.iloc[0, 0])
 
     def test_fit_range(self):
         columns = ["Product number", "Quantity", "Retailer code"]
