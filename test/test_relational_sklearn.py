@@ -52,7 +52,7 @@ from lale.datasets.data_schemas import (
     get_index_name,
 )
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
-from lale.expressions import astype, it
+from lale.expressions import it
 from lale.helpers import _ensure_pandas, create_data_loader
 from lale.lib.rasl import BatchedBaggingClassifier, ConcatFeatures, Convert
 from lale.lib.rasl import HashingEncoder as RaslHashingEncoder
