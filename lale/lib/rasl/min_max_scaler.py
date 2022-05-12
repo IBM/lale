@@ -16,7 +16,17 @@ import typing
 from typing import Any, Tuple
 
 import numpy as np
-from sklearn.preprocessing._data import _handle_zeros_in_scale
+
+try:
+    from sklearn.preprocessing._data import _handle_zeros_in_scale
+except ModuleNotFoundError:
+
+    def _handle_zeros_in_scale(scale):
+        constant_mask = scale < 10 * np.finfo(scale.dtype).eps
+        scale = scale.copy()
+        scale[constant_mask] = 1.0
+        return scale
+
 
 import lale.docstrings
 import lale.operators
