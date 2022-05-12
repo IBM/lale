@@ -16,6 +16,7 @@ import typing
 from typing import Any, Tuple
 
 import numpy as np
+from sklearn.preprocessing._data import _handle_zeros_in_scale
 
 import lale.docstrings
 import lale.operators
@@ -95,7 +96,7 @@ class _MinMaxScalerImpl(MonoidableOperator[_MinMaxScalerMonoid]):
         self.n_features_in_ = len(v.feature_names_in_)
         self.data_range_ = v.data_max_ - v.data_min_  # type: ignore
         range_min, range_max = self._hyperparams["feature_range"]
-        self.scale_ = (range_max - range_min) / (v.data_max_ - v.data_min_)  # type: ignore
+        self.scale_ = (range_max - range_min) / _handle_zeros_in_scale(v.data_max_ - v.data_min_)  # type: ignore
         self.min_ = range_min - v.data_min_ * self.scale_
         self._transformer = None
 
@@ -107,7 +108,7 @@ class _MinMaxScalerImpl(MonoidableOperator[_MinMaxScalerMonoid]):
         dmax = self.data_max_
         assert dmax is not None
         for i, c in enumerate(self.feature_names_in_):
-            c_std = (it[c] - dmin[i]) / (dmax[i] - dmin[i])
+            c_std = (it[c] - dmin[i]) / _handle_zeros_in_scale(dmax[i] - dmin[i])
             c_scaled = c_std * (range_max - range_min) + range_min
             ops.update({c: c_scaled})
         return Map(columns=ops)
