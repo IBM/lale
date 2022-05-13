@@ -193,6 +193,19 @@ class TestMinMaxScaler(unittest.TestCase):
             self.assertAlmostEqual(sk_transformed[20, 1], rasl_transformed.iloc[20, 1])
             self.assertAlmostEqual(sk_transformed[20, 2], rasl_transformed.iloc[20, 2])
 
+    def test_zero_scale(self):
+        pandas_data = pd.DataFrame({"a": [0.5]})
+        sk_scaler = SkMinMaxScaler()
+        sk_trained = sk_scaler.fit(pandas_data)
+        sk_transformed = sk_trained.transform(pandas_data)
+        rasl_scaler = RaslMinMaxScaler()
+        for tgt, _ in self.tgt2datasets.items():
+            data = Convert(astype=tgt).transform(pandas_data)
+            rasl_trained = rasl_scaler.fit(data)
+            rasl_transformed = rasl_trained.transform(data)
+            rasl_transformed = _ensure_pandas(rasl_transformed)
+            self.assertAlmostEqual(sk_transformed[0, 0], rasl_transformed.iloc[0, 0])
+
     def test_fit_range(self):
         columns = ["Product number", "Quantity", "Retailer code"]
         pandas_data = self.tgt2datasets["pandas"][0][columns]
