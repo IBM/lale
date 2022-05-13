@@ -61,7 +61,7 @@ def arff_data_loader(
 
     with open(file_name) as f:
         arff_dict = arff.load(f, return_type=arff.DENSE_GEN)
-        column_names = [name for name, _ in arff_dict["attributes"]]
+        column_names = [name.lower() for name, _ in arff_dict["attributes"]]
         row_list = []
         n_batches = 0
         for row in arff_dict["data"]:
@@ -114,6 +114,6 @@ def openml_data_loader(dataset_name: str, batch_size: int) -> Iterable[_PandasBa
     """Download the OpenML dataset, incrementally load it, and yield it one (X,y) batch at a time."""
     assert liac_arff_installed
     metadata = openml_datasets.experiments_dict[dataset_name]
-    label_name = cast(str, metadata["target"])
+    label_name = cast(str, metadata["target"]).lower()
     file_name = openml_datasets.download_if_missing(dataset_name)
     return arff_data_loader(file_name, label_name, batch_size)
