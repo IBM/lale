@@ -148,7 +148,6 @@ def hash_mod(df: Any, call: ast.Call):
 
 def replace(df: Any, call: ast.Call):
     column = _eval_ast_expr_pandas_df(df, call.args[0])  # type: ignore
-    mapping_dict = {}
     try:
         mapping_dict = ast.literal_eval(call.args[1].value)  # type: ignore
     except ValueError:
@@ -156,6 +155,7 @@ def replace(df: Any, call: ast.Call):
         # ast.literal_eval fails for `nan` with ValueError, we handle the case when
         # one of the keys is a `nan`. This is the case when using map with replace
         # in missing value imputation.
+        mapping_dict = {}
         for i, key in enumerate(mapping_dict_ast.keys):
             if key.id == "nan":
                 mapping_dict[np.nan] = ast.literal_eval(mapping_dict_ast.values[i])

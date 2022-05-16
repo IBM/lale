@@ -20,9 +20,9 @@ import numpy as np
 import lale.docstrings
 import lale.helpers
 import lale.operators
-from lale.expressions import count, it
+from lale.expressions import it
 from lale.expressions import sum as agg_sum
-from lale.lib.dataframe import get_columns
+from lale.lib.dataframe import count, get_columns
 from lale.lib.sklearn import standard_scaler
 
 from .aggregate import Aggregate
@@ -45,16 +45,12 @@ class _StandardScalerMonoid(Monoid):
             combined_sum1 = None
         else:
             assert other._sum1 is not None and len(self._sum1) == len(other._sum1)
-            combined_sum1 = [
-                self._sum1[i] + other._sum1[i] for i in range(len(self._sum1))
-            ]
+            combined_sum1 = self._sum1 + other._sum1
         if self._sum2 is None:
             combined_sum2 = None
         else:
             assert other._sum2 is not None and len(self._sum2) == len(other._sum2)
-            combined_sum2 = [
-                self._sum2[i] + other._sum2[i] for i in range(len(self._sum2))
-            ]
+            combined_sum2 = self._sum2 + other._sum2
         return _StandardScalerMonoid(
             feature_names_in_=combined_feat,
             n_samples_seen_=combined_n_samples_seen,
@@ -85,19 +81,13 @@ class _StandardScalerImpl(MonoidableOperator[_StandardScalerMonoid]):
         n = lifted.n_samples_seen_
         if self._hyperparams["with_std"]:
             # Table 1 of http://www.vldb.org/pvldb/vol8/p702-tangwongsan.pdf
-            self.var_ = [
-                (lifted._sum2[i] - lifted._sum1[i] * lifted._sum1[i] / n) / n
-                for i in range(len(lifted._sum1))
-            ]
-            self.scale_ = [
-                1.0 if self.var_[i] == 0.0 else np.sqrt(self.var_[i])
-                for i in range(len(lifted._sum1))
-            ]
+            self.var_ = (lifted._sum2 - lifted._sum1 * lifted._sum1 / n) / n
+            self.scale_ = np.where(self.var_ == 0.0, 1.0, np.sqrt(self.var_))
         else:
             self.var_ = None
             self.scale_ = None
         if self._hyperparams["with_mean"]:
-            self.mean_ = [lifted._sum1[i] / n for i in range(len(lifted._sum1))]
+            self.mean_ = lifted._sum1 / n
         else:
             self.mean_ = None
         self.n_features_in_ = len(lifted.feature_names_in_)
@@ -125,13 +115,11 @@ class _StandardScalerImpl(MonoidableOperator[_StandardScalerMonoid]):
         X, _ = v
         hyperparams = self._hyperparams
         feature_names_in = get_columns(X)
-        count_op = Aggregate(columns={"count": count(it[feature_names_in[0]])})
-        count_data = lale.helpers._ensure_pandas(count_op.transform(X))
-        n_samples_seen = count_data.loc[0, "count"]
+        n_samples_seen = count(X)
         if hyperparams["with_mean"] or hyperparams["with_std"]:
             sum1_op = Aggregate(columns={c: agg_sum(it[c]) for c in feature_names_in})
             sum1_data = lale.helpers._ensure_pandas(sum1_op.transform(X))
-            sum1 = [sum1_data.loc[0, c] for c in feature_names_in]
+            sum1 = sum1_data[feature_names_in].values[0]
         else:
             sum1 = None
         if hyperparams["with_std"]:
@@ -139,7 +127,7 @@ class _StandardScalerImpl(MonoidableOperator[_StandardScalerMonoid]):
                 columns={c: it[c] * it[c] for c in feature_names_in}
             ) >> Aggregate(columns={c: agg_sum(it[c]) for c in feature_names_in})
             sum2_data = lale.helpers._ensure_pandas(sum2_op.transform(X))
-            sum2 = [sum2_data.loc[0, c] for c in feature_names_in]
+            sum2 = sum2_data[feature_names_in].values[0]
         else:
             sum2 = None
         return _StandardScalerMonoid(
