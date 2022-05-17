@@ -299,3 +299,77 @@ CustomParamsCheckerOp = lale.operators.make_operator(
 )
 
 CustomOrigOperator = lale.operators.make_operator(model_to_be_wrapped, {})
+
+
+class _OpThatWorksWithFilesImpl:
+    def __init__(self, ngram_range):
+        self.ngram_range = ngram_range
+
+    def fit(self, X, y=None, sample_weight=None):
+        import pandas as pd
+
+        assert (
+            sample_weight is not None
+        ), "This is to test that Hyperopt passes fit_params correctly."
+        from lale.lib.sklearn import LogisticRegression, TfidfVectorizer
+
+        self.pipeline = (
+            TfidfVectorizer(input="content", ngram_range=self.ngram_range)
+            >> LogisticRegression()
+        )
+        self._wrapped_model = self.pipeline.fit(pd.read_csv(X, header=None), y)
+        return self
+
+    def predict(self, X):
+        assert hasattr(self, "_wrapped_model")
+        import pandas as pd
+
+        return self._wrapped_model.predict(pd.read_csv(X, header=None))
+
+
+_hyperparams_ranges_OpThatWorksWithFilesImpl = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["ngram_range"],
+    "relevantToOptimizer": ["ngram_range"],
+    "properties": {
+        "ngram_range": {
+            "default": (1, 1),
+            "anyOf": [
+                {
+                    "type": "array",
+                    "laleType": "tuple",
+                    "minItemsForOptimizer": 2,
+                    "maxItemsForOptimizer": 2,
+                    "items": {
+                        "type": "integer",
+                        "minimumForOptimizer": 1,
+                        "maximumForOptimizer": 3,
+                    },
+                    "forOptimizer": False,
+                },
+                {"enum": [(1, 1), (1, 2), (1, 3), (2, 2), (2, 3), (3, 3)]},
+            ],
+        },
+    },
+}
+
+_hyperparams_schema_OpThatWorksWithFilesImpl = {
+    "allOf": [_hyperparams_ranges_OpThatWorksWithFilesImpl]
+}
+
+_combined_schemas_OpThatWorksWithFilesImpl = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "object",
+    "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
+    "properties": {
+        "input_fit": {},
+        "input_predict": {},
+        "output_predict": {},
+        "hyperparams": _hyperparams_schema_OpThatWorksWithFilesImpl,
+    },
+}
+
+OpThatWorksWithFiles = lale.operators.make_operator(
+    _OpThatWorksWithFilesImpl, _combined_schemas_OpThatWorksWithFilesImpl
+)
