@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import tempfile
 import unittest
 import warnings
 from test import EnableSchemaValidation
 
 import jsonschema
 import numpy as np
+import pandas as pd
 import sklearn.datasets
 
 import lale.schemas as schemas
@@ -37,6 +39,8 @@ from lale.lib.sklearn import (
 )
 from lale.search.lale_smac import get_smac_space, lale_op_smac_tae
 from lale.search.op2hp import hyperopt_search_space
+
+from .mock_custom_operators import OpThatWorksWithFiles
 
 
 def f_min(op, X, y, num_folds=5):
@@ -641,6 +645,38 @@ class TestHyperopt(unittest.TestCase):
             train_x, train_y, args_to_cv={"groups": group_cols}
         )
         trained_optimizer.predict(train_x)
+
+    def test_string_X(self):
+        from sklearn.datasets import fetch_20newsgroups
+
+        cats = ["alt.atheism", "sci.space"]
+        newsgroups_train = fetch_20newsgroups(subset="train", categories=cats)
+        self.train_X, self.train_y = (
+            np.array(newsgroups_train.data),
+            newsgroups_train.target,
+        )
+        self.train_X = np.reshape(self.train_X, (self.train_X.shape[0], 1))
+        newsgroups_test = fetch_20newsgroups(subset="test", categories=cats)
+        self.test_X, self.test_y = (
+            np.array(newsgroups_test.data),
+            newsgroups_test.target,
+        )
+        self.test_X = np.reshape(self.test_X, (self.test_X.shape[0], 1))
+        op = OpThatWorksWithFiles()
+        optimizer = Hyperopt(estimator=op, cv=None, max_evals=2, verbose=True)
+        tmp = tempfile.NamedTemporaryFile(mode="w")
+        pd.DataFrame(self.train_X).to_csv(tmp.name, header=None, index=None)
+        # np.savetxt(tmp.name, self.train_X, fmt="%s")
+        tmp1 = tempfile.NamedTemporaryFile(mode="w")
+        pd.DataFrame(self.test_X).to_csv(tmp1.name, header=None, index=None)
+        # np.savetxt(tmp1.name, self.test_X, fmt="%s")
+        _ = optimizer.fit(
+            tmp.name,
+            y=self.train_y,
+            X_valid=tmp1.name,
+            y_valid=self.test_y,
+            sample_weight=[],
+        )
 
 
 class TestAutoConfigureClassification(unittest.TestCase):

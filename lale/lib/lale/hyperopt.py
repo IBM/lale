@@ -115,11 +115,19 @@ class _HyperoptImpl:
             if not self.verbose:
                 print("Run with verbose=True to see per-trial exceptions.")
 
-    def fit(self, X_train, y_train, **fit_params):
+    def fit(self, X_train, y_train, X_valid=None, y_valid=None, **fit_params):
         opt_start_time = time.time()
         is_clf = self.estimator.is_classifier()
-        self.cv = check_cv(self.cv, y=y_train, classifier=is_clf)
-        data_schema = lale.helpers.fold_schema(X_train, y_train, self.cv, is_clf)
+        if X_valid is not None:
+            assert (
+                self.cv is None
+            ), "cv should be None when using X_valid to pass validation dataset."
+        else:
+            self.cv = check_cv(self.cv, y=y_train, classifier=is_clf)
+        try:
+            data_schema = lale.helpers.fold_schema(X_train, y_train, self.cv, is_clf)
+        except BaseException:  # we may not always be able to extract schema for the given data format.
+            data_schema = None
         self.search_space = hyperopt.hp.choice(
             "meta_model",
             [
@@ -147,65 +155,89 @@ class _HyperoptImpl:
             )
             self.evals_with_defaults = 0
 
-        def hyperopt_train_test(params, X_train, y_train):
+        def hyperopt_train_test(params, X_train, y_train, X_valid, y_valid):
             warnings.filterwarnings("ignore")
 
             trainable = create_instance_from_hyperopt_search_space(
                 self.estimator, params
             )
-            try:
-                cv_score, logloss, execution_time = cross_val_score_track_trials(
-                    trainable,
-                    X_train,
-                    y_train,
-                    cv=self.cv,
-                    scoring=self.scoring,
-                    args_to_scorer=self.args_to_scorer,
-                    **fit_params,
-                )
-                logger.debug(
-                    "Successful trial of hyperopt with hyperparameters:{}".format(
-                        params
+            if self.cv is not None:
+                try:
+                    cv_score, logloss, execution_time = cross_val_score_track_trials(
+                        trainable,
+                        X_train,
+                        y_train,
+                        cv=self.cv,
+                        scoring=self.scoring,
+                        args_to_scorer=self.args_to_scorer,
+                        **fit_params,
                     )
-                )
-            except BaseException as e:
-                # If there is any error in cross validation, use the score based on a random train-test split as the evaluation criterion
-                if self.handle_cv_failure and trainable is not None:
-                    (
-                        X_train_part,
-                        X_validation,
-                        y_train_part,
-                        y_validation,
-                    ) = train_test_split(X_train, y_train, test_size=0.20)
-                    # remove cv params from fit_params
-                    if "args_to_cv" in fit_params.keys():
-                        del fit_params["args_to_cv"]
-                    start = time.time()
-                    trained = trainable.fit(X_train_part, y_train_part, **fit_params)
-                    scorer = check_scoring(trainable, scoring=self.scoring)
-                    cv_score = scorer(
-                        trained, X_validation, y_validation, **self.args_to_scorer
-                    )
-                    execution_time = time.time() - start
-                    y_pred_proba = trained.predict_proba(X_validation)
-                    try:
-                        logloss = log_loss(y_true=y_validation, y_pred=y_pred_proba)
-                    except BaseException:
-                        logloss = 0
-                        logger.debug("Warning, log loss cannot be computed")
-                else:
-                    logger.debug(e)
-                    if trainable is None:
-                        logger.debug(
-                            "Error {} with uncreatable pipeline with parameters:{}".format(
-                                e, lale.pretty_print.hyperparams_to_string(params)
-                            )
+                    logger.debug(
+                        "Successful trial of hyperopt with hyperparameters:{}".format(
+                            params
                         )
+                    )
+                except BaseException as e:
+                    # If there is any error in cross validation, use the score based on a random train-test split as the evaluation criterion
+                    if self.handle_cv_failure and trainable is not None:
+                        (
+                            X_train_part,
+                            X_validation,
+                            y_train_part,
+                            y_validation,
+                        ) = train_test_split(X_train, y_train, test_size=0.20)
+                        # remove cv params from fit_params
+                        if "args_to_cv" in fit_params.keys():
+                            del fit_params["args_to_cv"]
+                        start = time.time()
+                        trained = trainable.fit(
+                            X_train_part, y_train_part, **fit_params
+                        )
+                        scorer = check_scoring(trainable, scoring=self.scoring)
+                        cv_score = scorer(
+                            trained, X_validation, y_validation, **self.args_to_scorer
+                        )
+                        execution_time = time.time() - start
+                        y_pred_proba = trained.predict_proba(X_validation)
+                        try:
+                            logloss = log_loss(y_true=y_validation, y_pred=y_pred_proba)
+                        except BaseException:
+                            logloss = 0
+                            logger.debug("Warning, log loss cannot be computed")
                     else:
-                        logger.debug(
-                            "Error {} with pipeline:{}".format(e, trainable.to_json())
-                        )
-                    raise e
+                        logger.debug(e)
+                        if trainable is None:
+                            logger.debug(
+                                "Error {} with uncreatable pipeline with parameters:{}".format(
+                                    e, lale.pretty_print.hyperparams_to_string(params)
+                                )
+                            )
+                        else:
+                            logger.debug(
+                                "Error {} with pipeline:{}".format(
+                                    e, trainable.to_json()
+                                )
+                            )
+                        raise e
+            else:
+                assert (
+                    X_valid is not None
+                ), "X_valid needs to be passed when cv is None."
+                # remove cv params from fit_params
+                if "args_to_cv" in fit_params.keys():
+                    del fit_params["args_to_cv"]
+                start = time.time()
+                trained = trainable.fit(X_train, y_train, **fit_params)
+                scorer = check_scoring(trainable, scoring=self.scoring)
+                cv_score = scorer(trained, X_valid, y_valid, **self.args_to_scorer)
+                execution_time = time.time() - start
+                try:
+                    y_pred_proba = trained.predict_proba(X_valid)
+                    logloss = log_loss(y_true=y_valid, y_pred=y_pred_proba)
+                except BaseException:
+                    logloss = 0
+                    logger.debug("Warning, log loss cannot be computed")
+
             return cv_score, logloss, execution_time
 
         def merge_trials(trials1, trials2):
@@ -225,11 +257,15 @@ class _HyperoptImpl:
                 trials1.refresh()
             return trials1
 
-        def proc_train_test(params, X_train, y_train, return_dict):
+        def proc_train_test(params, X_train, y_train, X_valid, y_valid, return_dict):
             return_dict["params"] = copy.deepcopy(params)
             try:
                 score, logloss, execution_time = hyperopt_train_test(
-                    params, X_train=X_train, y_train=y_train
+                    params,
+                    X_train=X_train,
+                    y_train=y_train,
+                    X_valid=X_valid,
+                    y_valid=y_valid,
                 )
                 return_dict["loss"] = self.best_score - score
                 return_dict["time"] = execution_time
@@ -278,7 +314,8 @@ class _HyperoptImpl:
                 manager = multiprocessing.Manager()
                 proc_dict: Dict[str, Any] = manager.dict()
                 p = multiprocessing.Process(
-                    target=proc_train_test, args=(params, X_train, y_train, proc_dict)
+                    target=proc_train_test,
+                    args=(params, X_train, y_train, X_valid, y_valid, proc_dict),
                 )
                 p.start()
                 p.join(self.max_eval_time)
@@ -294,7 +331,7 @@ class _HyperoptImpl:
                     proc_dict["status"] = hyperopt.STATUS_FAIL
             else:
                 proc_dict = {}
-                proc_train_test(params, X_train, y_train, proc_dict)
+                proc_train_test(params, X_train, y_train, X_valid, y_valid, proc_dict)
             return proc_dict
 
         algo = getattr(hyperopt, self.algo)
