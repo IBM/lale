@@ -649,7 +649,24 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
                         None,
                         _lale_trained=True,
                     )
-                lale_op_obj = lale_op(steps=nested_pipeline_lale_named_steps)
+                other_hyperparams = sklearn_pipeline.get_params()
+                step_names = [name for name, _ in nested_pipeline_lale_named_steps]
+                keys_to_be_deleted = [
+                    key
+                    for key, _ in other_hyperparams.items()
+                    for step_name in step_names
+                    if key.startswith(step_name)
+                ]
+                for (
+                    key
+                ) in (
+                    keys_to_be_deleted
+                ):  # sklearn pipeline's get_params returns all mangled parameters of each step.
+                    del other_hyperparams[key]
+                del other_hyperparams["steps"]  # delete steps explicitly
+                lale_op_obj = lale_op(
+                    steps=nested_pipeline_lale_named_steps, **other_hyperparams
+                )
             else:  # no conversion to lale if a wrapper is not found for a subclass of pipeline
                 return sklearn_pipeline
     elif isinstance(sklearn_pipeline, sklearn.pipeline.FeatureUnion):
