@@ -27,7 +27,8 @@ from lale.datasets.data_schemas import add_table_name, get_index_names, get_tabl
 from lale.expressions import it
 from lale.helpers import _is_spark_df
 from lale.json_operator import JSON_TYPE
-from lale.lib.rasl import Alias, Join
+from lale.lib.rasl.alias import Alias
+from lale.lib.rasl.join import Join
 from lale.type_checking import is_subschema, join_schemas, validate_is_schema
 
 logger = logging.getLogger(__name__)
