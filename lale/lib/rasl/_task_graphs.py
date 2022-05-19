@@ -417,7 +417,7 @@ def _task_to_string(
     operation_s = task.get_operation(pipeline).name.lower()
     step_s = _step_id_to_string(task.step_id, pipeline, cls2label)
     batches_s = ",".join(task.batch_ids)
-    held_out_s = "" if task.held_out is None else f"#~{task.held_out}"
+    held_out_s = "" if task.held_out is None else f"\\\\{task.held_out}"
     return f"{trace_id_s}{operation_s}{sep}{step_s}({batches_s}){held_out_s}"
 
 
