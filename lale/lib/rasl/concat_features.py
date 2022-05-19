@@ -27,7 +27,7 @@ from lale.datasets.data_schemas import add_table_name, get_index_names, get_tabl
 from lale.expressions import it
 from lale.helpers import _is_spark_df
 from lale.json_operator import JSON_TYPE
-from lale.lib.rasl.join import Join
+from lale.lib.rasl import Alias, Join
 from lale.type_checking import is_subschema, join_schemas, validate_is_schema
 
 logger = logging.getLogger(__name__)
@@ -52,6 +52,14 @@ def _is_pandas_series(d):
 
 def _is_pandas(d):
     return _is_pandas_df(d) or _is_pandas_series(d)
+
+
+def _gen_table_name(avoid, cpt=0):
+    name = f"tbl{cpt}"
+    if name in avoid:
+        return _gen_table_name(avoid, cpt=cpt + 1)
+    else:
+        return name
 
 
 class _ConcatFeaturesImpl:
@@ -79,15 +87,17 @@ class _ConcatFeaturesImpl:
             def join(d1, d2):
                 n1 = get_table_name(d1)
                 n2 = get_table_name(d2)
-                if n1 is None or n2 is None:
-                    raise ValueError(
-                        "Table names are required to concatenate features of Spark dataframes"
-                    )
+                if n1 is None:
+                    n1 = _gen_table_name([n2])
+                    d1 = Alias(name=n1).transform(d1)
+                if n2 is None:
+                    n2 = _gen_table_name([n1])
+                    d2 = Alias(name=n2).transform(d2)
                 indexes_col1 = get_index_names(d1)
                 indexes_col2 = get_index_names(d2)
                 if indexes_col1 is None or indexes_col2 is None:
                     raise ValueError(
-                        "Index columns are required to concatenate features of Spark dataframes"
+                        "Index columns are required to concatenate features of Spark dataframes (see SparkDataFrameWithIndex)"
                     )
                 transformer = Join(
                     pred=[
