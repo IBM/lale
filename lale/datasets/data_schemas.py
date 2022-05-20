@@ -97,7 +97,7 @@ class SeriesWithSchema(Series):
 if spark_installed:
 
     def _gen_index_name(df, cpt=None):
-        name = f"index{0 if cpt is not None else ''}"
+        name = f"index{cpt if cpt is not None else ''}"
         if name in df.columns:
             return _gen_index_name(df, cpt=cpt + 1 if cpt is not None else 0)
         else:

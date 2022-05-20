@@ -411,6 +411,27 @@ class TestConcatFeatures(unittest.TestCase):
             for c in expected.columns:
                 self.assertEqual(list(transformed[c]), list(expected[c]))
 
+    def test_init_fit_predict_spark_no_table_name(self):
+        if spark_installed:
+            trainable_cf = ConcatFeatures()
+            A = [[11, 12, 13], [21, 22, 23], [31, 32, 33]]
+            B = [[14, 15], [24, 25], [34, 35]]
+            A = pd.DataFrame(A, columns=["a", "b", "c"])
+            B = pd.DataFrame(B, columns=["d", "e"])
+            A = pandas2spark(A, with_index=True)
+            B = pandas2spark(B, with_index=True)
+
+            trained_cf = trainable_cf.fit(X=[A, B])
+            transformed = trained_cf.transform([A, B]).toPandas()
+            expected = [
+                [11, 12, 13, 14, 15],
+                [21, 22, 23, 24, 25],
+                [31, 32, 33, 34, 35],
+            ]
+            expected = pd.DataFrame(expected, columns=["a", "b", "c", "d", "e"])
+            for c in expected.columns:
+                self.assertEqual(list(transformed[c]), list(expected[c]))
+
     def test_comparison_with_scikit(self):
         import warnings
 
