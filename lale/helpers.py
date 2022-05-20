@@ -762,6 +762,8 @@ def append_batch(data, batch_data):
     elif torch_installed and isinstance(data, torch.Tensor):
         if isinstance(batch_data, torch.Tensor):
             return torch.cat((data, batch_data))
+    elif isinstance(data, pd.Series) or isinstance(data, pd.DataFrame):
+        return pd.concat([data, batch_data], axis=0)
     try:
         import h5py
 
@@ -771,7 +773,9 @@ def append_batch(data, batch_data):
     except ModuleNotFoundError:
         pass
 
-    # TODO:Handle dataframes
+    raise ValueError(
+        f"{type(data)} is unsupported. Supported types are np.ndarray, torch.Tensor and h5py file"
+    )
 
 
 def create_data_loader(X, y=None, batch_size=1, num_workers=0, shuffle=True):
