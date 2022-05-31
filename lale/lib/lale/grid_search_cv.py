@@ -21,10 +21,10 @@ import lale.operators
 import lale.search.lale_grid_search_cv
 import lale.sklearn_compat
 from lale.lib._common_schemas import (
+    schema_cv,
     schema_estimator,
     schema_max_opt_time,
     schema_scoring_single,
-    schema_simple_cv,
 )
 
 from .observing import Observing
@@ -101,9 +101,14 @@ class _GridSearchCVImpl:
         observed_op = Observing(op=op, observer=obs)
 
         hp_grid = self._hyperparams["hp_grid"]
-        data_schema = lale.helpers.fold_schema(
-            X, y, self._hyperparams["cv"], op.is_classifier()
-        )
+        data_schema = {}
+        try:
+            data_schema = lale.helpers.fold_schema(
+                X, y, self._hyperparams["cv"], op.is_classifier()
+            )
+        except BaseException:  # Not all data types are handled by fold_schema
+            pass
+
         if hp_grid is None:
             hp_grid = lale.search.lale_grid_search_cv.get_parameter_grids(
                 observed_op,
@@ -222,7 +227,7 @@ _hyperparams_schema = {
             "properties": {
                 "estimator": schema_estimator,
                 "scoring": schema_scoring_single,
-                "cv": schema_simple_cv,
+                "cv": schema_cv,
                 "verbose": {
                     "description": "Controls the verbosity: the higher, the more messages.",
                     "type": "integer",
