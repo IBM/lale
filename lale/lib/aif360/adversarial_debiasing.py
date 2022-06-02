@@ -21,6 +21,8 @@ try:
 except ImportError:
     tensorflow_installed = False
 
+import contextlib
+import io
 import uuid
 
 import lale.docstrings
@@ -54,6 +56,7 @@ class _AdversarialDebiasingImpl(_BaseInEstimatorImpl):
         batch_size=128,
         classifier_num_hidden_units=200,
         debias=True,
+        verbose=0,
     ):
         assert tensorflow_installed, """Your Python environment does not have tensorflow installed. You can install it with
     pip install tensorflow
@@ -73,6 +76,7 @@ or with
         self.unfavorable_labels = unfavorable_labels
         self.redact = redact
         self.preparation = preparation
+        self.verbose = verbose
 
     def fit(self, X, y=None):
         tf.compat.v1.disable_eager_execution()
@@ -94,7 +98,7 @@ or with
             classifier_num_hidden_units=self.classifier_num_hidden_units,
             debias=self.debias,
         )
-        super(_AdversarialDebiasingImpl, self).__init__(
+        super().__init__(
             favorable_labels=self.favorable_labels,
             protected_attributes=self.protected_attributes,
             unfavorable_labels=self.unfavorable_labels,
@@ -102,7 +106,12 @@ or with
             preparation=self.preparation,
             mitigator=mitigator,
         )
-        return super(_AdversarialDebiasingImpl, self).fit(X, y)
+        if self.verbose == 0:
+            with contextlib.redirect_stdout(io.StringIO()):
+                result = super().fit(X, y)
+        else:
+            result = super().fit(X, y)
+        return result
 
 
 _input_fit_schema = _categorical_supervised_input_fit_schema
@@ -130,6 +139,7 @@ _hyperparams_schema = {
                 "batch_size",
                 "classifier_num_hidden_units",
                 "debias",
+                "verbose",
             ],
             "relevantToOptimizer": [
                 "adversary_loss_weight",
@@ -215,6 +225,11 @@ _hyperparams_schema = {
                     "description": "Learn a classifier with or without debiasing.",
                     "type": "boolean",
                     "default": True,
+                },
+                "verbose": {
+                    "description": "If zero, then no output.",
+                    "type": "integer",
+                    "default": 0,
                 },
             },
         },
