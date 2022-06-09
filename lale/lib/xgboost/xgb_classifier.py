@@ -67,6 +67,9 @@ class _XGBClassifierImpl:
 
     def fit(self, X, y, **fit_params):
         renamed_X = _rename_all_features(X)
+        if xgboost.__version__ >= "1.3.0" and "eval_metric" not in fit_params:
+            # set eval_metric explicitly to avoid spurious warning
+            fit_params = {"eval_metric": "logloss", **fit_params}
         self._wrapped_model.fit(renamed_X, y, **fit_params)
         return self
 
