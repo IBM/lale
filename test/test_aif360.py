@@ -62,6 +62,7 @@ from lale.lib.aif360 import (
     Redacting,
     RejectOptionClassification,
     Reweighing,
+    count_fairness_groups,
     fair_stratified_train_test_split,
 )
 from lale.lib.lale import ConcatFeatures, Project
@@ -1186,6 +1187,14 @@ class TestAIF360Cat(unittest.TestCase):
         di = di_scorer(trained_remi, test_X, test_y)
         self.assertLessEqual(0.8, di)
         self.assertLessEqual(di, 1.0)
+
+    def test_count_fairness_groups(self):
+        fairness_info = self.creditg_pd_cat["fairness_info"]
+        train_X = self.creditg_pd_cat["splits"][0]["train_X"]
+        train_y = self.creditg_pd_cat["splits"][0]["train_y"]
+        cfg = count_fairness_groups(train_X, train_y, **fairness_info)
+        self.assertEqual(cfg.at[(0, 0, 0), "count"], 31)
+        self.assertEqual(cfg.at[(1, 1, 1), "count"], 298)
 
 
 class TestAIF360Imports(unittest.TestCase):

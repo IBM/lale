@@ -74,7 +74,7 @@ Metrics:
 * `theil_index`_
 
 Datasets:
-================
+=========
 * `fetch_adult_df`_
 * `fetch_bank_df`_
 * `fetch_compas_df`_
@@ -97,6 +97,7 @@ Other Classes and Operators:
 
 Other Functions:
 ================
+* `count_fairness_groups`_
 * `dataset_to_pandas`_
 * `fair_stratified_train_test_split`_
 
@@ -153,6 +154,7 @@ zero or one to simplify the task for the mitigator.
 .. _`Reweighing`: lale.lib.aif360.reweighing.html#lale.lib.aif360.reweighing.Reweighing
 .. _`accuracy_and_disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.accuracy_and_disparate_impact
 .. _`average_odds_difference`: lale.lib.aif360.util.html#lale.lib.aif360.util.average_odds_difference
+.. _`count_fairness_groups`: lale.lib.aif360.util.html#lale.lib.aif360.util.count_fairness_groups
 .. _`dataset_to_pandas`: lale.lib.aif360.util.html#lale.lib.aif360.util.dataset_to_pandas
 .. _`disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.disparate_impact
 .. _`equal_opportunity_difference`: lale.lib.aif360.util.html#lale.lib.aif360.util.equal_opportunity_difference
@@ -211,6 +213,7 @@ from .util import (
     FairStratifiedKFold,
     accuracy_and_disparate_impact,
     average_odds_difference,
+    count_fairness_groups,
     dataset_to_pandas,
     disparate_impact,
     equal_opportunity_difference,

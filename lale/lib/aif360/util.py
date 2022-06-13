@@ -83,6 +83,31 @@ def dataset_to_pandas(
     return result_X, result_y
 
 
+def count_fairness_groups(
+    X: Union[pd.DataFrame, np.ndarray],
+    y: Union[pd.Series, np.ndarray],
+    favorable_labels: _FAV_LABELS_TYPE,
+    protected_attributes: List[JSON_TYPE],
+    unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
+) -> pd.DataFrame:
+    from lale.lib.aif360 import ProtectedAttributesEncoder
+
+    prot_attr_enc = ProtectedAttributesEncoder(
+        favorable_labels=favorable_labels,
+        protected_attributes=protected_attributes,
+        unfavorable_labels=unfavorable_labels,
+        remainder="drop",
+    )
+    encoded_X, encoded_y = prot_attr_enc.transform_X_y(X, y)
+    prot_attr_names = [pa["feature"] for pa in protected_attributes]
+    gensym = GenSym(set(prot_attr_names))
+    encoded_y = pd.Series(encoded_y, index=encoded_y.index, name=gensym("y_true"))
+    counts = pd.Series(data=1, index=encoded_y.index, name=gensym("count"))
+    enc = pd.concat([encoded_y, encoded_X, counts], axis=1)
+    result = enc.groupby([encoded_y.name] + prot_attr_names).count()
+    return result
+
+
 _categorical_fairness_properties: JSON_TYPE = {
     "favorable_labels": {
         "description": 'Label values which are considered favorable (i.e. "positive").',
