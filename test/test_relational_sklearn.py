@@ -29,6 +29,7 @@ from category_encoders.hashing import HashingEncoder as SkHashingEncoder
 from sklearn.feature_selection import SelectKBest as SkSelectKBest
 from sklearn.impute import SimpleImputer as SkSimpleImputer
 from sklearn.metrics import accuracy_score as sk_accuracy_score
+from sklearn.metrics import f1_score as sk_f1_score
 from sklearn.metrics import make_scorer
 from sklearn.metrics import r2_score as sk_r2_score
 from sklearn.model_selection import KFold
@@ -68,7 +69,9 @@ from lale.lib.rasl import accuracy_score as rasl_accuracy_score
 from lale.lib.rasl import categorical
 from lale.lib.rasl import cross_val_score as rasl_cross_val_score
 from lale.lib.rasl import cross_validate as rasl_cross_validate
-from lale.lib.rasl import csv_data_loader, fit_with_batches
+from lale.lib.rasl import csv_data_loader
+from lale.lib.rasl import f1_score as rasl_f1_score
+from lale.lib.rasl import fit_with_batches
 from lale.lib.rasl import get_scorer as rasl_get_scorer
 from lale.lib.rasl import mockup_data_loader, openml_data_loader
 from lale.lib.rasl import r2_score as rasl_r2_score
@@ -1946,6 +1949,17 @@ class TestMetrics(unittest.TestCase):
         sk_score = sk_accuracy_score(test_y, y_pred)
         self.assertEqual(sk_score, rasl_accuracy_score(test_y, y_pred))
         rasl_scorer = rasl_get_scorer("accuracy")
+        self.assertEqual(sk_score, rasl_scorer(est, test_X, test_y))
+        batches = mockup_data_loader(test_X, test_y, 3, "pandas")
+        self.assertEqual(sk_score, rasl_scorer.score_estimator_batched(est, batches))
+
+    def test_f1(self):
+        (train_X, train_y), (test_X, test_y) = self.creditg
+        est = LogisticRegression().fit(train_X, train_y)
+        y_pred = est.predict(test_X)
+        sk_score = sk_f1_score(test_y, y_pred, pos_label=1)
+        self.assertEqual(sk_score, rasl_f1_score(test_y, y_pred, pos_label=1))
+        rasl_scorer = rasl_get_scorer("f1", pos_label=1)
         self.assertEqual(sk_score, rasl_scorer(est, test_X, test_y))
         batches = mockup_data_loader(test_X, test_y, 3, "pandas")
         self.assertEqual(sk_score, rasl_scorer.score_estimator_batched(est, batches))
