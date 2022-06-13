@@ -1375,6 +1375,129 @@ equal_opportunity_difference.__doc__ = (
 )
 
 
+class _F1AndSymmDIData(MetricMonoid):
+    def __init__(
+        self,
+        f1_data: lale.lib.rasl.metrics._F1Data,
+        symm_di_data: _DIorSPDData,
+    ):
+        self.f1_data = f1_data
+        self.symm_di_data = symm_di_data
+
+    def combine(self, other: "_F1AndSymmDIData") -> "_F1AndSymmDIData":
+        return _F1AndSymmDIData(
+            self.f1_data.combine(other.f1_data),
+            self.symm_di_data.combine(other.symm_di_data),
+        )
+
+
+class _F1AndDisparateImpact(MetricMonoidFactory[_F1AndSymmDIData]):
+    def __init__(
+        self,
+        favorable_labels: _FAV_LABELS_TYPE,
+        protected_attributes: List[JSON_TYPE],
+        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
+        fairness_weight: float,
+    ):
+        if fairness_weight < 0.0 or fairness_weight > 1.0:
+            logger.warning(
+                f"invalid fairness_weight {fairness_weight}, setting it to 0.5"
+            )
+            fairness_weight = 0.5
+        if len(favorable_labels) != 1:
+            logger.warning(f"multiple favorable_labels {favorable_labels}")
+        if not isinstance(favorable_labels[0], (int, float, str)):
+            logger.warning(f"unexpected favorable_labels range {favorable_labels}")
+        self.f1_scorer = lale.lib.rasl.get_scorer("f1", pos_label=favorable_labels[0])
+        self.symm_di_scorer = symmetric_disparate_impact(
+            favorable_labels, protected_attributes, unfavorable_labels
+        )
+        self.fairness_weight = fairness_weight
+
+    def _blend_metrics(self, f1: float, symm_di: float) -> float:
+        if f1 < 0.0 or f1 > 1.0:
+            logger.warning(f"invalid f1 {f1}, setting it to zero")
+            f1 = 0.0
+        if symm_di < 0.0 or symm_di > 1.0 or np.isinf(symm_di) or np.isnan(symm_di):
+            logger.warning(f"invalid symm_di {symm_di}, setting it to zero")
+            symm_di = 0.0
+        result = (1 - self.fairness_weight) * f1 + self.fairness_weight * symm_di
+        if result < 0.0 or result > 1.0:
+            logger.warning(
+                f"unexpected result {result} for f1 {f1} and symm_di {symm_di}"
+            )
+        return result
+
+    def to_monoid(self, batch: _Batch_yyX) -> _F1AndSymmDIData:
+        return _F1AndSymmDIData(
+            self.f1_scorer.to_monoid(batch), self.symm_di_scorer.to_monoid(batch)
+        )
+
+    def from_monoid(self, v: _F1AndSymmDIData) -> float:
+        f1 = self.f1_scorer.from_monoid(v.f1_data)
+        symm_di = self.symm_di_scorer.from_monoid(v.symm_di_data)
+        return self._blend_metrics(f1, symm_di)
+
+    def score_data(
+        self,
+        y_true: Union[pd.Series, np.ndarray, None] = None,
+        y_pred: Union[pd.Series, np.ndarray, None] = None,
+        X: Union[pd.DataFrame, np.ndarray, None] = None,
+    ) -> float:
+        assert y_true is not None and y_pred is not None and X is not None
+        f1 = self.f1_scorer.score_data(y_true, y_pred, X)
+        symm_di = self.symm_di_scorer.score_data(y_true, y_pred, X)
+        return self._blend_metrics(f1, symm_di)
+
+    def score_estimator(
+        self,
+        estimator: TrainedOperator,
+        X: Union[pd.DataFrame, np.ndarray],
+        y: Union[pd.Series, np.ndarray],
+    ) -> float:
+        f1 = self.f1_scorer.score_estimator(estimator, X, y)
+        symm_di = self.symm_di_scorer.score_estimator(estimator, X, y)
+        return self._blend_metrics(f1, symm_di)
+
+    def __call__(
+        self,
+        estimator: TrainedOperator,
+        X: Union[pd.DataFrame, np.ndarray],
+        y: Union[pd.Series, np.ndarray],
+    ) -> float:
+        return self.score_estimator(estimator, X, y)
+
+
+def f1_and_disparate_impact(
+    favorable_labels: _FAV_LABELS_TYPE,
+    protected_attributes: List[JSON_TYPE],
+    unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
+    fairness_weight: float = 0.5,
+) -> _F1AndDisparateImpact:
+    """
+    Create a scikit-learn compatible blended scorer for `f1`_
+    and `symmetric disparate impact`_ given the fairness info.
+    The scorer is suitable for classification problems,
+    with higher resulting scores indicating better outcomes.
+    The result is a linear combination of F1 and
+    symmetric disparate impact, and is between 0 and 1.
+    This metric can be used as the `scoring` argument
+    of an optimizer such as `Hyperopt`_, as shown in this `demo`_.
+
+    .. _`f1`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.f1_score.html
+    .. _`symmetric disparate impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.symmetric_disparate_impact
+    .. _`Hyperopt`: lale.lib.lale.hyperopt.html#lale.lib.lale.hyperopt.Hyperopt
+    .. _`demo`: https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_aif360.ipynb"""
+    return _F1AndDisparateImpact(
+        favorable_labels, protected_attributes, unfavorable_labels, fairness_weight
+    )
+
+
+f1_and_disparate_impact.__doc__ = (
+    str(f1_and_disparate_impact.__doc__) + _BLENDED_SCORER_DOCSTRING
+)
+
+
 class _R2AndSymmDIData(MetricMonoid):
     def __init__(
         self,

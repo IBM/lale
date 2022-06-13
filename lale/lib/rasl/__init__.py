@@ -69,6 +69,7 @@ Data Loaders
 Metrics
 =======
 * lale.lib.rasl. `accuracy_score`_
+* lale.lib.rasl. `f1_score`_
 * lale.lib.rasl. `get_scorer`_
 * lale.lib.rasl. `r2_score`_
 
@@ -123,6 +124,7 @@ Other Facilities
 .. _`accuracy_score`: lale.lib.rasl.accuracy_score.html
 .. _`cross_val_score`: lale.lib.rasl.cross_val_score.html
 .. _`cross_validate`: lale.lib.rasl.cross_validate.html
+.. _`f1_score`: lale.lib.rasl.f1_score.html
 .. _`fit_with_batches`: lale.lib.rasl.fit_with_batches.html
 .. _`get_scorer`: lale.lib.rasl.get_scorer.html
 .. _`is_associative`: lale.lib.rasl.is_associative.html
@@ -131,7 +133,6 @@ Other Facilities
 .. _`mockup_data_loader`: lale.lib.rasl.datasets.html#lale.lib.rasl.datasets.mockup_data_loader
 .. _`openml_data_loader`: lale.lib.rasl.datasets.html#lale.lib.rasl.datasets.openml_data_loader
 .. _`r2_score`: lale.lib.rasl.r2_score.html
-
 """
 
 from ._task_graphs import (
@@ -158,7 +159,7 @@ from .group_by import GroupBy
 from .hashing_encoder import HashingEncoder
 from .join import Join
 from .map import Map
-from .metrics import accuracy_score, get_scorer, r2_score
+from .metrics import accuracy_score, f1_score, get_scorer, r2_score
 from .min_max_scaler import MinMaxScaler
 from .monoid import Monoid, MonoidableOperator, MonoidFactory
 from .one_hot_encoder import OneHotEncoder

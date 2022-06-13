@@ -68,6 +68,7 @@ Metrics:
 * `average_odds_difference`_
 * `disparate_impact`_
 * `equal_opportunity_difference`_
+* `f1_and_disparate_impact`_
 * `r2_and_disparate_impact`_
 * `statistical_parity_difference`_
 * `symmetric_disparate_impact`_
@@ -158,6 +159,7 @@ zero or one to simplify the task for the mitigator.
 .. _`dataset_to_pandas`: lale.lib.aif360.util.html#lale.lib.aif360.util.dataset_to_pandas
 .. _`disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.disparate_impact
 .. _`equal_opportunity_difference`: lale.lib.aif360.util.html#lale.lib.aif360.util.equal_opportunity_difference
+.. _`f1_and_disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.f1_and_disparate_impact
 .. _`fair_stratified_train_test_split`: lale.lib.aif360.util.html#lale.lib.aif360.util.fair_stratified_train_test_split
 .. _`fetch_adult_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_adult_df
 .. _`fetch_bank_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_bank_df
@@ -217,6 +219,7 @@ from .util import (
     dataset_to_pandas,
     disparate_impact,
     equal_opportunity_difference,
+    f1_and_disparate_impact,
     fair_stratified_train_test_split,
     r2_and_disparate_impact,
     statistical_parity_difference,

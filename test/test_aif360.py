@@ -908,6 +908,7 @@ class TestAIF360Cat(unittest.TestCase):
             lale.lib.aif360.average_odds_difference,
             lale.lib.aif360.symmetric_disparate_impact,
             lale.lib.aif360.accuracy_and_disparate_impact,
+            lale.lib.aif360.f1_and_disparate_impact,
         ]  # not including r2_and_disparate_impact, because it's for regression
         for factory in batched_scorer_factories:
             scorer = factory(**fairness_info)

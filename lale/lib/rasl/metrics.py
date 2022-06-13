@@ -146,6 +146,69 @@ def accuracy_score(y_true: pd.Series, y_pred: pd.Series) -> float:
     return get_scorer("accuracy").score_data(y_true, y_pred)
 
 
+class _F1Data(MetricMonoid):
+    def __init__(self, true_pos: int, true_neg: int, false_pos: int, false_neg: int):
+        self.true_pos = true_pos
+        self.true_neg = true_neg
+        self.false_pos = false_pos
+        self.false_neg = false_neg
+
+    def combine(self, other: "_F1Data") -> "_F1Data":
+        return _F1Data(
+            self.true_pos + other.true_pos,
+            self.true_neg + other.true_neg,
+            self.false_pos + other.false_pos,
+            self.false_neg + other.false_neg,
+        )
+
+
+class _F1(_MetricMonoidMixin[_F1Data]):
+    def __init__(self, pos_label=1):
+        self._pipeline = Map(
+            columns={
+                "true_pos": astype(
+                    "int", (it.y_pred == pos_label) & (it.y_true == pos_label)
+                ),
+                "true_neg": astype(
+                    "int", (it.y_pred != pos_label) & (it.y_true != pos_label)
+                ),
+                "false_pos": astype(
+                    "int", (it.y_pred == pos_label) & (it.y_true != pos_label)
+                ),
+                "false_neg": astype(
+                    "int", (it.y_pred != pos_label) & (it.y_true == pos_label)
+                ),
+            }
+        ) >> Aggregate(
+            columns={
+                "true_pos": sum(it.true_pos),
+                "true_neg": sum(it.true_neg),
+                "false_pos": sum(it.false_pos),
+                "false_neg": sum(it.false_neg),
+            }
+        )
+
+    def to_monoid(self, batch: _Batch_yyX) -> _F1Data:
+        input_df = _make_dataframe_yy(batch)
+        agg_df = self._pipeline.transform(input_df)
+        return _F1Data(
+            true_pos=agg_df.at[0, "true_pos"],
+            true_neg=agg_df.at[0, "true_neg"],
+            false_pos=agg_df.at[0, "false_pos"],
+            false_neg=agg_df.at[0, "false_neg"],
+        )
+
+    def from_monoid(self, v: _F1Data) -> float:
+        precision = v.true_pos / (v.true_pos + v.false_pos)
+        recall = v.true_pos / (v.true_pos + v.false_neg)
+        result = 2 * (precision * recall) / (precision + recall)
+        return float(result)
+
+
+def f1_score(y_true: pd.Series, y_pred: pd.Series, pos_label=1) -> float:
+    return get_scorer("f1", pos_label=pos_label).score_data(y_true, y_pred)
+
+
 class _R2Data(MetricMonoid):
     def __init__(self, n: int, sum: float, sum_sq: float, res_sum_sq: float):
         self.n = n
@@ -204,7 +267,9 @@ def r2_score(y_true: pd.Series, y_pred: pd.Series) -> float:
 _scorer_cache: Dict[str, Optional[MetricMonoidFactory]] = {"accuracy": None, "r2": None}
 
 
-def get_scorer(scoring: str) -> MetricMonoidFactory:
+def get_scorer(scoring: str, **kwargs) -> MetricMonoidFactory:
+    if scoring == "f1":
+        return _F1(**kwargs)
     assert scoring in _scorer_cache, scoring
     if _scorer_cache[scoring] is None:
         if scoring == "accuracy":
