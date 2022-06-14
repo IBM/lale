@@ -97,7 +97,7 @@ class _MetricMonoidMixin(MetricMonoidFactory[_M], Protocol):
     def score_estimator(
         self, estimator: TrainedOperator, X: pd.DataFrame, y: pd.Series
     ) -> float:
-        return self.score_data(y_true=y, y_pred=estimator.predict(X))
+        return self.score_data(y_true=y, y_pred=estimator.predict(X), X=X)
 
 
 def _make_dataframe_yy(batch):
@@ -147,30 +147,25 @@ def accuracy_score(y_true: pd.Series, y_pred: pd.Series) -> float:
 
 
 class _F1Data(MetricMonoid):
-    def __init__(self, true_pos: int, true_neg: int, false_pos: int, false_neg: int):
+    def __init__(self, true_pos: int, false_pos: int, false_neg: int):
         self.true_pos = true_pos
-        self.true_neg = true_neg
         self.false_pos = false_pos
         self.false_neg = false_neg
 
     def combine(self, other: "_F1Data") -> "_F1Data":
         return _F1Data(
             self.true_pos + other.true_pos,
-            self.true_neg + other.true_neg,
             self.false_pos + other.false_pos,
             self.false_neg + other.false_neg,
         )
 
 
 class _F1(_MetricMonoidMixin[_F1Data]):
-    def __init__(self, pos_label=1):
+    def __init__(self, pos_label: Union[int, float, str] = 1):
         self._pipeline = Map(
             columns={
                 "true_pos": astype(
                     "int", (it.y_pred == pos_label) & (it.y_true == pos_label)
-                ),
-                "true_neg": astype(
-                    "int", (it.y_pred != pos_label) & (it.y_true != pos_label)
                 ),
                 "false_pos": astype(
                     "int", (it.y_pred == pos_label) & (it.y_true != pos_label)
@@ -182,7 +177,6 @@ class _F1(_MetricMonoidMixin[_F1Data]):
         ) >> Aggregate(
             columns={
                 "true_pos": sum(it.true_pos),
-                "true_neg": sum(it.true_neg),
                 "false_pos": sum(it.false_pos),
                 "false_neg": sum(it.false_neg),
             }
@@ -193,19 +187,19 @@ class _F1(_MetricMonoidMixin[_F1Data]):
         agg_df = self._pipeline.transform(input_df)
         return _F1Data(
             true_pos=agg_df.at[0, "true_pos"],
-            true_neg=agg_df.at[0, "true_neg"],
             false_pos=agg_df.at[0, "false_pos"],
             false_neg=agg_df.at[0, "false_neg"],
         )
 
     def from_monoid(self, v: _F1Data) -> float:
-        precision = v.true_pos / (v.true_pos + v.false_pos)
-        recall = v.true_pos / (v.true_pos + v.false_neg)
-        result = 2 * (precision * recall) / (precision + recall)
+        two_tp = v.true_pos + v.true_pos
+        result = two_tp / (two_tp + v.false_pos + v.false_neg)
         return float(result)
 
 
-def f1_score(y_true: pd.Series, y_pred: pd.Series, pos_label=1) -> float:
+def f1_score(
+    y_true: pd.Series, y_pred: pd.Series, pos_label: Union[int, float, str] = 1
+) -> float:
     return get_scorer("f1", pos_label=pos_label).score_data(y_true, y_pred)
 
 
