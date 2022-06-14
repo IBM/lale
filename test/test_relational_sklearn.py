@@ -1947,9 +1947,9 @@ class TestMetrics(unittest.TestCase):
         est = LogisticRegression().fit(train_X, train_y)
         y_pred = est.predict(test_X)
         sk_score = sk_accuracy_score(test_y, y_pred)
-        self.assertEqual(sk_score, rasl_accuracy_score(test_y, y_pred))
+        self.assertAlmostEqual(sk_score, rasl_accuracy_score(test_y, y_pred))
         rasl_scorer = rasl_get_scorer("accuracy")
-        self.assertEqual(sk_score, rasl_scorer(est, test_X, test_y))
+        self.assertAlmostEqual(sk_score, rasl_scorer(est, test_X, test_y))
         batches = mockup_data_loader(test_X, test_y, 3, "pandas")
         self.assertAlmostEqual(
             sk_score, rasl_scorer.score_estimator_batched(est, batches)
@@ -1960,9 +1960,9 @@ class TestMetrics(unittest.TestCase):
         est = LogisticRegression().fit(train_X, train_y)
         y_pred = est.predict(test_X)
         sk_score = sk_f1_score(test_y, y_pred, pos_label=1)
-        self.assertEqual(sk_score, rasl_f1_score(test_y, y_pred, pos_label=1))
+        self.assertAlmostEqual(sk_score, rasl_f1_score(test_y, y_pred, pos_label=1))
         rasl_scorer = rasl_get_scorer("f1", pos_label=1)
-        self.assertEqual(sk_score, rasl_scorer(est, test_X, test_y))
+        self.assertAlmostEqual(sk_score, rasl_scorer(est, test_X, test_y))
         batches = mockup_data_loader(test_X, test_y, 3, "pandas")
 
         self.assertAlmostEqual(
