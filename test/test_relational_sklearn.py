@@ -1951,7 +1951,9 @@ class TestMetrics(unittest.TestCase):
         rasl_scorer = rasl_get_scorer("accuracy")
         self.assertEqual(sk_score, rasl_scorer(est, test_X, test_y))
         batches = mockup_data_loader(test_X, test_y, 3, "pandas")
-        self.assertEqual(sk_score, rasl_scorer.score_estimator_batched(est, batches))
+        self.assertAlmostEqual(
+            sk_score, rasl_scorer.score_estimator_batched(est, batches)
+        )
 
     def test_f1(self):
         (train_X, train_y), (test_X, test_y) = self.creditg
@@ -1962,7 +1964,10 @@ class TestMetrics(unittest.TestCase):
         rasl_scorer = rasl_get_scorer("f1", pos_label=1)
         self.assertEqual(sk_score, rasl_scorer(est, test_X, test_y))
         batches = mockup_data_loader(test_X, test_y, 3, "pandas")
-        self.assertEqual(sk_score, rasl_scorer.score_estimator_batched(est, batches))
+
+        self.assertAlmostEqual(
+            sk_score, rasl_scorer.score_estimator_batched(est, batches)
+        )
 
     def test_r2_score(self):
         (train_X, train_y), (test_X, test_y) = self.creditg
