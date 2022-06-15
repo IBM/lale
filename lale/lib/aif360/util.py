@@ -1399,16 +1399,20 @@ class _F1AndDisparateImpact(MetricMonoidFactory[_F1AndSymmDIData]):
         unfavorable_labels: Optional[_FAV_LABELS_TYPE],
         fairness_weight: float,
     ):
+        from lale.lib.aif360 import ProtectedAttributesEncoder
+
         if fairness_weight < 0.0 or fairness_weight > 1.0:
             logger.warning(
                 f"invalid fairness_weight {fairness_weight}, setting it to 0.5"
             )
             fairness_weight = 0.5
-        if len(favorable_labels) != 1:
-            logger.warning(f"multiple favorable_labels {favorable_labels}")
-        if not isinstance(favorable_labels[0], (int, float, str)):
-            logger.warning(f"unexpected favorable_labels range {favorable_labels}")
-        self.f1_scorer = lale.lib.rasl.get_scorer("f1", pos_label=favorable_labels[0])
+        self.prot_attr_enc = ProtectedAttributesEncoder(
+            favorable_labels=favorable_labels,
+            protected_attributes=protected_attributes,
+            unfavorable_labels=unfavorable_labels,
+            remainder="drop",
+        )
+        self.f1_scorer = lale.lib.rasl.get_scorer("f1", pos_label=1)
         self.symm_di_scorer = symmetric_disparate_impact(
             favorable_labels, protected_attributes, unfavorable_labels
         )
@@ -1428,9 +1432,18 @@ class _F1AndDisparateImpact(MetricMonoidFactory[_F1AndSymmDIData]):
             )
         return result
 
+    def _encode_batch(self, batch: _Batch_yyX) -> _Batch_yyX:
+        y_true, y_pred, X = batch
+        assert y_true is not None and y_pred is not None, batch
+        y_pred = _y_pred_series(y_true, y_pred, X)
+        _, enc_y_true = self.prot_attr_enc.transform_X_y(X, y_true)
+        _, enc_y_pred = self.prot_attr_enc.transform_X_y(X, y_pred)
+        return enc_y_true, enc_y_pred, X
+
     def to_monoid(self, batch: _Batch_yyX) -> _F1AndSymmDIData:
         return _F1AndSymmDIData(
-            self.f1_scorer.to_monoid(batch), self.symm_di_scorer.to_monoid(batch)
+            self.f1_scorer.to_monoid(self._encode_batch(batch)),
+            self.symm_di_scorer.to_monoid(batch),
         )
 
     def from_monoid(self, v: _F1AndSymmDIData) -> float:
@@ -1445,7 +1458,8 @@ class _F1AndDisparateImpact(MetricMonoidFactory[_F1AndSymmDIData]):
         X: Union[pd.DataFrame, np.ndarray, None] = None,
     ) -> float:
         assert y_true is not None and y_pred is not None and X is not None
-        f1 = self.f1_scorer.score_data(y_true, y_pred, X)
+        enc_y_true, enc_y_pred, _ = self._encode_batch((y_true, y_pred, X))
+        f1 = self.f1_scorer.score_data(enc_y_true, enc_y_pred, X)
         symm_di = self.symm_di_scorer.score_data(y_true, y_pred, X)
         return self._blend_metrics(f1, symm_di)
 
@@ -1455,9 +1469,7 @@ class _F1AndDisparateImpact(MetricMonoidFactory[_F1AndSymmDIData]):
         X: Union[pd.DataFrame, np.ndarray],
         y: Union[pd.Series, np.ndarray],
     ) -> float:
-        f1 = self.f1_scorer.score_estimator(estimator, X, y)
-        symm_di = self.symm_di_scorer.score_estimator(estimator, X, y)
-        return self._blend_metrics(f1, symm_di)
+        return self.score_data(y_true=y, y_pred=estimator.predict(X), X=X)
 
     def __call__(
         self,
