@@ -40,6 +40,7 @@ from sklearn.preprocessing import MinMaxScaler as SkMinMaxScaler
 from sklearn.preprocessing import OneHotEncoder as SkOneHotEncoder
 from sklearn.preprocessing import OrdinalEncoder as SkOrdinalEncoder
 from sklearn.preprocessing import StandardScaler as SkStandardScaler
+from sklearn.preprocessing import scale as sk_scale
 
 import lale.datasets
 import lale.datasets.openml
@@ -75,6 +76,7 @@ from lale.lib.rasl import fit_with_batches
 from lale.lib.rasl import get_scorer as rasl_get_scorer
 from lale.lib.rasl import mockup_data_loader, openml_data_loader
 from lale.lib.rasl import r2_score as rasl_r2_score
+from lale.lib.rasl.standard_scaler import scale as rasl_scale
 from lale.lib.sklearn import (
     DecisionTreeClassifier,
     LogisticRegression,
@@ -1155,6 +1157,24 @@ class TestStandardScaler(unittest.TestCase):
             rasl_trained = rasl_trainable.fit(train_X)
             _check_trained_standard_scaler(self, sk_trained, rasl_trained.impl, tgt)
             rasl_transformed = rasl_trained.transform(test_X)
+            if tgt == "spark-with-index":
+                self.assertEqual(get_index_name(rasl_transformed), "index")
+            rasl_transformed = _ensure_pandas(rasl_transformed)
+            self.assertEqual(sk_transformed.shape, rasl_transformed.shape, tgt)
+            for row_idx in range(sk_transformed.shape[0]):
+                for col_idx in range(sk_transformed.shape[1]):
+                    self.assertAlmostEqual(
+                        sk_transformed[row_idx, col_idx],
+                        rasl_transformed.iloc[row_idx, col_idx],
+                        msg=(row_idx, col_idx, tgt),
+                    )
+
+    def test_scale(self):
+        (X_pd, _), _ = self.tgt2creditg["pandas"]
+        sk_transformed = sk_scale(X_pd)
+        for tgt, dataset in self.tgt2creditg.items():
+            (X, _), _ = dataset
+            rasl_transformed = rasl_scale(X)
             if tgt == "spark-with-index":
                 self.assertEqual(get_index_name(rasl_transformed), "index")
             rasl_transformed = _ensure_pandas(rasl_transformed)

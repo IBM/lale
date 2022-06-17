@@ -30,6 +30,10 @@ from .map import Map
 from .monoid import Monoid, MonoidableOperator
 
 
+def scale(X, **kwargs):
+    return StandardScaler(**kwargs).fit(X).transform(X)
+
+
 class _StandardScalerMonoid(Monoid):
     def __init__(self, *, feature_names_in_, n_samples_seen_, _sum1, _sum2):
         self.feature_names_in_ = feature_names_in_
@@ -62,11 +66,16 @@ class _StandardScalerMonoid(Monoid):
 class _StandardScalerImpl(MonoidableOperator[_StandardScalerMonoid]):
     def __init__(self, *, copy=True, with_mean=True, with_std=True):
         self._hyperparams = {"copy": copy, "with_mean": with_mean, "with_std": with_std}
+        self.with_mean = with_mean
 
-    def transform(self, X):
+    def transform(self, X, copy=None):
         if self._transformer is None:
             self._transformer = self._build_transformer()
         return self._transformer.transform(X)
+
+    def get_feature_names_out(self, input_features):
+        assert input_features == self.feature_names_in_
+        return self.feature_names_in_
 
     @property
     def n_samples_seen_(self):
