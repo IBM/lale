@@ -601,18 +601,18 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
 
     if isinstance(sklearn_obj, lale.operators.TrainableIndividualOp) and fitted:
         if hasattr(sklearn_obj, "_trained"):
-            return sklearn_obj._trained
+            return copy.deepcopy(sklearn_obj._trained)
         elif is_hyperparam or not hasattr(
             sklearn_obj._impl_instance(), "fit"
         ):  # Operators such as NoOp do not have a fit, so return them as is.
-            return sklearn_obj
+            return copy.deepcopy(sklearn_obj)
         else:
             raise ValueError(
                 f"""The input pipeline has an operator {sklearn_obj} that is not trained and fitted is set to True,
                 please pass fitted=False if you want a trainable pipeline as output."""
             )
     elif isinstance(sklearn_obj, lale.operators.Operator):
-        return sklearn_obj
+        return copy.deepcopy(sklearn_obj)
 
     if isinstance(sklearn_pipeline, sklearn.pipeline.Pipeline):
         nested_pipeline_steps = sklearn_pipeline.named_steps

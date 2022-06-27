@@ -3977,13 +3977,13 @@ class BasePipeline(Operator, Generic[OpType]):
                     value = getattr(node, element)
                     if isinstance(value, IndividualOp):
                         if isinstance(
-                            value._impl_instance(), sklearn.base.BaseEstimator
+                            value.shallow_impl, sklearn.base.BaseEstimator
                         ):
-                            setattr(node, element, value._impl_instance())
-                        if hasattr(value._impl_instance(), "_wrapped_model"):
+                            setattr(node, element, value.shallow_impl)
+                        if hasattr(value.shallow_impl, "_wrapped_model"):
                             # node is a higher order operator
                             setattr(
-                                node, element, value._impl_instance()._wrapped_model
+                                node, element, value.shallow_impl._wrapped_model
                             )
 
                     stripped = strip_schema(value)
@@ -4005,10 +4005,10 @@ class BasePipeline(Operator, Generic[OpType]):
                     "A pipeline that has an OperatorChoice can not be converted to "
                     " a scikit-learn pipeline:{}".format(self.to_json())
                 )
-            if sink_node._impl_class() == Relational._impl_class():
+            if sink_node.impl_class == Relational.impl_class:
                 return None
             convert_nested_objects(sink_node._impl)
-            if sink_node._impl_class() == ConcatFeatures._impl_class():
+            if sink_node.impl_class == ConcatFeatures.impl_class:
                 list_of_transformers = []
                 for pred in self._preds[sink_node]:
                     pred_transformer = create_pipeline_from_sink_node(pred)
@@ -4031,13 +4031,13 @@ class BasePipeline(Operator, Generic[OpType]):
                         )
                     )
                 else:
-                    if hasattr(sink_node._impl_instance(), "_wrapped_model"):
-                        sklearn_op = sink_node._impl_instance()._wrapped_model
+                    if hasattr(sink_node.shallow_impl, "_wrapped_model"):
+                        sklearn_op = sink_node.shallow_impl._wrapped_model
                         convert_nested_objects(
                             sklearn_op
                         )  # This case needs one more level of conversion
                     else:
-                        sklearn_op = sink_node._impl_instance()
+                        sklearn_op = sink_node.shallow_impl
                     sklearn_op = copy.deepcopy(sklearn_op)
                     if preds is None or len(preds) == 0:
                         return sklearn_op
@@ -4045,14 +4045,14 @@ class BasePipeline(Operator, Generic[OpType]):
                         output_pipeline_steps = []
                         previous_sklearn_op = create_pipeline_from_sink_node(preds[0])
                         if previous_sklearn_op is not None and not isinstance(
-                            previous_sklearn_op, NoOp._impl_class()
+                            previous_sklearn_op, NoOp.impl_class
                         ):
                             if isinstance(previous_sklearn_op, list):
                                 output_pipeline_steps = previous_sklearn_op
                             else:
                                 output_pipeline_steps.append(previous_sklearn_op)
                         if not isinstance(
-                            sklearn_op, NoOp._impl_class()
+                            sklearn_op, NoOp.impl_class
                         ):  # Append the current op only if not NoOp
                             output_pipeline_steps.append(sklearn_op)
                         return output_pipeline_steps
