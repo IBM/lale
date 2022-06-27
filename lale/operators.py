@@ -3976,15 +3976,11 @@ class BasePipeline(Operator, Generic[OpType]):
                 try:
                     value = getattr(node, element)
                     if isinstance(value, IndividualOp):
-                        if isinstance(
-                            value.shallow_impl, sklearn.base.BaseEstimator
-                        ):
+                        if isinstance(value.shallow_impl, sklearn.base.BaseEstimator):
                             setattr(node, element, value.shallow_impl)
                         if hasattr(value.shallow_impl, "_wrapped_model"):
                             # node is a higher order operator
-                            setattr(
-                                node, element, value.shallow_impl._wrapped_model
-                            )
+                            setattr(node, element, value.shallow_impl._wrapped_model)
 
                     stripped = strip_schema(value)
                     if value is stripped:
