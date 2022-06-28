@@ -599,9 +599,13 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
 
     sklearn_obj = sklearn_pipeline
 
-    if isinstance(sklearn_obj, lale.operators.TrainableIndividualOp) and fitted:
+    if isinstance(sklearn_obj, lale.operators.TrainableIndividualOp):
         if hasattr(sklearn_obj, "_trained"):
-            return copy.deepcopy(sklearn_obj._trained)
+            if fitted:
+                return copy.deepcopy(sklearn_obj._trained)
+            else:
+                delattr(sklearn_obj, "_trained")  # delete _trained before returning
+                return copy.deepcopy(sklearn_obj)
         elif is_hyperparam or not hasattr(
             sklearn_obj._impl_instance(), "fit"
         ):  # Operators such as NoOp do not have a fit, so return them as is.
@@ -702,6 +706,7 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
             hyperparams = orig_hyperparams
 
         lale_wrapper_found, class_ = find_lale_wrapper(sklearn_obj)
+
         if not lale_wrapper_found:
             return class_  # Return the original object
 
