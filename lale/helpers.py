@@ -606,15 +606,17 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
             else:
                 delattr(sklearn_obj, "_trained")  # delete _trained before returning
                 return copy.deepcopy(sklearn_obj)
-        elif is_hyperparam or not hasattr(
-            sklearn_obj._impl_instance(), "fit"
+        elif (
+            fitted and is_hyperparam or not hasattr(sklearn_obj._impl_instance(), "fit")
         ):  # Operators such as NoOp do not have a fit, so return them as is.
             return copy.deepcopy(sklearn_obj)
-        else:
+        elif fitted:
             raise ValueError(
                 f"""The input pipeline has an operator {sklearn_obj} that is not trained and fitted is set to True,
                 please pass fitted=False if you want a trainable pipeline as output."""
             )
+        else:  # is a trainable, never trained and fitted=False
+            return copy.deepcopy(sklearn_obj)
     elif isinstance(sklearn_obj, lale.operators.Operator):
         return copy.deepcopy(sklearn_obj)
 
