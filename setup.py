@@ -44,7 +44,7 @@ else:
         "black==19.10b0",
         "click==8.0.4",
         "graphviz",
-        "hyperopt<=0.2.5",
+        "hyperopt>=0.2,<=0.2.5",
         "jsonschema",
         "jsonsubschema>=0.0.6",
         "scikit-learn<=1.0.2",
