@@ -29,6 +29,7 @@ from category_encoders.hashing import HashingEncoder as SkHashingEncoder
 from sklearn.feature_selection import SelectKBest as SkSelectKBest
 from sklearn.impute import SimpleImputer as SkSimpleImputer
 from sklearn.metrics import accuracy_score as sk_accuracy_score
+from sklearn.metrics import balanced_accuracy_score as sk_balanced_accuracy_score
 from sklearn.metrics import f1_score as sk_f1_score
 from sklearn.metrics import make_scorer
 from sklearn.metrics import r2_score as sk_r2_score
@@ -67,6 +68,7 @@ from lale.lib.rasl import SelectKBest as RaslSelectKBest
 from lale.lib.rasl import SimpleImputer as RaslSimpleImputer
 from lale.lib.rasl import StandardScaler as RaslStandardScaler
 from lale.lib.rasl import accuracy_score as rasl_accuracy_score
+from lale.lib.rasl import balanced_accuracy_score as rasl_balanced_accuracy_score
 from lale.lib.rasl import categorical
 from lale.lib.rasl import cross_val_score as rasl_cross_val_score
 from lale.lib.rasl import cross_validate as rasl_cross_validate
@@ -1969,6 +1971,19 @@ class TestMetrics(unittest.TestCase):
         sk_score = sk_accuracy_score(test_y, y_pred)
         self.assertAlmostEqual(sk_score, rasl_accuracy_score(test_y, y_pred))
         rasl_scorer = rasl_get_scorer("accuracy")
+        self.assertAlmostEqual(sk_score, rasl_scorer(est, test_X, test_y))
+        batches = mockup_data_loader(test_X, test_y, 3, "pandas")
+        self.assertAlmostEqual(
+            sk_score, rasl_scorer.score_estimator_batched(est, batches)
+        )
+
+    def test_balanced_accuracy(self):
+        (train_X, train_y), (test_X, test_y) = self.creditg
+        est = LogisticRegression().fit(train_X, train_y)
+        y_pred = est.predict(test_X)
+        sk_score = sk_balanced_accuracy_score(test_y, y_pred)
+        self.assertAlmostEqual(sk_score, rasl_balanced_accuracy_score(test_y, y_pred))
+        rasl_scorer = rasl_get_scorer("balanced_accuracy")
         self.assertAlmostEqual(sk_score, rasl_scorer(est, test_X, test_y))
         batches = mockup_data_loader(test_X, test_y, 3, "pandas")
         self.assertAlmostEqual(
