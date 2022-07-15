@@ -1264,6 +1264,125 @@ average_odds_difference.__doc__ = (
 )
 
 
+class _BalAccAndSymmDIData(MetricMonoid):
+    def __init__(
+        self,
+        bal_acc_data: lale.lib.rasl.metrics._BalancedAccuracyData,
+        symm_di_data: _DIorSPDData,
+    ):
+        self.bal_acc_data = bal_acc_data
+        self.symm_di_data = symm_di_data
+
+    def combine(self, other: "_BalAccAndSymmDIData") -> "_BalAccAndSymmDIData":
+        return _BalAccAndSymmDIData(
+            self.bal_acc_data.combine(other.bal_acc_data),
+            self.symm_di_data.combine(other.symm_di_data),
+        )
+
+
+class _BalancedAccuracyAndDisparateImpact(MetricMonoidFactory[_BalAccAndSymmDIData]):
+    def __init__(
+        self,
+        favorable_labels: _FAV_LABELS_TYPE,
+        protected_attributes: List[JSON_TYPE],
+        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
+        fairness_weight: float,
+    ):
+        if fairness_weight < 0.0 or fairness_weight > 1.0:
+            logger.warning(
+                f"invalid fairness_weight {fairness_weight}, setting it to 0.5"
+            )
+            fairness_weight = 0.5
+        self.bal_acc_scorer = lale.lib.rasl.get_scorer("balanced_accuracy")
+        self.symm_di_scorer = symmetric_disparate_impact(
+            favorable_labels, protected_attributes, unfavorable_labels
+        )
+        self.fairness_weight = fairness_weight
+
+    def _blend_metrics(self, bal_acc: float, symm_di: float) -> float:
+        if bal_acc < 0.0 or bal_acc > 1.0:
+            logger.warning(f"invalid bal_acc {bal_acc}, setting it to zero")
+            bal_acc = 0.0
+        if symm_di < 0.0 or symm_di > 1.0 or np.isinf(symm_di) or np.isnan(symm_di):
+            logger.warning(f"invalid symm_di {symm_di}, setting it to zero")
+            symm_di = 0.0
+        result = (1 - self.fairness_weight) * bal_acc + self.fairness_weight * symm_di
+        if result < 0.0 or result > 1.0:
+            logger.warning(
+                f"unexpected result {result} for bal_acc {bal_acc} and symm_di {symm_di}"
+            )
+        return result
+
+    def to_monoid(self, batch: _Batch_yyX) -> _BalAccAndSymmDIData:
+        return _BalAccAndSymmDIData(
+            self.bal_acc_scorer.to_monoid(batch), self.symm_di_scorer.to_monoid(batch)
+        )
+
+    def from_monoid(self, v: _BalAccAndSymmDIData) -> float:
+        bal_acc = self.bal_acc_scorer.from_monoid(v.bal_acc_data)
+        symm_di = self.symm_di_scorer.from_monoid(v.symm_di_data)
+        return self._blend_metrics(bal_acc, symm_di)
+
+    def score_data(
+        self,
+        y_true: Union[pd.Series, np.ndarray, None] = None,
+        y_pred: Union[pd.Series, np.ndarray, None] = None,
+        X: Union[pd.DataFrame, np.ndarray, None] = None,
+    ) -> float:
+        assert y_true is not None and y_pred is not None and X is not None
+        bal_acc = self.bal_acc_scorer.score_data(y_true, y_pred, X)
+        symm_di = self.symm_di_scorer.score_data(y_true, y_pred, X)
+        return self._blend_metrics(bal_acc, symm_di)
+
+    def score_estimator(
+        self,
+        estimator: TrainedOperator,
+        X: Union[pd.DataFrame, np.ndarray],
+        y: Union[pd.Series, np.ndarray],
+    ) -> float:
+        bal_acc = self.bal_acc_scorer.score_estimator(estimator, X, y)
+        symm_di = self.symm_di_scorer.score_estimator(estimator, X, y)
+        return self._blend_metrics(bal_acc, symm_di)
+
+    def __call__(
+        self,
+        estimator: TrainedOperator,
+        X: Union[pd.DataFrame, np.ndarray],
+        y: Union[pd.Series, np.ndarray],
+    ) -> float:
+        return self.score_estimator(estimator, X, y)
+
+
+def balanced_accuracy_and_disparate_impact(
+    favorable_labels: _FAV_LABELS_TYPE,
+    protected_attributes: List[JSON_TYPE],
+    unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
+    fairness_weight: float = 0.5,
+) -> _BalancedAccuracyAndDisparateImpact:
+    """
+    Create a scikit-learn compatible blended scorer for `balanced accuracy`_
+    and `symmetric disparate impact`_ given the fairness info.
+    The scorer is suitable for classification problems,
+    with higher resulting scores indicating better outcomes.
+    The result is a linear combination of accuracy and
+    symmetric disparate impact, and is between 0 and 1.
+    This metric can be used as the `scoring` argument
+    of an optimizer such as `Hyperopt`_, as shown in this `demo`_.
+
+    .. _`balanced accuracy`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.balanced_accuracy_score.html
+    .. _`symmetric disparate impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.symmetric_disparate_impact
+    .. _`Hyperopt`: lale.lib.lale.hyperopt.html#lale.lib.lale.hyperopt.Hyperopt
+    .. _`demo`: https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_aif360.ipynb"""
+    return _BalancedAccuracyAndDisparateImpact(
+        favorable_labels, protected_attributes, unfavorable_labels, fairness_weight
+    )
+
+
+balanced_accuracy_and_disparate_impact.__doc__ = (
+    str(balanced_accuracy_and_disparate_impact.__doc__) + _BLENDED_SCORER_DOCSTRING
+)
+
+
 class _DisparateImpact(_DIorSPDScorerFactory, MetricMonoidFactory[_DIorSPDData]):
     def __init__(
         self,

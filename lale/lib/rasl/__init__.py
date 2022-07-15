@@ -69,6 +69,7 @@ Data Loaders
 Metrics
 =======
 * lale.lib.rasl. `accuracy_score`_
+* lale.lib.rasl. `balanced_accuracy_score`_
 * lale.lib.rasl. `f1_score`_
 * lale.lib.rasl. `get_scorer`_
 * lale.lib.rasl. `r2_score`_
@@ -111,28 +112,27 @@ Other Facilities
 .. _`SimpleImputer`: lale.lib.rasl.simple_imputer.html
 .. _`StandardScaler`: lale.lib.rasl.standard_scaler.html
 
-.. _`BaggingMonoidClassifier`: lale.lib.rasl.batched_bagging_classifier.html
-
 .. _`categorical`: lale.lib.rasl.functions.html#lale.lib.rasl.functions.categorical
 .. _`date_time`: lale.lib.rasl.functions.html#lale.lib.rasl.functions.date_time
 .. _`SparkExplainer`: lale.lib.rasl.spark_explainer.html
 
-.. _`Prio`: lale.lib.rasl.Prio.html
-.. _`PrioBatch`: lale.lib.rasl.PrioBatch.html
-.. _`PrioResourceAware`: lale.lib.rasl.PrioResourceAware.html
-.. _`PrioStep`: lale.lib.rasl.PrioStep.html
-.. _`accuracy_score`: lale.lib.rasl.accuracy_score.html
-.. _`cross_val_score`: lale.lib.rasl.cross_val_score.html
-.. _`cross_validate`: lale.lib.rasl.cross_validate.html
-.. _`f1_score`: lale.lib.rasl.f1_score.html
-.. _`fit_with_batches`: lale.lib.rasl.fit_with_batches.html
-.. _`get_scorer`: lale.lib.rasl.get_scorer.html
-.. _`is_associative`: lale.lib.rasl.is_associative.html
-.. _`is_incremental`: lale.lib.rasl.is_incremental.html
+.. _`Prio`: lale.lib.rasl.task_graphs.html#lale.lib.rasl.task_graphs.Prio.html
+.. _`PrioBatch`: lale.lib.rasl.task_graphs.html#lale.lib.rasl.task_graphs.PrioBatch.html
+.. _`PrioResourceAware`: lale.lib.rasl.task_graphs.html#lale.lib.rasl.task_graphs.PrioResourceAware.html
+.. _`PrioStep`: lale.lib.rasl.task_graphs.html#lale.lib.rasl.task_graphs.PrioStep.html
+.. _`accuracy_score`: lale.lib.rasl.metrics.html#lale.lib.rasl.metrics..accuracy_score.html
+.. _`balanced_accuracy_score`: lale.lib.rasl.metrics.html#lale.lib.rasl.metrics.balanced_accuracy_score.html
+.. _`cross_val_score`: lale.lib.rasl.task_graphs.html#lale.lib.rasl.task_graphs.cross_val_score.html
+.. _`cross_validate`: lale.lib.rasl.task_graphs.html#lale.lib.rasl.task_graphs.cross_validate.html
+.. _`f1_score`: lale.lib.rasl.metrics.html#lale.lib.rasl.metrics.f1_score.html
+.. _`fit_with_batches`: lale.lib.rasl.task_graphs.html#lale.lib.rasl.task_graphs.fit_with_batches.html
+.. _`get_scorer`: lale.lib.rasl.metrics.html#lale.lib.rasl.metrics.get_scorer.html
+.. _`is_associative`: lale.lib.rasl.task_graphs.html#lale.lib.rasl.task_graphs.is_associative.html
+.. _`is_incremental`: lale.lib.rasl.task_graphs.html#lale.lib.rasl.task_graphs.is_incremental.html
 .. _`csv_data_loader`: lale.lib.rasl.datasets.html#lale.lib.rasl.datasets.csv_data_loader
 .. _`mockup_data_loader`: lale.lib.rasl.datasets.html#lale.lib.rasl.datasets.mockup_data_loader
 .. _`openml_data_loader`: lale.lib.rasl.datasets.html#lale.lib.rasl.datasets.openml_data_loader
-.. _`r2_score`: lale.lib.rasl.r2_score.html
+.. _`r2_score`: lale.lib.rasl.metrics.html#lale.lib.rasl.metrics.r2_score.html
 """
 
 from ._task_graphs import (
@@ -159,7 +159,13 @@ from .group_by import GroupBy
 from .hashing_encoder import HashingEncoder
 from .join import Join
 from .map import Map
-from .metrics import accuracy_score, f1_score, get_scorer, r2_score
+from .metrics import (
+    accuracy_score,
+    balanced_accuracy_score,
+    f1_score,
+    get_scorer,
+    r2_score,
+)
 from .min_max_scaler import MinMaxScaler
 from .monoid import Monoid, MonoidableOperator, MonoidFactory
 from .one_hot_encoder import OneHotEncoder

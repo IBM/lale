@@ -20,11 +20,13 @@ import numpy as np
 import pandas as pd
 from typing_extensions import Protocol
 
-from lale.expressions import astype, count, it, sum
+from lale.expressions import astype, count, it
+from lale.expressions import sum as lale_sum
 from lale.helpers import spark_installed
 from lale.operators import TrainedOperator
 
 from .aggregate import Aggregate
+from .group_by import GroupBy
 from .map import Map
 from .monoid import Monoid, MonoidFactory
 
@@ -131,7 +133,7 @@ class _Accuracy(_MetricMonoidMixin[_AccuracyData]):
     def __init__(self):
         self._pipeline = Map(
             columns={"match": astype("int", it.y_true == it.y_pred)}
-        ) >> Aggregate(columns={"match": sum(it.match), "total": count(it.match)})
+        ) >> Aggregate(columns={"match": lale_sum(it.match), "total": count(it.match)})
 
     def to_monoid(self, batch: _Batch_yyX) -> _AccuracyData:
         input_df = _make_dataframe_yy(batch)
@@ -144,6 +146,58 @@ class _Accuracy(_MetricMonoidMixin[_AccuracyData]):
 
 def accuracy_score(y_true: pd.Series, y_pred: pd.Series) -> float:
     return get_scorer("accuracy").score_data(y_true, y_pred)
+
+
+class _BalancedAccuracyData(MetricMonoid):
+    def __init__(self, true_pos: Dict[str, int], false_neg: Dict[str, int]):
+        self.true_pos = true_pos
+        self.false_neg = false_neg
+
+    def combine(self, other: "_BalancedAccuracyData") -> "_BalancedAccuracyData":
+        keys = set(self.true_pos.keys()) | set(other.true_pos.keys())
+        return _BalancedAccuracyData(
+            {k: self.true_pos.get(k, 0) + other.true_pos.get(k, 0) for k in keys},
+            {k: self.false_neg.get(k, 0) + other.false_neg.get(k, 0) for k in keys},
+        )
+
+
+class _BalancedAccuracy(_MetricMonoidMixin[_BalancedAccuracyData]):
+    def __init__(self):
+        self._pipeline = (
+            Map(
+                columns={
+                    "y_true": it.y_true,
+                    "true_pos": astype("int", (it.y_pred == it.y_true)),
+                    "false_neg": astype("int", (it.y_pred != it.y_true)),
+                }
+            )
+            >> GroupBy(by=[it.y_true])
+            >> Aggregate(
+                columns={
+                    "true_pos": lale_sum(it.true_pos),
+                    "false_neg": lale_sum(it.false_neg),
+                }
+            )
+        )
+
+    def to_monoid(self, batch: _Batch_yyX) -> _BalancedAccuracyData:
+        input_df = _make_dataframe_yy(batch)
+        agg_df = self._pipeline.transform(input_df)
+        return _BalancedAccuracyData(
+            true_pos={k: agg_df.at[k, "true_pos"] for k in agg_df.index},
+            false_neg={k: agg_df.at[k, "false_neg"] for k in agg_df.index},
+        )
+
+    def from_monoid(self, v: _BalancedAccuracyData) -> float:
+        recalls = {
+            k: v.true_pos[k] / (v.true_pos[k] + v.false_neg[k]) for k in v.true_pos
+        }
+        result = sum(recalls.values()) / len(recalls)
+        return float(result)
+
+
+def balanced_accuracy_score(y_true: pd.Series, y_pred: pd.Series) -> float:
+    return get_scorer("balanced_accuracy").score_data(y_true, y_pred)
 
 
 class _F1Data(MetricMonoid):
@@ -176,9 +230,9 @@ class _F1(_MetricMonoidMixin[_F1Data]):
             }
         ) >> Aggregate(
             columns={
-                "true_pos": sum(it.true_pos),
-                "false_pos": sum(it.false_pos),
-                "false_neg": sum(it.false_neg),
+                "true_pos": lale_sum(it.true_pos),
+                "false_pos": lale_sum(it.false_pos),
+                "false_neg": lale_sum(it.false_neg),
             }
         )
 
@@ -233,9 +287,9 @@ class _R2(_MetricMonoidMixin[_R2Data]):
         ) >> Aggregate(
             columns={
                 "n": count(it.y),
-                "sum": sum(it.y),
-                "sum_sq": sum(it.y2),
-                "res_sum_sq": sum(it.e2),  # residual sum of squares
+                "sum": lale_sum(it.y),
+                "sum_sq": lale_sum(it.y2),
+                "res_sum_sq": lale_sum(it.e2),  # residual sum of squares
             }
         )
 
@@ -258,7 +312,11 @@ def r2_score(y_true: pd.Series, y_pred: pd.Series) -> float:
     return get_scorer("r2").score_data(y_true, y_pred)
 
 
-_scorer_cache: Dict[str, Optional[MetricMonoidFactory]] = {"accuracy": None, "r2": None}
+_scorer_cache: Dict[str, Optional[MetricMonoidFactory]] = {
+    "accuracy": None,
+    "balanced_accuracy": None,
+    "r2": None,
+}
 
 
 def get_scorer(scoring: str, **kwargs) -> MetricMonoidFactory:
@@ -268,6 +326,8 @@ def get_scorer(scoring: str, **kwargs) -> MetricMonoidFactory:
     if _scorer_cache[scoring] is None:
         if scoring == "accuracy":
             _scorer_cache[scoring] = _Accuracy()
+        elif scoring == "balanced_accuracy":
+            _scorer_cache[scoring] = _BalancedAccuracy()
         elif scoring == "r2":
             _scorer_cache[scoring] = _R2()
     result = _scorer_cache[scoring]
