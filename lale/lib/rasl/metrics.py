@@ -57,6 +57,8 @@ else:
 
 
 class MetricMonoidFactory(MonoidFactory[_Batch_yyX, float, _M], Protocol):
+    """Abstract base class for factories that create metrics with an associative monoid interface."""
+
     @abstractmethod
     def to_monoid(self, v: _Batch_yyX) -> _M:
         pass
@@ -145,6 +147,10 @@ class _Accuracy(_MetricMonoidMixin[_AccuracyData]):
 
 
 def accuracy_score(y_true: pd.Series, y_pred: pd.Series) -> float:
+    """Replacement for sklearn's `accuracy_score`_ function.
+
+    .. _`accuracy_score`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html
+    """
     return get_scorer("accuracy").score_data(y_true, y_pred)
 
 
@@ -197,6 +203,10 @@ class _BalancedAccuracy(_MetricMonoidMixin[_BalancedAccuracyData]):
 
 
 def balanced_accuracy_score(y_true: pd.Series, y_pred: pd.Series) -> float:
+    """Replacement for sklearn's `balanced_accuracy_score`_ function.
+
+    .. _`balanced_accuracy_score`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.balanced_accuracy_score.html
+    """
     return get_scorer("balanced_accuracy").score_data(y_true, y_pred)
 
 
@@ -254,6 +264,10 @@ class _F1(_MetricMonoidMixin[_F1Data]):
 def f1_score(
     y_true: pd.Series, y_pred: pd.Series, pos_label: Union[int, float, str] = 1
 ) -> float:
+    """Replacement for sklearn's `f1_score`_ function.
+
+    .. _`f1_score`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.f1_score.html
+    """
     return get_scorer("f1", pos_label=pos_label).score_data(y_true, y_pred)
 
 
@@ -309,6 +323,10 @@ class _R2(_MetricMonoidMixin[_R2Data]):
 
 
 def r2_score(y_true: pd.Series, y_pred: pd.Series) -> float:
+    """Replacement for sklearn's `r2_score`_ function.
+
+    .. _`r2_score`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.r2_score.html
+    """
     return get_scorer("r2").score_data(y_true, y_pred)
 
 
@@ -320,6 +338,10 @@ _scorer_cache: Dict[str, Optional[MetricMonoidFactory]] = {
 
 
 def get_scorer(scoring: str, **kwargs) -> MetricMonoidFactory:
+    """Replacement for sklearn's `get_scorer`_ function.
+
+    .. _`get_scorer`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.get_scorer.html
+    """
     if scoring == "f1":
         return _F1(**kwargs)
     assert scoring in _scorer_cache, scoring
