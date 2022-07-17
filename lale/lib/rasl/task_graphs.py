@@ -76,16 +76,19 @@ _ALL_BATCHES = -1
 
 
 def is_pretrained(op: TrainableIndividualOp) -> bool:
+    """Is the operator frozen-trained or does it lack a fit method?"""
     return isinstance(op, TrainedIndividualOp) and (
         op.is_frozen_trained() or not hasattr(op.impl, "fit")
     )
 
 
 def is_incremental(op: TrainableIndividualOp) -> bool:
+    """Does the operator have a partial_fit method or is it pre-trained?"""
     return op.has_method("partial_fit") or is_pretrained(op)
 
 
 def is_associative(op: TrainableIndividualOp) -> bool:
+    """Is the operator pre-trained or does it implement MonoidFactory?"""
     return is_pretrained(op) or isinstance(op.impl, MonoidFactory)
 
 
@@ -312,6 +315,8 @@ def _task_type_prio(task: _Task) -> int:
 
 
 class Prio(ABC):
+    """Abstract base class for scheduling priority in task graphs."""
+
     arity: int
 
     def bottom(self) -> Any:  # tuple of "inf" means all others are more important
@@ -334,6 +339,8 @@ class Prio(ABC):
 
 
 class PrioStep(Prio):
+    """Execute tasks from earlier steps first, like nested-loop algorithm."""
+
     arity = 6
 
     def task_priority(self, task: _Task) -> Any:
@@ -354,6 +361,8 @@ class PrioStep(Prio):
 
 
 class PrioBatch(Prio):
+    """Execute tasks from earlier batches first."""
+
     arity = 6
 
     def task_priority(self, task: _Task) -> Any:
@@ -374,6 +383,8 @@ class PrioBatch(Prio):
 
 
 class PrioResourceAware(Prio):
+    """Execute tasks with less non-resident data first."""
+
     arity = 5
 
     def task_priority(self, task: _Task) -> Any:
@@ -1340,6 +1351,7 @@ def fit_with_batches(
     verbose: int,
     progress_callback: Optional[Callable[[float, int, bool], None]],
 ) -> TrainedPipeline[TrainedIndividualOp]:
+    """Replacement for the `fit` method on a pipeline (early interface, subject to change)."""
     assert partial_transform in [False, "score", True]
     need_metrics = scoring is not None
     folds = ["d"]
@@ -1373,6 +1385,10 @@ def cross_val_score(
     same_fold: bool,
     verbose: int,
 ) -> List[float]:
+    """Replacement for sklearn's `cross_val_score`_ function (early interface, subject to change).
+
+    .. _`cross_val_score`: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_val_score.html
+    """
     cv = sklearn.model_selection.check_cv(cv)
     folds = [chr(ord("d") + i) for i in range(cv.get_n_splits())]
     with _create_tasks(pipeline, folds, True, False, False, same_fold) as tg:
@@ -1404,6 +1420,10 @@ def cross_validate(
     return_estimator: bool,
     verbose: int,
 ) -> Dict[str, Union[List[float], List[TrainedPipeline]]]:
+    """Replacement for sklearn's `cross_validate`_ function (early interface, subject to change).
+
+    .. _`cross_validate`: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.cross_validate.html
+    """
     cv = sklearn.model_selection.check_cv(cv)
     folds = [chr(ord("d") + i) for i in range(cv.get_n_splits())]
     with _create_tasks(pipeline, folds, True, return_estimator, False, same_fold) as tg:
