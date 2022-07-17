@@ -76,7 +76,6 @@ Metrics
 
 Other Facilities
 ================
-
 * lale.lib.rasl. `Prio`_
 * lale.lib.rasl. `PrioBatch`_
 * lale.lib.rasl. `PrioResourceAware`_

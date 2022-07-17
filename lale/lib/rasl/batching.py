@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +17,8 @@ import numpy as np
 import lale.docstrings
 import lale.helpers
 import lale.operators
-from lale.lib.rasl import PrioResourceAware, fit_with_batches
+
+from .task_graphs import PrioResourceAware, fit_with_batches
 
 
 class _BatchingImpl:
