@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import warnings
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -70,7 +71,10 @@ class _XGBClassifierImpl:
         if xgboost.__version__ >= "1.3.0" and "eval_metric" not in fit_params:
             # set eval_metric explicitly to avoid spurious warning
             fit_params = {"eval_metric": "logloss", **fit_params}
-        self._wrapped_model.fit(renamed_X, y, **fit_params)
+        with warnings.catch_warnings():
+            if fit_params.get("use_label_encoder", True):
+                warnings.filterwarnings("ignore", category=UserWarning)
+            self._wrapped_model.fit(renamed_X, y, **fit_params)
         return self
 
     def predict(self, X, **predict_params):

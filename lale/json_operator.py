@@ -428,7 +428,7 @@ def _op_to_json_rec(
                 jsn["viz_label"] = op._impl.viz_label()
             hyperparams = op.reduced_hyperparams()
             if hyperparams is None:
-                jsn["hyperparams"] = None
+                jsn["hyperparams"] = {} if hasattr(op._impl, "fit") else None
             else:
                 hp_schema = _hparams_schemas_to_props(op.hyperparam_schema())
                 hyperparams = {
