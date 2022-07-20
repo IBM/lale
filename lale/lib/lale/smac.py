@@ -15,6 +15,7 @@
 import logging
 import time
 import traceback
+import warnings
 
 import numpy as np
 from sklearn.metrics import check_scoring, log_loss
@@ -36,7 +37,9 @@ from lale.lib.sklearn import LogisticRegression
 
 try:
     # Import ConfigSpace and different types of parameters
-    from smac.configspace import ConfigurationSpace
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=FutureWarning)
+        from smac.configspace import ConfigurationSpace
 
     # Import SMAC-utilities
     from smac.facade.smac_facade import SMAC as orig_SMAC
@@ -191,8 +194,6 @@ or with
         return self
 
     def predict(self, X_eval, **predict_params):
-        import warnings
-
         warnings.filterwarnings("ignore")
         trained = self._best_estimator
         if trained is None:
