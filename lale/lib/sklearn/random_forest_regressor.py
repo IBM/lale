@@ -391,4 +391,36 @@ Training using “absolute_error” is significantly slower than when using “s
         set_as_available=True,
     )
 
+if sklearn.__version__ >= "1.1":
+    # old: https://scikit-learn.org/1.0/modules/generated/sklearn.ensemble.RandomForestRegressor.html
+    # new: https://scikit-learn.org/1.1/modules/generated/sklearn.ensemble.RandomForestRegressor.html
+    RandomForestRegressor = RandomForestRegressor.customize_schema(
+        max_features={
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "minimum": 2,
+                    "forOptimizer": False,
+                    "laleMaximum": "X/items/maxItems",  # number of columns
+                    "description": "Consider max_features features at each split.",
+                },
+                {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "exclusiveMinimum": True,
+                    "minimumForOptimizer": 0.01,
+                    "maximum": 1.0,
+                    "default": 0.5,
+                    "distribution": "uniform",
+                    "description": "max_features is a fraction and int(max_features * n_features) features are considered at each split.",
+                },
+                {"enum": ["auto", "sqrt", "log2", None]},
+            ],
+            "default": 1.0,
+            "description": "The number of features to consider when looking for the best split.",
+        },
+        set_as_available=True,
+    )
+
+
 lale.docstrings.set_docstrings(RandomForestRegressor)

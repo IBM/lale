@@ -249,4 +249,28 @@ if sklearn_version >= version.Version("0.23"):
         set_as_available=True,
     )
 
+if sklearn_version >= version.Version("1.1"):
+    # new: https://scikit-learn.org/1.1/modules/generated/sklearn.preprocessing.OneHotEncoder.html
+    OneHotEncoder = OneHotEncoder.customize_schema(
+        handle_unknown={
+            "description": "Specifies the way unknown categories are handled during transform.",
+            "anyOf": [
+                {
+                    "enum": ["error"],
+                    "description": "Raise an error if an unknown category is present during transform.",
+                },
+                {
+                    "enum": ["ignore"],
+                    "description": "When an unknown category is encountered during transform, the resulting one-hot encoded columns for this feature will be all zeros. In the inverse transform, an unknown category will be denoted as None.",
+                },
+                {
+                    "enum": ["infrequent_if_exist"],
+                    "description": "When an unknown category is encountered during transform, the resulting one-hot encoded columns for this feature will map to the infrequent category if it exists. The infrequent category will be mapped to the last position in the encoding. During inverse transform, an unknown category will be mapped to the category denoted ``'infrequent'`` if it exists. If the ``'infrequent'`` category does not exist, then transform and inverse_transform will handle an unknown category as with ``handle_unknown='ignore'``. Infrequent categories exist based on ``min_frequency`` and ``max_categories``. Read more in the User Guide.",
+                },
+            ],
+            "default": "error",
+        },
+        set_as_available=True,
+    )
+
 lale.docstrings.set_docstrings(OneHotEncoder)

@@ -160,5 +160,16 @@ if sklearn.__version__ >= "0.22":
         set_as_available=True,
     )
 
+if sklearn.__version__ >= "1.1":
+    # old: https://scikit-learn.org/0.23/modules/generated/sklearn.preprocessing.FunctionTransformer.html
+    # new: https://scikit-learn.org/1.1/modules/generated/sklearn.preprocessing.FunctionTransformer.html
+    FunctionTransformer = FunctionTransformer.customize_schema(
+        feature_names_out={
+            "anyOf": [{"laleType": "callable"}, {"enum": ["one-to-one", None]}],
+            "default": None,
+            "description": "Determines the list of feature names that will be returned by the ``get_feature_names_out`` method. If it is ‘one-to-one’, then the output feature names will be equal to the input feature names. If it is a callable, then it must take two positional arguments: this ``FunctionTransformer`` (``self``) and an array-like of input feature names (``input_features``). It must return an array-like of output feature names. The ``get_feature_names_out`` method is only defined if ``feature_names_out`` is not None.",
+        },
+        set_as_available=True,
+    )
 
 lale.docstrings.set_docstrings(FunctionTransformer)

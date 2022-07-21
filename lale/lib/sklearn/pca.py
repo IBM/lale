@@ -241,4 +241,19 @@ _combined_schemas = {
 
 PCA = lale.operators.make_operator(sklearn.decomposition.PCA, _combined_schemas)
 
+if sklearn.__version__ >= "1.1":
+    PCA = PCA.customize_schema(
+        n_oversamples={
+            "description": 'This parameter is only relevant when ``svd_solver="randomized"``. It corresponds to the additional number of random vectors to sample the range of X so as to ensure proper conditioning. See randomized_svd for more details.',
+            "type": "integer",
+            "default": 10,
+        },  # XXX add bounds?
+        power_iteration_normalizer={
+            "description": "Power iteration normalizer for randomized SVD solver. Not used by ARPACK. See ``randomized_svd`` for more details.",
+            "enum": ["auto", "QR", "LU", "none"],
+            "default": "auto",
+        },
+        set_as_available=True,
+    )
+
 lale.docstrings.set_docstrings(PCA)

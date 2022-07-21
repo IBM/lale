@@ -375,4 +375,35 @@ if sklearn.__version__ >= "1.0":
         min_impurity_split=None, set_as_available=True
     )
 
+if sklearn.__version__ >= "1.1":
+    # old: https://scikit-learn.org/1.0/modules/generated/sklearn.ensemble.ExtraTreesClassifier.html
+    # new: https://scikit-learn.org/1.1/modules/generated/sklearn.ensemble.ExtraTreesClassifier.html
+    ExtraTreesClassifier = ExtraTreesClassifier.customize_schema(
+        max_features={
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "minimum": 2,
+                    "laleMaximum": "X/items/maxItems",  # number of columns
+                    "forOptimizer": False,
+                    "description": "Consider max_features features at each split.",
+                },
+                {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "exclusiveMinimum": True,
+                    "maximum": 1.0,
+                    "distribution": "uniform",
+                    "minimumForOptimizer": 0.01,
+                    "default": 0.5,
+                    "description": "max_features is a fraction and int(max_features * n_features) features are considered at each split.",
+                },
+                {"enum": ["auto", "sqrt", "log2", None]},
+            ],
+            "default": "sqrt",
+            "description": "The number of features to consider when looking for the best split:",
+        },
+        set_as_available=True,
+    )
+
 lale.docstrings.set_docstrings(ExtraTreesClassifier)
