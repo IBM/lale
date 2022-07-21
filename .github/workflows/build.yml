@@ -289,7 +289,7 @@ jobs:
     - name: Install pytest
       run: pip install pytest
     - name: Install latest scikit-learn, xgboost, and lightgbm
-      run: pip install --upgrade --upgrade-strategy eager scikit-learn==1.0.2 xgboost lightgbm
+      run: pip install --upgrade --upgrade-strategy eager scikit-learn xgboost lightgbm
     - name: pip list packages
       run: pip list
     - name: Run test
