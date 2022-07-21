@@ -176,7 +176,7 @@ This behavior is also impacted by the handle_cv_failure flag.
     "default": 5,
 }
 
-schema_cv_1_1: JSON_TYPE = schema_cv # XXX TODO XXX
+schema_cv_1_1: JSON_TYPE = schema_cv  # XXX TODO XXX
 
 schema_max_opt_time: JSON_TYPE = {
     "description": "Maximum amount of time in seconds for the optimization.",

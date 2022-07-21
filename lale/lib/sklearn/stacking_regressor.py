@@ -233,7 +233,7 @@ if sklearn.__version__ >= "1.1":
     from lale.lib._common_schemas import schema_cv_1_1
 
     StackingRegressor = StackingRegressor.customize_schema(
-        cv = schema_cv_1_1,
+        cv=schema_cv_1_1,
         set_as_available=True,
     )
 
