@@ -247,8 +247,10 @@ if sklearn.__version__ >= "1.1":
         n_oversamples={
             "description": 'This parameter is only relevant when ``svd_solver="randomized"``. It corresponds to the additional number of random vectors to sample the range of X so as to ensure proper conditioning. See randomized_svd for more details.',
             "type": "integer",
+            "minimum": 0,
+            "maximumForOptimizer": 1000,
             "default": 10,
-        },  # XXX add bounds?
+        },
         power_iteration_normalizer={
             "description": "Power iteration normalizer for randomized SVD solver. Not used by ARPACK. See ``randomized_svd`` for more details.",
             "enum": ["auto", "QR", "LU", "none"],
