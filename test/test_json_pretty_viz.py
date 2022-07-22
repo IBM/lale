@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -1097,6 +1097,46 @@ import lale
 
 lale.wrap_imported_operators(["test.mock_module"])
 pipeline = CustomOrigOperator() >> LogisticRegression()"""
+        self._roundtrip(expected, pipeline.pretty_print())
+
+    @unittest.skip("TODO: avoid spurious 'name' keys in printed dictionaries")
+    def test_fairness_info(self):
+        from lale.lib.aif360 import DisparateImpactRemover, fetch_creditg_df
+        from lale.lib.lale import Hyperopt, Project
+        from lale.lib.sklearn import KNeighborsClassifier
+
+        X, y, fairness_info = fetch_creditg_df()
+        disparate_impact_remover = DisparateImpactRemover(
+            **fairness_info,
+            preparation=Project(columns={"type": "number"}),
+        )
+        planned = disparate_impact_remover >> KNeighborsClassifier()
+        frozen = planned.freeze_trainable()
+        pipeline = frozen.auto_configure(X, y, optimizer=Hyperopt, cv=2, max_evals=1)
+        expected = """from aif360.algorithms.preprocessing import DisparateImpactRemover
+from lale.lib.rasl import Project
+from sklearn.neighbors import KNeighborsClassifier
+import lale
+
+lale.wrap_imported_operators()
+project = Project(columns={"type": "number"})
+disparate_impact_remover = DisparateImpactRemover(
+    favorable_labels=["good"],
+    protected_attributes=[
+        {
+            "reference_group": [
+                "male div/sep", "male mar/wid", "male single",
+            ],
+            "feature": "personal_status",
+        },
+        {
+            "reference_group": [[26, 1000]],
+            "feature": "age",
+        },
+    ],
+    preparation=project,
+)
+pipeline = disparate_impact_remover >> KNeighborsClassifier()"""
         self._roundtrip(expected, pipeline.pretty_print())
 
 
