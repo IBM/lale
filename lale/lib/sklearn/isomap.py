@@ -180,7 +180,7 @@ if sklearn.__version__ >= "1.1":
                 AllOf([Object(n_neighors=Int()), Object(radius=Null())]),
                 AllOf([Object(n_neighors=Null()), Object(radius=Float())]),
             ]
-        ),  # XXX check if constraint correct
+        ),
         set_as_available=True,
     )
 
