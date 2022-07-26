@@ -100,6 +100,15 @@ extras_require = {
         "protobuf<=3.20.1",
         "BlackBoxAuditing",
     ],
+    "tutorial": [
+        "jupyter",
+        "xgboost<=1.5.1",
+        "imbalanced-learn",
+        "liac-arff>=2.4.0",
+        "aif360<0.4.0",
+        "protobuf<=3.20.1",
+        "BlackBoxAuditing",
+    ],
 }
 
 setup(
