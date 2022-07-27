@@ -176,7 +176,23 @@ This behavior is also impacted by the handle_cv_failure flag.
     "default": 5,
 }
 
-schema_cv_1_1: JSON_TYPE = schema_cv  # XXX TODO XXX
+schema_cv_1_1: JSON_TYPE = {
+    "description": "Determines the cross-validation splitting strategy used in cross_val_predict to train final_estimator.",
+    "anyOf": [
+        schema_simple_cv,
+        {
+            "enum": ["prefit"],
+            "description": '"prefit" to assume the estimators are prefit. In this case, the estimators will not be refitted.',
+            "forOptimizer": False,
+        },
+        {
+            "not": {"anyOf": [{"type": "integer"}, {"enum": ["prefit"]}]},
+            "forOptimizer": False,
+            "description": "Object with split function: generator yielding (train, test) splits as arrays of indices. Can use any of the iterators from https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators",
+        },
+    ],
+    "default": 5,
+}
 
 schema_max_opt_time: JSON_TYPE = {
     "description": "Maximum amount of time in seconds for the optimization.",
