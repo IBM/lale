@@ -149,13 +149,22 @@ def check_scoring_best_score_constraint(scoring=None, best_score=0) -> None:
 
 
 schema_simple_cv: JSON_TYPE = {
-    "description": "Number of folds for cross-validation.",
-    "type": "integer",
-    "minimum": 2,
-    "default": 5,
-    "minimumForOptimizer": 3,
-    "maximumForOptimizer": 4,
-    "distribution": "uniform",
+    "anyOf": [
+        {
+            "description": "Number of folds for cross-validation.",
+            "type": "integer",
+            "minimum": 2,
+            "default": 5,
+            "minimumForOptimizer": 3,
+            "maximumForOptimizer": 4,
+            "distribution": "uniform",
+        },
+        {
+            "enum": [None],
+            "description": "to use the default 5-fold cross validation",
+            "forOptimizer": False,
+        },
+    ]
 }
 
 schema_cv: JSON_TYPE = {
