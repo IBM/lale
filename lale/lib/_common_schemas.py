@@ -168,7 +168,7 @@ This behavior is also impacted by the handle_cv_failure flag.
     "anyOf": [
         schema_simple_cv,
         {
-            "not": {"type": "integer"},
+            "laleType": "CrossvalGenerator",
             "forOptimizer": False,
             "description": "Object with split function: generator yielding (train, test) splits as arrays of indices. Can use any of the iterators from https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators",
         },
