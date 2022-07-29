@@ -186,7 +186,7 @@ schema_cv_1_1: JSON_TYPE = {
             "forOptimizer": False,
         },
         {
-            "type": "object",
+            "laleType": "CrossvalGenerator",
             "forOptimizer": False,
             "description": "Object with split function: generator yielding (train, test) splits as arrays of indices. Can use any of the iterators from https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators",
         },
