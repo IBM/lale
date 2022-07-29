@@ -60,7 +60,7 @@ _hyperparams_schema = {
         {
             "type": "object",
             "required": ["operator"],
-            "relevantToOptimizer": ["operator"],
+            "relevantToOptimizer": ["operator", "sampling_strategy"],
             "additionalProperties": False,
             "properties": {
                 "operator": {
@@ -88,6 +88,7 @@ number of samples in the minority class after resampling and
     ``float`` is only available for **binary** classification. An
     error is raised for multi-class classification.""",
                             "type": "number",
+                            "forOptimizer": False
                         },
                         {
                             "description": """When ``str``, specify the class targeted by the resampling.
@@ -111,12 +112,14 @@ Possible choices are:
 The values correspond to the desired number of samples for each targeted
 class.""",
                             "type": "object",
+                            "forOptimizer": False
                         },
                         {
                             "description": """When callable, function taking ``y`` and returns a ``dict``.
 The keys correspond to the targeted classes. The values correspond to the
 desired number of samples for each class.""",
                             "laleType": "callable",
+                            "forOptimizer": False
                         },
                     ],
                     "default": "auto",
