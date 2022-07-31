@@ -81,7 +81,7 @@ iterative AutoML.
 
 #### 4. Handling Class Imbalance
 
-[4_imbalance.ipynb](4_imbalance.ipynb)
+[04_imbalance.ipynb](4_imbalance.ipynb)
 
 Lale includes operators for class imbalance correction from
 [imbalanced-learn](https://imbalanced-learn.org).
@@ -102,7 +102,6 @@ them.
 #### 6. Multi-objective Optimization
 
 [6_multobj.ipynb](6_multobj.ipynb)
-TODO: Notebook will be uploaded at this URL before the tutorial.
 
 Most commonly used AutoML tools optimize for a single metric.
 In practice, there is often a need to take more than one metric into
@@ -114,8 +113,7 @@ optimization to find Pareto frontiers.
 
 #### 7. Working with Multi-table Datasets
 
-[7_multtab.ipynb](7_multitab.ipynb)
-TODO: Notebook will be uploaded at this URL before the tutorial.
+[07_multtab.ipynb](7_multitab.ipynb)
 
 The preprocessing steps in a data science workflow often involve more
 than one table.
@@ -160,7 +158,6 @@ documentation generation.
 #### 11. Research Directions
 
 [11_directions.ipynb](11_directions.ipynb)
-TODO: Notebook will be uploaded at this URL before the tutorial.
 
 We will wrap up the tutorial with examples of some research directions:
 (1) batch-wise training of pipelines for datasets that do not fit in
