@@ -22,6 +22,5 @@ Functions:
 
 """
 
-from .util import multitable_train_test_split
-
 from .fetch_datasets import fetch_creditg_multitable_dataset
+from .util import multitable_train_test_split
