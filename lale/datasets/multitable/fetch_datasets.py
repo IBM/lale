@@ -17,8 +17,10 @@ import os
 import urllib.request
 
 import pandas as pd
+import numpy as np
 
 from lale.datasets.data_schemas import add_table_name
+import lale.datasets.openml
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -190,3 +192,71 @@ def fetch_imdb_dataset(datatype="pandas"):
                 )
             )
     return imdb_list
+
+
+def fetch_creditg_multitable_dataset(datatype="pandas"):
+
+    """
+    Fetches credit-g dataset from OpenML, but in a multi-table format.
+    It transforms the [credit-g](https://www.openml.org/d/31) dataset from OpenML
+    to a multi-table format. We split the dataset into 3 tables: `loan_application`,
+    `bank_account_info` and `existing_credits_info`. 
+    The table `loan_application` serves as our primary table,
+    and we treat the other two tables as providing additional information related to
+    the applicant's bank account and existing credits. As one can see, this is very
+    close to a real life scenario where information is present in multiple tables in
+    normalized forms. We created a primary key column `id` as a proxy to the loan applicant's
+    identity number.
+
+    Parameters
+    ----------
+    datatype : string, optional, default 'pandas'
+
+      If 'pandas',
+      Returns a list of singleton dictionaries (each element of the list is one
+      table from the dataset) after reading the downloaded CSV files. The key of
+      each dictionary is the name of the table and the value contains a pandas
+      dataframe consisting of the data.
+
+    Returns
+    -------
+    dataframes_list : list of singleton dictionary of pandas dataframes
+    """
+    (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
+        'credit-g', 'classification', preprocess=False)
+    #vstack train and test
+    X = pd.concat([train_X, test_X], axis=0)
+    y = pd.concat([train_y, test_y], axis=0)
+
+    bank_account_columns =['checking_status', 'savings_status']
+    existing_credits_columns = ['credit_number', 'type', 'status']# to generate 'existing_credits' count
+    loan_application_columns =['duration', 'credit_history', 'purpose',
+                        'credit_amount', 'employment',
+                        'installment_commitment', 'personal_status', 'other_parties',
+                        'residence_since', 'property_magnitude', 'age', 'other_payment_plans',
+                        'housing', 'job', 'num_dependents', 'own_telephone',
+                        'foreign_worker']
+    dataframes_list = []
+
+    bank_acc_df = X[bank_account_columns]
+    bank_acc_df = bank_acc_df.copy()
+    bank_acc_df['id'] = bank_acc_df.index
+    dataframes_list.append(add_table_name(bank_acc_df, 'bank_account_info'))
+
+    loan_application_df = X[loan_application_columns]
+    loan_application_df = loan_application_df.copy()
+    loan_application_df['id'] = loan_application_df.index
+    loan_application_df['class'] = y
+    dataframes_list.append(add_table_name(loan_application_df, 'loan_application'))
+
+    #existing credits is a fake table we are adding, so a join and count can create the `existing_credits` column
+    df_col = X['existing_credits']
+    records = []
+    for row in df_col.iteritems():
+        id = row[0]
+        credit_count = int(row[1])
+        for i in range(credit_count):
+            records.append({'id':id, 'credit_number':np.random.randint(1, 1000000), 'type':'credit','status':'on'})
+    existing_credits_df = pd.DataFrame.from_records(records)
+    dataframes_list.append(add_table_name(existing_credits_df, 'existing_credits_info'))
+    return dataframes_list

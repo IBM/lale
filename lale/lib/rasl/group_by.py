@@ -82,7 +82,11 @@ _hyperparams_schema = {
             "required": ["by"],
             "relevantToOptimizer": [],
             "properties": {
-                "by": {"description": "GroupBy key(s).", "laleType": "Any"},
+                "by": {
+                    "description": "GroupBy key(s).",
+                    "type": "array",
+                    "items": {"laleType": "expression"},
+                },
             },
         }
     ]
