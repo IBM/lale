@@ -68,8 +68,7 @@ and how to inspect the output models of `AutoPipeline`.
 
 #### 3. Customizing Algorithm Choices and Hyperparameters
 
-[3_custom.ipynb](3_custom.ipynb)
-TODO: Notebook will be uploaded at this URL before the tutorial.
+[03_custom.ipynb](03_custom.ipynb)
 
 This notebook will focus on using Lale to compose a pipeline
 with algorithm choices, such as between different categorical
@@ -101,7 +100,7 @@ them.
 
 #### 6. Multi-objective Optimization
 
-[6_multobj.ipynb](6_multobj.ipynb)
+[06_multobj.ipynb](06_multobj.ipynb)
 
 Most commonly used AutoML tools optimize for a single metric.
 In practice, there is often a need to take more than one metric into
