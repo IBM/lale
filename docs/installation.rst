@@ -4,7 +4,7 @@ Installation
 Installing from PyPI
 ----------------------
 
-Lale is easy to install. Assuming you already have a Python 3.6+
+Lale is easy to install. Assuming you already have a Python 3.7+
 environment, all you need is the following:
 
 .. code:: Bash
@@ -68,7 +68,7 @@ directory:
 Setting up the Environment
 --------------------------
 
-For the full functionality of Lale, you will need a Python 3.6+
+For the full functionality of Lale, you will need a Python 3.7+
 environment, as well as g++, graphviz, make, and swig. You can use
 Lale on Linux, Windows 10, or Mac OS X. Depending on your operating
 system, you can skip ahead to the appropriate section below.
@@ -76,16 +76,7 @@ system, you can skip ahead to the appropriate section below.
 On Windows 10
 ~~~~~~~~~~~~~
 
-First, you should enable the Windows Subsystem for Linux (WSL):
-
-- Start/search -> Settings -> Update&Security -> For developers -> activate "Developer Mode"
-
-- Start/search -> Turn Windows features on or off -> WSL -> restart
-
-- Internet Explorer -> https://aka.ms/wslstore -> Ubuntu -> get
-
-- Start/search -> Ubuntu
-
+First, you should enable the Windows Subsystem for Linux (WSL).
 At this point, you can continue with the instructions in section
 `On Ubuntu Linux`_.
 
@@ -113,17 +104,16 @@ installed. Otherwise, you can install them:
     sudo apt install make
     sudo apt install swig
 
-Next, set up a Python virtual environment with Python 3.6.
+Next, set up a Python virtual environment with Python 3.7.
 
 .. code:: Bash
 
-    sudo add-apt-repository ppa:jonathonf/python-3.6
-    sudo apt update
-    sudo apt install python3.6
-    sudo apt install python3.6-dev
-    sudo apt install virtualenv
-    virtualenv -p /usr/bin/python3.6 ~/python3.6venv
-    source ~/python3.6venv/bin/activate
+    sudo add-apt-repository ppa:deadsnakes/ppa
+    sudo apt-get install python3.7
+    sudo apt-get install python3-virtualenv
+    sudo apt-get install python3.7-distutils
+    virtualenv -p /usr/bin/python3.7 ~/python3.7venv
+    source ~/python3.7venv/bin/activate
 
 At this point, you can continue with the Lale `Installation`_
 instructions at the top of this file.
@@ -131,7 +121,7 @@ instructions at the top of this file.
 On Mac OS X
 ~~~~~~~~~~~
 
-Assuming you already have a Python 3.6+ virtual environment, you will
+Assuming you already have a Python 3.7+ virtual environment, you will
 need to install swig using brew before you can install Lale.
 
 If you encounter any issues in installing SMAC:
