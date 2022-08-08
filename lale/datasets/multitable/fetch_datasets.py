@@ -253,12 +253,12 @@ def fetch_creditg_multitable_dataset(datatype="pandas"):
 
     bank_acc_df = X[bank_account_columns]
     bank_acc_df = bank_acc_df.copy()
-    bank_acc_df.insert(0, 'id', bank_acc_df.index)
+    bank_acc_df.insert(0, "id", bank_acc_df.index)
     dataframes_list.append(add_table_name(bank_acc_df, "bank_account_info"))
 
     loan_application_df = X[loan_application_columns]
     loan_application_df = loan_application_df.copy()
-    loan_application_df.insert(0, 'id', loan_application_df.index)
+    loan_application_df.insert(0, "id", loan_application_df.index)
     loan_application_df["class"] = y
     dataframes_list.append(add_table_name(loan_application_df, "loan_application"))
 
