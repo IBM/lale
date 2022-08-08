@@ -80,7 +80,7 @@ iterative AutoML.
 
 #### 4. Handling Class Imbalance
 
-[04_imbalance.ipynb](4_imbalance.ipynb)
+[04_imbalance.ipynb](04_imbalance.ipynb)
 
 Lale includes operators for class imbalance correction from
 [imbalanced-learn](https://imbalanced-learn.org).
@@ -112,7 +112,7 @@ optimization to find Pareto frontiers.
 
 #### 7. Working with Multi-table Datasets
 
-[07_multtab.ipynb](7_multitab.ipynb)
+[07_multtab.ipynb](07_multitab.ipynb)
 
 The preprocessing steps in a data science workflow often involve more
 than one table.
