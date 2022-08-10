@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
 
 
-class _OptimizeLast:
+class _OptimizeLastImpl:
 
     _suffix_optimizer: lale.operators.Operator
 
@@ -134,6 +134,6 @@ Examples
 }
 
 
-OptimizeLast = lale.operators.make_operator(_OptimizeLast, _combined_schemas)
+OptimizeLast = lale.operators.make_operator(_OptimizeLastImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(OptimizeLast)
