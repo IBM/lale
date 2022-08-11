@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.helpers
 import lale.operators
 
-from .task_graphs import PrioResourceAware, fit_with_batches
+from .task_graphs import PrioBatch, PrioResourceAware, PrioStep, fit_with_batches
 
 
 class _BatchingImpl:
@@ -33,6 +33,8 @@ class _BatchingImpl:
         max_resident=None,
         scoring=None,
         progress_callback=None,
+        partial_transform=False,
+        priority="resource_aware",
         verbose=0,
     ):
         self.operator = operator
@@ -44,46 +46,56 @@ class _BatchingImpl:
         self.max_resident = max_resident
         self.scoring = scoring
         self.progress_callback = progress_callback
+        self.partial_transform = partial_transform
+        self.priority = priority
         self.verbose = verbose
 
     def fit(self, X, y=None, classes=None):
         if self.operator is None:
             raise ValueError("The pipeline object can't be None at the time of fit.")
-        try:
-            from torch.utils.data import DataLoader
-        except ImportError:
-            raise ImportError(
-                """Batching uses Pytorch for data loading. It is not
-            installed in the current environment, please install
-            the package and try again."""
-            )
-        if isinstance(X, DataLoader):
-            assert (
-                y is None
-            ), "When X is a torch.utils.data.DataLoader, y should be None"
-            data_loader = X
-        elif hasattr(X, "__next__") and hasattr(
+        if hasattr(X, "__next__") and hasattr(
             X, "__iter__"
         ):  # allow an iterable that is not a torch data loader
             assert y is None, "When X is an Iterable, y should be None"
             data_loader = X
         else:
-            data_loader = lale.helpers.create_data_loader(
-                X=X,
-                y=y,
-                batch_size=self.batch_size,
-                num_workers=self.num_workers,
-                shuffle=self.shuffle,
-            )
+            try:
+                from torch.utils.data import DataLoader
+            except ImportError:
+                raise ImportError(
+                    """Batching uses Pytorch for data loading. It is not
+                installed in the current environment, please install
+                the package and try again."""
+                )
+            if isinstance(X, DataLoader):
+                assert (
+                    y is None
+                ), "When X is a torch.utils.data.DataLoader, y should be None"
+                data_loader = X
+            else:
+                data_loader = lale.helpers.create_data_loader(
+                    X=X,
+                    y=y,
+                    batch_size=self.batch_size,
+                    num_workers=self.num_workers,
+                    shuffle=self.shuffle,
+                )
         if y is not None and classes is None:
             classes = np.unique(y)
+        if self.priority == "batch":
+            prio = PrioBatch()
+        elif self.priority == "step":
+            prio = PrioStep()
+        else:
+            prio = PrioResourceAware()
+
         self.operator = fit_with_batches(
             pipeline=self.operator,
             batches=data_loader,  # type:ignore
             unique_class_labels=classes,
             max_resident=self.max_resident,
-            prio=PrioResourceAware(),
-            partial_transform=False,
+            prio=prio,
+            partial_transform=self.partial_transform,
             scoring=self.scoring,
             progress_callback=self.progress_callback,
             verbose=self.verbose,
@@ -305,6 +317,20 @@ _hyperparams_schema = {
                     "anyOf": [{"laleType": "callable"}, {"enum": [None]}],
                     "default": None,
                     "description": "Callback function to get performance metrics per batch.",
+                },
+                "partial_transform": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": """Whether to allow partially-trained upstream operators
+to transform data for training downstream operators even before the upstream operator has been fully trained.""",
+                },
+                "priority": {
+                    "description": """Scheduling priority in task graphs.
+"batch" will execute tasks from earlier batches first.
+"step" will execute tasks from earlier steps first, like nested-loop algorithm.
+And "resource_aware" will execute tasks with less non-resident data first.""",
+                    "enum": ["batch", "step", "resource_aware"],
+                    "default": "resource_aware",
                 },
                 "verbose": {
                     "type": "integer",
