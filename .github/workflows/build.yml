@@ -377,17 +377,17 @@ jobs:
           python-version: 3.7
           setup-target: '.[tutorial,test]'
           test-case: 'test/test_notebooks.py'
-          nbexcludes: '06_multobj.ipynb.ipynb'
+          nbexcludes: '06_multobj.ipynb'
         - dir: 'examples/kdd22'
           python-version: 3.8
           setup-target: '.[tutorial,test]'
           test-case: 'test/test_notebooks.py'
-          nbexcludes: '06_multobj.ipynb.ipynb'
+          nbexcludes: '06_multobj.ipynb'
         - dir: 'examples/kdd22'
           python-version: 3.9
           setup-target: '.[tutorial,test]'
           test-case: 'test/test_notebooks.py'
-          nbexcludes: '06_multobj.ipynb.ipynb'
+          nbexcludes: '06_multobj.ipynb'
 
     steps:
     - uses: actions/checkout@v2
