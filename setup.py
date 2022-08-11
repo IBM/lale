@@ -108,6 +108,7 @@ extras_require = {
         "aif360<0.4.0",
         "protobuf<=3.20.1",
         "BlackBoxAuditing",
+        "typing-extensions",
     ],
 }
 
