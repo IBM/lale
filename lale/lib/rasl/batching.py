@@ -47,6 +47,7 @@ class _BatchingImpl:
         self.scoring = scoring
         self.progress_callback = progress_callback
         self.partial_transform = partial_transform
+        self.priority = priority
         self.verbose = verbose
 
     def fit(self, X, y=None, classes=None):
@@ -86,7 +87,7 @@ class _BatchingImpl:
         elif self.priority == "step":
             prio = PrioStep()
         else:
-            self.priority = PrioResourceAware()
+            prio = PrioResourceAware()
 
         self.operator = fit_with_batches(
             pipeline=self.operator,
