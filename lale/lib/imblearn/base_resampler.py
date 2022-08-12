@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import warnings
+
 
 class _BaseResamplerImpl:
     def __init__(self, operator=None, resampler=None):
@@ -21,7 +23,9 @@ class _BaseResamplerImpl:
     def fit(self, X, y=None):
         resampler = self.resampler
         assert resampler is not None
-        X, y = resampler.fit_resample(X, y)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=FutureWarning)
+            X, y = resampler.fit_resample(X, y)
 
         op = self.operator
         assert op is not None

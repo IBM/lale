@@ -103,32 +103,33 @@ class _BatchingImpl:
         return self
 
     def transform(self, X, y=None):
-        try:
-            from torch.utils.data import DataLoader
-        except ImportError:
-            raise ImportError(
-                """Batching uses Pytorch for data loading. It is not
-            installed in the current environment, please install
-            the package and try again."""
-            )
-        if isinstance(X, DataLoader):
-            assert (
-                y is None
-            ), "When X is a torch.utils.data.DataLoader, y should be None"
-            data_loader = X
-        elif hasattr(X, "__next__") and hasattr(
+        if hasattr(X, "__next__") and hasattr(
             X, "__iter__"
         ):  # allow an iterable that is not a torch data loader
             assert y is None, "When X is an Iterable, y should be None"
             data_loader = X
         else:
-            data_loader = lale.helpers.create_data_loader(
-                X=X,
-                y=y,
-                batch_size=self.batch_size,
-                num_workers=self.num_workers,
-                shuffle=self.shuffle,
-            )
+            try:
+                from torch.utils.data import DataLoader
+            except ImportError:
+                raise ImportError(
+                    """Batching uses Pytorch for data loading. It is not
+                installed in the current environment, please install
+                the package and try again."""
+                )
+            if isinstance(X, DataLoader):
+                assert (
+                    y is None
+                ), "When X is a torch.utils.data.DataLoader, y should be None"
+                data_loader = X
+            else:
+                data_loader = lale.helpers.create_data_loader(
+                    X=X,
+                    y=y,
+                    batch_size=self.batch_size,
+                    num_workers=self.num_workers,
+                    shuffle=self.shuffle,
+                )
 
         op = self.operator
         assert op is not None

@@ -109,6 +109,7 @@ extras_require = {
         "protobuf<=3.20.1",
         "BlackBoxAuditing",
         "typing-extensions",
+        "h5py",
     ],
 }
 
