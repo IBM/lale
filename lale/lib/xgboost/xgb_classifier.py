@@ -74,6 +74,7 @@ class _XGBClassifierImpl:
         with warnings.catch_warnings():
             if fit_params.get("use_label_encoder", True):
                 warnings.filterwarnings("ignore", category=UserWarning)
+            warnings.filterwarnings("ignore", category=FutureWarning)
             self._wrapped_model.fit(renamed_X, y, **fit_params)
         return self
 
