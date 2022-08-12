@@ -50,8 +50,6 @@ from lale.search.PGO import PGO
 SEED = 42
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
-# multiprocessing.set_start_method('fork')
-
 
 class _HyperoptImpl:
     def __init__(
