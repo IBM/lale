@@ -50,6 +50,7 @@ from lale.search.PGO import PGO
 SEED = 42
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
+# multiprocessing.set_start_method('fork')
 
 
 class _HyperoptImpl:
@@ -155,91 +156,6 @@ class _HyperoptImpl:
             )
             self.evals_with_defaults = 0
 
-        def hyperopt_train_test(params, X_train, y_train, X_valid, y_valid):
-            warnings.filterwarnings("ignore")
-
-            trainable = create_instance_from_hyperopt_search_space(
-                self.estimator, params
-            )
-            if self.cv is not None:
-                try:
-                    cv_score, logloss, execution_time = cross_val_score_track_trials(
-                        trainable,
-                        X_train,
-                        y_train,
-                        cv=self.cv,
-                        scoring=self.scoring,
-                        args_to_scorer=self.args_to_scorer,
-                        **fit_params,
-                    )
-                    logger.debug(
-                        "Successful trial of hyperopt with hyperparameters:{}".format(
-                            params
-                        )
-                    )
-                except BaseException as e:
-                    # If there is any error in cross validation, use the score based on a random train-test split as the evaluation criterion
-                    if self.handle_cv_failure and trainable is not None:
-                        (
-                            X_train_part,
-                            X_validation,
-                            y_train_part,
-                            y_validation,
-                        ) = train_test_split(X_train, y_train, test_size=0.20)
-                        # remove cv params from fit_params
-                        if "args_to_cv" in fit_params.keys():
-                            del fit_params["args_to_cv"]
-                        start = time.time()
-                        trained = trainable.fit(
-                            X_train_part, y_train_part, **fit_params
-                        )
-                        scorer = check_scoring(trainable, scoring=self.scoring)
-                        cv_score = scorer(
-                            trained, X_validation, y_validation, **self.args_to_scorer
-                        )
-                        execution_time = time.time() - start
-                        y_pred_proba = trained.predict_proba(X_validation)
-                        try:
-                            logloss = log_loss(y_true=y_validation, y_pred=y_pred_proba)
-                        except BaseException:
-                            logloss = 0
-                            logger.debug("Warning, log loss cannot be computed")
-                    else:
-                        logger.debug(e)
-                        if trainable is None:
-                            logger.debug(
-                                "Error {} with uncreatable pipeline with parameters:{}".format(
-                                    e, lale.pretty_print.hyperparams_to_string(params)
-                                )
-                            )
-                        else:
-                            logger.debug(
-                                "Error {} with pipeline:{}".format(
-                                    e, trainable.to_json()
-                                )
-                            )
-                        raise e
-            else:
-                assert (
-                    X_valid is not None
-                ), "X_valid needs to be passed when cv is None."
-                # remove cv params from fit_params
-                if "args_to_cv" in fit_params.keys():
-                    del fit_params["args_to_cv"]
-                start = time.time()
-                trained = trainable.fit(X_train, y_train, **fit_params)
-                scorer = check_scoring(trainable, scoring=self.scoring)
-                cv_score = scorer(trained, X_valid, y_valid, **self.args_to_scorer)
-                execution_time = time.time() - start
-                try:
-                    y_pred_proba = trained.predict_proba(X_valid)
-                    logloss = log_loss(y_true=y_valid, y_pred=y_pred_proba)
-                except BaseException:
-                    logloss = 0
-                    logger.debug("Warning, log loss cannot be computed")
-
-            return cv_score, logloss, execution_time
-
         def merge_trials(trials1, trials2):
             max_tid = max([trial["tid"] for trial in trials1.trials])
 
@@ -256,40 +172,6 @@ class _HyperoptImpl:
                 trials1.insert_trial_docs(hyperopt_trial)
                 trials1.refresh()
             return trials1
-
-        def proc_train_test(params, X_train, y_train, X_valid, y_valid, return_dict):
-            return_dict["params"] = copy.deepcopy(params)
-            try:
-                score, logloss, execution_time = hyperopt_train_test(
-                    params,
-                    X_train=X_train,
-                    y_train=y_train,
-                    X_valid=X_valid,
-                    y_valid=y_valid,
-                )
-                return_dict["loss"] = self.best_score - score
-                return_dict["time"] = execution_time
-                return_dict["log_loss"] = logloss
-                return_dict["status"] = hyperopt.STATUS_OK
-            except BaseException as e:
-                exception_type = f"{type(e).__module__}.{type(e).__name__}"
-                try:
-                    trainable = create_instance_from_hyperopt_search_space(
-                        self.estimator, params
-                    )
-                    if trainable is None:
-                        trial_info = f"hyperparams: {params}"
-                    else:
-                        trial_info = f'pipeline: """{trainable.pretty_print(show_imports=False)}"""'
-
-                except BaseException:
-                    trial_info = f"hyperparams: {params}"
-                error_msg = f"Exception caught in Hyperopt: {exception_type}, {traceback.format_exc()}with {trial_info}"
-                logger.warning(error_msg + ", setting status to FAIL")
-                return_dict["status"] = hyperopt.STATUS_FAIL
-                return_dict["error_msg"] = error_msg
-                if self.verbose:
-                    print(return_dict["error_msg"])
 
         def get_final_trained_estimator(params, X_train, y_train):
             warnings.filterwarnings("ignore")
@@ -314,8 +196,17 @@ class _HyperoptImpl:
                 manager = multiprocessing.Manager()
                 proc_dict: Dict[str, Any] = manager.dict()
                 p = multiprocessing.Process(
-                    target=proc_train_test,
-                    args=(params, X_train, y_train, X_valid, y_valid, proc_dict),
+                    target=_proc_train_test,
+                    args=(
+                        self,
+                        params,
+                        X_train,
+                        y_train,
+                        X_valid,
+                        y_valid,
+                        fit_params,
+                        proc_dict,
+                    ),
                 )
                 p.start()
                 p.join(self.max_eval_time)
@@ -331,7 +222,16 @@ class _HyperoptImpl:
                     proc_dict["status"] = hyperopt.STATUS_FAIL
             else:
                 proc_dict = {}
-                proc_train_test(params, X_train, y_train, X_valid, y_valid, proc_dict)
+                _proc_train_test(
+                    self,
+                    params,
+                    X_train,
+                    y_train,
+                    X_valid,
+                    y_valid,
+                    fit_params,
+                    proc_dict,
+                )
             return proc_dict
 
         algo = getattr(hyperopt, self.algo)
@@ -485,6 +385,127 @@ class _HyperoptImpl:
             return result
         assert astype == "sklearn", astype
         return result.export_to_sklearn_pipeline()
+
+
+def _hyperopt_train_test(
+    hyperopt_impl, params, X_train, y_train, X_valid, y_valid, fit_params
+):
+    warnings.filterwarnings("ignore")
+
+    trainable = create_instance_from_hyperopt_search_space(
+        hyperopt_impl.estimator, params
+    )
+    if hyperopt_impl.cv is not None:
+        try:
+            cv_score, logloss, execution_time = cross_val_score_track_trials(
+                trainable,
+                X_train,
+                y_train,
+                cv=hyperopt_impl.cv,
+                scoring=hyperopt_impl.scoring,
+                args_to_scorer=hyperopt_impl.args_to_scorer,
+                **fit_params,
+            )
+            logger.debug(
+                "Successful trial of hyperopt with hyperparameters:{}".format(params)
+            )
+        except BaseException as e:
+            # If there is any error in cross validation, use the score based on a random train-test split as the evaluation criterion
+            if hyperopt_impl.handle_cv_failure and trainable is not None:
+                (
+                    X_train_part,
+                    X_validation,
+                    y_train_part,
+                    y_validation,
+                ) = train_test_split(X_train, y_train, test_size=0.20)
+                # remove cv params from fit_params
+                if "args_to_cv" in fit_params.keys():
+                    del fit_params["args_to_cv"]
+                start = time.time()
+                trained = trainable.fit(X_train_part, y_train_part, **fit_params)
+                scorer = check_scoring(trainable, scoring=hyperopt_impl.scoring)
+                cv_score = scorer(
+                    trained, X_validation, y_validation, **hyperopt_impl.args_to_scorer
+                )
+                execution_time = time.time() - start
+                y_pred_proba = trained.predict_proba(X_validation)
+                try:
+                    logloss = log_loss(y_true=y_validation, y_pred=y_pred_proba)
+                except BaseException:
+                    logloss = 0
+                    logger.debug("Warning, log loss cannot be computed")
+            else:
+                logger.debug(e)
+                if trainable is None:
+                    logger.debug(
+                        "Error {} with uncreatable pipeline with parameters:{}".format(
+                            e, lale.pretty_print.hyperparams_to_string(params)
+                        )
+                    )
+                else:
+                    logger.debug(
+                        "Error {} with pipeline:{}".format(e, trainable.to_json())
+                    )
+                raise e
+    else:
+        assert X_valid is not None, "X_valid needs to be passed when cv is None."
+        # remove cv params from fit_params
+        if "args_to_cv" in fit_params.keys():
+            del fit_params["args_to_cv"]
+        start = time.time()
+        trained = trainable.fit(X_train, y_train, **fit_params)
+        scorer = check_scoring(trainable, scoring=hyperopt_impl.scoring)
+        cv_score = scorer(trained, X_valid, y_valid, **hyperopt_impl.args_to_scorer)
+        execution_time = time.time() - start
+        try:
+            y_pred_proba = trained.predict_proba(X_valid)
+            logloss = log_loss(y_true=y_valid, y_pred=y_pred_proba)
+        except BaseException:
+            logloss = 0
+            logger.debug("Warning, log loss cannot be computed")
+
+    return cv_score, logloss, execution_time
+
+
+def _proc_train_test(
+    hyperopt_impl, params, X_train, y_train, X_valid, y_valid, fit_params, return_dict
+):
+    return_dict["params"] = copy.deepcopy(params)
+    try:
+        score, logloss, execution_time = _hyperopt_train_test(
+            hyperopt_impl,
+            params,
+            X_train=X_train,
+            y_train=y_train,
+            X_valid=X_valid,
+            y_valid=y_valid,
+            fit_params=fit_params,
+        )
+        return_dict["loss"] = hyperopt_impl.best_score - score
+        return_dict["time"] = execution_time
+        return_dict["log_loss"] = logloss
+        return_dict["status"] = hyperopt.STATUS_OK
+    except BaseException as e:
+        exception_type = f"{type(e).__module__}.{type(e).__name__}"
+        try:
+            trainable = create_instance_from_hyperopt_search_space(
+                hyperopt_impl.estimator, params
+            )
+            if trainable is None:
+                trial_info = f"hyperparams: {params}"
+            else:
+                trial_info = (
+                    f'pipeline: """{trainable.pretty_print(show_imports=False)}"""'
+                )
+
+        except BaseException:
+            trial_info = f"hyperparams: {params}"
+        error_msg = f"Exception caught in Hyperopt: {exception_type}, {traceback.format_exc()}with {trial_info}"
+        logger.warning(error_msg + ", setting status to FAIL")
+        return_dict["status"] = hyperopt.STATUS_FAIL
+        return_dict["error_msg"] = error_msg
+        if hyperopt_impl.verbose:
+            print(return_dict["error_msg"])
 
 
 _hyperparams_schema = {
