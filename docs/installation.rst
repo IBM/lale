@@ -58,12 +58,6 @@ The output should look like::
     Ran 20 tests in 105.201s
     OK
 
-To run the full test suite, do the following in the ``lale``
-directory:
-
-.. code:: Bash
-
-    make run_tests
 
 Setting up the Environment
 --------------------------
