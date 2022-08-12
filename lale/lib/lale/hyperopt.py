@@ -51,6 +51,7 @@ SEED = 42
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
 
+
 class _HyperoptImpl:
     def __init__(
         self,
