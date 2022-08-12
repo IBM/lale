@@ -31,18 +31,20 @@ from lale.lib._common_schemas import (
     schema_scoring_single,
 )
 
-try:
-    import xgboost  # noqa: F401
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=FutureWarning)
+    try:
+        import xgboost  # noqa: F401
 
-    xgboost_installed = True
-except ImportError:
-    xgboost_installed = False
-try:
-    import lightgbm.sklearn  # noqa: F401
+        xgboost_installed = True
+    except ImportError:
+        xgboost_installed = False
+    try:
+        import lightgbm.sklearn  # noqa: F401
 
-    lightgbm_installed = True
-except ImportError:
-    lightgbm_installed = False
+        lightgbm_installed = True
+    except ImportError:
+        lightgbm_installed = False
 
 
 def auto_prep(X):

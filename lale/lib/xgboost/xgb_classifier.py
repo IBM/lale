@@ -23,14 +23,16 @@ import lale.operators
 
 from ._common_schemas import schema_silent
 
-try:
-    import xgboost  # type: ignore
-
-    xgboost_installed = True
-except ImportError:
-    xgboost_installed = False
-    if TYPE_CHECKING:
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=FutureWarning)
+    try:
         import xgboost  # type: ignore
+
+        xgboost_installed = True
+    except ImportError:
+        xgboost_installed = False
+        if TYPE_CHECKING:
+            import xgboost  # type: ignore
 
 
 # xgboost does not like column names with some characters (which are legal in pandas)
@@ -74,12 +76,15 @@ class _XGBClassifierImpl:
         with warnings.catch_warnings():
             if fit_params.get("use_label_encoder", True):
                 warnings.filterwarnings("ignore", category=UserWarning)
+            warnings.filterwarnings("ignore", category=FutureWarning)
             self._wrapped_model.fit(renamed_X, y, **fit_params)
         return self
 
     def predict(self, X, **predict_params):
         renamed_X = _rename_all_features(X)
-        result = self._wrapped_model.predict(renamed_X, **predict_params)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=FutureWarning)
+            result = self._wrapped_model.predict(renamed_X, **predict_params)
         return result
 
     def predict_proba(self, X):
