@@ -1,5 +1,7 @@
 # KDD 2022 Hands-on Tutorial on "Gradual AutoML using Lale"
 
+Tuesday 16 August, 1:30pm-4:30pm, Room 102-b
+
 Authors: Kiran Kate, Martin Hirzel, Parikshit Ram, Avraham Shinnar,
 and Jason Tsay (IBM Research)
 
@@ -184,5 +186,5 @@ tutorial.
   booktitle = "Tutorial at the Conference on Knowledge Discovery and Data Mining (KDD-Tutorial)",
   year = 2022,
   month = aug,
-  url = "http://hirzels.com/martin/papers/kdd22-tutorial-lale.pdf" }
+  url = "https://doi.org/10.1145/3534678.3542630" }
 ```
