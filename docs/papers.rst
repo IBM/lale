@@ -23,7 +23,7 @@ https://proceedings.neurips.cc/paper/2021/file/a3b36cb25e2e0b93b5f334ffb4e4064e-
 "Gradual AutoML using Lale".
 Kiran Kate, Martin Hirzel, Parikshit Ram, Avraham Shinnar, and Jason Tsay.
 Tutorial at Conference on Knowledge Discovery and Data Mining (KDD-Tutorial), August 2022.
-http://hirzels.com/martin/papers/kdd22-tutorial-lale.pdf
+https://doi.org/10.1145/3534678.3542630
 
 .. code:: BibTeX
 
@@ -33,7 +33,8 @@ http://hirzels.com/martin/papers/kdd22-tutorial-lale.pdf
       booktitle = "Tutorial at the Conference on Knowledge Discovery and Data Mining (KDD-Tutorial)",
       year = 2022,
       month = aug,
-      url = "http://hirzels.com/martin/papers/kdd22-tutorial-lale.pdf" }
+      pages = "pages 4794--4795",
+      url = "https://doi.org/10.1145/3534678.3542630" }
 
 
 "An Empirical Study of Modular Bias Mitigators and Ensembles".

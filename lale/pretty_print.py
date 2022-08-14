@@ -522,10 +522,11 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
             import_stmt = f"from {module_name} import {op_name}"
         else:
             import_stmt = f"from {module_name} import {op_name} as {label}"
-        gen.imports.append(import_stmt)
-        external_module_name = _get_wrapper_module_if_external(class_name)
-        if external_module_name is not None:
-            gen.external_wrapper_modules.append(external_module_name)
+        if module_name != "__main__":
+            gen.imports.append(import_stmt)
+            external_module_name = _get_wrapper_module_if_external(class_name)
+            if external_module_name is not None:
+                gen.external_wrapper_modules.append(external_module_name)
         printed_steps = {
             step_uid: _operator_jsn_to_string_rec(step_uid, step_val, gen)
             for step_uid, step_val in jsn.get("steps", {}).items()
