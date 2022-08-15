@@ -79,6 +79,7 @@ extras_require = {
         "cvxpy>=1.0",
         "fairlearn",
         "h5py",
+        "pynisher==0.6.4",
     ],
     "dev": ["pre-commit"],
     "test": [
