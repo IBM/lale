@@ -79,7 +79,6 @@ extras_require = {
         "cvxpy>=1.0",
         "fairlearn",
         "h5py",
-        "pynisher==0.6.4",
     ],
     "dev": ["pre-commit"],
     "test": [
@@ -94,6 +93,7 @@ extras_require = {
         "pyspark",
         "func_timeout",
         "category-encoders",
+        "pynisher==0.6.4",
     ],
     "fairness": [
         "liac-arff>=2.4.0",
