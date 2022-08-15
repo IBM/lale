@@ -260,6 +260,9 @@ def fetch_creditg_multitable_dataset(datatype="pandas"):
     loan_application_df = loan_application_df.copy()
     loan_application_df.insert(0, "id", loan_application_df.index)
     loan_application_df["class"] = y
+    loan_application_df.iloc[2, 7] = "M single"
+    loan_application_df.iloc[996, 7] = "M single"
+    loan_application_df.iloc[998, 7] = "F div/dep/mar"
     dataframes_list.append(add_table_name(loan_application_df, "loan_application"))
 
     # existing credits is a fake table we are adding, so a join and count can create the `existing_credits` column
