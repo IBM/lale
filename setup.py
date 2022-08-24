@@ -84,10 +84,9 @@ extras_require = {
     "test": [
         "joblib",
         "jupyter",
-        "numpydoc",
-        "sphinx==2.4.4",
-        "m2r2",
+        "sphinx>=5.0.0",
         "sphinx_rtd_theme",
+        "m2r2",
         "sphinxcontrib.apidoc",
         "pytest",
         "pyspark",
