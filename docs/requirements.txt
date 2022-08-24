@@ -24,6 +24,3 @@ sphinx>=5.0.0
 m2r2
 sphinx_rtd_theme
 sphinxcontrib.apidoc
-# not listed in setup.py
-docutils==0.16
-mistune>=2.0.3
