@@ -80,7 +80,7 @@ extensions = [
     "sphinx.ext.imgmath",
     "sphinx.ext.ifconfig",
     "sphinx.ext.viewcode",
-    "m2r",
+    "m2r2",
     "sphinxcontrib.apidoc",
 ]
 apidoc_module_dir = "../lale"

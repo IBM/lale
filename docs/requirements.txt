@@ -20,7 +20,7 @@ aif360>=0.4.0
 imbalanced-learn
 cvxpy>=1.0,<=1.1.7
 # subset of setup.py -> extras_require -> test
-sphinx==2.4.4
+sphinx>=5.0.0
 m2r2
 sphinx_rtd_theme
 sphinxcontrib.apidoc
