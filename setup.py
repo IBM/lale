@@ -87,6 +87,7 @@ extras_require = {
         "numpydoc",
         "sphinx==2.4.4",
         "m2r",
+        "mistune<=0.8.4",
         "sphinx_rtd_theme",
         "sphinxcontrib.apidoc",
         "pytest",
