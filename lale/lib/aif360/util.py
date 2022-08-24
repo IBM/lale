@@ -334,6 +334,9 @@ def _ensure_str(str_or_int: Union[str, int]) -> str:
 def _ndarray_to_series(data, name, index=None, dtype=None) -> pd.Series:
     if isinstance(data, pd.Series):
         return data
+    if isinstance(data, pd.DataFrame):
+        assert len(data.columns) == 1, data.columns
+        data = data[data.columns[0]]
     result = pd.Series(data=data, index=index, dtype=dtype, name=_ensure_str(name))
     schema = getattr(data, "json_schema", None)
     if schema is not None:

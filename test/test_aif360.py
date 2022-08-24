@@ -928,6 +928,8 @@ class TestAIF360Cat(unittest.TestCase):
         test_X = self.creditg_pd_cat["splits"][0]["test_X"]
         test_y = self.creditg_pd_cat["splits"][0]["test_y"]
         self._attempt_scorers(fairness_info, trained, test_X, test_y)
+        test_y_frame = pd.DataFrame({test_y.name: test_y})
+        self._attempt_scorers(fairness_info, trained, test_X, test_y_frame)
         self._attempt_scorers_batched(fairness_info, trained, test_X, test_y)
 
     def test_scorers_np_cat(self):
