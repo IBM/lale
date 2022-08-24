@@ -86,7 +86,7 @@ extras_require = {
         "jupyter",
         "numpydoc",
         "sphinx==2.4.4",
-        "m2r",
+        "m2r2",
         "sphinx_rtd_theme",
         "sphinxcontrib.apidoc",
         "pytest",
