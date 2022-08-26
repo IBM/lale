@@ -41,7 +41,9 @@ jobs:
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
-      run: pip install pipdeptree & pipdeptree -fl
+      run: |
+      pip install pipdeptree
+      pipdeptree -fl
     - name: pre-commit checks
       uses: pre-commit/action@v2.0.0
 
@@ -152,7 +154,9 @@ jobs:
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
-      run: pip install pipdeptree & pipdeptree -fl
+      run: |
+      pip install pipdeptree
+      pipdeptree -fl
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 
@@ -254,7 +258,9 @@ jobs:
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
-      run: pip install pipdeptree & pipdeptree -fl
+      run: |
+      pip install pipdeptree
+      pipdeptree -fl
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 
@@ -300,7 +306,9 @@ jobs:
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
-      run: pip install pipdeptree & pipdeptree -fl
+      run: |
+      pip install pipdeptree
+      pipdeptree -fl
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 
@@ -355,7 +363,9 @@ jobs:
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
-      run: pip install pipdeptree & pipdeptree -fl
+      run: |
+      pip install pipdeptree
+      pipdeptree -fl
     - name: Run test
       run: >
         NOTEBOOK_EXCLUDES="${{matrix.nbexcludes}}"
@@ -424,7 +434,9 @@ jobs:
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
-      run: pip install pipdeptree & pipdeptree -fl
+      run: |
+      pip install pipdeptree
+      pipdeptree -fl
     - name: Run test
       run: >
         NOTEBOOK_EXCLUDES="${{matrix.nbexcludes}}"
@@ -461,7 +473,9 @@ jobs:
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
-      run: pip install pipdeptree & pipdeptree -fl
+      run: |
+      pip install pipdeptree
+      pipdeptree -fl
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 
