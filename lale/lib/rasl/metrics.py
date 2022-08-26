@@ -108,6 +108,8 @@ def _make_dataframe_yy(batch):
     def make_series_y(y):
         if isinstance(y, np.ndarray):
             series = pd.Series(y)
+        elif isinstance(y, pd.DataFrame):
+            series = y.squeeze()
         elif spark_installed and isinstance(y, SparkDataFrame):
             series = cast(pd.DataFrame, y.toPandas()).squeeze()
         else:

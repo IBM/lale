@@ -20,8 +20,18 @@ from typing import List, Optional
 
 import pytest
 
+notebook_dir: str = os.environ.get("NOTEBOOK_DIR", ".")
+
 
 def should_test(f: str) -> bool:
+    notebooks_to_skip_str: Optional[str] = os.environ.get("NOTEBOOK_EXCLUDES", None)
+    notebooks_to_skip: Optional[List[str]] = (
+        notebooks_to_skip_str.split() if notebooks_to_skip_str is not None else None
+    )
+
+    if notebooks_to_skip and f in notebooks_to_skip:
+        return False
+
     notebooks_categories_str: Optional[str] = os.environ.get("NOTEBOOK_CATEGORY", None)
     notebooks_categories: Optional[List[str]] = (
         notebooks_categories_str.split()
@@ -37,7 +47,7 @@ def should_test(f: str) -> bool:
         else None
     )
 
-    if notebooks_categories is None:
+    if not notebooks_categories:
         if all_notebooks_categories is None:
             # run everything (with a warning)
             warnings.warn(
@@ -66,10 +76,13 @@ def should_test(f: str) -> bool:
 
 @pytest.mark.parametrize(
     "filename",
-    [f for f in os.listdir("examples") if f.endswith(".ipynb") and should_test(f)],
+    sorted(
+        [f for f in os.listdir(notebook_dir) if f.endswith(".ipynb") and should_test(f)]
+    ),
 )
 def test_notebook(filename):
-    path = os.path.join("examples", filename)
+    path = os.path.join(notebook_dir, filename)
+    print(path)
     with tempfile.NamedTemporaryFile(suffix=".ipynb") as fout:
         args = [
             "jupyter",

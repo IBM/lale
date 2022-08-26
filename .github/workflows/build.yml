@@ -1,3 +1,4 @@
+---
 name: Tests
 
 on: [push, pull_request]
@@ -42,13 +43,13 @@ jobs:
     - name: pre-commit checks
       uses: pre-commit/action@v2.0.0
 
-# test_matrix_pr and test_matrix_master have a lot of redundancy
-# If GitHub actions adds support for conditional matrix expressions
-# these should be combined, but current workarounds seem overly complex
+  # test_matrix_pr and test_matrix_master have a lot of redundancy
+  # If GitHub actions adds support for conditional matrix expressions
+  # these should be combined, but current workarounds seem overly complex
   test_matrix_pr:
     name: Test (PR)
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'pull_request' }}
+    if: ${{github.event_name == 'pull_request' }}
     needs: [static]
     strategy:
       fail-fast: false
@@ -65,7 +66,7 @@ jobs:
         - test/test_interoperability.py
         - test/test_optimizers.py
         - test/test_pipeline.py
-        #- test/test_autoai_output_consumption.py
+#        - test/test_autoai_output_consumption.py
         - test/test_autogen_lib.py
         - test/test_snapml.py
         - test/test_relational.py
@@ -127,10 +128,10 @@ jobs:
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     # - name: Install deps for test_autoai_output_consumption
     #   if: ${{ matrix.test-case == 'test/test_autoai_output_consumption.py' }}
-    #   run: pip install 'scikit-learn==0.23.1' 'lightgbm==3.3.0'
-    # - name: Install deps for test_lale_lib_versions
-    #   if: ${{ matrix.test-case == 'test/test_lale_lib_versions.py' }}
-    #   run: pip install 'scikit-learn==0.20.3' 'xgboost==0.90'
+    #   run: pip install 'numpy==1.21.6' 'scikit-learn==0.23.1' 'lightgbm==3.3.0'
+#    - name: Install deps for test_lale_lib_versions
+#      if: ${{ matrix.test-case == 'test/test_lale_lib_versions.py' }}
+#      run: pip install 'scikit-learn==0.20.3' 'xgboost==0.90'
     - name: Install autoai-libs from regular pypi for Python 3.7 and 3.8
       if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
       run: pip install autoai-libs>=1.12.6
@@ -172,7 +173,7 @@ jobs:
         - test/test_interoperability.py
         - test/test_optimizers.py
         - test/test_pipeline.py
-        #- test/test_autoai_output_consumption.py
+        - test/test_autoai_output_consumption.py
         - test/test_autogen_lib.py
         - test/test_relational.py
         python-version: [3.7, 3.8, 3.9]
@@ -227,10 +228,10 @@ jobs:
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     # - name: Install deps for test_autoai_output_consumption
     #   if: ${{ matrix.test-case == 'test/test_autoai_output_consumption.py' }}
-    #   run: pip install 'scikit-learn==0.23.1' 'lightgbm==3.3.0'
-    # - name: Install deps for test_lale_lib_versions
-    #   if: ${{ matrix.test-case == 'test/test_lale_lib_versions.py' }}
-    #   run: pip install 'scikit-learn==0.20.3' 'xgboost==0.90'
+    #   run: pip install 'numpy==1.21.6' 'scikit-learn==0.23.1' 'lightgbm==3.3.0'
+#    - name: Install deps for test_lale_lib_versions
+#      if: ${{ matrix.test-case == 'test/test_lale_lib_versions.py' }}
+#      run: pip install 'scikit-learn==0.20.3' 'xgboost==0.90'
     - name: Install autoai-libs from regular pypi for Python 3.7 and 3.8
       if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
       run: pip install autoai-libs>=1.12.6
@@ -311,7 +312,16 @@ jobs:
         - talk_
         python-version: [3.8]
         setup-target: ['.[full,test]']
-        test-case: [test/test_notebooks.py]
+        test-case: ['test/test_notebooks.py']
+        dir: ['examples']
+        nbexcludes: ['']
+        include:
+        - dir: 'examples/kdd22'
+          python-version: 3.8
+          setup-target: '.[tutorial,test]'
+          test-case: 'test/test_notebooks.py'
+          # nbexcludes: '06_multobj.ipynb'
+
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
@@ -337,7 +347,11 @@ jobs:
     - name: pip list packages
       run: pip list
     - name: Run test
-      run: NOTEBOOK_CATEGORY=${{matrix.category}} py.test -v --capture=tee-sys ${{matrix.test-case}}
+      run: >
+        NOTEBOOK_EXCLUDES="${{matrix.nbexcludes}}"
+        NOTEBOOK_DIR=${{matrix.dir}}
+        NOTEBOOK_CATEGORY=${{matrix.category}}
+        py.test -v --capture=tee-sys ${{matrix.test-case}}
 
   test_notebooks_master:
     name: Test Notebooks (master)
@@ -355,7 +369,26 @@ jobs:
         - talk_
         python-version: [3.7, 3.8, 3.9]
         setup-target: ['.[full,test]']
-        test-case: [test/test_notebooks.py]
+        test-case: ['test/test_notebooks.py']
+        dir: ['examples']
+        nbexcludes: ['']
+        include:
+        - dir: 'examples/kdd22'
+          python-version: 3.7
+          setup-target: '.[tutorial,test]'
+          test-case: 'test/test_notebooks.py'
+          # nbexcludes: '06_multobj.ipynb'
+        - dir: 'examples/kdd22'
+          python-version: 3.8
+          setup-target: '.[tutorial,test]'
+          test-case: 'test/test_notebooks.py'
+          # nbexcludes: '06_multobj.ipynb'
+        - dir: 'examples/kdd22'
+          python-version: 3.9
+          setup-target: '.[tutorial,test]'
+          test-case: 'test/test_notebooks.py'
+          # nbexcludes: '06_multobj.ipynb'
+
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
@@ -381,7 +414,11 @@ jobs:
     - name: pip list packages
       run: pip list
     - name: Run test
-      run: NOTEBOOK_CATEGORY=${{matrix.category}} py.test -v --capture=tee-sys ${{matrix.test-case}}
+      run: >
+        NOTEBOOK_EXCLUDES="${{matrix.nbexcludes}}"
+        NOTEBOOK_DIR=${{matrix.dir}}
+        NOTEBOOK_CATEGORY=${{matrix.category}}
+        py.test -v --capture=tee-sys ${{matrix.test-case}}
 
   test_fairness:
     name: Test fairness install

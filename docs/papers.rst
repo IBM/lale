@@ -19,9 +19,45 @@ https://proceedings.neurips.cc/paper/2021/file/a3b36cb25e2e0b93b5f334ffb4e4064e-
       month = dec,
       url = "https://proceedings.neurips.cc/paper/2021/file/a3b36cb25e2e0b93b5f334ffb4e4064e-Paper.pdf" }
 
+
+"Gradual AutoML using Lale".
+Kiran Kate, Martin Hirzel, Parikshit Ram, Avraham Shinnar, and Jason Tsay.
+Tutorial at Conference on Knowledge Discovery and Data Mining (KDD-Tutorial), August 2022.
+https://doi.org/10.1145/3534678.3542630
+
+.. code:: BibTeX
+
+    @InProceedings{kate_et_al_2022,
+      author = "Kate, Kiran and Hirzel, Martin and Ram, Parikshit and Shinnar, Avraham and Tsay, Jason",
+      title = "Gradual {AutoML} using {Lale}",
+      booktitle = "Tutorial at the Conference on Knowledge Discovery and Data Mining (KDD-Tutorial)",
+      year = 2022,
+      month = aug,
+      pages = "pages 4794--4795",
+      url = "https://doi.org/10.1145/3534678.3542630" }
+
+
+"An Empirical Study of Modular Bias Mitigators and Ensembles".
+Michael Feffer, Martin Hirzel, Samuel C. Hoffman, Kiran Kate, Parikshit Ram, and Avraham Shinnar.
+Workshop on Benchmarking Data for Data-Centric AI (DataPerf@ICML), July 2022.
+http://hirzels.com/martin/papers/dataperf22-fair-ensembles.pdf
+
+.. code:: BibTeX
+
+    @InProceedings{feffer_et_al_2022,
+      title = "An Empirical Study of Modular Bias Mitigators and Ensembles",
+      author = "Feffer, Michael and Hirzel, Martin and Hoffman, Samuel C. and Kate, Kiran and Ram, Parikshit and Shinnar, Avraham",
+      booktitle = "Workshop on Benchmarking Data for Data-Centric AI (DataPerf@ICML)",
+      year = 2022,
+      month = jul,
+      url = "http://hirzels.com/martin/papers/dataperf22-fair-ensembles.pdf" }
+
 "The Raise of Machine Learning Hyperparameter Constraints in Python Code".
 Ingkarat Rak-amnouykit, Ana Milanova, Guillaume Baudart, Martin Hirzel, and Julian Dolby.
 International Symposium on Software Testing and Analysis (ISSTA), July 2022. 
+https://doi.org/10.1145/3533767.3534400
+
+**Winner of a Distinguished Paper Award at ISSTA 2022.**
 
 .. code:: BibTeX
 
@@ -30,23 +66,9 @@ International Symposium on Software Testing and Analysis (ISSTA), July 2022.
       author = "Rak-amnouykit, Ingkarat and Milanova, Ana and Baudart, Guillaume and Hirzel, Martin and Dolby, Julian",
       booktitle = "International Symposium on Software Testing and Analysis (ISSTA)",
       year = 2022,
-      month = jul }
-
-"An Empirical Study of Modular Bias Mitigators and Ensembles".
-Michael Feffer, Martin Hirzel, Samuel C. Hoffman, Kiran Kate, Parikshit Ram, and Avraham Shinnar.
-arXiv:2202.00751 [cs.LG], February 2022.
-https://arxiv.org/abs/2202.00751
-
-.. code:: BibTeX
-
-    @Article{feffer_et_al_2022,
-      title = "An Empirical Study of Modular Bias Mitigators and Ensembles",
-      author = "Feffer, Michael and Hirzel, Martin and Hoffman, Samuel C. and Kate, Kiran and Ram, Parikshit and Shinnar, Avraham",
-      journal = "CoRR",
-      volume = "abs/2202.00751",
-      year = 2022,
-      month = feb,
-      url = "https://arxiv.org/abs/2202.00751" }
+      pages = "580--592",
+      month = jul,
+      url = "https://doi.org/10.1145/3533767.3534400" }
 
 "RASL: Relational Algebra in Scikit-Learn Pipelines".
 Chirag Sahni, Kiran Kate, Avraham Shinnar, Hoang Thanh Lam, and Martin Hirzel.
