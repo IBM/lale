@@ -22,10 +22,10 @@ import lale.lib.sklearn
 import lale.operators
 import lale.search.lale_grid_search_cv
 from lale.lib._common_schemas import (
+    schema_cv,
     schema_estimator,
     schema_max_opt_time,
     schema_scoring_single,
-    schema_simple_cv,
 )
 
 from .observing import Observing
@@ -243,7 +243,7 @@ _hyperparams_schema = {
             "properties": {
                 "estimator": schema_estimator,
                 "scoring": schema_scoring_single,
-                "cv": schema_simple_cv,
+                "cv": schema_cv,
                 "verbose": {
                     "description": "Controls the verbosity: the higher, the more messages.",
                     "type": "integer",
