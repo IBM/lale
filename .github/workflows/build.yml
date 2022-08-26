@@ -42,8 +42,8 @@ jobs:
       run: pip list
     - name: show pip dependencies
       run: |
-      pip install pipdeptree
-      pipdeptree -fl
+        pip install pipdeptree
+        pipdeptree -fl
     - name: pre-commit checks
       uses: pre-commit/action@v2.0.0
 
@@ -155,8 +155,8 @@ jobs:
       run: pip list
     - name: show pip dependencies
       run: |
-      pip install pipdeptree
-      pipdeptree -fl
+        pip install pipdeptree
+        pipdeptree -fl
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 
@@ -259,8 +259,8 @@ jobs:
       run: pip list
     - name: show pip dependencies
       run: |
-      pip install pipdeptree
-      pipdeptree -fl
+        pip install pipdeptree
+        pipdeptree -fl
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 
@@ -307,8 +307,8 @@ jobs:
       run: pip list
     - name: show pip dependencies
       run: |
-      pip install pipdeptree
-      pipdeptree -fl
+        pip install pipdeptree
+        pipdeptree -fl
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 
@@ -364,8 +364,8 @@ jobs:
       run: pip list
     - name: show pip dependencies
       run: |
-      pip install pipdeptree
-      pipdeptree -fl
+        pip install pipdeptree
+        pipdeptree -fl
     - name: Run test
       run: >
         NOTEBOOK_EXCLUDES="${{matrix.nbexcludes}}"
@@ -435,8 +435,8 @@ jobs:
       run: pip list
     - name: show pip dependencies
       run: |
-      pip install pipdeptree
-      pipdeptree -fl
+        pip install pipdeptree
+        pipdeptree -fl
     - name: Run test
       run: >
         NOTEBOOK_EXCLUDES="${{matrix.nbexcludes}}"
@@ -474,8 +474,8 @@ jobs:
       run: pip list
     - name: show pip dependencies
       run: |
-      pip install pipdeptree
-      pipdeptree -fl
+        pip install pipdeptree
+        pipdeptree -fl
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 
