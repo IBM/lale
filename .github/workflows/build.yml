@@ -65,7 +65,7 @@ jobs:
         - test/test_interoperability.py
         - test/test_optimizers.py
         - test/test_pipeline.py
-        - test/test_autoai_output_consumption.py
+        #- test/test_autoai_output_consumption.py
         - test/test_autogen_lib.py
         - test/test_snapml.py
         - test/test_relational.py
@@ -93,9 +93,9 @@ jobs:
         - test-case: test/test_halving_gridsearchcv.py
           python-version: 3.7
           setup-target: '.[test]'
-        - test-case: test/test_lale_lib_versions.py
-          python-version: 3.7
-          setup-target: '.[full,test]'
+        # - test-case: test/test_lale_lib_versions.py
+        #   python-version: 3.7
+        #   setup-target: '.[full,test]'
         - test-case: test/test_aif360.py
           python-version: 3.7
           setup-target: '.[full,test]'
@@ -125,12 +125,12 @@ jobs:
       run: pip install -U numpy
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
-    - name: Install deps for test_autoai_output_consumption
-      if: ${{ matrix.test-case == 'test/test_autoai_output_consumption.py' }}
-      run: pip install 'scikit-learn==0.23.1' 'lightgbm==3.3.0'
-    - name: Install deps for test_lale_lib_versions
-      if: ${{ matrix.test-case == 'test/test_lale_lib_versions.py' }}
-      run: pip install 'scikit-learn==0.20.3' 'xgboost==0.90'
+    # - name: Install deps for test_autoai_output_consumption
+    #   if: ${{ matrix.test-case == 'test/test_autoai_output_consumption.py' }}
+    #   run: pip install 'scikit-learn==0.23.1' 'lightgbm==3.3.0'
+    # - name: Install deps for test_lale_lib_versions
+    #   if: ${{ matrix.test-case == 'test/test_lale_lib_versions.py' }}
+    #   run: pip install 'scikit-learn==0.20.3' 'xgboost==0.90'
     - name: Install autoai-libs from regular pypi for Python 3.7 and 3.8
       if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
       run: pip install autoai-libs>=1.12.6
@@ -172,7 +172,7 @@ jobs:
         - test/test_interoperability.py
         - test/test_optimizers.py
         - test/test_pipeline.py
-        - test/test_autoai_output_consumption.py
+        #- test/test_autoai_output_consumption.py
         - test/test_autogen_lib.py
         - test/test_relational.py
         python-version: [3.7, 3.8, 3.9]
@@ -187,9 +187,9 @@ jobs:
         - test-case: test/test_halving_gridsearchcv.py
           python-version: 3.7
           setup-target: '.[test]'
-        - test-case: test/test_lale_lib_versions.py
-          python-version: 3.7
-          setup-target: '.[full,test]'
+        # - test-case: test/test_lale_lib_versions.py
+        #   python-version: 3.7
+        #   setup-target: '.[full,test]'
         - test-case: test/test_aif360.py
           python-version: 3.7
           setup-target: '.[full,test]'
@@ -225,12 +225,12 @@ jobs:
       run: pip install -U numpy
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
-    - name: Install deps for test_autoai_output_consumption
-      if: ${{ matrix.test-case == 'test/test_autoai_output_consumption.py' }}
-      run: pip install 'scikit-learn==0.23.1' 'lightgbm==3.3.0'
-    - name: Install deps for test_lale_lib_versions
-      if: ${{ matrix.test-case == 'test/test_lale_lib_versions.py' }}
-      run: pip install 'scikit-learn==0.20.3' 'xgboost==0.90'
+    # - name: Install deps for test_autoai_output_consumption
+    #   if: ${{ matrix.test-case == 'test/test_autoai_output_consumption.py' }}
+    #   run: pip install 'scikit-learn==0.23.1' 'lightgbm==3.3.0'
+    # - name: Install deps for test_lale_lib_versions
+    #   if: ${{ matrix.test-case == 'test/test_lale_lib_versions.py' }}
+    #   run: pip install 'scikit-learn==0.20.3' 'xgboost==0.90'
     - name: Install autoai-libs from regular pypi for Python 3.7 and 3.8
       if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
       run: pip install autoai-libs>=1.12.6
