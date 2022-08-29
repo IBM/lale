@@ -133,7 +133,7 @@ jobs:
     # - name: Install deps for test_autoai_output_consumption
     #   if: ${{ matrix.test-case == 'test/test_autoai_output_consumption.py' }}
     #   run: pip install 'numpy==1.21.6' 'scikit-learn==0.23.1' 'lightgbm==3.3.0'
-   - name: Install deps for test_lale_lib_versions
+    - name: Install deps for test_lale_lib_versions
      if: ${{ matrix.test-case == 'test/test_lale_lib_versions.py' }}
      run: pip install 'scikit-learn==0.20.3' 'xgboost==0.90'
     - name: Install autoai-libs from regular pypi for Python 3.7 and 3.8
@@ -240,7 +240,7 @@ jobs:
     # - name: Install deps for test_autoai_output_consumption
     #   if: ${{ matrix.test-case == 'test/test_autoai_output_consumption.py' }}
     #   run: pip install 'numpy==1.21.6' 'scikit-learn==0.23.1' 'lightgbm==3.3.0'
-   - name: Install deps for test_lale_lib_versions
+    - name: Install deps for test_lale_lib_versions
      if: ${{ matrix.test-case == 'test/test_lale_lib_versions.py' }}
      run: pip install 'scikit-learn==0.20.3' 'xgboost==0.90'
     - name: Install autoai-libs from regular pypi for Python 3.7 and 3.8
