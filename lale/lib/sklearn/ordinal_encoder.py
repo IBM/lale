@@ -306,4 +306,14 @@ It has to be distinct from the values used to encode any of the categories in fi
         set_as_available=True,
     )
 
+if sklearn.__version__ >= "1.1":
+    OrdinalEncoder = OrdinalEncoder.customize_schema(
+        encoded_missing_value=AnyOf(
+            desc="Encoded value of missing categories. If set to ``np.nan``, then the ``dtype`` parameter must be a float dtype.",
+            default=np.nan,
+            types=[Int(), Enum(values=[np.nan]), Null()],
+        ),
+        set_as_available=True,
+    )
+
 lale.docstrings.set_docstrings(OrdinalEncoder)

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn
 import sklearn.decomposition
 
 import lale.docstrings
@@ -240,5 +241,22 @@ _combined_schemas = {
 }
 
 PCA = lale.operators.make_operator(sklearn.decomposition.PCA, _combined_schemas)
+
+if sklearn.__version__ >= "1.1":
+    PCA = PCA.customize_schema(
+        n_oversamples={
+            "description": 'This parameter is only relevant when ``svd_solver="randomized"``. It corresponds to the additional number of random vectors to sample the range of X so as to ensure proper conditioning. See randomized_svd for more details.',
+            "type": "integer",
+            "minimum": 0,
+            "maximumForOptimizer": 1000,
+            "default": 10,
+        },
+        power_iteration_normalizer={
+            "description": "Power iteration normalizer for randomized SVD solver. Not used by ARPACK. See ``randomized_svd`` for more details.",
+            "enum": ["auto", "QR", "LU", "none"],
+            "default": "auto",
+        },
+        set_as_available=True,
+    )
 
 lale.docstrings.set_docstrings(PCA)

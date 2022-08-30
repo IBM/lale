@@ -40,6 +40,10 @@ jobs:
       run: pip install autoai-libs>=1.13.6
     - name: pip list packages
       run: pip list
+    - name: show pip dependencies
+      run: |
+        pip install pipdeptree
+        pipdeptree -fl
     - name: pre-commit checks
       uses: pre-commit/action@v2.0.0
 
@@ -66,7 +70,7 @@ jobs:
         - test/test_interoperability.py
         - test/test_optimizers.py
         - test/test_pipeline.py
-#        - test/test_autoai_output_consumption.py
+        - test/test_autoai_output_consumption.py
         - test/test_autogen_lib.py
         - test/test_snapml.py
         - test/test_relational.py
@@ -126,9 +130,9 @@ jobs:
       run: pip install -U numpy
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
-    # - name: Install deps for test_autoai_output_consumption
-    #   if: ${{ matrix.test-case == 'test/test_autoai_output_consumption.py' }}
-    #   run: pip install 'numpy==1.21.6' 'scikit-learn==0.23.1' 'lightgbm==3.3.0'
+    - name: Install deps for test_autoai_output_consumption
+      if: ${{ matrix.test-case == 'test/test_autoai_output_consumption.py' }}
+      run: pip install 'scikit-learn==0.23.1' 'lightgbm==3.3.0'
     - name: Install deps for test_lale_lib_versions
       if: ${{ matrix.test-case == 'test/test_lale_lib_versions.py' }}
       run: pip install 'scikit-learn==0.20.3' 'xgboost==0.90'
@@ -147,8 +151,15 @@ jobs:
     - name: Install deps for test_snapml
       if: ${{ matrix.test-case == 'test/test_snapml.py' }}
       run: pip install 'numpy>=1.20.1'
+    - name: Imbalanced learn version for Python 3.8
+      if: ${{ matrix.test-case == 'test/test_interoperability.py' &&  matrix.python-version == 3.8}}
+      run: pip install 'imbalanced-learn==0.9.0' 'scikit-learn==1.0.2'
     - name: pip list packages
       run: pip list
+    - name: show pip dependencies
+      run: |
+        pip install pipdeptree
+        pipdeptree -fl
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 
@@ -173,7 +184,7 @@ jobs:
         - test/test_interoperability.py
         - test/test_optimizers.py
         - test/test_pipeline.py
-#        - test/test_autoai_output_consumption.py
+        - test/test_autoai_output_consumption.py
         - test/test_autogen_lib.py
         - test/test_relational.py
         python-version: [3.7, 3.8, 3.9]
@@ -226,9 +237,9 @@ jobs:
       run: pip install -U numpy
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
-    # - name: Install deps for test_autoai_output_consumption
-    #   if: ${{ matrix.test-case == 'test/test_autoai_output_consumption.py' }}
-    #   run: pip install 'numpy==1.21.6' 'scikit-learn==0.23.1' 'lightgbm==3.3.0'
+    - name: Install deps for test_autoai_output_consumption
+      if: ${{ matrix.test-case == 'test/test_autoai_output_consumption.py' }}
+      run: pip install 'scikit-learn==0.23.1' 'lightgbm==3.3.0'
     - name: Install deps for test_lale_lib_versions
       if: ${{ matrix.test-case == 'test/test_lale_lib_versions.py' }}
       run: pip install 'scikit-learn==0.20.3' 'xgboost==0.90'
@@ -247,8 +258,15 @@ jobs:
     - name: Install deps for test_snapml
       if: ${{ matrix.test-case == 'test/test_snapml.py' }}
       run: pip install 'numpy>=1.20.1'
+    - name: Imbalanced learn version for Python 3.8
+      if: ${{ matrix.test-case == 'test/test_interoperability.py' &&  matrix.python-version == 3.8}}
+      run: pip install 'imbalanced-learn==0.9.0' 'scikit-learn==1.0.2'
     - name: pip list packages
       run: pip list
+    - name: show pip dependencies
+      run: |
+        pip install pipdeptree
+        pipdeptree -fl
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 
@@ -290,9 +308,13 @@ jobs:
     - name: Install pytest
       run: pip install pytest
     - name: Install latest scikit-learn, xgboost, and lightgbm
-      run: pip install --upgrade --upgrade-strategy eager scikit-learn==1.0.2 xgboost lightgbm
+      run: pip install --upgrade --upgrade-strategy eager scikit-learn xgboost lightgbm
     - name: pip list packages
       run: pip list
+    - name: show pip dependencies
+      run: |
+        pip install pipdeptree
+        pipdeptree -fl
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 
@@ -346,6 +368,10 @@ jobs:
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: pip list packages
       run: pip list
+    - name: show pip dependencies
+      run: |
+        pip install pipdeptree
+        pipdeptree -fl
     - name: Run test
       run: >
         NOTEBOOK_EXCLUDES="${{matrix.nbexcludes}}"
@@ -413,6 +439,10 @@ jobs:
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: pip list packages
       run: pip list
+    - name: show pip dependencies
+      run: |
+        pip install pipdeptree
+        pipdeptree -fl
     - name: Run test
       run: >
         NOTEBOOK_EXCLUDES="${{matrix.nbexcludes}}"
@@ -448,6 +478,10 @@ jobs:
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: pip list packages
       run: pip list
+    - name: show pip dependencies
+      run: |
+        pip install pipdeptree
+        pipdeptree -fl
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 

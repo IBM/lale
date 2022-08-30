@@ -32,6 +32,7 @@ as the right side succeed. This is specified using ``{'laleType': 'Any'}``.
 
 import functools
 import inspect
+from collections import Iterable
 from typing import Any, Dict, List, Optional, Tuple, overload
 
 import jsonschema
@@ -77,6 +78,11 @@ def _validate_lale_type(validator, laleType, instance, schema):
             )
     elif laleType == "numpy.random.RandomState":
         if not isinstance(instance, numpy.random.RandomState):
+            yield jsonschema.exceptions.ValidationError(
+                f"expected {laleType}, got {type(instance)}"
+            )
+    elif laleType == "CrossvalGenerator":
+        if not (hasattr(instance, "split") or isinstance(instance, Iterable)):
             yield jsonschema.exceptions.ValidationError(
                 f"expected {laleType}, got {type(instance)}"
             )

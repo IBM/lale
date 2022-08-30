@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn
 from sklearn.manifold import Isomap as SKLModel
 
 from lale.docstrings import set_docstrings
@@ -162,5 +163,25 @@ _combined_schemas = {
     },
 }
 Isomap = make_operator(SKLModel, _combined_schemas)
+
+if sklearn.__version__ >= "1.1":
+    # old: https://scikit-learn.org/0.23/modules/generated/sklearn.manifold.Isomap.html
+    # new: https://scikit-learn.org/1.1/modules/generated/sklearn.manifold.Isomap.html
+    from lale.schemas import AllOf, AnyOf, Float, Int, Null, Object
+
+    Isomap = Isomap.customize_schema(
+        radius=AnyOf(
+            types=[Float(), Null()],
+            desc="Limiting distance of neighbors to return. If ``radius`` is a float, then ``n_neighbors`` must be set to ``None``.",
+            default=None,
+        ),
+        constraint=AnyOf(
+            [
+                AllOf([Object(n_neighors=Int()), Object(radius=Null())]),
+                AllOf([Object(n_neighors=Null()), Object(radius=Float())]),
+            ]
+        ),
+        set_as_available=True,
+    )
 
 set_docstrings(Isomap)

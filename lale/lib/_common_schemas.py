@@ -149,13 +149,22 @@ def check_scoring_best_score_constraint(scoring=None, best_score=0) -> None:
 
 
 schema_simple_cv: JSON_TYPE = {
-    "description": "Number of folds for cross-validation.",
-    "type": "integer",
-    "minimum": 2,
-    "default": 5,
-    "minimumForOptimizer": 3,
-    "maximumForOptimizer": 4,
-    "distribution": "uniform",
+    "anyOf": [
+        {
+            "description": "Number of folds for cross-validation.",
+            "type": "integer",
+            "minimum": 2,
+            "default": 5,
+            "minimumForOptimizer": 3,
+            "maximumForOptimizer": 4,
+            "distribution": "uniform",
+        },
+        {
+            "enum": [None],
+            "description": "to use the default 5-fold cross validation",
+            "forOptimizer": False,
+        },
+    ]
 }
 
 schema_cv: JSON_TYPE = {
@@ -168,7 +177,25 @@ This behavior is also impacted by the handle_cv_failure flag.
     "anyOf": [
         schema_simple_cv,
         {
-            "not": {"type": "integer"},
+            "laleType": "CrossvalGenerator",
+            "forOptimizer": False,
+            "description": "Object with split function: generator yielding (train, test) splits as arrays of indices. Can use any of the iterators from https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators",
+        },
+    ],
+    "default": 5,
+}
+
+schema_cv_1_1: JSON_TYPE = {
+    "description": "Determines the cross-validation splitting strategy used in cross_val_predict to train final_estimator.",
+    "anyOf": [
+        schema_simple_cv,
+        {
+            "enum": ["prefit"],
+            "description": '"prefit" to assume the estimators are prefit. In this case, the estimators will not be refitted.',
+            "forOptimizer": False,
+        },
+        {
+            "laleType": "CrossvalGenerator",
             "forOptimizer": False,
             "description": "Object with split function: generator yielding (train, test) splits as arrays of indices. Can use any of the iterators from https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators",
         },

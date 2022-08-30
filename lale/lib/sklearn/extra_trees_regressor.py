@@ -356,4 +356,29 @@ and “absolute_error” for the mean absolute error.""",
         set_as_available=True,
     )
 
+if sklearn.__version__ >= "1.1":
+    # old: https://scikit-learn.org/1.0/modules/generated/sklearn.tree.ExtraTreesRegressor.html
+    # new: https://scikit-learn.org/1.1/modules/generated/sklearn.tree.ExtraTreesRegressor.html
+    ExtraTreesRegressor = ExtraTreesRegressor.customize_schema(
+        max_features={
+            "anyOf": [
+                {"type": "integer", "forOptimizer": False},
+                {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "exclusiveMinimum": True,
+                    "minimumForOptimizer": 0.01,
+                    "maximumForOptimizer": 1.0,
+                    "default": 0.5,
+                    "distribution": "uniform",
+                },
+                {"enum": ["auto", "sqrt", "log2", None]},
+            ],
+            "default": 1.0,
+            "description": "The number of features to consider when looking for the best split.",
+        },
+        set_as_available=True,
+    )
+
+
 lale.docstrings.set_docstrings(ExtraTreesRegressor)

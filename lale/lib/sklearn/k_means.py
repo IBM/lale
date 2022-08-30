@@ -253,4 +253,19 @@ if sklearn.__version__ >= "1.0":
         set_as_available=True,
     )
 
+if sklearn.__version__ >= "1.1":
+    # old: https://scikit-learn.org/1.0/modules/generated/sklearn.cluster.KMeans.html
+    # new: https://scikit-learn.org/1.1/modules/generated/sklearn.cluster.KMeans.html
+    KMeans = KMeans.customize_schema(
+        algorithm={
+            "description": """K-means algorithm to use.
+The classical EM-style algorithm is “full”. The “elkan” variation is more efficient on data with well-defined clusters, by using the triangle inequality.
+However it’s more memory intensive due to the allocation of an extra array of shape (n_samples, n_clusters).
+For now “auto” (kept for backward compatibiliy) chooses “elkan” but it might change in the future for a better heuristic.""",
+            "enum": ["lloyd", "elkan", "auto", "full"],
+            "default": "lloyd",
+        },
+        set_as_available=True,
+    )
+
 set_docstrings(KMeans)
