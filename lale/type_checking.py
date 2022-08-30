@@ -32,7 +32,7 @@ as the right side succeed. This is specified using ``{'laleType': 'Any'}``.
 
 import functools
 import inspect
-from collections import Iterable
+from collections.abc import Iterable
 from typing import Any, Dict, List, Optional, Tuple, overload
 
 import jsonschema
