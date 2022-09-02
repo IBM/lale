@@ -86,6 +86,7 @@ extras_require = {
         "jupyter",
         "sphinx>=5.0.0",
         "sphinx_rtd_theme>=0.5.2",
+        "docutils<0.17",
         "m2r2",
         "sphinxcontrib.apidoc",
         "pytest",

@@ -21,6 +21,7 @@ imbalanced-learn
 cvxpy>=1.0,<=1.1.7
 # subset of setup.py -> extras_require -> test
 sphinx>=5.0.0
-m2r2
 sphinx_rtd_theme>=0.5.2
+docutils<0.17
+m2r2
 sphinxcontrib.apidoc
