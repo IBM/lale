@@ -85,7 +85,7 @@ extras_require = {
         "joblib",
         "jupyter",
         "sphinx>=5.0.0",
-        "sphinx_rtd_theme",
+        "sphinx_rtd_theme>=0.5.2",
         "m2r2",
         "sphinxcontrib.apidoc",
         "pytest",
