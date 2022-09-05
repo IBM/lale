@@ -870,7 +870,7 @@ if xgboost_installed and xgboost.__version__ >= "1.6":
                 {"enum": [None]},
             ],
             "default": None,
-        }
+        },
     )
 
 
