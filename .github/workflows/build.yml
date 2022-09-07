@@ -157,6 +157,8 @@ jobs:
     - name: Imbalanced learn version for Python 3.8
       if: ${{ matrix.test-case == 'test/test_interoperability.py' &&  matrix.python-version == 3.8}}
       run: pip install 'imbalanced-learn==0.9.0' 'scikit-learn==1.0.2'
+    - name: Install scikit-learn latest
+      run: pip install -U 'scikit-learn'
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
