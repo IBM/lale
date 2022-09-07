@@ -151,6 +151,9 @@ jobs:
     - name: Install deps for test_snapml
       if: ${{ matrix.test-case == 'test/test_snapml.py' }}
       run: pip install 'numpy>=1.20.1'
+    - name: Install deps for test_core_pipeline with scipy 1.5.4
+      if: ${{ matrix.test-case == 'test/test_core_pipeline.py' }}
+      run: pip install 'scipy==1.5.4'
     - name: Imbalanced learn version for Python 3.8
       if: ${{ matrix.test-case == 'test/test_interoperability.py' &&  matrix.python-version == 3.8}}
       run: pip install 'imbalanced-learn==0.9.0' 'scikit-learn==1.0.2'

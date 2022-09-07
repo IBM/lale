@@ -803,6 +803,74 @@ if xgboost_installed and xgboost.__version__ >= "1.6":
             "type": "boolean",
             "default": False,
         },
+        max_leaves={
+            "description": """Maximum number of leaves; 0 indicates no limit.""",
+            "anyOf": [
+                {"type": "integer"},
+                {"enum": [None], "forOptimizer": False},
+            ],
+            "default": None,
+        },
+        max_bin={
+            "description": """If using histogram-based algorithm, maximum number of bins per feature.""",
+            "anyOf": [
+                {"type": "integer"},
+                {"enum": [None], "forOptimizer": False},
+            ],
+            "default": None,
+        },
+        grow_policy={
+            "description": """Tree growing policy.
+            0: favor splitting at nodes closest to the node, i.e. grow depth-wise.
+            1: favor splitting at nodes with highest loss change.""",
+            "enum": [0, 1, None],
+            "default": None,
+        },
+        sampling_method={
+            "description": """Sampling method. Used only by gpu_hist tree method.
+            - uniform: select random training instances uniformly.
+            - gradient_based select random training instances with higher probability when the gradient and hessian are larger. (cf. CatBoost)""",
+            "enum": ["uniform", "gadient_based", None],
+            "default": None,
+        },
+        max_cat_to_onehot={
+            "description": """A threshold for deciding whether XGBoost should use
+            one-hot encoding based split for categorical data.""",
+            "anyOf": [
+                {"type": "integer"},
+                {"enum": [None]},
+            ],
+            "default": None,
+        },
+        eval_metric={
+            "description": """Metric used for monitoring the training result and early stopping.""",
+            "anyOf": [
+                {"type": "string"},
+                {"type": "array", "items": {"type": "string"}},
+                {"type": "array", "items": {"laleType": "callable"}},
+                {"enum": [None]},
+            ],
+            "default": None,
+        },
+        early_stopping_rounds={
+            "description": """Activates early stopping.
+            Validation metric needs to improve at least once in every early_stopping_rounds round(s)
+            to continue training.""",
+            "anyOf": [
+                {"type": "integer"},
+                {"enum": [None]},
+            ],
+            "default": None,
+        },
+        callbacks={
+            "description": """List of callback functions that are applied at end of each iteration.
+            It is possible to use predefined callbacks by using Callback API.""",
+            "anyOf": [
+                {"type": "array", "items": {"laleType": "callable"}},
+                {"enum": [None]},
+            ],
+            "default": None,
+        },
     )
 
 
