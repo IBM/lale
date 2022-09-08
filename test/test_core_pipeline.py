@@ -852,7 +852,7 @@ class TestAutoPipeline(unittest.TestCase):
         # classification, only numbers, synthetically added missing values
         all_X, all_y = sklearn.datasets.load_iris(return_X_y=True)
         with_missing_X = lale.helpers.add_missing_values(all_X)
-        with self.assertRaisesRegex(ValueError, "Input contains NaN"):
+        with self.assertRaisesRegex(ValueError, "Input.*contains NaN"):
             lr_trainable = LogisticRegression()
             _ = lr_trainable.fit(with_missing_X, all_y)
         self._fit_predict("classification", with_missing_X, all_y)
@@ -861,7 +861,7 @@ class TestAutoPipeline(unittest.TestCase):
         # regression, categoricals+numbers, synthetically added missing values
         all_X, all_y = sklearn.datasets.load_boston(return_X_y=True)
         with_missing_X = lale.helpers.add_missing_values(all_X)
-        with self.assertRaisesRegex(ValueError, "Input contains NaN"):
+        with self.assertRaisesRegex(ValueError, "Input.*contains NaN"):
             lr_trainable = LinearRegression()
             _ = lr_trainable.fit(with_missing_X, all_y)
         self._fit_predict("regression", with_missing_X, all_y)
