@@ -25,12 +25,14 @@ class SchemaRange(object):
         exclusive_minimum=False,
         exclusive_maximum=False,
         is_integer: bool = False,
+        distribution: Optional[str] = None,
     ) -> None:
         self.minimum = minimum
         self.maximum = maximum
         self.exclusive_minimum = exclusive_minimum
         self.exclusive_maximum = exclusive_maximum
         self.is_integer = is_integer
+        self.distribution = distribution
 
     def __str__(self):
         res = ""
@@ -44,9 +46,14 @@ class SchemaRange(object):
             res += str(self.minimum)
         res += ","
         if self.maximum is None:
-            res += "infty)"
+            res += "infty"
+            if self.distribution == "loguniform":
+                res += "//log"
+            res += ")"
         else:
             res += str(self.maximum)
+            if self.distribution == "loguniform":
+                res += "//log"
             if self.exclusive_maximum:
                 res += ")"
             else:
@@ -71,6 +78,7 @@ class SchemaRange(object):
             exclusive_minimum=schema.get("exclusiveMinimum", False),
             exclusive_maximum=schema.get("exclusiveMaximum", False),
             is_integer=schema.get("type", "number") == "integer",
+            distribution=schema.get("distribution", None),
         )
 
     @classmethod
@@ -99,12 +107,15 @@ class SchemaRange(object):
         elif s.maximum is not None and minimum == s.minimum:
             exclusive_maximum = exclusive_maximum or s.exclusive_maximum
 
+        distribution = s.distribution
+
         return SchemaRange(
             minimum=minimum,
             maximum=maximum,
             exclusive_minimum=exclusive_minimum,
             exclusive_maximum=exclusive_maximum,
             is_integer=is_integer,
+            distribution=distribution,
         )
 
     @classmethod
@@ -157,6 +168,9 @@ class SchemaRange(object):
                 if optimizer_range.exclusive_maximum:
                     number_schema["exclusiveMaximumForOptimizer"] = True
 
+        if optimizer_range.distribution is not None:
+            number_schema["distribution"] = optimizer_range.distribution
+
         return number_schema
 
     def __iand__(self, other: "SchemaRange"):
@@ -184,6 +198,9 @@ class SchemaRange(object):
             elif self.maximum > other.maximum:
                 self.maximum = other.maximum
                 self.exclusive_maximum = other.exclusive_maximum
+
+        if self.distribution is None:
+            self.distribution = other.distribution
 
         return self
 
