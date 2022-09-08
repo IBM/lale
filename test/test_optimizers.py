@@ -351,6 +351,18 @@ class TestHyperopt(unittest.TestCase):
         X, y = data.data, data.target
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
 
+    def test_loguniform_search_space(self):
+        from lale.lib.sklearn import SVC
+        from lale.search.schema2search_space import op_to_search_space
+        from lale.search.search_space import SearchSpaceObject
+
+        svc = SVC()
+        space = op_to_search_space(svc)
+        self.assertIsInstance(space, SearchSpaceObject)
+        strobj = str(space)
+        self.assertRegex(strobj, r"gamma->\[[^[]*,<log>,8]")
+        pass
+
     def test_using_scoring(self):
 
         lr = LogisticRegression()
