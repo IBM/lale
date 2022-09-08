@@ -93,7 +93,7 @@ jobs:
           python-version: 3.9
           setup-target: '.[full,test]'
         - test-case: test/test_autogen_lib.py
-          python-version: 3.6
+          python-version: 3.7
           setup-target: '.[test]'
         - test-case: test/test_halving_gridsearchcv.py
           python-version: 3.7
@@ -127,7 +127,7 @@ jobs:
           ${{ runner.os }}-pip-new3
           ${{ runner.os }}-new3
     - name: Install numpy
-      run: pip install -U numpy 'scikit-learn>=1.0.0,<=1.1.1'
+      run: pip install -U numpy
     - name: Install autoai-libs from regular pypi for Python 3.7 and 3.8
       if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
       run: pip install autoai-libs>=1.12.6
@@ -197,7 +197,7 @@ jobs:
           python-version: 3.8
           setup-target: '.[test]'
         - test-case: test/test_autogen_lib.py
-          python-version: 3.6
+          python-version: 3.7
           setup-target: '.[test]'
         - test-case: test/test_halving_gridsearchcv.py
           python-version: 3.7
@@ -305,7 +305,7 @@ jobs:
           ${{ runner.os }}-pip-new3
           ${{ runner.os }}-new3
     - name: Install numpy
-      run: pip install -U numpy 'scikit-learn>=1.0.0,<=1.1.1'
+      run: pip install -U numpy
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Install pytest
@@ -366,7 +366,7 @@ jobs:
     - name: Install packages
       run: sudo apt-get install graphviz swig
     - name: Install numpy
-      run: pip install -U numpy 'scikit-learn>=1.0.0,<=1.1.1'
+      run: pip install -U numpy
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: pip list packages
@@ -437,7 +437,7 @@ jobs:
     - name: Install packages
       run: sudo apt-get install graphviz swig
     - name: Install numpy
-      run: pip install -U numpy 'scikit-learn>=1.0.0,<=1.1.1'
+      run: pip install -U numpy
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: pip list packages
@@ -474,7 +474,7 @@ jobs:
     - name: Install system packages
       run: sudo apt-get install graphviz swig
     - name: Install numpy
-      run: pip install -U numpy 'scikit-learn>=1.0.0,<=1.1.1'
+      run: pip install -U numpy
     - name: Install pytest
       run: pip install pytest
     - name: Install dependencies

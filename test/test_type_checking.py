@@ -1186,6 +1186,7 @@ class TestHyperparamConstraints(unittest.TestCase):
             with self.assertRaises(jsonschema.ValidationError):
                 RandomForestRegressor(**bad_hyperparams)
 
+    @unittest.skip("newer versions of sklearn do support this")
     def test_ridge_1(self):
         import sklearn
 
