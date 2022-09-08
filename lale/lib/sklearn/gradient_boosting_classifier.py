@@ -444,4 +444,24 @@ The default value of ‘friedman_mse’ is generally the best as it can provide 
         set_as_available=True,
     )
 
+if sklearn.__version__ >= "1.1":
+    # old: https://scikit-learn.org/1.0/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
+    # new: https://scikit-learn.org/1.1/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
+    GradientBoostingClassifier = GradientBoostingClassifier.customize_schema(
+        loss={
+            "description": "TThe loss function to be optimized. ‘log_loss’ refers to binomial and multinomial deviance, the same as used in logistic regression. It is a good choice for classification with probabilistic outputs. For loss ‘exponential’, gradient boosting recovers the AdaBoost algorithm.",
+            "anyOf": [
+                {"enum": ["log_loss", "exponential"]},
+                {
+                    "description": "Deprecated since version 1.1.",
+                    "enum": ["deviance"],
+                    "forOptimizer": False,
+                },
+            ],
+            "default": "log_loss",
+        },
+        min_impurity_split=None,
+        set_as_available=True,
+    )
+
 lale.docstrings.set_docstrings(GradientBoostingClassifier)
