@@ -29,15 +29,15 @@ jobs:
           ${{ runner.os }}-pip-new3
           ${{ runner.os }}-new3
     - name: Install numpy
-      run: pip install -U numpy 'scikit-learn>=1.0.0,<=1.1.1'
-    - name: Install dependencies
-      run: pip install --upgrade --upgrade-strategy eager .[full,test]
+      run: pip install -U numpy
     - name: Install autoai-libs from regular pypi for Python 3.7 and 3.8
       if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
       run: pip install autoai-libs>=1.12.6
     - name: Install autoai-libs from test pypi for Python 3.9
       if: ${{ matrix.python-version == 3.9}}
       run: pip install autoai-libs>=1.13.6
+    - name: Install dependencies
+      run: pip install --upgrade --upgrade-strategy eager .[full,test]
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
@@ -128,6 +128,12 @@ jobs:
           ${{ runner.os }}-new3
     - name: Install numpy
       run: pip install -U numpy 'scikit-learn>=1.0.0,<=1.1.1'
+    - name: Install autoai-libs from regular pypi for Python 3.7 and 3.8
+      if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
+      run: pip install autoai-libs>=1.12.6
+    - name: Install autoai-libs from test pypi for Python 3.9
+      if: ${{ matrix.python-version == 3.9}}
+      run: pip install autoai-libs>=1.13.6
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Install deps for test_autoai_output_consumption
@@ -136,12 +142,6 @@ jobs:
     - name: Install deps for test_lale_lib_versions
       if: ${{ matrix.test-case == 'test/test_lale_lib_versions.py' }}
       run: pip install 'scikit-learn==0.20.3' 'xgboost==0.90'
-    - name: Install autoai-libs from regular pypi for Python 3.7 and 3.8
-      if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
-      run: pip install autoai-libs>=1.12.6
-    - name: Install autoai-libs from test pypi for Python 3.9
-      if: ${{ matrix.python-version == 3.9}}
-      run: pip install autoai-libs>=1.13.6
     - name: Install deps for test_halving_gridsearchcv
       if: ${{ matrix.test-case == 'test/test_halving_gridsearchcv.py' }}
       run: pip install 'scikit-learn==0.24.1'
@@ -237,7 +237,13 @@ jobs:
           ${{ runner.os }}-pip-new3
           ${{ runner.os }}-new3
     - name: Install numpy
-      run: pip install -U numpy 'scikit-learn>=1.0.0,<=1.1.1'
+      run: pip install -U numpy
+    - name: Install autoai-libs from regular pypi for Python 3.7 and 3.8
+      if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
+      run: pip install autoai-libs>=1.12.6
+    - name: Install autoai-libs from test pypi for Python 3.9
+      if: ${{ matrix.python-version == 3.9}}
+      run: pip install autoai-libs>=1.13.6
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Install deps for test_autoai_output_consumption
@@ -246,12 +252,6 @@ jobs:
     - name: Install deps for test_lale_lib_versions
       if: ${{ matrix.test-case == 'test/test_lale_lib_versions.py' }}
       run: pip install 'scikit-learn==0.20.3' 'xgboost==0.90'
-    - name: Install autoai-libs from regular pypi for Python 3.7 and 3.8
-      if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
-      run: pip install autoai-libs>=1.12.6
-    - name: Install autoai-libs from test pypi for Python 3.9
-      if: ${{ matrix.python-version == 3.9}}
-      run: pip install autoai-libs>=1.13.6
     - name: Install deps for test_halving_gridsearchcv
       if: ${{ matrix.test-case == 'test/test_halving_gridsearchcv.py' }}
       run: pip install 'scikit-learn==0.24.1'
