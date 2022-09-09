@@ -54,7 +54,7 @@ def _convert(data, astype, X_or_y):
             result = pandas2spark(data, with_index=True)
         else:
             assert False, astype
-    elif isinstance(data, np.ndarray):
+    elif isinstance(data, (list, np.ndarray)):
         if astype == "pandas":
             if X_or_y == "X":
                 result = pd.DataFrame(data)
