@@ -2559,7 +2559,7 @@ class TestConvert(unittest.TestCase):
             self._check(go_products, transformed_df, tgt)
 
     def test_from_list(self):
-        df = [[0.1,0.2,0.3], [4,5,6]]
+        df = [[0.1, 0.2, 0.3], [4, 5, 6]]
         pd_src = pd.DataFrame(df)
         for tgt in self.targets:
             transformer = Convert(astype=tgt)
