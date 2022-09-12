@@ -25,6 +25,7 @@ import jsonschema
 import numpy as np
 import pandas as pd
 import sklearn
+import sklearn.datasets
 from category_encoders.hashing import HashingEncoder as SkHashingEncoder
 from sklearn.feature_selection import SelectKBest as SkSelectKBest
 from sklearn.impute import SimpleImputer as SkSimpleImputer
@@ -57,6 +58,7 @@ from lale.datasets.data_schemas import (
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
 from lale.expressions import it
 from lale.helpers import _ensure_pandas, create_data_loader
+from lale.lib.lightgbm import LGBMClassifier, LGBMRegressor
 from lale.lib.rasl import BatchedBaggingClassifier, ConcatFeatures, Convert
 from lale.lib.rasl import HashingEncoder as RaslHashingEncoder
 from lale.lib.rasl import Map
@@ -85,6 +87,7 @@ from lale.lib.sklearn import (
     RandomForestClassifier,
     SGDClassifier,
 )
+from lale.lib.xgboost import XGBClassifier, XGBRegressor
 from lale.operators import TrainedPipeline
 
 assert sklearn.__version__ >= "1.0", sklearn.__version__
@@ -2151,3 +2154,35 @@ class TestBatchedBaggingClassifier(unittest.TestCase):
                 same_fold=True,
                 verbose=0,
             )
+
+
+class TestXGBoost(unittest.TestCase):
+    def test_partial_fit_xgb_classifier(self):
+        X, y = sklearn.datasets.load_iris(return_X_y=True, as_frame=True)
+        est = XGBClassifier(verbosity=0)
+        for bX, by in mockup_data_loader(X, y, 3, "pandas"):
+            est = est.partial_fit(bX, by)
+            _ = est.predict(bX)
+
+    def test_partial_fit_xgb_regressor(self):
+        X, y = sklearn.datasets.load_diabetes(return_X_y=True, as_frame=True)
+        est = XGBRegressor(verbosity=0)
+        for bX, by in mockup_data_loader(X, y, 3, "pandas"):
+            est = est.partial_fit(bX, by)
+            _ = est.predict(bX)
+
+
+class TestLightGBM(unittest.TestCase):
+    def test_partial_fit_lgbm_classifier(self):
+        X, y = sklearn.datasets.load_iris(return_X_y=True, as_frame=True)
+        est = LGBMClassifier()
+        for bX, by in mockup_data_loader(X, y, 3, "pandas"):
+            est = est.partial_fit(bX, by)
+            _ = est.predict(bX)
+
+    def test_partial_fit_lgbm_regressor(self):
+        X, y = sklearn.datasets.load_diabetes(return_X_y=True, as_frame=True)
+        est = LGBMRegressor()
+        for bX, by in mockup_data_loader(X, y, 3, "pandas"):
+            est = est.partial_fit(bX, by)
+            _ = est.predict(bX)

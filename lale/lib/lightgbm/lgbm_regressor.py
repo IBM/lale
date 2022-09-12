@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -86,6 +86,12 @@ or with
         except Exception as e:
             raise RuntimeError(str(self._hyperparams)) from e
         return self
+
+    def partial_fit(self, X, y, **fit_params):
+        if self._wrapped_model.__sklearn_is_fitted__():
+            booster = self._wrapped_model.booster_
+            fit_params = {**fit_params, "init_model": booster}
+        return self.fit(X, y, **fit_params)
 
     def predict(self, X, **predict_params):
         return self._wrapped_model.predict(X, **predict_params)
