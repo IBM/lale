@@ -3345,7 +3345,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         # Since this is a trained operator and we are calling partial_fit,
         # we allow the trained op to be mutated by using the same impl to
         # call partial_fit
-        trainable_impl = self.impl
+        trainable_impl = self.shallow_impl
         if filtered_fit_params is None:
             trained_impl = trainable_impl.partial_fit(X, y)
         else:
