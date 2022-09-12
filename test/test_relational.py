@@ -2521,8 +2521,8 @@ class TestTrainTestSplit(unittest.TestCase):
 class TestConvert(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        targets = ["pandas", "spark", "spark-with-index"]
-        cls.tgt2datasets = {tgt: fetch_go_sales_dataset(tgt) for tgt in targets}
+        cls.targets = ["pandas", "spark", "spark-with-index"]
+        cls.tgt2datasets = {tgt: fetch_go_sales_dataset(tgt) for tgt in cls.targets}
 
     def _check(self, src, dst, tgt):
         self.assertEqual(get_table_name(src), get_table_name(dst), tgt)
@@ -2557,3 +2557,19 @@ class TestConvert(unittest.TestCase):
             transformed_df = transformer.transform(go_products)
             self.assertTrue(_is_spark_with_index(transformed_df), tgt)
             self._check(go_products, transformed_df, tgt)
+
+    def test_from_list(self):
+        df = [[0.1,0.2,0.3], [4,5,6]]
+        pd_src = pd.DataFrame(df)
+        for tgt in self.targets:
+            transformer = Convert(astype=tgt)
+            tranformed_df = transformer.transform(df)
+            pd_dst = _ensure_pandas(tranformed_df)
+            self.assertEqual(pd_src.shape, pd_dst.shape, tgt)
+            for row_idx in range(pd_src.shape[0]):
+                for col_idx in range(pd_src.shape[1]):
+                    self.assertAlmostEqual(
+                        pd_src.iloc[row_idx, col_idx],
+                        pd_dst.iloc[row_idx, col_idx],
+                        msg=(row_idx, col_idx, tgt),
+                    )
