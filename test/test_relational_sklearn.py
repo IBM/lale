@@ -14,6 +14,7 @@
 
 import itertools
 import math
+import numbers
 import os.path
 import re
 import tempfile
@@ -309,13 +310,6 @@ class TestPipeline(unittest.TestCase):
             _ = trained.predict(X_test)
 
 
-def _check_trained_ordinal_encoder(test, op1, op2, msg):
-    test.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
-    test.assertEqual(len(op1.categories_), len(op2.categories_), msg)
-    for i in range(len(op1.categories_)):
-        test.assertEqual(list(op1.categories_[i]), list(op2.categories_[i]), msg)
-
-
 class TestSelectKBest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -412,6 +406,21 @@ class TestSelectKBest(unittest.TestCase):
             self._check_trained(
                 sk_trained, rasl_trained, f"lower: {lower}, upper: {upper}"
             )
+
+
+def _check_trained_ordinal_encoder(test, op1, op2, msg):
+    if hasattr(op1, "feature_names_in_") and hasattr(op2, "feature_names_in_"):
+        test.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
+    test.assertEqual(len(op1.categories_), len(op2.categories_), msg)
+    for i in range(len(op1.categories_)):
+        test.assertEqual(len(op1.categories_[i]), len(op2.categories_[i]), msg)
+        for j in range(len(op1.categories_[i])):
+            if isinstance(op1.categories_[i][j], numbers.Number) and math.isnan(
+                op1.categories_[i][j]
+            ):
+                test.assertTrue(math.isnan(op2.categories_[i][j]))
+            else:
+                test.assertEqual(op1.categories_[i][j], op2.categories_[i][j], msg)
 
 
 class TestOrdinalEncoder(unittest.TestCase):
