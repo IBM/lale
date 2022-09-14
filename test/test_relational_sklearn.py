@@ -1238,7 +1238,9 @@ class _BatchTestingCallback:
     def __init__(self):
         self.n_calls = 0
 
-    def __call__(self, score, n_batches_scanned, end_of_scanned_batches):
+    def __call__(
+        self, score_train, score_valid, n_batches_scanned, end_of_scanned_batches
+    ):
         self.n_calls += 1
         assert self.n_calls == n_batches_scanned, (self.n_calls, n_batches_scanned)
         assert not end_of_scanned_batches
@@ -1308,7 +1310,8 @@ class TestTaskGraphs(unittest.TestCase):
                 rasl_trainable = self._make_rasl_trainable("sgd")
                 rasl_trained = fit_with_batches(
                     pipeline=rasl_trainable,
-                    batches=batches,
+                    batches_train=batches,
+                    batches_valid=None,
                     scoring=None,
                     unique_class_labels=unique_class_labels,
                     max_resident=3 * math.ceil(train_data_space / n_batches),
@@ -1339,7 +1342,8 @@ class TestTaskGraphs(unittest.TestCase):
             progress_callback = _BatchTestingCallback()
             _ = fit_with_batches(
                 pipeline=rasl_trainable,
-                batches=batches,
+                batches_train=batches,
+                batches_valid=None,
                 scoring=rasl_get_scorer("accuracy"),
                 unique_class_labels=unique_class_labels,
                 max_resident=None,
@@ -1359,7 +1363,8 @@ class TestTaskGraphs(unittest.TestCase):
         trainable1 = self._make_rasl_trainable("sgd")
         trained1 = fit_with_batches(
             pipeline=trainable1,
-            batches=[first_batch],
+            batches_train=[first_batch],
+            batches_valid=None,
             scoring=None,
             unique_class_labels=unique_class_labels,
             max_resident=None,
@@ -1375,7 +1380,8 @@ class TestTaskGraphs(unittest.TestCase):
         progress_callback = _BatchTestingCallback()
         _ = fit_with_batches(
             pipeline=trainable2,
-            batches=batches,
+            batches_train=batches,
+            batches_valid=None,
             scoring=rasl_get_scorer("accuracy"),
             unique_class_labels=unique_class_labels,
             max_resident=None,
@@ -1609,7 +1615,8 @@ class TestTaskGraphsWithConcat(unittest.TestCase):
                 rasl_trainable = self._make_rasl_trainable("sgd")
                 rasl_trained = fit_with_batches(
                     pipeline=rasl_trainable,
-                    batches=batches,  # type: ignore
+                    batches_train=batches,  # type: ignore
+                    batches_valid=None,
                     scoring=None,
                     unique_class_labels=unique_class_labels,
                     max_resident=3 * math.ceil(train_data_space / n_batches),
@@ -1785,7 +1792,8 @@ class TestTaskGraphsWithCategoricalConcat(unittest.TestCase):
                 rasl_trainable = self._make_rasl_trainable("sgd")
                 rasl_trained = fit_with_batches(
                     pipeline=rasl_trainable,
-                    batches=batches,  # type: ignore
+                    batches_train=batches,  # type: ignore
+                    batches_valid=None,
                     scoring=None,
                     unique_class_labels=unique_class_labels,
                     max_resident=3 * math.ceil(train_data_space / n_batches),
@@ -1866,7 +1874,8 @@ class TestTaskGraphsSpark(unittest.TestCase):
         for tgt, n_batches in itertools.product(["pandas", "spark"], [1, 3]):
             rasl_trained = fit_with_batches(
                 pipeline=self._make_rasl_trainable(),
-                batches=mockup_data_loader(train_X, train_y, n_batches, tgt),
+                batches_train=mockup_data_loader(train_X, train_y, n_batches, tgt),
+                batches_valid=None,
                 scoring=None,
                 unique_class_labels=unique_class_labels,
                 max_resident=None,
@@ -2122,7 +2131,8 @@ class TestBatchedBaggingClassifier(unittest.TestCase):
                 rasl_trainable = self._make_rasl_trainable("bagging_monoid")
                 rasl_trained = fit_with_batches(
                     pipeline=rasl_trainable,
-                    batches=batches,
+                    batches_train=batches,
+                    batches_valid=None,
                     scoring=None,
                     unique_class_labels=unique_class_labels,
                     max_resident=3 * math.ceil(train_data_space / n_batches),

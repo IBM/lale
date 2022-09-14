@@ -537,8 +537,14 @@ class _TaskGraph:
         scores = [extract_score(held_out) for held_out in self.folds]
         return scores
 
-    def extract_trained_pipeline(self, held_out: Optional[str]) -> TrainedPipeline:
-        batch_ids = _batch_ids_except(self.folds, held_out)
+    def extract_trained_pipeline(
+        self, held_out: Optional[str], up_to: int
+    ) -> TrainedPipeline:
+        if up_to == _ALL_BATCHES:
+            batch_ids = _batch_ids_except(self.folds, held_out)
+        else:
+            assert len(self.folds) == 1 and held_out is None
+            batch_ids = tuple(_batch_id(self.folds[0], i) for i in range(up_to))
 
         def extract_trained_step(step_id: int) -> TrainedIndividualOp:
             task = cast(
@@ -1030,14 +1036,15 @@ class _BatchCache:
 
 def _run_tasks_inner(
     tg: _TaskGraph,
-    batches: Iterable[Tuple[Any, Any]],
+    batches_train: Iterable[Tuple[Any, Any]],
+    batches_valid: Optional[List[Tuple[Any, Any]]],
     scoring: Optional[MetricMonoidFactory],
     cv,
     unique_class_labels: List[Union[str, int, float]],
     cache: _BatchCache,
     prio: Prio,
     verbose: int,
-    progress_callback: Optional[Callable[[float, int, bool], None]],
+    progress_callback: Optional[Callable[[float, float, int, bool], None]],
     call_depth: int,
 ) -> None:
     for task in tg.all_tasks.values():
@@ -1064,7 +1071,8 @@ def _run_tasks_inner(
                     task.batch = None
                 elif isinstance(task, _TrainTask):
                     task.monoid = None
-                    task.trained = None
+                    if batches_valid is None:
+                        task.trained = None
                 elif isinstance(task, _MetricTask):
                     task.mmonoid = None
                 else:
@@ -1102,7 +1110,7 @@ def _run_tasks_inner(
                             mark_done(task2)
 
     trace: Optional[List[_TraceRecord]] = [] if verbose >= 2 else None
-    batches_iterator = iter(batches)
+    batches_iterator = iter(batches_train)
     while len(ready_keys) > 0:
         task = tg.all_tasks[
             min(ready_keys, key=lambda k: prio.task_priority(tg.all_tasks[k]))
@@ -1279,8 +1287,18 @@ def _run_tasks_inner(
                 y_pred = task.preds[1].batch.y  # type: ignore
                 task.mmonoid = scoring.to_monoid((y_true, y_pred, X))
                 if progress_callback is not None:
+                    if batches_valid is None or len(batches_valid) == 0:
+                        score_valid = float("nan")
+                    else:
+                        partially_trained = tg.extract_trained_pipeline(
+                            None, n_batches_scanned
+                        )
+                        score_valid = scoring.score_estimator_batched(
+                            partially_trained, batches_valid
+                        )
                     progress_callback(
                         scoring.from_monoid(task.mmonoid),
+                        score_valid,
                         n_batches_scanned,
                         end_of_scanned_batches,
                     )
@@ -1313,14 +1331,15 @@ def _run_tasks_inner(
 
 def _run_tasks(
     tg: _TaskGraph,
-    batches: Iterable[Tuple[Any, Any]],
+    batches_train: Iterable[Tuple[Any, Any]],
+    batches_valid: Optional[List[Tuple[Any, Any]]],
     scoring: Optional[MetricMonoidFactory],
     cv,
     unique_class_labels: List[Union[str, int, float]],
     max_resident: Optional[int],
     prio: Prio,
     verbose: int,
-    progress_callback: Optional[Callable[[float, int, bool], None]],
+    progress_callback: Optional[Callable[[float, float, int, bool], None]],
     call_depth: int,
 ) -> None:
     if scoring is None and progress_callback is not None:
@@ -1328,7 +1347,8 @@ def _run_tasks(
     with _BatchCache(tg.all_tasks, max_resident, prio, verbose) as cache:
         _run_tasks_inner(
             tg,
-            batches,
+            batches_train,
+            batches_valid,
             scoring,
             cv,
             unique_class_labels,
@@ -1342,14 +1362,15 @@ def _run_tasks(
 
 def fit_with_batches(
     pipeline: TrainablePipeline[TrainableIndividualOp],
-    batches: Iterable[Tuple[Any, Any]],
+    batches_train: Iterable[Tuple[Any, Any]],
+    batches_valid: Optional[List[Tuple[Any, Any]]],
     scoring: Optional[MetricMonoidFactory],
     unique_class_labels: List[Union[str, int, float]],
     max_resident: Optional[int],
     prio: Prio,
     partial_transform: Union[bool, str],
     verbose: int,
-    progress_callback: Optional[Callable[[float, int, bool], None]],
+    progress_callback: Optional[Callable[[float, float, int, bool], None]],
 ) -> TrainedPipeline[TrainedIndividualOp]:
     """Replacement for the `fit` method on a pipeline (early interface, subject to change)."""
     assert partial_transform in [False, "score", True]
@@ -1360,7 +1381,8 @@ def fit_with_batches(
     ) as tg:
         _run_tasks(
             tg,
-            batches,
+            batches_train,
+            batches_valid,
             scoring,
             None,
             unique_class_labels,
@@ -1370,7 +1392,7 @@ def fit_with_batches(
             progress_callback,
             call_depth=2,
         )
-        trained_pipeline = tg.extract_trained_pipeline(None)
+        trained_pipeline = tg.extract_trained_pipeline(None, _ALL_BATCHES)
     return trained_pipeline
 
 
@@ -1395,6 +1417,7 @@ def cross_val_score(
         _run_tasks(
             tg,
             batches,
+            None,
             scoring,
             cv,
             unique_class_labels,
@@ -1430,6 +1453,7 @@ def cross_validate(
         _run_tasks(
             tg,
             batches,
+            None,
             scoring,
             cv,
             unique_class_labels,
@@ -1443,6 +1467,7 @@ def cross_validate(
         result["test_score"] = tg.extract_scores(scoring)
         if return_estimator:
             result["estimator"] = [
-                tg.extract_trained_pipeline(held_out) for held_out in tg.folds
+                tg.extract_trained_pipeline(held_out, _ALL_BATCHES)
+                for held_out in tg.folds
             ]
     return result
