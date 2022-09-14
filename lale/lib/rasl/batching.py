@@ -91,7 +91,8 @@ class _BatchingImpl:
 
         self.operator = fit_with_batches(
             pipeline=self.operator,
-            batches=data_loader,  # type:ignore
+            batches_train=data_loader,  # type:ignore
+            batches_valid=None,
             unique_class_labels=classes,
             max_resident=self.max_resident,
             prio=prio,
