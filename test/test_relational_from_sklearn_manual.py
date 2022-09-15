@@ -13,23 +13,31 @@
 # limitations under the License.
 
 import unittest
+from test.test_relational_sklearn import (
+    _check_trained_min_max_scaler,
+    _check_trained_one_hot_encoder,
+    _check_trained_ordinal_encoder,
+)
+
 import numpy as np
-
-from lale.helpers import _ensure_pandas
-
-from lale.lib.rasl import Convert
-from lale.lib.rasl import MinMaxScaler as RaslMinMaxScaler
-from lale.lib.rasl import SelectKBest as RaslSelectKBest
-from lale.lib.rasl import OrdinalEncoder as RaslOrdinalEncoder
-from test.test_relational_sklearn import _check_trained_min_max_scaler, _check_trained_ordinal_encoder
-
 import sklearn
 from sklearn.datasets import load_digits
 from sklearn.feature_selection import SelectKBest as SkSelectKBest
+from sklearn.impute import SimpleImputer as SkSimpleImputer
 from sklearn.preprocessing import MinMaxScaler as SkMinMaxScaler
+from sklearn.preprocessing import OneHotEncoder as SkOneHotEncoder
 from sklearn.preprocessing import OrdinalEncoder as SkOrdinalEncoder
 
+from lale.helpers import _ensure_pandas
+from lale.lib.rasl import Convert
+from lale.lib.rasl import MinMaxScaler as RaslMinMaxScaler
+from lale.lib.rasl import OneHotEncoder as RaslOneHotEncoder
+from lale.lib.rasl import OrdinalEncoder as RaslOrdinalEncoder
+from lale.lib.rasl import SelectKBest as RaslSelectKBest
+from lale.lib.rasl import SimpleImputer as RaslSimpleImputer
+
 assert sklearn.__version__ >= "1.0", sklearn.__version__
+
 
 def _check_data(self, sk_data, rasl_data, msg):
     rasl_data = _ensure_pandas(rasl_data)
@@ -45,8 +53,8 @@ def _check_data(self, sk_data, rasl_data, msg):
                     msg=(row_idx, col_idx, msg),
                 )
 
-class TestMinMaxScaler(unittest.TestCase):
 
+class TestMinMaxScaler(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.targets = ["pandas", "spark", "spark-with-index"]
@@ -89,7 +97,6 @@ class TestMinMaxScaler(unittest.TestCase):
 
 
 class TestOrdinalEncoder(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         cls.targets = ["pandas", "spark", "spark-with-index"]
@@ -109,9 +116,9 @@ class TestOrdinalEncoder(unittest.TestCase):
             [1., 0.]])
         """
         sk_enc = SkOrdinalEncoder()
-        X = [['Male', 1], ['Female', 3], ['Female', 2]]
+        X = [["Male", 1], ["Female", 3], ["Female", 2]]
         sk_enc.fit(X)
-        data = [['Female', 3], ['Male', 1]]
+        data = [["Female", 3], ["Male", 1]]
         sk_transformed = sk_enc.transform(data)
         for target in self.targets:
             rasl_enc = RaslOrdinalEncoder()
@@ -133,7 +140,7 @@ class TestOrdinalEncoder(unittest.TestCase):
             [ 0., nan]])
         """
         sk_enc = SkOrdinalEncoder()
-        X = [['Male', 1], ['Female', 3], ['Female', np.nan]]
+        X = [["Male", 1], ["Female", 3], ["Female", np.nan]]
         sk_transformed = sk_enc.fit_transform(X)
         for target in self.targets:
             rasl_enc = RaslOrdinalEncoder()
@@ -152,14 +159,16 @@ class TestOrdinalEncoder(unittest.TestCase):
             [ 0.,  1.],
             [ 0., -1.]])
         """
-        pass # XXX encoded_missing_value is not implemented
+        pass  # XXX encoded_missing_value is not implemented
 
 
 class TestSelectKBest(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
-        cls.targets = ["pandas", "spark-with-index"] # XXX "spark" is not supported by SelectKBest
+        cls.targets = [
+            "pandas",
+            "spark-with-index",
+        ]  # XXX "spark" is not supported by SelectKBest
 
     def test1(self):
         """
@@ -175,10 +184,124 @@ class TestSelectKBest(unittest.TestCase):
         """
 
         X, y = load_digits(return_X_y=True, as_frame=True)
-        sk_X_new = SkSelectKBest(k=20).fit_transform(X, y) # XXX chi2 is not supported in RASL
+        sk_X_new = SkSelectKBest(k=20).fit_transform(
+            X, y
+        )  # XXX chi2 is not supported in RASL
         for target in self.targets:
             X = Convert(astype=target).transform(X)
             y = Convert(astype=target).transform(y)
             rasl_X_new = RaslSelectKBest(k=20).fit_transform(X, y)
             _check_data(self, sk_X_new, rasl_X_new, target)
 
+
+class TestOneHotEncoder(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.targets = ["pandas", "spark", "spark-with-index"]
+
+    def test_1(self):
+        """
+                From https://scikit-learn.org/1.1/modules/generated/sklearn.preprocessing.OneHotEncoder.html
+                >>> enc = OneHotEncoder(handle_unknown='ignore')
+                >>> X = [['Male', 1], ['Female', 3], ['Female', 2]]
+                >>> enc.fit(X)
+                OneHotEncoder(handle_unknown='ignore')
+                >>> enc.categories_
+                [array(['Female', 'Male'], dtype=object), array([1, 2, 3], dtype=object)]
+                >>> enc.transform([['Female', 1], ['Male', 4]]).toarray()
+                array([[1., 0., 1., 0., 0.],
+                    [0., 1., 0., 0., 0.]])
+                >>> enc.inverse_transform([[0, 1, 1, 0, 0], [0, 0, 0, 1, 0]])
+                array([['Male', 1],
+                    [None, 2]], dtype=object)
+                >>> enc.get_feature_names_out(['gender', 'group'])
+        array(['gender_Female', 'gender_Male', 'group_1', 'group_2', 'group_3'], ...)
+        """
+        sk_enc = SkOneHotEncoder(handle_unknown="ignore")
+        X = [["Male", 1], ["Female", 3], ["Female", 2]]
+        sk_enc.fit(X)
+        data = [["Female", 1], ["Male", 4]]
+        sk_transformed_data = sk_enc.transform(data).toarray()
+        # enc.inverse_transform([[0, 1, 1, 0, 0], [0, 0, 0, 1, 0]])
+
+        for target in self.targets:
+            X = Convert(astype=target).transform(X)
+            data = Convert(astype=target).transform(data)
+            rasl_enc = RaslOneHotEncoder(handle_unknown="ignore")
+            rasl_enc.fit(X)
+            rasl_transformed_data = rasl_enc.transform(data)
+            _check_trained_one_hot_encoder(self, sk_enc, rasl_enc, target)
+            _check_data(self, sk_transformed_data, rasl_transformed_data, target)
+            # for i in range(len(sk_transformed_data)):
+            #     for j in range(len(sk_transformed_data[i])):
+            #         self.assertEqual(sk_transformed_data[i][j], rasl_transformed_data[i][j])
+
+    def test_2(self):
+        """
+        From https://scikit-learn.org/1.1/modules/generated/sklearn.preprocessing.OneHotEncoder.html
+        >>> drop_enc = OneHotEncoder(drop='first').fit(X)
+        >>> drop_enc.categories_
+        [array(['Female', 'Male'], dtype=object), array([1, 2, 3], dtype=object)]
+        >>> drop_enc.transform([['Female', 1], ['Male', 2]]).toarray()
+        array([[0., 0., 0.],
+            [1., 1., 0.]])
+        """
+        pass  # XXX `drop='first'` is not supported
+
+    def test_3(self):
+        """
+        From https://scikit-learn.org/1.1/modules/generated/sklearn.preprocessing.OneHotEncoder.html
+        >>> drop_binary_enc = OneHotEncoder(drop='if_binary').fit(X)
+        >>> drop_binary_enc.transform([['Female', 1], ['Male', 2]]).toarray()
+        array([[0., 1., 0., 0.],
+            [1., 0., 1., 0.]])
+        """
+        pass  # XXX `drop='if_binary'` is not supported
+
+    def test_4(self):
+        """
+        From https://scikit-learn.org/1.1/modules/generated/sklearn.preprocessing.OneHotEncoder.html
+        >>> import numpy as np
+        >>> X = np.array([["a"] * 5 + ["b"] * 20 + ["c"] * 10 + ["d"] * 3], dtype=object).T
+        >>> ohe = OneHotEncoder(max_categories=3, sparse=False).fit(X)
+        >>> ohe.infrequent_categories_
+        [array(['a', 'd'], dtype=object)]
+        >>> ohe.transform([["a"], ["b"]])
+        array([[0., 0., 1.],
+            [1., 0., 0.]])
+        """
+        pass  # XXX `max_categories=3` is not supported
+
+
+class TestSimpleImputer(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.targets = ["pandas", "spark", "spark-with-index"]
+
+    def test_1(self):
+        """
+        From https://scikit-learn.org/1.1/modules/generated/sklearn.impute.SimpleImputer.html
+        >>> import numpy as np
+        >>> from sklearn.impute import SimpleImputer
+        >>> imp_mean = SimpleImputer(missing_values=np.nan, strategy='mean')
+        >>> imp_mean.fit([[7, 2, 3], [4, np.nan, 6], [10, 5, 9]])
+        SimpleImputer()
+        >>> X = [[np.nan, 2, 3], [4, np.nan, 6], [10, np.nan, 9]]
+        >>> print(imp_mean.transform(X))
+        [[ 7.   2.   3. ]
+        [ 4.   3.5  6. ]
+        [10.   3.5  9. ]]
+        """
+        sk_imp_mean = SkSimpleImputer(missing_values=np.nan, strategy="mean")
+        training = [[7, 2, 3], [4, np.nan, 6], [10, 5, 9]]
+        sk_imp_mean.fit(training)
+
+        X = [[np.nan, 2, 3], [4, np.nan, 6], [10, np.nan, 9]]
+        sk_transformed = sk_imp_mean.transform(X)
+        for target in self.targets:
+            training = Convert(astype=target).transform(training)
+            X = Convert(astype=target).transform(X)
+            rasl_imp_mean = RaslSimpleImputer(missing_values=np.nan, strategy="mean")
+            rasl_imp_mean.fit(training)
+            rasl_transformed = rasl_imp_mean.transform(X)
+            _check_data(self, sk_transformed, rasl_transformed, target)

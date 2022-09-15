@@ -409,7 +409,7 @@ class TestSelectKBest(unittest.TestCase):
 
 
 def _check_trained_ordinal_encoder(test, op1, op2, msg):
-    if hasattr(op1, "feature_names_in_") and hasattr(op2, "feature_names_in_"):
+    if hasattr(op1, "feature_names_in_"):
         test.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
     test.assertEqual(len(op1.categories_), len(op2.categories_), msg)
     for i in range(len(op1.categories_)):
@@ -528,7 +528,8 @@ class TestOrdinalEncoder(unittest.TestCase):
 
 
 def _check_trained_one_hot_encoder(test, op1, op2, msg):
-    test.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
+    if hasattr(op1, "feature_names_in_"):
+        test.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
     test.assertEqual(len(op1.categories_), len(op2.categories_), msg)
     for i in range(len(op1.categories_)):
         test.assertEqual(list(op1.categories_[i]), list(op2.categories_[i]), msg)
