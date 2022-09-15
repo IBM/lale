@@ -95,7 +95,7 @@ _hyperparams_schema = {
                     "description": 'When strategy == "constant", fill_value is used to replace all occurrences of missing_values',
                 },
                 "verbose": {
-                    "anyOf": [{"type": "integer"}, {"type": "string"}],
+                    "type": "integer",
                     "default": 0,
                     "description": "Controls the verbosity of the imputer.",
                 },
@@ -185,5 +185,16 @@ _combined_schemas = {
 
 
 SimpleImputer = lale.operators.make_operator(_SimpleImputerImpl, _combined_schemas)
+
+if sklearn.__version__ >= "1.1":
+    # old: https://scikit-learn.org/1.0/modules/generated/sklearn.impute.SimpleImputer.html#sklearn.impute.SimpleImputer
+    # new: https://scikit-learn.org/1.1/modules/generated/sklearn.impute.SimpleImputer.html#sklearn.impute.SimpleImputer
+    SimpleImputer = SimpleImputer.customize_schema(
+        verbose={
+            "anyOf": [{"type": "integer"}, {"enum": ["deprecated"]}],
+            "default": "deprecated",
+            "description": "Controls the verbosity of the imputer. Deprecated since version 1.1: The ‘verbose’ parameter was deprecated in version 1.1 and will be removed in 1.3. A warning will always be raised upon the removal of empty columns in the future version.",
+        }
+    )
 
 lale.docstrings.set_docstrings(SimpleImputer)
