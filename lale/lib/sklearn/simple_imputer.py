@@ -95,7 +95,7 @@ _hyperparams_schema = {
                     "description": 'When strategy == "constant", fill_value is used to replace all occurrences of missing_values',
                 },
                 "verbose": {
-                    "type": "integer",
+                    "anyOf": [{"type": "integer"}, {"type": "string"}],
                     "default": 0,
                     "description": "Controls the verbosity of the imputer.",
                 },
