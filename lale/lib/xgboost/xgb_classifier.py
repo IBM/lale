@@ -827,9 +827,9 @@ if xgboost_installed and xgboost.__version__ >= "1.6":
         },
         grow_policy={
             "description": """Tree growing policy.
-            0: favor splitting at nodes closest to the node, i.e. grow depth-wise.
-            1: favor splitting at nodes with highest loss change.""",
-            "enum": [0, 1, None],
+            0 or depthwise: favor splitting at nodes closest to the node, i.e. grow depth-wise.
+            1 or lossguide: favor splitting at nodes with highest loss change.""",
+            "enum": [0, 1, "depthwise", "lossguide", None],
             "default": None,
         },
         sampling_method={
