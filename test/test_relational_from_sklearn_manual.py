@@ -17,6 +17,7 @@ from test.test_relational_sklearn import (
     _check_trained_min_max_scaler,
     _check_trained_one_hot_encoder,
     _check_trained_ordinal_encoder,
+    _check_trained_standard_scaler,
 )
 
 import numpy as np
@@ -27,6 +28,7 @@ from sklearn.impute import SimpleImputer as SkSimpleImputer
 from sklearn.preprocessing import MinMaxScaler as SkMinMaxScaler
 from sklearn.preprocessing import OneHotEncoder as SkOneHotEncoder
 from sklearn.preprocessing import OrdinalEncoder as SkOrdinalEncoder
+from sklearn.preprocessing import StandardScaler as SkStandardScaler
 
 from lale.helpers import _ensure_pandas
 from lale.lib.rasl import Convert
@@ -35,6 +37,7 @@ from lale.lib.rasl import OneHotEncoder as RaslOneHotEncoder
 from lale.lib.rasl import OrdinalEncoder as RaslOrdinalEncoder
 from lale.lib.rasl import SelectKBest as RaslSelectKBest
 from lale.lib.rasl import SimpleImputer as RaslSimpleImputer
+from lale.lib.rasl import StandardScaler as RaslStandardScaler
 
 assert sklearn.__version__ >= "1.0", sklearn.__version__
 
@@ -305,3 +308,44 @@ class TestSimpleImputer(unittest.TestCase):
             rasl_imp_mean.fit(training)
             rasl_transformed = rasl_imp_mean.transform(X)
             _check_data(self, sk_transformed, rasl_transformed, target)
+
+
+class TestStandardScaler(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.targets = ["pandas", "spark", "spark-with-index"]
+
+    def test_1(self):
+        """
+        From https://scikit-learn.org/1.1/modules/generated/sklearn.preprocessing.StandardScaler.html
+        >>> from sklearn.preprocessing import StandardScaler
+        >>> data = [[0, 0], [0, 0], [1, 1], [1, 1]]
+        >>> scaler = StandardScaler()
+        >>> print(scaler.fit(data))
+        StandardScaler()
+        >>> print(scaler.mean_)
+        [0.5 0.5]
+        >>> print(scaler.transform(data))
+        [[-1. -1.]
+        [-1. -1.]
+        [ 1.  1.]
+        [ 1.  1.]]
+        >>> print(scaler.transform([[2, 2]]))
+        [[3. 3.]]
+        """
+        data = [[0, 0], [0, 0], [1, 1], [1, 1]]
+        sk_scaler = SkStandardScaler()
+        sk_scaler.fit(data)
+        sk_transformed_data = sk_scaler.transform(data)
+        data2 = [[2, 2]]
+        sk_transformed_data2 = sk_scaler.transform(data2)
+        for target in self.targets:
+            data = Convert(astype=target).transform(data)
+            data2 = Convert(astype=target).transform(data2)
+            rasl_scaler = RaslStandardScaler()
+            rasl_scaler.fit(data)
+            rasl_transformed_data = rasl_scaler.transform(data)
+            rasl_transformed_data2 = rasl_scaler.transform(data2)
+            _check_trained_standard_scaler(self, sk_scaler, rasl_scaler, target)
+            _check_data(self, sk_transformed_data, rasl_transformed_data, target)
+            _check_data(self, sk_transformed_data2, rasl_transformed_data2, target)

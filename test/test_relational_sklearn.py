@@ -1086,7 +1086,8 @@ class TestSimpleImputer(unittest.TestCase):
 
 
 def _check_trained_standard_scaler(test, op1, op2, msg):
-    test.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
+    if hasattr(op1, "feature_names_in_"):
+        test.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
     test.assertEqual(op1.n_features_in_, op2.n_features_in_, msg)
     test.assertEqual(op1.n_samples_seen_, op2.n_samples_seen_, msg)
     if op1.mean_ is None:
