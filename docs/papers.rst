@@ -52,9 +52,10 @@ http://hirzels.com/martin/papers/dataperf22-fair-ensembles.pdf
       month = jul,
       url = "http://hirzels.com/martin/papers/dataperf22-fair-ensembles.pdf" }
 
+
 "The Raise of Machine Learning Hyperparameter Constraints in Python Code".
 Ingkarat Rak-amnouykit, Ana Milanova, Guillaume Baudart, Martin Hirzel, and Julian Dolby.
-International Symposium on Software Testing and Analysis (ISSTA), July 2022. 
+International Symposium on Software Testing and Analysis (ISSTA), pages 580-592, July 2022. 
 https://doi.org/10.1145/3533767.3534400
 
 **Winner of a Distinguished Paper Award at ISSTA 2022.**
@@ -70,6 +71,23 @@ https://doi.org/10.1145/3533767.3534400
       month = jul,
       url = "https://doi.org/10.1145/3533767.3534400" }
 
+
+"Automatically Debugging AutoML Pipelines Using Maro: ML Automated Remediation Oracle".
+Julian Dolby, Jason Tsay, and Martin Hirzel.
+Symposium on Machine Programming (MAPS), pages 60-69, June 2022.
+
+.. code:: BibTeX
+
+    @InProceedings{dolby_tsay_hirzel_2022,
+      title = "Automatically Debugging {AutoML} Pipelines Using {Maro}: {ML} Automated Remediation Oracle",
+      author = "Dolby, Julian and Tsay, Jason and Hirzel, Martin",
+      booktitle = "Symposium on Machine Programming (MAPS)",
+      year = 2022,
+      month = jun,
+      pages = "60--69",
+      url = "https://dl.acm.org/doi/10.1145/3520312.3534868" }
+
+
 "RASL: Relational Algebra in Scikit-Learn Pipelines".
 Chirag Sahni, Kiran Kate, Avraham Shinnar, Hoang Thanh Lam, and Martin Hirzel.
 Workshop on Databases and AI (DBAI@NeurIPS), December 2021.
@@ -84,6 +102,7 @@ https://openreview.net/forum?id=u9ct1gjoDcn
       year = 2021,
       month = dec,
       url = "https://openreview.net/forum?id=u9ct1gjoDcn" }
+
 
 "Finding Data Compatibility Bugs with JSON Subschema Checking".
 Andrew Habib, Avraham Shinnar, Martin Hirzel, and Michael Pradel.
@@ -102,6 +121,7 @@ https://doi.org/10.1145/3460319.3464796
       pages = "620--632",
       url = "https://doi.org/10.1145/3460319.3464796" }
 
+
 "Engineering Fair Machine Learning Pipelines".
 Martin Hirzel, Kiran Kate, and Parikshit Ram.
 ICLR Workshop on Responsible AI (RAI@ICLR), May 2021. 
@@ -116,6 +136,7 @@ http://hirzels.com/martin/papers/rai21-fairness.pdf
       year = 2021,
       month = may,
       url = "http://hirzels.com/martin/papers/rai21-fairness.pdf" }
+
 
 "Extracting Hyperparameter Constraints from Code".
 Ingkarat Rak-amnouykit, Ana Milanova, Guillaume Baudart,
@@ -134,6 +155,7 @@ https://aisecure-workshop.github.io/aml-iclr2021/papers/18.pdf
       month = may,
       url = "https://aisecure-workshop.github.io/aml-iclr2021/papers/18.pdf" }
 
+
 "Lale: Consistent Automated Machine Learning".
 Guillaume Baudart, Martin Hirzel, Kiran Kate, Parikshit Ram, and
 Avraham Shinnar.
@@ -150,6 +172,7 @@ https://arxiv.org/abs/2007.01977
       month = aug,
       url = "https://arxiv.org/abs/2007.01977" }
 
+
 "Mining Documentation to Extract Hyperparameter Schemas".
 Guillaume Baudart, Peter Kirchner, Martin Hirzel, and Kiran Kate.
 ICML Workshop on Automated Machine Learning (AutoML@ICML), July 2020.
@@ -164,6 +187,7 @@ https://arxiv.org/abs/2006.16984
       month = jul,
       year = 2020,
       url = "https://arxiv.org/abs/2006.16984" }
+
 
 "A Semi-supervised Deep Learning Algorithm for Abnormal EEG Identification".
 Subhrajit Roy, Kiran Kate, and Martin Hirzel.
@@ -180,6 +204,7 @@ https://arxiv.org/abs/1903.07822v2
       year = 2019,
       url = "https://arxiv.org/abs/1903.07822v2" }
 
+
 "Type Safety with JSON Subschema".
 Andrew Habib, Avraham Shinnar, Martin Hirzel, and Michael Pradel.
 arXiv:1911.12651 [cs.PL], November 2019.
@@ -195,6 +220,7 @@ https://arxiv.org/abs/1911.12651
       year = 2019,
       month = nov,
       url = "https://arxiv.org/abs/1911.12651" }
+
 
 "Type-Driven Automated Learning with Lale".
 Martin Hirzel, Kiran Kate, Avraham Shinnar, Subhrajit Roy, and Parikshit Ram.
