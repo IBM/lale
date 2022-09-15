@@ -719,9 +719,10 @@ class TestHashingEncoder(unittest.TestCase):
 def _check_trained_simple_imputer(test, op1, op2, msg):
     if hasattr(op1, "feature_names_in_"):
         test.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
-    test.assertEqual(len(op1.statistics_), len(op2.statistics_), msg)
-    for i in range(len(op1.statistics_)):
-        test.assertEqual(op1.statistics_[i], op2.statistics_[i], msg)
+    if hasattr(op1, "statistics_"):
+        test.assertEqual(len(op1.statistics_), len(op2.statistics_), msg)
+        for i in range(len(op1.statistics_)):
+            test.assertEqual(op1.statistics_[i], op2.statistics_[i], msg)
     test.assertEqual(op1.n_features_in_, op2.n_features_in_, msg)
     test.assertEqual(op1.indicator_, op2.indicator_, msg)
 
