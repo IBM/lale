@@ -18,6 +18,7 @@ from test.test_relational_sklearn import (
     _check_trained_one_hot_encoder,
     _check_trained_ordinal_encoder,
     _check_trained_select_k_best,
+    _check_trained_simple_imputer,
     _check_trained_standard_scaler,
 )
 
@@ -311,6 +312,7 @@ class TestSimpleImputer(unittest.TestCase):
             rasl_imp_mean = RaslSimpleImputer(missing_values=np.nan, strategy="mean")
             rasl_imp_mean.fit(training)
             rasl_transformed = rasl_imp_mean.transform(X)
+            _check_trained_simple_imputer(self, sk_imp_mean, rasl_imp_mean, target)
             _check_data(self, sk_transformed, rasl_transformed, target)
 
 

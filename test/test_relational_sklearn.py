@@ -716,6 +716,16 @@ class TestHashingEncoder(unittest.TestCase):
             self.assertEqual(sk_predicted.tolist(), rasl_predicted.tolist(), tgt)
 
 
+def _check_trained_simple_imputer(test, op1, op2, msg):
+    if hasattr(op1, "feature_names_in_"):
+        test.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
+    test.assertEqual(len(op1.statistics_), len(op2.statistics_), msg)
+    for i in range(len(op1.statistics_)):
+        test.assertEqual(op1.statistics_[i], op2.statistics_[i], msg)
+    test.assertEqual(op1.n_features_in_, op2.n_features_in_, msg)
+    test.assertEqual(op1.indicator_, op2.indicator_, msg)
+
+
 class TestSimpleImputer(unittest.TestCase):
     def setUp(self):
         targets = ["pandas", "spark", "spark-with-index"]
@@ -772,8 +782,10 @@ class TestSimpleImputer(unittest.TestCase):
             {"strategy": "constant", "fill_value": 99},
         ]
         for hyperparam in hyperparams:
-            rasl_trainable = prefix >> RaslSimpleImputer(**hyperparam)
-            sk_trainable = prefix >> SkSimpleImputer(**hyperparam)
+            rasl_imputer = RaslSimpleImputer(**hyperparam)
+            sk_imputer = SkSimpleImputer(**hyperparam)
+            rasl_trainable = prefix >> rasl_imputer
+            sk_trainable = prefix >> sk_imputer
             sk_trained = sk_trainable.fit(self.tgt2adult["pandas"][0][0])
             sk_transformed = sk_trained.transform(self.tgt2adult["pandas"][1][0])
             sk_statistics_ = sk_trained.steps[-1][1].impl.statistics_
@@ -803,6 +815,7 @@ class TestSimpleImputer(unittest.TestCase):
                             rasl_transformed.iloc[row_idx, col_idx],
                             msg=(row_idx, col_idx, tgt),
                         )
+                _check_trained_simple_imputer(self, sk_imputer, rasl_imputer, tgt)
 
     def test_fit_transform_numeric_nonan_missing(self):
         self._fill_missing_value("age", 36.0, -1)
