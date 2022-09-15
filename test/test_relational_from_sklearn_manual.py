@@ -17,6 +17,7 @@ from test.test_relational_sklearn import (
     _check_trained_min_max_scaler,
     _check_trained_one_hot_encoder,
     _check_trained_ordinal_encoder,
+    _check_trained_select_k_best,
     _check_trained_standard_scaler,
 )
 
@@ -187,13 +188,16 @@ class TestSelectKBest(unittest.TestCase):
         """
 
         X, y = load_digits(return_X_y=True, as_frame=True)
-        sk_X_new = SkSelectKBest(k=20).fit_transform(
+        sk_selectkbest = SkSelectKBest(k=20)
+        sk_X_new = sk_selectkbest.fit_transform(
             X, y
         )  # XXX chi2 is not supported in RASL
         for target in self.targets:
             X = Convert(astype=target).transform(X)
             y = Convert(astype=target).transform(y)
-            rasl_X_new = RaslSelectKBest(k=20).fit_transform(X, y)
+            rasl_selectkbest = RaslSelectKBest(k=20)
+            rasl_X_new = rasl_selectkbest.fit_transform(X, y)
+            _check_trained_select_k_best(self, sk_selectkbest, rasl_selectkbest, target)
             _check_data(self, sk_X_new, rasl_X_new, target)
 
 

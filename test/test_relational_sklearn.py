@@ -310,6 +310,27 @@ class TestPipeline(unittest.TestCase):
             _ = trained.predict(X_test)
 
 
+def _check_trained_select_k_best(self, sk_trained, rasl_trained, msg=""):
+    for i in range(len(sk_trained.scores_)):
+        if not (
+            np.isnan(sk_trained.scores_[i]) and np.isnan(rasl_trained.impl.scores_[i])
+        ):
+            self.assertAlmostEqual(
+                sk_trained.scores_[i],
+                rasl_trained.impl.scores_[i],
+                msg=f"{msg}: {i}",
+            )
+        if not (
+            np.isnan(sk_trained.pvalues_[i]) and np.isnan(rasl_trained.impl.pvalues_[i])
+        ):
+            self.assertAlmostEqual(
+                sk_trained.pvalues_[i],
+                rasl_trained.impl.pvalues_[i],
+                msg=f"{msg}: {i}",
+            )
+    self.assertEqual(sk_trained.n_features_in_, rasl_trained.impl.n_features_in_, msg)
+
+
 class TestSelectKBest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -331,30 +352,6 @@ class TestSelectKBest(unittest.TestCase):
         add_df("X", X)
         add_df("y", y)
 
-    def _check_trained(self, sk_trained, rasl_trained, msg=""):
-        for i in range(len(sk_trained.scores_)):
-            if not (
-                np.isnan(sk_trained.scores_[i])
-                and np.isnan(rasl_trained.impl.scores_[i])
-            ):
-                self.assertAlmostEqual(
-                    sk_trained.scores_[i],
-                    rasl_trained.impl.scores_[i],
-                    msg=f"{msg}: {i}",
-                )
-            if not (
-                np.isnan(sk_trained.pvalues_[i])
-                and np.isnan(rasl_trained.impl.pvalues_[i])
-            ):
-                self.assertAlmostEqual(
-                    sk_trained.pvalues_[i],
-                    rasl_trained.impl.pvalues_[i],
-                    msg=f"{msg}: {i}",
-                )
-        self.assertEqual(
-            sk_trained.n_features_in_, rasl_trained.impl.n_features_in_, msg
-        )
-
     def test_fit(self):
         sk_trainable = SkSelectKBest(k=20)
         X, y = self.tgt2datasets["pandas"]["X"], self.tgt2datasets["pandas"]["y"]
@@ -367,7 +364,7 @@ class TestSelectKBest(unittest.TestCase):
                     rasl_trained = rasl_trainable.fit(X, y)
             else:
                 rasl_trained = rasl_trainable.fit(X, y)
-                self._check_trained(sk_trained, rasl_trained, tgt)
+                _check_trained_select_k_best(self, sk_trained, rasl_trained, tgt)
 
     def test_transform(self):
         sk_trainable = SkSelectKBest(k=20)
@@ -383,7 +380,7 @@ class TestSelectKBest(unittest.TestCase):
                 continue
             rasl_trained = rasl_trainable.fit(X, y)
             rasl_transformed = rasl_trained.transform(X)
-            self._check_trained(sk_trained, rasl_trained, tgt)
+            _check_trained_select_k_best(self, sk_trained, rasl_trained, tgt)
             rasl_transformed = _ensure_pandas(rasl_transformed)
             self.assertEqual(sk_transformed.shape, rasl_transformed.shape, tgt)
             for row_idx in range(sk_transformed.shape[0]):
@@ -403,8 +400,8 @@ class TestSelectKBest(unittest.TestCase):
             sk_trained = sk_trainable.fit(X_so_far, y_so_far)
             X_delta, y_delta = X[lower:upper], y[lower:upper]
             rasl_trained = rasl_trainable.partial_fit(X_delta, y_delta)
-            self._check_trained(
-                sk_trained, rasl_trained, f"lower: {lower}, upper: {upper}"
+            _check_trained_select_k_best(
+                self, sk_trained, rasl_trained, f"lower: {lower}, upper: {upper}"
             )
 
 
