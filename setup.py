@@ -52,6 +52,7 @@ else:
         "pandas",
         "decorator",
         "astunparse",
+        "typing-extensions",
     ]
 
 import lale  # noqa: E402
