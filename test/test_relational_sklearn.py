@@ -725,7 +725,8 @@ def _check_trained_simple_imputer(test, op1, op2, msg):
             test.assertEqual(op1.statistics_[i], op2.statistics_[i], msg)
     if hasattr(op1, "n_features_in_"):
         test.assertEqual(op1.n_features_in_, op2.n_features_in_, msg)
-    test.assertEqual(op1.indicator_, op2.indicator_, msg)
+    if hasattr(op1, "indicator_"):
+        test.assertEqual(op1.indicator_, op2.indicator_, msg)
 
 
 class TestSimpleImputer(unittest.TestCase):
