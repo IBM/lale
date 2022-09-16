@@ -723,7 +723,8 @@ def _check_trained_simple_imputer(test, op1, op2, msg):
         test.assertEqual(len(op1.statistics_), len(op2.statistics_), msg)
         for i in range(len(op1.statistics_)):
             test.assertEqual(op1.statistics_[i], op2.statistics_[i], msg)
-    test.assertEqual(op1.n_features_in_, op2.n_features_in_, msg)
+    if hasattr(op1, "n_features_in_"):
+        test.assertEqual(op1.n_features_in_, op2.n_features_in_, msg)
     test.assertEqual(op1.indicator_, op2.indicator_, msg)
 
 
