@@ -14,6 +14,7 @@
 
 import itertools
 import math
+import numbers
 import os.path
 import re
 import tempfile
@@ -309,11 +310,25 @@ class TestPipeline(unittest.TestCase):
             _ = trained.predict(X_test)
 
 
-def _check_trained_ordinal_encoder(test, op1, op2, msg):
-    test.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
-    test.assertEqual(len(op1.categories_), len(op2.categories_), msg)
-    for i in range(len(op1.categories_)):
-        test.assertEqual(list(op1.categories_[i]), list(op2.categories_[i]), msg)
+def _check_trained_select_k_best(self, sk_trained, rasl_trained, msg=""):
+    for i in range(len(sk_trained.scores_)):
+        if not (
+            np.isnan(sk_trained.scores_[i]) and np.isnan(rasl_trained.impl.scores_[i])
+        ):
+            self.assertAlmostEqual(
+                sk_trained.scores_[i],
+                rasl_trained.impl.scores_[i],
+                msg=f"{msg}: {i}",
+            )
+        if not (
+            np.isnan(sk_trained.pvalues_[i]) and np.isnan(rasl_trained.impl.pvalues_[i])
+        ):
+            self.assertAlmostEqual(
+                sk_trained.pvalues_[i],
+                rasl_trained.impl.pvalues_[i],
+                msg=f"{msg}: {i}",
+            )
+    self.assertEqual(sk_trained.n_features_in_, rasl_trained.impl.n_features_in_, msg)
 
 
 class TestSelectKBest(unittest.TestCase):
@@ -337,30 +352,6 @@ class TestSelectKBest(unittest.TestCase):
         add_df("X", X)
         add_df("y", y)
 
-    def _check_trained(self, sk_trained, rasl_trained, msg=""):
-        for i in range(len(sk_trained.scores_)):
-            if not (
-                np.isnan(sk_trained.scores_[i])
-                and np.isnan(rasl_trained.impl.scores_[i])
-            ):
-                self.assertAlmostEqual(
-                    sk_trained.scores_[i],
-                    rasl_trained.impl.scores_[i],
-                    msg=f"{msg}: {i}",
-                )
-            if not (
-                np.isnan(sk_trained.pvalues_[i])
-                and np.isnan(rasl_trained.impl.pvalues_[i])
-            ):
-                self.assertAlmostEqual(
-                    sk_trained.pvalues_[i],
-                    rasl_trained.impl.pvalues_[i],
-                    msg=f"{msg}: {i}",
-                )
-        self.assertEqual(
-            sk_trained.n_features_in_, rasl_trained.impl.n_features_in_, msg
-        )
-
     def test_fit(self):
         sk_trainable = SkSelectKBest(k=20)
         X, y = self.tgt2datasets["pandas"]["X"], self.tgt2datasets["pandas"]["y"]
@@ -373,7 +364,7 @@ class TestSelectKBest(unittest.TestCase):
                     rasl_trained = rasl_trainable.fit(X, y)
             else:
                 rasl_trained = rasl_trainable.fit(X, y)
-                self._check_trained(sk_trained, rasl_trained, tgt)
+                _check_trained_select_k_best(self, sk_trained, rasl_trained, tgt)
 
     def test_transform(self):
         sk_trainable = SkSelectKBest(k=20)
@@ -389,7 +380,7 @@ class TestSelectKBest(unittest.TestCase):
                 continue
             rasl_trained = rasl_trainable.fit(X, y)
             rasl_transformed = rasl_trained.transform(X)
-            self._check_trained(sk_trained, rasl_trained, tgt)
+            _check_trained_select_k_best(self, sk_trained, rasl_trained, tgt)
             rasl_transformed = _ensure_pandas(rasl_transformed)
             self.assertEqual(sk_transformed.shape, rasl_transformed.shape, tgt)
             for row_idx in range(sk_transformed.shape[0]):
@@ -409,9 +400,24 @@ class TestSelectKBest(unittest.TestCase):
             sk_trained = sk_trainable.fit(X_so_far, y_so_far)
             X_delta, y_delta = X[lower:upper], y[lower:upper]
             rasl_trained = rasl_trainable.partial_fit(X_delta, y_delta)
-            self._check_trained(
-                sk_trained, rasl_trained, f"lower: {lower}, upper: {upper}"
+            _check_trained_select_k_best(
+                self, sk_trained, rasl_trained, f"lower: {lower}, upper: {upper}"
             )
+
+
+def _check_trained_ordinal_encoder(test, op1, op2, msg):
+    if hasattr(op1, "feature_names_in_"):
+        test.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
+    test.assertEqual(len(op1.categories_), len(op2.categories_), msg)
+    for i in range(len(op1.categories_)):
+        test.assertEqual(len(op1.categories_[i]), len(op2.categories_[i]), msg)
+        for j in range(len(op1.categories_[i])):
+            if isinstance(op1.categories_[i][j], numbers.Number) and math.isnan(
+                op1.categories_[i][j]
+            ):
+                test.assertTrue(math.isnan(op2.categories_[i][j]))
+            else:
+                test.assertEqual(op1.categories_[i][j], op2.categories_[i][j], msg)
 
 
 class TestOrdinalEncoder(unittest.TestCase):
@@ -519,7 +525,8 @@ class TestOrdinalEncoder(unittest.TestCase):
 
 
 def _check_trained_one_hot_encoder(test, op1, op2, msg):
-    test.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
+    if hasattr(op1, "feature_names_in_"):
+        test.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
     test.assertEqual(len(op1.categories_), len(op2.categories_), msg)
     for i in range(len(op1.categories_)):
         test.assertEqual(list(op1.categories_[i]), list(op2.categories_[i]), msg)
@@ -709,6 +716,19 @@ class TestHashingEncoder(unittest.TestCase):
             self.assertEqual(sk_predicted.tolist(), rasl_predicted.tolist(), tgt)
 
 
+def _check_trained_simple_imputer(test, op1, op2, msg):
+    if hasattr(op1, "feature_names_in_"):
+        test.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
+    if hasattr(op1, "statistics_"):
+        test.assertEqual(len(op1.statistics_), len(op2.statistics_), msg)
+        for i in range(len(op1.statistics_)):
+            test.assertEqual(op1.statistics_[i], op2.statistics_[i], msg)
+    if hasattr(op1, "n_features_in_"):
+        test.assertEqual(op1.n_features_in_, op2.n_features_in_, msg)
+    if hasattr(op1, "indicator_"):
+        test.assertEqual(op1.indicator_, op2.indicator_, msg)
+
+
 class TestSimpleImputer(unittest.TestCase):
     def setUp(self):
         targets = ["pandas", "spark", "spark-with-index"]
@@ -765,8 +785,10 @@ class TestSimpleImputer(unittest.TestCase):
             {"strategy": "constant", "fill_value": 99},
         ]
         for hyperparam in hyperparams:
-            rasl_trainable = prefix >> RaslSimpleImputer(**hyperparam)
-            sk_trainable = prefix >> SkSimpleImputer(**hyperparam)
+            rasl_imputer = RaslSimpleImputer(**hyperparam)
+            sk_imputer = SkSimpleImputer(**hyperparam)
+            rasl_trainable = prefix >> rasl_imputer
+            sk_trainable = prefix >> sk_imputer
             sk_trained = sk_trainable.fit(self.tgt2adult["pandas"][0][0])
             sk_transformed = sk_trained.transform(self.tgt2adult["pandas"][1][0])
             sk_statistics_ = sk_trained.steps[-1][1].impl.statistics_
@@ -796,6 +818,7 @@ class TestSimpleImputer(unittest.TestCase):
                             rasl_transformed.iloc[row_idx, col_idx],
                             msg=(row_idx, col_idx, tgt),
                         )
+                _check_trained_simple_imputer(self, sk_imputer, rasl_imputer, tgt)
 
     def test_fit_transform_numeric_nonan_missing(self):
         self._fill_missing_value("age", 36.0, -1)
@@ -1076,7 +1099,8 @@ class TestSimpleImputer(unittest.TestCase):
 
 
 def _check_trained_standard_scaler(test, op1, op2, msg):
-    test.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
+    if hasattr(op1, "feature_names_in_"):
+        test.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
     test.assertEqual(op1.n_features_in_, op2.n_features_in_, msg)
     test.assertEqual(op1.n_samples_seen_, op2.n_samples_seen_, msg)
     if op1.mean_ is None:

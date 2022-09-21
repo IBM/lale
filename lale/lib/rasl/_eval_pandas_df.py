@@ -157,11 +157,11 @@ def replace(df: Any, call: ast.Call):
         # in missing value imputation.
         mapping_dict = {}
         for i, key in enumerate(mapping_dict_ast.keys):
-            if key.id == "nan":
+            if hasattr(key, "id") and key.id == "nan":
                 mapping_dict[np.nan] = ast.literal_eval(mapping_dict_ast.values[i])
             else:
                 mapping_dict[
-                    ast.literal_eval(ast.literal_eval(mapping_dict_ast.keys[i]))
+                    ast.literal_eval(mapping_dict_ast.keys[i])
                 ] = ast.literal_eval(mapping_dict_ast.values[i])
     handle_unknown = ast.literal_eval(call.args[2])
     if handle_unknown == "use_encoded_value":
