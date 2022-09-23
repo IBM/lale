@@ -24,7 +24,6 @@ from lale.helpers import (
     _is_ast_subscript,
     _is_df,
     _is_spark_df,
-    _is_spark_with_index,
 )
 from lale.lib.dataframe import get_columns
 
@@ -223,7 +222,7 @@ class _JoinImpl:
             return left_df, right_df
 
         def remove_implicit_col(key_col, df):
-            if _is_spark_with_index(df):
+            if _is_spark_df(df):
                 indexes = df.index_names
                 for index in set(indexes) - set(key_col):
                     df = df.drop(index)
@@ -231,13 +230,13 @@ class _JoinImpl:
 
         def add_index(left_df, right_df, joined_df):
             joined_names = set(get_columns(joined_df))
-            if _is_spark_with_index(left_df) and _is_spark_with_index(right_df):
+            if _is_spark_df(left_df) and _is_spark_df(right_df):
                 left_names = left_df.index_names
                 right_names = right_df.index_names
                 index_names = set.union(set(left_names), set(right_names))
-            elif _is_spark_with_index(left_df):
+            elif _is_spark_df(left_df):
                 index_names = set(left_df.index_names)
-            elif _is_spark_with_index(right_df):
+            elif _is_spark_df(right_df):
                 index_names = set(right_df.index_names)
             else:
                 assert False
@@ -290,7 +289,7 @@ class _JoinImpl:
                     "Cannot perform join operation! Non-key columns cannot be duplicate."
                 )
             joined_df = join_df(left_df, right_df)
-            if _is_spark_with_index(left_df) or _is_spark_with_index(right_df):
+            if _is_spark_df(left_df) or _is_spark_df(right_df):
                 joined_df = add_index(left_df, right_df, joined_df)
             tables_encountered.add(left_table_name)
             tables_encountered.add(right_table_name)

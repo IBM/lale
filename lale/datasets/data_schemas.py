@@ -142,7 +142,7 @@ else:
 
     class SparkDataFrameWithIndex:  # type: ignore
         def __init__(self, df, index_names=None):
-            raise ValueError("pyspark is not installed")
+            raise ValueError("pyspark is not installed")  # type: ignore
 
         @property
         def index_name(self) -> Union[str, None]:

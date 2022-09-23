@@ -27,7 +27,7 @@ except ImportError:
     spark_installed = False
 
 
-def pandas2spark(pandas_df, with_index=False):
+def pandas2spark(pandas_df):
     assert spark_installed
     spark_conf = (
         SparkConf().setMaster("local[2]").set("spark.driver.bindAddress", "127.0.0.1")
@@ -37,14 +37,11 @@ def pandas2spark(pandas_df, with_index=False):
     name = get_table_name(pandas_df)
     if isinstance(pandas_df, pd.Series):
         pandas_df = pandas_df.to_frame()
-    index_names = None
-    if with_index:
-        index_names = pandas_df.index.names
-        if len(index_names) == 1 and index_names[0] is None:
-            index_names = ["index"]
-        cols = list(pandas_df.columns) + list(index_names)
-        pandas_df = pandas_df.reset_index().reindex(columns=cols)
+    index_names = pandas_df.index.names
+    if len(index_names) == 1 and index_names[0] is None:
+        index_names = ["index"]
+    cols = list(pandas_df.columns) + list(index_names)
+    pandas_df = pandas_df.reset_index().reindex(columns=cols)
     spark_dataframe = spark_sql_context.createDataFrame(pandas_df)
-    if index_names is not None:
-        spark_dataframe = SparkDataFrameWithIndex(spark_dataframe, index_names)
-    return add_table_name(spark_dataframe, name)
+    spark_dataframe_with_index = SparkDataFrameWithIndex(spark_dataframe, index_names)
+    return add_table_name(spark_dataframe_with_index, name)

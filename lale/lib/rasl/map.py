@@ -27,7 +27,6 @@ from lale.helpers import (
     _is_ast_subs_or_attr,
     _is_pandas_df,
     _is_spark_df,
-    _is_spark_with_index,
 )
 from lale.lib.dataframe import get_columns
 from lale.lib.rasl._eval_pandas_df import eval_expr_pandas_df
@@ -211,10 +210,9 @@ class _MapImpl:
                 if x not in accessed_column_names
             ]
             new_columns.extend(remainder_columns)
-        if _is_spark_with_index(X):
-            for index_name in X.index_names:
-                if index_name not in accessed_column_names:
-                    new_columns.extend([spark_col(index_name)])
+        for index_name in X.index_names:
+            if index_name not in accessed_column_names:
+                new_columns.extend([spark_col(index_name)])
         mapped_df = X.select(new_columns)
         mapped_df = forward_metadata(X, mapped_df)
         return mapped_df

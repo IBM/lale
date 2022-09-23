@@ -16,17 +16,15 @@
 Common interface to manipulate different type of dataframes supported in Lale.
 """
 
+# XXX TODO: review file XXX
+
 from typing import List, Union
 
 import numpy as np
 import pandas as pd
 
-from lale.helpers import (
-    _is_pandas_df,
-    _is_pandas_series,
-    _is_spark_df,
-    _is_spark_with_index,
-)
+from lale.datasets.data_schemas import SparkDataFrameWithIndex
+from lale.helpers import _is_pandas_df, _is_pandas_series, _is_spark_df
 
 column_index = Union[str, int]
 
@@ -36,10 +34,8 @@ def get_columns(df) -> List[column_index]:
         return pd.Series([df.name])
     if _is_pandas_df(df):
         return df.columns
-    if _is_spark_with_index(df):
-        return pd.Series(df.columns_without_indexes)
     if _is_spark_df(df):
-        return df.columns
+        return pd.Series(df.columns_without_indexes)
     if isinstance(df, np.ndarray):
         # should have more asserts here
         _, num_cols = df.shape
@@ -53,7 +49,8 @@ def select_col(df, col: column_index):
     elif _is_pandas_df(df):
         return df[col]
     elif _is_spark_df(df):
-        return df.select(col)
+        res = df.select(col + df.index_names)
+        return SparkDataFrameWithIndex(res, index_names=df.index_names)
     else:
         raise ValueError(f"Unsupported series type {type(df)}")
 
