@@ -224,7 +224,7 @@ _hyperparams_schema = {
                         {"type": "object", "additionalProperties": {"type": "number"}},
                         {
                             "type": "array",
-                            "item": {
+                            "items": {
                                 "type": "object",
                                 "additionalProperties": {"type": "number"},
                             },
@@ -364,6 +364,7 @@ if sklearn.__version__ >= "0.22":
     RandomForestClassifier = RandomForestClassifier.customize_schema(
         n_estimators=Int(
             desc="The number of trees in the forest.",
+            minimum=1,
             default=100,
             forOptimizer=True,
             minimumForOptimizer=10,

@@ -179,7 +179,7 @@ _hyperparams_schema = {
                         {"type": "object", "additionalProperties": {"type": "number"}},
                         {
                             "type": "array",
-                            "item": {
+                            "items": {
                                 "type": "object",
                                 "additionalProperties": {"type": "number"},
                             },
