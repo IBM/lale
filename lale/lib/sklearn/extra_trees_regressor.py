@@ -293,6 +293,7 @@ if sklearn.__version__ >= "0.22":
     ExtraTreesRegressor = ExtraTreesRegressor.customize_schema(
         n_estimators=Int(
             desc="The number of trees in the forest.",
+            minimum=1,
             default=100,
             forOptimizer=True,
             minimumForOptimizer=10,

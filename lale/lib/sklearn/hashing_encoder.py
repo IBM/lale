@@ -58,7 +58,7 @@ _hyperparams_schema = {
                     "default": None,
                 },
                 "hash_method": {
-                    "descruption": "which hashing method to use.",
+                    "description": "which hashing method to use.",
                     "type": "string",
                     "default": "md5",
                 },
