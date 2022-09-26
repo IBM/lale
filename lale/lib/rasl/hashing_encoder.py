@@ -22,8 +22,8 @@ import lale.helpers
 import lale.operators
 from lale.expressions import Expr, hash_mod, it, ite
 from lale.helpers import _is_pandas_df, _is_spark_df
+from lale.lib.category_encoders import hashing_encoder
 from lale.lib.dataframe import count, get_columns
-from lale.lib.sklearn import hashing_encoder
 
 from .map import Map
 from .monoid import Monoid, MonoidableOperator

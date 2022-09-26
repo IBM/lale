@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import hashlib
+
 import pandas as pd
 
 try:
@@ -59,7 +61,7 @@ _hyperparams_schema = {
                 },
                 "hash_method": {
                     "description": "which hashing method to use.",
-                    "type": "string",
+                    "enum": list(hashlib.algorithms_available),
                     "default": "md5",
                 },
             },
