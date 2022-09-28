@@ -114,7 +114,10 @@ _hyperparams_schema = {
                     "default": "word",
                 },
                 "stop_words": {
-                    "anyOf": [{"enum": [None]}, {"type": "array"}, {"type": "string"}],
+                    "anyOf": [
+                        {"enum": [None, "english"]},
+                        {"type": "array", "items": {"type": "string"}},
+                    ],
                     "default": None,
                 },
                 "token_pattern": {"type": "string", "default": "(?u)\\b\\w\\w+\\b"},
@@ -202,7 +205,11 @@ _hyperparams_schema = {
             "anyOf": [
                 {
                     "type": "object",
-                    "properties": {"stop_words": {"not": {"type": "array"}}},
+                    "properties": {
+                        "stop_words": {
+                            "not": {"type": "array", "items": {"type": "string"}}
+                        }
+                    },
                 },
                 {"type": "object", "properties": {"analyzer": {"enum": ["word"]}}},
             ],

@@ -1033,6 +1033,30 @@ class TrainableOperator(PlannedOperator):
         """
         pass
 
+    def fit_transform(self, X, y=None, **fit_params):
+        """
+        Fit to data, then transform it.
+
+        Fits transformer to `X` and `y` with optional parameters `fit_params`
+        and returns a transformed version of `X`.
+
+        Parameters
+        ----------
+        X:
+            Features that conform to the X property of input_schema_fit.
+        y: optional
+            Labels that conform to the y property of input_schema_fit.
+            Default is None.
+        fit_params: Dictionary, optional
+            A dictionary of keyword parameters to be used during training.
+
+        Returns
+        -------
+        result :
+            Transformed features; see output_transform schema of the operator.
+        """
+        return self.fit(X, y, **fit_params).transform(X)
+
     @abstractmethod
     def freeze_trainable(self) -> "TrainableOperator":
         """Return a copy of the trainable parts of this operator that is the same except
@@ -2759,9 +2783,6 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         if not isinstance(self, TrainedIndividualOp):
             self._trained = result
         return result
-
-    def fit_transform(self, X, y=None):
-        return self.fit(X, y).transform(X)
 
     def freeze_trained(self) -> "TrainedIndividualOp":
         """

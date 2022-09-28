@@ -98,7 +98,7 @@ extras_require = {
     ],
     "fairness": [
         "liac-arff>=2.4.0",
-        "aif360<0.4.0",
+        "aif360<0.6.0",
         "protobuf<=3.20.1",
         "BlackBoxAuditing",
     ],
@@ -123,6 +123,7 @@ setup(
     long_description_content_type="text/markdown",
     url="https://github.com/IBM/lale",
     python_requires=">=3.6",
+    package_data={"lale": ["py.typed"]},
     packages=find_packages(),
     license="",
     install_requires=install_requires,
