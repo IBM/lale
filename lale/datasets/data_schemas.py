@@ -141,7 +141,7 @@ if spark_installed:
 else:
 
     class SparkDataFrameWithIndex:  # type: ignore
-        def __init__(self, df, index_names=None):
+        def __init__(self, df, index_names=None) -> None:
             raise ValueError("pyspark is not installed")  # type: ignore
 
         @property
