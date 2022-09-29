@@ -15,6 +15,7 @@
 from typing import TYPE_CHECKING
 
 import lale.docstrings
+import lale.helpers
 import lale.operators
 
 try:
@@ -88,6 +89,7 @@ or with
         return self
 
     def partial_fit(self, X, y, **fit_params):
+        fit_params = lale.helpers.dict_without(fit_params, "classes")
         if self._wrapped_model.__sklearn_is_fitted__():
             booster = self._wrapped_model.booster_
             fit_params = {**fit_params, "init_model": booster}

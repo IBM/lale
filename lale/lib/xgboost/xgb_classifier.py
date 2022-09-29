@@ -19,6 +19,7 @@ import numpy as np
 import pandas as pd
 
 import lale.docstrings
+import lale.helpers
 import lale.operators
 
 from ._common_schemas import schema_silent
@@ -81,6 +82,7 @@ class _XGBClassifierImpl:
         return self
 
     def partial_fit(self, X, y, **fit_params):
+        fit_params = lale.helpers.dict_without(fit_params, "classes")
         if self._wrapped_model.__sklearn_is_fitted__():
             booster = self._wrapped_model.get_booster()
             fit_params = {**fit_params, "xgb_model": booster}
