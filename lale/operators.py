@@ -414,8 +414,10 @@ class Operator(metaclass=AbstractVisitorMeta):
 
     def pretty_print(
         self,
+        *,
         show_imports: bool = True,
         combinators: bool = True,
+        assign_nested: bool = True,
         customize_schema: bool = False,
         astype: Union[Literal["lale"], Literal["sklearn"]] = "lale",
         ipython_display: Union[bool, Literal["input"]] = False,
@@ -431,6 +433,10 @@ class Operator(metaclass=AbstractVisitorMeta):
         combinators : bool, default True
 
             If True, pretty-print with combinators (`>>`, `|`, `&`). Otherwise, pretty-print with functions (`make_pipeline`, `make_choice`, `make_union`) instead. Always False when astype is 'sklearn'.
+
+        assign_nested : bool, default True
+
+            If True, then nested operators, such as the base estimator for an ensemble, get assigned to fresh intermediate variables if configured with non-trivial arguments of their own.
 
         customize_schema : bool, default False
 
@@ -466,7 +472,13 @@ class Operator(metaclass=AbstractVisitorMeta):
             If called with ipython_display=False, return pretty-printed Python source code as a Python string.
         """
         result = lale.pretty_print.to_string(
-            self, show_imports, combinators, customize_schema, astype, call_depth=2
+            self,
+            show_imports=show_imports,
+            combinators=combinators,
+            customize_schema=customize_schema,
+            assign_nested=assign_nested,
+            astype=astype,
+            call_depth=2,
         )
         if ipython_display is False:
             return result
