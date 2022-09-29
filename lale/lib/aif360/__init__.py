@@ -183,49 +183,58 @@ zero or one to simplify the task for the mitigator.
 
 """
 
-from .adversarial_debiasing import AdversarialDebiasing
-from .calibrated_eq_odds_postprocessing import CalibratedEqOddsPostprocessing
-from .datasets import (
-    _fetch_boston_housing_df,
-    fetch_adult_df,
-    fetch_bank_df,
-    fetch_compas_df,
-    fetch_compas_violent_df,
-    fetch_creditg_df,
-    fetch_meps_panel19_fy2015_df,
-    fetch_meps_panel20_fy2015_df,
-    fetch_meps_panel21_fy2016_df,
-    fetch_nursery_df,
-    fetch_ricci_df,
-    fetch_speeddating_df,
-    fetch_tae_df,
-    fetch_titanic_df,
+# Note: all imports should be done as
+# from .xxx import XXX as XXX
+# this ensures that pyright considers them to be publicly available
+# and not private imports (this affects lale users that use pyright)
+
+from .adversarial_debiasing import AdversarialDebiasing as AdversarialDebiasing
+from .calibrated_eq_odds_postprocessing import (
+    CalibratedEqOddsPostprocessing as CalibratedEqOddsPostprocessing,
 )
-from .disparate_impact_remover import DisparateImpactRemover
-from .eq_odds_postprocessing import EqOddsPostprocessing
-from .gerry_fair_classifier import GerryFairClassifier
-from .lfr import LFR
-from .meta_fair_classifier import MetaFairClassifier
-from .optim_preproc import OptimPreproc
-from .prejudice_remover import PrejudiceRemover
-from .protected_attributes_encoder import ProtectedAttributesEncoder
-from .redacting import Redacting
-from .reject_option_classification import RejectOptionClassification
-from .reweighing import Reweighing
+from .datasets import _fetch_boston_housing_df as _fetch_boston_housing_df
+from .datasets import fetch_adult_df as fetch_adult_df
+from .datasets import fetch_bank_df as fetch_bank_df
+from .datasets import fetch_compas_df as fetch_compas_df
+from .datasets import fetch_compas_violent_df as fetch_compas_violent_df
+from .datasets import fetch_creditg_df as fetch_creditg_df
+from .datasets import fetch_meps_panel19_fy2015_df as fetch_meps_panel19_fy2015_df
+from .datasets import fetch_meps_panel20_fy2015_df as fetch_meps_panel20_fy2015_df
+from .datasets import fetch_meps_panel21_fy2016_df as fetch_meps_panel21_fy2016_df
+from .datasets import fetch_nursery_df as fetch_nursery_df
+from .datasets import fetch_ricci_df as fetch_ricci_df
+from .datasets import fetch_speeddating_df as fetch_speeddating_df
+from .datasets import fetch_tae_df as fetch_tae_df
+from .datasets import fetch_titanic_df as fetch_titanic_df
+from .disparate_impact_remover import DisparateImpactRemover as DisparateImpactRemover
+from .eq_odds_postprocessing import EqOddsPostprocessing as EqOddsPostprocessing
+from .gerry_fair_classifier import GerryFairClassifier as GerryFairClassifier
+from .lfr import LFR as LFR
+from .meta_fair_classifier import MetaFairClassifier as MetaFairClassifier
+from .optim_preproc import OptimPreproc as OptimPreproc
+from .prejudice_remover import PrejudiceRemover as PrejudiceRemover
+from .protected_attributes_encoder import (
+    ProtectedAttributesEncoder as ProtectedAttributesEncoder,
+)
+from .redacting import Redacting as Redacting
+from .reject_option_classification import (
+    RejectOptionClassification as RejectOptionClassification,
+)
+from .reweighing import Reweighing as Reweighing
+from .util import FAIRNESS_INFO_SCHEMA as FAIRNESS_INFO_SCHEMA
+from .util import FairStratifiedKFold as FairStratifiedKFold
+from .util import accuracy_and_disparate_impact as accuracy_and_disparate_impact
+from .util import average_odds_difference as average_odds_difference
 from .util import (
-    FAIRNESS_INFO_SCHEMA,
-    FairStratifiedKFold,
-    accuracy_and_disparate_impact,
-    average_odds_difference,
-    balanced_accuracy_and_disparate_impact,
-    count_fairness_groups,
-    dataset_to_pandas,
-    disparate_impact,
-    equal_opportunity_difference,
-    f1_and_disparate_impact,
-    fair_stratified_train_test_split,
-    r2_and_disparate_impact,
-    statistical_parity_difference,
-    symmetric_disparate_impact,
-    theil_index,
+    balanced_accuracy_and_disparate_impact as balanced_accuracy_and_disparate_impact,
 )
+from .util import count_fairness_groups as count_fairness_groups
+from .util import dataset_to_pandas as dataset_to_pandas
+from .util import disparate_impact as disparate_impact
+from .util import equal_opportunity_difference as equal_opportunity_difference
+from .util import f1_and_disparate_impact as f1_and_disparate_impact
+from .util import fair_stratified_train_test_split as fair_stratified_train_test_split
+from .util import r2_and_disparate_impact as r2_and_disparate_impact
+from .util import statistical_parity_difference as statistical_parity_difference
+from .util import symmetric_disparate_impact as symmetric_disparate_impact
+from .util import theil_index as theil_index

@@ -134,47 +134,54 @@ Other Facilities
 .. _`r2_score`: lale.lib.rasl.metrics.html#lale.lib.rasl.metrics.r2_score
 """
 
-from .aggregate import Aggregate
-from .alias import Alias
-from .batched_bagging_classifier import BatchedBaggingClassifier
-from .batching import Batching
-from .concat_features import ConcatFeatures
-from .convert import Convert
-from .datasets import csv_data_loader, mockup_data_loader, openml_data_loader
-from .filter import Filter
+# Note: all imports should be done as
+# from .xxx import XXX as XXX
+# this ensures that pyright considers them to be publicly available
+# and not private imports (this affects lale users that use pyright)
+
+from .aggregate import Aggregate as Aggregate
+from .alias import Alias as Alias
+from .batched_bagging_classifier import (
+    BatchedBaggingClassifier as BatchedBaggingClassifier,
+)
+from .batching import Batching as Batching
+from .concat_features import ConcatFeatures as ConcatFeatures
+from .convert import Convert as Convert
+from .datasets import csv_data_loader as csv_data_loader
+from .datasets import mockup_data_loader as mockup_data_loader
+from .datasets import openml_data_loader as openml_data_loader
+from .filter import Filter as Filter
 from .functions import categorical, date_time
-from .group_by import GroupBy
-from .hashing_encoder import HashingEncoder
-from .join import Join
-from .map import Map
-from .metrics import (
-    accuracy_score,
-    balanced_accuracy_score,
-    f1_score,
-    get_scorer,
-    r2_score,
-)
-from .min_max_scaler import MinMaxScaler
-from .monoid import Monoid, MonoidableOperator, MonoidFactory
-from .one_hot_encoder import OneHotEncoder
-from .orderby import OrderBy
-from .ordinal_encoder import OrdinalEncoder
-from .project import Project
-from .relational import Relational
-from .scan import Scan
-from .select_k_best import SelectKBest
-from .simple_imputer import SimpleImputer
-from .spark_explainer import SparkExplainer
-from .split_xy import SplitXy
-from .standard_scaler import StandardScaler
-from .task_graphs import (
-    Prio,
-    PrioBatch,
-    PrioResourceAware,
-    PrioStep,
-    cross_val_score,
-    cross_validate,
-    fit_with_batches,
-    is_associative,
-    is_incremental,
-)
+from .group_by import GroupBy as GroupBy
+from .hashing_encoder import HashingEncoder as HashingEncoder
+from .join import Join as Join
+from .map import Map as Map
+from .metrics import accuracy_score as accuracy_score
+from .metrics import balanced_accuracy_score as balanced_accuracy_score
+from .metrics import f1_score as f1_score
+from .metrics import get_scorer as get_scorer
+from .metrics import r2_score as r2_score
+from .min_max_scaler import MinMaxScaler as MinMaxScaler
+from .monoid import Monoid as Monoid
+from .monoid import MonoidableOperator as MonoidableOperator
+from .monoid import MonoidFactory as MonoidFactory
+from .one_hot_encoder import OneHotEncoder as OneHotEncoder
+from .orderby import OrderBy as OrderBy
+from .ordinal_encoder import OrdinalEncoder as OrdinalEncoder
+from .project import Project as Project
+from .relational import Relational as Relational
+from .scan import Scan as Scan
+from .select_k_best import SelectKBest as SelectKBest
+from .simple_imputer import SimpleImputer as SimpleImputer
+from .spark_explainer import SparkExplainer as SparkExplainer
+from .split_xy import SplitXy as SplitXy
+from .standard_scaler import StandardScaler as StandardScaler
+from .task_graphs import Prio as Prio
+from .task_graphs import PrioBatch as PrioBatch
+from .task_graphs import PrioResourceAware as PrioResourceAware
+from .task_graphs import PrioStep as PrioStep
+from .task_graphs import cross_val_score as cross_val_score
+from .task_graphs import cross_validate as cross_validate
+from .task_graphs import fit_with_batches as fit_with_batches
+from .task_graphs import is_associative as is_associative
+from .task_graphs import is_incremental as is_incremental

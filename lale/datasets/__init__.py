@@ -12,12 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .movie_review import load_movie_review
-from .sklearn_to_pandas import (
-    boston_housing_df,
-    california_housing_df,
-    covtype_df,
-    digits_df,
-    load_iris_df,
-)
-from .util import pandas2spark
+# Note: all imports should be done as
+# from .xxx import XXX as XXX
+# this ensures that pyright considers them to be publicly available
+# and not private imports (this affects lale users that use pyright)
+
+from .movie_review import load_movie_review as load_movie_review
+from .sklearn_to_pandas import boston_housing_df as boston_housing_df
+from .sklearn_to_pandas import california_housing_df as california_housing_df
+from .sklearn_to_pandas import covtype_df as covtype_df
+from .sklearn_to_pandas import digits_df as digits_df
+from .sklearn_to_pandas import load_iris_df as load_iris_df
+from .util import pandas2spark as pandas2spark

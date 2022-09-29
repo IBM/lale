@@ -22,5 +22,12 @@ Functions:
 
 """
 
-from .fetch_datasets import fetch_creditg_multitable_dataset
-from .util import multitable_train_test_split
+# Note: all imports should be done as
+# from .xxx import XXX as XXX
+# this ensures that pyright considers them to be publicly available
+# and not private imports (this affects lale users that use pyright)
+
+from .fetch_datasets import (
+    fetch_creditg_multitable_dataset as fetch_creditg_multitable_dataset,
+)
+from .util import multitable_train_test_split as multitable_train_test_split
