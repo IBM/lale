@@ -139,7 +139,9 @@ def is_empty_dict(val) -> bool:
 
 
 def dict_without(orig_dict: Dict[str, Any], key: str) -> Dict[str, Any]:
-    return {k: orig_dict[k] for k in orig_dict if k != key}
+    if key not in orig_dict:
+        return orig_dict
+    return {k: v for k, v in orig_dict.items() if k != key}
 
 
 def json_lookup(ptr, jsn, default=None):
