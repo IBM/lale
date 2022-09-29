@@ -49,19 +49,40 @@ Regressors:
 .. _`SnapRandomForestRegressor`: lale.lib.snapml.snap_random_forest_regressor.html
 .. _`SnapSVMClassifier`: lale.lib.snapml.snap_svm_classifier.html
 """
-
 from lale import register_lale_wrapper_modules
 
-from .batched_tree_ensemble_classifier import BatchedTreeEnsembleClassifier
-from .batched_tree_ensemble_regressor import BatchedTreeEnsembleRegressor
-from .snap_boosting_machine_classifier import SnapBoostingMachineClassifier
-from .snap_boosting_machine_regressor import SnapBoostingMachineRegressor
-from .snap_decision_tree_classifier import SnapDecisionTreeClassifier
-from .snap_decision_tree_regressor import SnapDecisionTreeRegressor
-from .snap_linear_regression import SnapLinearRegression
-from .snap_logistic_regression import SnapLogisticRegression
-from .snap_random_forest_classifier import SnapRandomForestClassifier
-from .snap_random_forest_regressor import SnapRandomForestRegressor
-from .snap_svm_classifier import SnapSVMClassifier
+from .batched_tree_ensemble_classifier import (
+    BatchedTreeEnsembleClassifier as BatchedTreeEnsembleClassifier,
+)
+from .batched_tree_ensemble_regressor import (
+    BatchedTreeEnsembleRegressor as BatchedTreeEnsembleRegressor,
+)
+from .snap_boosting_machine_classifier import (
+    SnapBoostingMachineClassifier as SnapBoostingMachineClassifier,
+)
+from .snap_boosting_machine_regressor import (
+    SnapBoostingMachineRegressor as SnapBoostingMachineRegressor,
+)
+from .snap_decision_tree_classifier import (
+    SnapDecisionTreeClassifier as SnapDecisionTreeClassifier,
+)
+from .snap_decision_tree_regressor import (
+    SnapDecisionTreeRegressor as SnapDecisionTreeRegressor,
+)
+from .snap_linear_regression import SnapLinearRegression as SnapLinearRegression
+from .snap_logistic_regression import SnapLogisticRegression as SnapLogisticRegression
+from .snap_random_forest_classifier import (
+    SnapRandomForestClassifier as SnapRandomForestClassifier,
+)
+from .snap_random_forest_regressor import (
+    SnapRandomForestRegressor as SnapRandomForestRegressor,
+)
+from .snap_svm_classifier import SnapSVMClassifier as SnapSVMClassifier
+
+# Note: all imports should be done as
+# from .xxx import XXX as XXX
+# this ensures that pyright considers them to be publicly available
+# and not private imports (this affects lale users that use pyright)
+
 
 register_lale_wrapper_modules(__name__)

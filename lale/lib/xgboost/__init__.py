@@ -28,7 +28,13 @@ Operators:
 
 from lale import register_lale_wrapper_modules
 
-from .xgb_classifier import XGBClassifier
-from .xgb_regressor import XGBRegressor
+from .xgb_classifier import XGBClassifier as XGBClassifier
+from .xgb_regressor import XGBRegressor as XGBRegressor
+
+# Note: all imports should be done as
+# from .xxx import XXX as XXX
+# this ensures that pyright considers them to be publicly available
+# and not private imports (this affects lale users that use pyright)
+
 
 register_lale_wrapper_modules(__name__)
