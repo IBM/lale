@@ -43,12 +43,18 @@ class _CodeGenState:
     external_wrapper_modules: List[str]
 
     def __init__(
-        self, names: Set[str], combinators: bool, customize_schema: bool, astype: str
+        self,
+        names: Set[str],
+        combinators: bool,
+        assign_nested: bool,
+        customize_schema: bool,
+        astype: str,
     ):
         self.imports = []
         self.assigns = []
         self.external_wrapper_modules = []
         self.combinators = combinators
+        self.assign_nested = assign_nested
         self.customize_schema = customize_schema
         self.astype = astype
         self.gensym = lale.helpers.GenSym(
@@ -549,7 +555,7 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
         if "hyperparams" in jsn and jsn["hyperparams"] is not None:
             hp_string = hyperparams_to_string(jsn["hyperparams"], printed_steps, gen)
             op_expr = f"{op_expr}({hp_string})"
-        if re.fullmatch(r".+\(.+\)", op_expr):
+        if gen.assign_nested and re.fullmatch(r".+\(.+\)", op_expr):
             gen.assigns.append(f"{uid} = {op_expr}")
             return uid
         else:
@@ -605,10 +611,13 @@ def _operator_jsn_to_string(
     jsn: JSON_TYPE,
     show_imports: bool,
     combinators: bool,
+    assign_nested: bool,
     customize_schema: bool,
     astype: str,
 ) -> str:
-    gen = _CodeGenState(_collect_names(jsn), combinators, customize_schema, astype)
+    gen = _CodeGenState(
+        _collect_names(jsn), combinators, assign_nested, customize_schema, astype
+    )
     expr = _operator_jsn_to_string_rec("pipeline", jsn, gen)
     if expr != "pipeline":
         gen.assigns.append(f"pipeline = {expr}")
@@ -673,8 +682,10 @@ def json_to_string(jsn: JSON_TYPE) -> str:
 
 def to_string(
     arg: Union[JSON_TYPE, "lale.operators.Operator"],
+    *,
     show_imports: bool = True,
     combinators: bool = True,
+    assign_nested: bool = True,
     customize_schema: bool = False,
     astype: str = "lale",
     call_depth: int = 1,
@@ -691,7 +702,7 @@ def to_string(
             add_custom_default=not customize_schema,
         )
         return _operator_jsn_to_string(
-            jsn, show_imports, combinators, customize_schema, astype
+            jsn, show_imports, combinators, assign_nested, customize_schema, astype
         )
     else:
         raise ValueError(f"Unexpected argument type {type(arg)} for {arg}")
@@ -699,11 +710,19 @@ def to_string(
 
 def ipython_display(
     arg: Union[JSON_TYPE, "lale.operators.Operator"],
+    *,
     show_imports: bool = True,
     combinators: bool = True,
+    assign_nested: bool = True,
 ):
     import IPython.display
 
-    pretty_printed = to_string(arg, show_imports, combinators, call_depth=3)
+    pretty_printed = to_string(
+        arg,
+        show_imports=show_imports,
+        combinators=combinators,
+        assign_nested=assign_nested,
+        call_depth=3,
+    )
     markdown = IPython.display.Markdown(f"```python\n{pretty_printed}\n```")
     IPython.display.display(markdown)
