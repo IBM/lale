@@ -197,10 +197,7 @@ class _AggregateImpl:
 
         keep_columns = [new_col_name for new_col_name, _, _ in agg_info]
         drop_columns = [col for col in aggregated_df.columns if col not in keep_columns]
-        if len(drop_columns) > 0:
-            aggregated_df = SparkDataFrameWithIndex(
-                aggregated_df, index_names=drop_columns
-            )
+        aggregated_df = SparkDataFrameWithIndex(aggregated_df, index_names=drop_columns)
         return aggregated_df
 
     def _get_exclude_when_expr(self, col_name):
