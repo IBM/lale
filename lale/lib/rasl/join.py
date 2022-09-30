@@ -24,6 +24,7 @@ from lale.helpers import (
     _is_ast_subscript,
     _is_df,
     _is_spark_df,
+    _is_spark_df_without_index,
 )
 from lale.lib.dataframe import get_columns
 
@@ -163,7 +164,9 @@ class _JoinImpl:
         def join_df(left_df, right_df):
 
             # Joining spark dataframes
-            if _is_spark_df(left_df) and _is_spark_df(right_df):
+            if (_is_spark_df(left_df) or _is_spark_df_without_index(left_df)) and (
+                _is_spark_df(right_df) or _is_spark_df_without_index(right_df)
+            ):
                 on = []
                 drop_col = []
                 left_table = left_df.alias("left_table")
@@ -180,6 +183,8 @@ class _JoinImpl:
                 op_df = left_table.join(right_table, on, self.join_type)
                 for key in drop_col:
                     op_df = op_df.drop(getattr(right_table, key))
+                if _is_spark_df_without_index(op_df):
+                    op_df = add_index(left_df, right_df, op_df)
                 return op_df
 
             # Joining pandas dataframes
@@ -239,7 +244,7 @@ class _JoinImpl:
             elif _is_spark_df(right_df):
                 index_names = set(right_df.index_names)
             else:
-                assert False
+                index_names = set([])
             new_index_names = set.intersection(index_names, joined_names)
             joined_df = SparkDataFrameWithIndex(
                 joined_df, index_names=list(new_index_names)
@@ -289,8 +294,6 @@ class _JoinImpl:
                     "Cannot perform join operation! Non-key columns cannot be duplicate."
                 )
             joined_df = join_df(left_df, right_df)
-            if _is_spark_df(left_df) or _is_spark_df(right_df):
-                joined_df = add_index(left_df, right_df, joined_df)
             tables_encountered.add(left_table_name)
             tables_encountered.add(right_table_name)
         return add_table_name(joined_df, self.name)

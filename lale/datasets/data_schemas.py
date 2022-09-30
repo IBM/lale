@@ -107,7 +107,7 @@ if spark_installed:
         def __init__(self, df, index_names=None):
             if index_names is not None and len(index_names) == 1:
                 index_name = index_names[0]
-            elif index_names is None:
+            elif index_names is None or len(index_names) == 0:
                 index_name = _gen_index_name(df)
                 index_names = [index_name]
             else:
