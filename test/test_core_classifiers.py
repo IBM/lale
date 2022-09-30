@@ -149,6 +149,7 @@ classifiers = [
     "lale.lib.sklearn.LogisticRegression",
     "lale.lib.sklearn.MLPClassifier",
     "lale.lib.sklearn.SVC",
+    "lale.lib.sklearn.Perceptron",
     "lale.lib.sklearn.PassiveAggressiveClassifier",
     "lale.lib.sklearn.MultinomialNB",
     "lale.lib.sklearn.AdaBoostClassifier",

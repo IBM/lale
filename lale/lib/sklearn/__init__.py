@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ Classifiers:
 * lale.lib.sklearn. `MLPClassifier`_
 * lale.lib.sklearn. `MultinomialNB`_
 * lale.lib.sklearn. `PassiveAggressiveClassifier`_
+* lale.lib.sklearn. `Perceptron`_
 * lale.lib.sklearn. `RandomForestClassifier`_
 * lale.lib.sklearn. `RidgeClassifier`_
 * lale.lib.sklearn. `SGDClassifier`_
@@ -131,6 +132,7 @@ Clustering:
 .. _`OrdinalEncoder`: lale.lib.sklearn.ordinal_encoder.html
 .. _`PassiveAggressiveClassifier`: lale.lib.sklearn.passive_aggressive_classifier.html
 .. _`PCA`: lale.lib.sklearn.pca.html
+.. _`Perceptron`: lale.lib.sklearn.perceptron.html
 .. _`Pipeline`: lale.lib.sklearn.pipeline.html
 .. _`PolynomialFeatures`: lale.lib.sklearn.polynomial_features.html
 .. _`QuadraticDiscriminantAnalysis`: lale.lib.sklearn.quadratic_discriminant_analysis.html
@@ -202,6 +204,7 @@ from .passive_aggressive_classifier import (
     PassiveAggressiveClassifier as PassiveAggressiveClassifier,
 )
 from .pca import PCA as PCA
+from .perceptron import Perceptron as Perceptron
 from .pipeline import Pipeline as Pipeline
 from .polynomial_features import PolynomialFeatures as PolynomialFeatures
 from .quadratic_discriminant_analysis import (
