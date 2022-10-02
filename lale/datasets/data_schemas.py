@@ -113,14 +113,23 @@ if spark_installed:
             else:
                 index_name = None
             if index_name is not None and index_name not in df.columns:
-                df = (
+                df_with_index = (
                     df.rdd.zipWithIndex()
                     .map(lambda row: row[0] + (row[1],))
                     .toDF(df.columns + [index_name])
                 )
-            super(self.__class__, self).__init__(df._jdf, df.sql_ctx)
+            else:
+                df_with_index = df
+            table_name = get_table_name(df)
+            if table_name is not None:
+                df_with_index = df_with_index.alias(table_name)
+            super(self.__class__, self).__init__(
+                df_with_index._jdf, df_with_index.sql_ctx
+            )
             self.index_name = index_name
             self.index_names = index_names
+            for f in df.schema.fieldNames():
+                self.schema[f].metadata = df.schema[f].metadata
 
         def drop_indexes(self):
             result = self.drop(*self.index_names)
