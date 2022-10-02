@@ -245,8 +245,8 @@ class _FilterImpl:
             expr_to_parse = pred_element._expr
             lhs, op, rhs = self._get_filter_info(expr_to_parse, X)
             filtered_df = filter(filtered_df)
-        filtered_df_with_metadata = forward_metadata(X, filtered_df)
-        return filtered_df_with_metadata
+            filtered_df = forward_metadata(X, filtered_df)
+        return filtered_df
 
 
 _hyperparams_schema = {

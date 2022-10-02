@@ -170,16 +170,19 @@ class TestFilter(unittest.TestCase):
                 lambda x: Row(TrainId=int(x[0]), col1=x[1], col2=int(x[2]), col6=x[3])
             )
             spark_main = add_table_name(sqlContext.createDataFrame(table_main), "main")
+            spark_main = SparkDataFrameWithIndex(spark_main)
 
             rdd = sc.parallelize(info)
             table_info = rdd.map(
                 lambda x: Row(train_id=int(x[0]), col3=x[1], col4=int(x[2]))
             )
             spark_info = add_table_name(sqlContext.createDataFrame(table_info), "info")
+            spark_info = SparkDataFrameWithIndex(spark_info)
 
             rdd = sc.parallelize(t1)
             table_t1 = rdd.map(lambda x: Row(tid=int(x[0]), col5=x[1]))
             spark_t1 = add_table_name(sqlContext.createDataFrame(table_t1), "t1")
+            spark_t1 = SparkDataFrameWithIndex(spark_t1)
 
             trainable = Join(
                 pred=[
@@ -190,10 +193,13 @@ class TestFilter(unittest.TestCase):
             )
             spark_transformed_df = trainable.transform(
                 [spark_main, spark_info, spark_t1]
-            ).sort("TrainId")
+            )
+            spark_transformed_df = SparkDataFrameWithIndex(
+                spark_transformed_df.drop_indexes().sort("TrainId")
+            )
             cls.tgt2datasets = {
                 "pandas": spark_transformed_df.toPandas(),
-                "spark": SparkDataFrameWithIndex(spark_transformed_df),
+                "spark": spark_transformed_df,
             }
         else:
             pandas_main = pd.DataFrame(main, index=["TrainId", "col1", "col2", "col6"])
