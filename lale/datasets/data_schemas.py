@@ -161,6 +161,9 @@ else:
         def index_names(self) -> List[str]:
             raise ValueError("pyspark is not installed")  # type: ignore
 
+        def toPandas(self, *args, **kwargs) -> DataFrame:
+            raise ValueError("pyspark is not installed")  # type: ignore
+
 
 def add_schema(obj, schema=None, raise_on_failure=False, recalc=False) -> Any:
     from lale.settings import disable_data_schema_validation
