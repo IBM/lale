@@ -16,8 +16,6 @@
 Common interface to manipulate different type of dataframes supported in Lale.
 """
 
-# XXX TODO: review file XXX
-
 from typing import List, Union
 
 import numpy as np
