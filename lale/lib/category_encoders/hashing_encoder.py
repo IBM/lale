@@ -114,7 +114,7 @@ _combined_schemas = {
 
 .. _`Hashing encoder`: https://contrib.scikit-learn.org/category_encoders/hashing.html
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.hashing_encoder.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.category_encoders.hashing_encoder.html",
     "import_from": "category_encoders.hashing",
     "type": "object",
     "tags": {"pre": ["categoricals"], "op": ["transformer"], "post": []},
