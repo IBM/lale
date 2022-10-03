@@ -69,12 +69,7 @@ from lale.expressions import (
     string_indexer,
     sum,
 )
-from lale.helpers import (
-    _ensure_pandas,
-    _is_pandas_df,
-    _is_spark_df,
-    _is_spark_with_index,
-)
+from lale.helpers import _ensure_pandas, _is_pandas_df, _is_spark_df
 from lale.lib.dataframe import get_columns
 from lale.lib.lale import ConcatFeatures, Hyperopt, SplitXy
 from lale.lib.rasl import (
@@ -175,16 +170,19 @@ class TestFilter(unittest.TestCase):
                 lambda x: Row(TrainId=int(x[0]), col1=x[1], col2=int(x[2]), col6=x[3])
             )
             spark_main = add_table_name(sqlContext.createDataFrame(table_main), "main")
+            spark_main = SparkDataFrameWithIndex(spark_main)
 
             rdd = sc.parallelize(info)
             table_info = rdd.map(
                 lambda x: Row(train_id=int(x[0]), col3=x[1], col4=int(x[2]))
             )
             spark_info = add_table_name(sqlContext.createDataFrame(table_info), "info")
+            spark_info = SparkDataFrameWithIndex(spark_info)
 
             rdd = sc.parallelize(t1)
             table_t1 = rdd.map(lambda x: Row(tid=int(x[0]), col5=x[1]))
             spark_t1 = add_table_name(sqlContext.createDataFrame(table_t1), "t1")
+            spark_t1 = SparkDataFrameWithIndex(spark_t1)
 
             trainable = Join(
                 pred=[
@@ -195,11 +193,13 @@ class TestFilter(unittest.TestCase):
             )
             spark_transformed_df = trainable.transform(
                 [spark_main, spark_info, spark_t1]
-            ).sort("TrainId")
+            )
+            spark_transformed_df = SparkDataFrameWithIndex(
+                spark_transformed_df.drop_indexes().sort("TrainId")
+            )
             cls.tgt2datasets = {
                 "pandas": spark_transformed_df.toPandas(),
                 "spark": spark_transformed_df,
-                "spark-with-index": SparkDataFrameWithIndex(spark_transformed_df),
             }
         else:
             pandas_main = pd.DataFrame(main, index=["TrainId", "col1", "col2", "col6"])
@@ -228,16 +228,15 @@ class TestFilter(unittest.TestCase):
                 # `None` is considered as `nan` in Pandas
                 self.assertEqual(filtered_df.shape, (2, 9), tgt)
                 self.assertTrue(all(np.isnan(filtered_df["col6"])), tgt)
-            elif tgt.startswith("spark"):
+            elif tgt == "spark":
                 self.assertEqual(_ensure_pandas(filtered_df).shape, (1, 9), tgt)
                 test_list = [row[0] for row in filtered_df.select("col6").collect()]
                 self.assertTrue(all((np.isnan(i) for i in test_list if i is not None)))
-            else:
-                assert False
-            if tgt == "spark-with-index":
                 self.assertEqual(
                     get_index_name(transformed_df), get_index_name(filtered_df)
                 )
+            else:
+                assert False
 
     def test_filter_isnotnan(self):
         for tgt, transformed_df in self.tgt2datasets.items():
@@ -246,18 +245,17 @@ class TestFilter(unittest.TestCase):
             if tgt == "pandas":
                 self.assertTrue(all(np.logical_not(np.isnan(filtered_df["col6"]))), tgt)
                 self.assertEqual(filtered_df.shape, (3, 9), tgt)
-            elif tgt.startswith("spark"):
+            elif tgt == "spark":
                 self.assertEqual(_ensure_pandas(filtered_df).shape, (4, 9), tgt)
                 test_list = [row[0] for row in filtered_df.select("col6").collect()]
                 self.assertTrue(
                     all((not np.isnan(i) for i in test_list if i is not None))
                 )
-            else:
-                assert False
-            if tgt == "spark-with-index":
                 self.assertEqual(
                     get_index_name(transformed_df), get_index_name(filtered_df)
                 )
+            else:
+                assert False
 
     def test_filter_isnull(self):
         for tgt, transformed_df in self.tgt2datasets.items():
@@ -267,16 +265,15 @@ class TestFilter(unittest.TestCase):
                 # `None` is considered as `nan` in Pandas
                 self.assertEqual(filtered_df.shape, (2, 9), tgt)
                 self.assertTrue(all(np.isnan(filtered_df["col6"])), tgt)
-            elif tgt.startswith("spark"):
+            elif tgt == "spark":
                 self.assertEqual(_ensure_pandas(filtered_df).shape, (1, 9), tgt)
                 test_list = [row[0] for row in filtered_df.select("col6").collect()]
                 self.assertTrue(all((i is None for i in test_list)))
-            else:
-                assert False
-            if tgt == "spark-with-index":
                 self.assertEqual(
                     get_index_name(transformed_df), get_index_name(filtered_df)
                 )
+            else:
+                assert False
 
     def test_filter_isnotnull(self):
         for tgt, transformed_df in self.tgt2datasets.items():
@@ -286,16 +283,15 @@ class TestFilter(unittest.TestCase):
                 # `None` is considered as `nan` in Pandas
                 self.assertEqual(filtered_df.shape, (3, 9), tgt)
                 self.assertTrue(all(np.logical_not(np.isnan(filtered_df["col6"]))))
-            elif tgt.startswith("spark"):
+            elif tgt == "spark":
                 self.assertEqual(_ensure_pandas(filtered_df).shape, (4, 9), tgt)
                 test_list = [row[0] for row in filtered_df.select("col6").collect()]
                 self.assertTrue(all((i is not None for i in test_list)))
-            else:
-                assert False
-            if tgt == "spark-with-index":
                 self.assertEqual(
                     get_index_name(transformed_df), get_index_name(filtered_df)
                 )
+            else:
+                assert False
 
     def test_filter_eq(self):
         for tgt, transformed_df in self.tgt2datasets.items():
@@ -360,7 +356,7 @@ class TestFilter(unittest.TestCase):
             filtered_df = trainable.transform(transformed_df)
             if tgt == "pandas":
                 self.assertEqual(filtered_df.shape, (2, 9))
-            elif tgt.startswith("spark"):
+            elif tgt == "spark":
                 # `None != "Cold"` is not true in Spark
                 filtered_df = _ensure_pandas(filtered_df)
                 self.assertEqual(filtered_df.shape, (1, 9))
@@ -430,7 +426,7 @@ class TestScan(unittest.TestCase):
 class TestAlias(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        targets = ["pandas", "spark", "spark-with-index"]
+        targets = ["pandas", "spark"]
         cls.tgt2datasets = {tgt: fetch_go_sales_dataset(tgt) for tgt in targets}
 
     def test_alias(self):
@@ -442,7 +438,7 @@ class TestAlias(unittest.TestCase):
             self.assertEqual(get_table_name(transformed_df), "test_alias")
             if tgt == "pandas":
                 self.assertTrue(_is_pandas_df(transformed_df))
-            elif tgt.startswith("spark"):
+            elif tgt == "spark":
                 self.assertTrue(_is_spark_df(transformed_df))
                 transformed_df = transformed_df.toPandas()
             else:
@@ -463,7 +459,7 @@ class TestAlias(unittest.TestCase):
             trained = Filter(pred=[it["Unit cost"] >= 10])
             transformed = trained.transform(go_products)
             self.assertEqual(get_table_name(transformed), "go_products", tgt)
-            if tgt == "spark-with-index":
+            if tgt == "spark":
                 self.assertEqual(get_index_name(transformed), "index", tgt)
 
     def test_map_name(self):
@@ -472,7 +468,7 @@ class TestAlias(unittest.TestCase):
             trained = Map(columns={"unit_cost": it["Unit cost"]})
             transformed = trained.transform(go_products)
             self.assertEqual(get_table_name(transformed), "go_products", tgt)
-            if tgt == "spark-with-index":
+            if tgt == "spark":
                 self.assertEqual(get_index_name(transformed), "index", tgt)
 
     def test_join_name(self):
@@ -505,7 +501,7 @@ class TestAlias(unittest.TestCase):
 class TestGroupBy(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        targets = ["pandas", "spark", "spark-with-index"]
+        targets = ["pandas", "spark"]
         cls.tgt2datasets = {tgt: fetch_go_sales_dataset(tgt) for tgt in targets}
 
     def test_groupby(self):
@@ -537,7 +533,7 @@ class TestGroupBy(unittest.TestCase):
 class TestAggregate(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        targets = ["pandas", "spark", "spark-with-index"]
+        targets = ["pandas", "spark"]
         cls.tgt2datasets = {tgt: fetch_go_sales_dataset(tgt) for tgt in targets}
 
     def test_sales_not_grouped_single_col(self):
@@ -554,8 +550,7 @@ class TestAggregate(unittest.TestCase):
         )
         for tgt, datasets in self.tgt2datasets.items():
             result = pipeline.transform(datasets)
-            if tgt.startswith("spark"):
-                result = result.toPandas()
+            result = _ensure_pandas(result)
             self.assertEqual(result.shape, (1, 5), tgt)
             self.assertEqual(result.loc[0, "min_method_code"], 1, tgt)
             self.assertEqual(result.loc[0, "max_method_code"], 7, tgt)
@@ -576,8 +571,7 @@ class TestAggregate(unittest.TestCase):
         )
         for tgt, datasets in self.tgt2datasets.items():
             result = pipeline.transform(datasets[2])
-            if tgt.startswith("spark"):
-                result = result.toPandas()
+            result = _ensure_pandas(result)
             self.assertEqual(result.shape, (1, 2), tgt)
             self.assertEqual(result.loc[0, "max_method_code"], 12, tgt)
             self.assertEqual(result.loc[0, "max_method_type"], "Web", tgt)
@@ -592,8 +586,7 @@ class TestAggregate(unittest.TestCase):
         )
         for tgt, datasets in self.tgt2datasets.items():
             result = pipeline.transform(datasets[2])
-            if tgt.startswith("spark"):
-                result = result.toPandas()
+            result = _ensure_pandas(result)
             self.assertEqual(result.shape, (1, 3), tgt)
             self.assertEqual(result.loc[0, "min_method_code"], 1, tgt)
             self.assertEqual(result.loc[0, "max_method_code"], 12, tgt)
@@ -618,8 +611,7 @@ class TestAggregate(unittest.TestCase):
         )
         for tgt, datasets in self.tgt2datasets.items():
             result = pipeline.transform(datasets)
-            if tgt.startswith("spark"):
-                result = result.toPandas()
+            result = _ensure_pandas(result)
             self.assertEqual(result.shape, (289, 6))
             row = result[result.retailer_code == 1201]
             self.assertEqual(row.loc[row.index[0], "retailer_code"], 1201, tgt)
@@ -648,8 +640,7 @@ class TestAggregate(unittest.TestCase):
         )
         for tgt, datasets in self.tgt2datasets.items():
             result = pipeline.transform(datasets)
-            if tgt.startswith("spark"):
-                result = result.toPandas()
+            result = _ensure_pandas(result)
             self.assertEqual(result.shape, (289, 4))
             self.assertEqual(result.loc[1201, "min_method_code"], 2, tgt)
             self.assertEqual(result.loc[1201, "max_method_code"], 6, tgt)
@@ -672,8 +663,7 @@ class TestAggregate(unittest.TestCase):
         )
         for tgt, datasets in self.tgt2datasets.items():
             result = pipeline.transform(datasets)
-            if tgt.startswith("spark"):
-                result = result.toPandas()
+            result = _ensure_pandas(result)
             self.assertEqual(result.shape, (289, 2))
             self.assertEqual(result.loc[1201, "min_method_code"], 2, tgt)
             self.assertEqual(result.loc[1201, "min_quantity"], 1, tgt)
@@ -694,8 +684,7 @@ class TestAggregate(unittest.TestCase):
         )
         for tgt, datasets in self.tgt2datasets.items():
             result = pipeline.transform(datasets)
-            if tgt.startswith("spark"):
-                result = result.toPandas()
+            result = _ensure_pandas(result)
             self.assertEqual(result.shape, (5, 4))
             row = result[result.line == "Camping Equipment"]
             self.assertEqual(row.loc[row.index[0], "line"], "Camping Equipment", tgt)
@@ -748,8 +737,7 @@ class TestAggregate(unittest.TestCase):
         )
         for tgt, datasets in self.tgt2datasets.items():
             result = pipeline.transform(datasets)
-            if tgt.startswith("spark"):
-                result = result.toPandas()
+            result = _ensure_pandas(result)
             self.assertEqual(result.shape, (30, 4))
             row = result[
                 (result.line == "Camping Equipment") & (result.brand == "Star")
@@ -791,7 +779,7 @@ class TestJoin(unittest.TestCase):
     # Define pandas dataframes with different structures
     @classmethod
     def setUpClass(cls):
-        targets = ["pandas", "spark", "spark-with-index"]
+        targets = ["pandas", "spark"]
         cls.tgt2datasets = {
             tgt: {"go_sales": fetch_go_sales_dataset(tgt)} for tgt in targets
         }
@@ -799,9 +787,6 @@ class TestJoin(unittest.TestCase):
         def add_df(name, df):
             cls.tgt2datasets["pandas"][name] = df
             cls.tgt2datasets["spark"][name] = pandas2spark(df)
-            cls.tgt2datasets["spark-with-index"][name] = pandas2spark(
-                df, with_index=True
-            )
 
         table1 = {
             "train_id": [1, 2, 3, 4, 5],
@@ -1038,7 +1023,7 @@ class TestJoin(unittest.TestCase):
                 )
                 self.assertEqual(transformed_df.shape, (149257, 10), tgt)
                 self.assertEqual(transformed_df["Country"][4], "France", tgt)
-            elif tgt.startswith("spark"):
+            elif tgt == "spark":
                 self.assertEqual(len(get_columns(transformed_df)), 10, tgt)
                 self.assertEqual(transformed_df.count(), 149257, tgt)
                 # transformed_df = transformed_df.orderBy(order).collect()
@@ -1065,6 +1050,7 @@ class TestJoin(unittest.TestCase):
                 _ = trainable.transform(go_sales)
 
     def test_join_index(self):
+        tgt = "spark"
         trainable = Join(
             pred=[it.info.idx == it.main.idx, it.info.idx == it.t1.idx],
             join_type="inner",
@@ -1072,61 +1058,15 @@ class TestJoin(unittest.TestCase):
         df1 = _set_index_name(self.tgt2datasets["pandas"]["df1"], "idx")
         df2 = _set_index_name(self.tgt2datasets["pandas"]["df2"], "idx")
         df3 = _set_index_name(self.tgt2datasets["pandas"]["df3"], "idx")
-        for tgt in ["spark-with-index"]:
-            if tgt == "spark-with-index":
-                df1 = pandas2spark(df1, with_index=True)
-                df2 = pandas2spark(df2, with_index=True)
-                df3 = pandas2spark(df3, with_index=True)
-            transformed_df = trainable.transform([df1, df2, df3])
-            transformed_df = _ensure_pandas(transformed_df)
-            self.assertEqual(transformed_df.index.name, "idx", tgt)
-            transformed_df = transformed_df.sort_values(by="TrainId").reset_index(
-                drop=True
-            )
-            self.assertEqual(transformed_df.shape, (3, 8), tgt)
-            self.assertEqual(transformed_df["col5"][1], "Cold", tgt)
-
-    def test_join_one_index_right(self):
-        trainable = Join(
-            pred=[it.info.TrainId == it.main.train_id, it.info.TrainId == it.t1.tid],
-            join_type="inner",
-        )
-        df1 = _set_index(self.tgt2datasets["pandas"]["df1"], "train_id")
-        df2 = self.tgt2datasets["pandas"]["df2"]
-        df3 = self.tgt2datasets["pandas"]["df3"]
-        for tgt in ["spark-with-index"]:
-            if tgt == "spark-with-index":
-                df1 = pandas2spark(df1, with_index=True)
-                df2 = pandas2spark(df2, with_index=True)
-                df3 = pandas2spark(df3)
-            transformed_df = trainable.transform([df1, df2, df3])
-            transformed_df = _ensure_pandas(transformed_df)
-            transformed_df = transformed_df.sort_values(by="TrainId").reset_index(
-                drop=True
-            )
-            self.assertEqual(transformed_df.shape, (3, 7))
-            self.assertEqual(transformed_df["col5"][1], "Cold")
-
-    def test_join_one_index_left(self):
-        trainable = Join(
-            pred=[it.main.train_id == it.info.TrainId, it.info.TrainId == it.t1.tid],
-            join_type="inner",
-        )
-        df1 = _set_index(self.tgt2datasets["pandas"]["df1"], "train_id")
-        df2 = self.tgt2datasets["pandas"]["df2"]
-        df3 = self.tgt2datasets["pandas"]["df3"]
-        for tgt in ["spark-with-index"]:
-            if tgt == "spark-with-index":
-                df1 = pandas2spark(df1, with_index=True)
-                df2 = pandas2spark(df2, with_index=True)
-                df3 = pandas2spark(df3)
-            transformed_df = trainable.transform([df1, df2, df3])
-            transformed_df = _ensure_pandas(transformed_df)
-            transformed_df = transformed_df.sort_values(by="TrainId").reset_index(
-                drop=True
-            )
-            self.assertEqual(transformed_df.shape, (3, 7))
-            self.assertEqual(transformed_df["col5"][1], "Cold")
+        df1 = pandas2spark(df1)
+        df2 = pandas2spark(df2)
+        df3 = pandas2spark(df3)
+        transformed_df = trainable.transform([df1, df2, df3])
+        transformed_df = _ensure_pandas(transformed_df)
+        self.assertEqual(transformed_df.index.name, "idx", tgt)
+        transformed_df = transformed_df.sort_values(by="TrainId").reset_index(drop=True)
+        self.assertEqual(transformed_df.shape, (3, 8), tgt)
+        self.assertEqual(transformed_df["col5"][1], "Cold", tgt)
 
     def test_join_index_multiple_names(self):
         trainable = Join(
@@ -1136,11 +1076,9 @@ class TestJoin(unittest.TestCase):
         df1 = _set_index(self.tgt2datasets["pandas"]["df1"], "train_id")
         df2 = _set_index(self.tgt2datasets["pandas"]["df2"], "TrainId")
         df3 = _set_index(self.tgt2datasets["pandas"]["df3"], "tid")
-        for tgt in ["spark-with-index"]:
-            if tgt == "spark-with-index":
-                df1 = pandas2spark(df1, with_index=True)
-                df2 = pandas2spark(df2, with_index=True)
-                df3 = pandas2spark(df3, with_index=True)
+        df1 = pandas2spark(df1)
+        df2 = pandas2spark(df2)
+        df3 = pandas2spark(df3)
         transformed_df = trainable.transform([df1, df2, df3])
         transformed_df = _ensure_pandas(transformed_df)
         transformed_df = transformed_df.sort_values(by="TrainId").reset_index(drop=True)
@@ -1151,7 +1089,7 @@ class TestJoin(unittest.TestCase):
 class TestMap(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        targets = ["pandas", "spark", "spark-with-index"]
+        targets = ["pandas", "spark"]
         cls.tgt2datasets = {
             tgt: {"go_sales": fetch_go_sales_dataset(tgt)} for tgt in targets
         }
@@ -1159,9 +1097,6 @@ class TestMap(unittest.TestCase):
         def add_df(name, df):
             cls.tgt2datasets["pandas"][name] = df
             cls.tgt2datasets["spark"][name] = pandas2spark(df)
-            cls.tgt2datasets["spark-with-index"][name] = pandas2spark(
-                df, with_index=True
-            )
 
         df = pd.DataFrame(
             {
@@ -1341,7 +1276,7 @@ class TestMap(unittest.TestCase):
         for tgt, datasets in self.tgt2datasets.items():
             if tgt == "pandas":
                 trainable = Map(columns=[day_of_month(it.date_column, "%Y-%m-%d")])
-            elif tgt.startswith("spark"):
+            elif tgt == "spark":
                 trainable = Map(columns=[day_of_month(it.date_column, "y-M-d")])
             else:
                 assert False
@@ -1359,7 +1294,7 @@ class TestMap(unittest.TestCase):
                 trainable = Map(
                     columns={"dom": day_of_month(it.date_column, "%Y-%m-%d")}
                 )
-            elif tgt.startswith("spark"):
+            elif tgt == "spark":
                 trainable = Map(columns={"dom": day_of_month(it.date_column, "y-M-d")})
             else:
                 assert False
@@ -1383,7 +1318,7 @@ class TestMap(unittest.TestCase):
                 self.assertEqual(transformed_df["date_column"][0], 5)
                 self.assertEqual(transformed_df["date_column"][1], 0)
                 self.assertEqual(transformed_df["date_column"][2], 1)
-            elif tgt.startswith("spark"):
+            elif tgt == "spark":
                 df, transformed_df = _ensure_pandas(df), _ensure_pandas(transformed_df)
                 self.assertEqual(transformed_df["date_column"][0], 7)
                 self.assertEqual(transformed_df["date_column"][1], 2)
@@ -1402,7 +1337,7 @@ class TestMap(unittest.TestCase):
                 self.assertEqual(transformed_df["date_column"][0], 5)
                 self.assertEqual(transformed_df["date_column"][1], 0)
                 self.assertEqual(transformed_df["date_column"][2], 1)
-            elif tgt.startswith("spark"):
+            elif tgt == "spark":
                 trainable = Map(columns=[day_of_week(it.date_column, "y-M-d")])
                 df = datasets["df_date"]
                 trained = trainable.fit(df)
@@ -1429,7 +1364,7 @@ class TestMap(unittest.TestCase):
                 self.assertEqual(transformed_df["dow"][0], 5)
                 self.assertEqual(transformed_df["dow"][1], 0)
                 self.assertEqual(transformed_df["dow"][2], 1)
-            elif tgt.startswith("spark"):
+            elif tgt == "spark":
                 trainable = Map(columns={"dow": day_of_week(it.date_column, "y-M-d")})
                 df = datasets["df_date"]
                 trained = trainable.fit(df)
@@ -1457,7 +1392,7 @@ class TestMap(unittest.TestCase):
         for tgt, datasets in self.tgt2datasets.items():
             if tgt == "pandas":
                 trainable = Map(columns=[day_of_year(it.date_column, "%Y-%m-%d")])
-            elif tgt.startswith("spark"):
+            elif tgt == "spark":
                 trainable = Map(columns=[day_of_year(it.date_column, "y-M-d")])
             else:
                 assert False
@@ -1475,7 +1410,7 @@ class TestMap(unittest.TestCase):
                 trainable = Map(
                     columns={"doy": day_of_year(it.date_column, "%Y-%m-%d")}
                 )
-            elif tgt.startswith("spark"):
+            elif tgt == "spark":
                 trainable = Map(columns={"doy": day_of_year(it.date_column, "y-M-d")})
             else:
                 assert False
@@ -1503,7 +1438,7 @@ class TestMap(unittest.TestCase):
         for tgt, datasets in self.tgt2datasets.items():
             if tgt == "pandas":
                 trainable = Map(columns=[hour(it.date_column, "%Y-%m-%d %H:%M:%S")])
-            elif tgt.startswith("spark"):
+            elif tgt == "spark":
                 trainable = Map(columns=[hour(it.date_column, "y-M-d HH:mm:ss")])
             else:
                 assert False
@@ -1521,7 +1456,7 @@ class TestMap(unittest.TestCase):
                 trainable = Map(
                     columns={"hour": hour(it.date_column, "%Y-%m-%d %H:%M:%S")}
                 )
-            elif tgt.startswith("spark"):
+            elif tgt == "spark":
                 trainable = Map(
                     columns={"hour": hour(it.date_column, "y-M-d HH:mm:ss")}
                 )
@@ -1551,7 +1486,7 @@ class TestMap(unittest.TestCase):
         for tgt, datasets in self.tgt2datasets.items():
             if tgt == "pandas":
                 trainable = Map(columns=[minute(it.date_column, "%Y-%m-%d %H:%M:%S")])
-            elif tgt.startswith("spark"):
+            elif tgt == "spark":
                 trainable = Map(columns=[minute(it.date_column, "y-M-d HH:mm:ss")])
             else:
                 assert False
@@ -1569,7 +1504,7 @@ class TestMap(unittest.TestCase):
                 trainable = Map(
                     columns={"minute": minute(it.date_column, "%Y-%m-%d %H:%M:%S")}
                 )
-            elif tgt.startswith("spark"):
+            elif tgt == "spark":
                 trainable = Map(
                     columns={"minute": minute(it.date_column, "y-M-d HH:mm:ss")}
                 )
@@ -1599,7 +1534,7 @@ class TestMap(unittest.TestCase):
         for tgt, datasets in self.tgt2datasets.items():
             if tgt == "pandas":
                 trainable = Map(columns=[month(it.date_column, "%Y-%m-%d %H:%M:%S")])
-            elif tgt.startswith("spark"):
+            elif tgt == "spark":
                 trainable = Map(columns=[month(it.date_column, "y-M-d HH:mm:ss")])
             else:
                 assert False
@@ -1617,7 +1552,7 @@ class TestMap(unittest.TestCase):
                 trainable = Map(
                     columns={"month": month(it.date_column, "%Y-%m-%d %H:%M:%S")}
                 )
-            elif tgt.startswith("spark"):
+            elif tgt == "spark":
                 trainable = Map(
                     columns={"month": month(it.date_column, "y-M-d HH:mm:ss")}
                 )
@@ -1935,7 +1870,7 @@ class TestMap(unittest.TestCase):
                 self.assertEqual(
                     transformed_df["pow_h_w"][1], df["height"][1] ** df["weight"][1]
                 )
-            elif tgt.startswith("spark"):
+            elif tgt == "spark":
                 # Spark and Pandas have a different semantics for large numbers
                 self.assertEqual(transformed_df["pow_h_w"][1], 4**50)
             else:
@@ -1980,7 +1915,7 @@ class TestMap(unittest.TestCase):
                         ),
                     }
                 )
-            elif tgt.startswith("spark"):
+            elif tgt == "spark":
                 trainable = Map(
                     columns={
                         "date": replace(it.month, month_map),
@@ -2223,15 +2158,12 @@ class TestRelationalOperator(unittest.TestCase):
         from sklearn.datasets import load_iris
         from sklearn.model_selection import train_test_split
 
-        targets = ["pandas", "spark", "spark-with-index"]
+        targets = ["pandas", "spark"]
         cls.tgt2datasets = {tgt: {} for tgt in targets}
 
         def add_df(name, df):
             cls.tgt2datasets["pandas"][name] = df
             cls.tgt2datasets["spark"][name] = pandas2spark(df)
-            cls.tgt2datasets["spark-with-index"][name] = pandas2spark(
-                df, with_index=True
-            )
 
         X, y = load_iris(as_frame=True, return_X_y=True)
         X_train, X_test, y_train, y_test = train_test_split(X, y)
@@ -2318,7 +2250,7 @@ class TestRelationalOperator(unittest.TestCase):
             if tgt == "pandas":
                 trained_pipeline = pipeline.fit(X_train, y_train)
                 _ = trained_pipeline.predict(X_test)
-            elif tgt.startswith("spark"):
+            elif tgt == "spark":
                 # LogisticRegression is not implemented on Spark
                 pass
             else:
@@ -2328,15 +2260,12 @@ class TestRelationalOperator(unittest.TestCase):
 class TestOrderBy(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        targets = ["pandas", "spark", "spark-with-index"]
+        targets = ["pandas", "spark"]
         cls.tgt2datasets = {tgt: {} for tgt in targets}
 
         def add_df(name, df):
             cls.tgt2datasets["pandas"][name] = df
             cls.tgt2datasets["spark"][name] = pandas2spark(df)
-            cls.tgt2datasets["spark-with-index"][name] = pandas2spark(
-                df, with_index=True
-            )
 
         df = pd.DataFrame(
             {
@@ -2353,7 +2282,7 @@ class TestOrderBy(unittest.TestCase):
             df = datasets["df"]
             trained = trainable.fit(df)
             transformed_df = trained.transform(df)
-            if tgt == "spark-with-index":
+            if tgt == "spark":
                 self.assertEqual(get_index_name(transformed_df), get_index_name(df))
             transformed_df = _ensure_pandas(transformed_df)
             self.assertTrue((transformed_df["status"]).is_monotonic_increasing)
@@ -2364,7 +2293,7 @@ class TestOrderBy(unittest.TestCase):
             df = datasets["df"]
             trained = trainable.fit(df)
             transformed_df = trained.transform(df)
-            if tgt == "spark-with-index":
+            if tgt == "spark":
                 self.assertEqual(get_index_name(transformed_df), get_index_name(df))
             transformed_df = _ensure_pandas(transformed_df)
             self.assertTrue((transformed_df["status"]).is_monotonic_increasing)
@@ -2401,8 +2330,7 @@ class TestOrderBy(unittest.TestCase):
                     "status": [1, 1, 1, 0, 0],
                 }
             )
-            if tgt == "pandas" or tgt == "spark-with-index":
-                self.assertEqual(list(transformed_df.index), [1, 4, 2, 0, 3])
+            self.assertEqual(list(transformed_df.index), [1, 4, 2, 0, 3])
             self.assertTrue((transformed_df["gender"]).is_monotonic_increasing)
             self.assertTrue(
                 transformed_df.reset_index(drop=True).equals(expected_result)
@@ -2438,7 +2366,6 @@ class TestSplitXy(unittest.TestCase):
         cls.tgt2datasets = {
             "pandas": combined_df,
             "spark": spark_df,
-            "spark-with-index": SparkDataFrameWithIndex(spark_df),
         }
 
     def test_split_transform(self):
@@ -2521,7 +2448,7 @@ class TestTrainTestSplit(unittest.TestCase):
 class TestConvert(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.targets = ["pandas", "spark", "spark-with-index"]
+        cls.targets = ["pandas", "spark"]
         cls.tgt2datasets = {tgt: fetch_go_sales_dataset(tgt) for tgt in cls.targets}
 
     def _check(self, src, dst, tgt):
@@ -2551,11 +2478,11 @@ class TestConvert(unittest.TestCase):
 
     def test_to_spark_with_index(self):
         for tgt, datasets in self.tgt2datasets.items():
-            transformer = Convert(astype="spark-with-index")
+            transformer = Convert(astype="spark")
             go_products = datasets[3]
             self.assertEqual(get_table_name(go_products), "go_products", tgt)
             transformed_df = transformer.transform(go_products)
-            self.assertTrue(_is_spark_with_index(transformed_df), tgt)
+            self.assertTrue(_is_spark_df(transformed_df), tgt)
             self._check(go_products, transformed_df, tgt)
 
     def test_from_list(self):

@@ -22,7 +22,7 @@ import pandas as pd
 import lale.docstrings
 import lale.operators
 from lale.expressions import count, it, median, mode, replace, sum
-from lale.helpers import _is_df, _is_pandas_df, _is_spark_df, _is_spark_with_index
+from lale.helpers import _is_df, _is_pandas_df, _is_spark_df
 from lale.lib.dataframe import get_columns
 from lale.lib.sklearn import simple_imputer
 from lale.schemas import Enum
@@ -41,10 +41,9 @@ def _is_numeric_df(X):
         numeric_cols = [
             f.name for f in X.schema.fields if isinstance(f.dataType, NumericType)
         ]
-        if _is_spark_with_index(X):
-            for index_name in X.index_names:
-                if index_name in numeric_cols:
-                    numeric_cols.remove(index_name)
+        for index_name in X.index_names:
+            if index_name in numeric_cols:
+                numeric_cols.remove(index_name)
         return len(get_columns(X)) == len(numeric_cols)
     else:
         return False

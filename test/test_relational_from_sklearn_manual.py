@@ -62,7 +62,7 @@ def _check_data(self, sk_data, rasl_data, msg):
 class TestMinMaxScaler(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.targets = ["pandas", "spark", "spark-with-index"]
+        cls.targets = ["pandas", "spark"]
 
     def test1(self):
         """
@@ -104,7 +104,7 @@ class TestMinMaxScaler(unittest.TestCase):
 class TestOrdinalEncoder(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.targets = ["pandas", "spark", "spark-with-index"]
+        cls.targets = ["pandas", "spark"]
 
     def test_1(self):
         """
@@ -172,8 +172,8 @@ class TestSelectKBest(unittest.TestCase):
     def setUpClass(cls):
         cls.targets = [
             "pandas",
-            "spark-with-index",
-        ]  # XXX "spark" is not supported by SelectKBest
+            "spark",
+        ]
 
     def test1(self):
         """
@@ -205,7 +205,7 @@ class TestSelectKBest(unittest.TestCase):
 class TestOneHotEncoder(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.targets = ["pandas", "spark", "spark-with-index"]
+        cls.targets = ["pandas", "spark"]
 
     def test_1(self):
         """
@@ -284,7 +284,7 @@ class TestOneHotEncoder(unittest.TestCase):
 class TestSimpleImputer(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.targets = ["pandas", "spark", "spark-with-index"]
+        cls.targets = ["pandas", "spark"]
 
     def test_1(self):
         """
@@ -319,7 +319,7 @@ class TestSimpleImputer(unittest.TestCase):
 class TestStandardScaler(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.targets = ["pandas", "spark", "spark-with-index"]
+        cls.targets = ["pandas", "spark"]
 
     def test_1(self):
         """

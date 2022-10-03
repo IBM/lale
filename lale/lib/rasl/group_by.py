@@ -24,7 +24,6 @@ from lale.helpers import (
     _is_ast_subscript,
     _is_pandas_df,
     _is_spark_df,
-    _is_spark_with_index,
 )
 from lale.lib.dataframe import get_columns
 
@@ -46,7 +45,6 @@ class _GroupByImpl:
 
     def transform(self, X):
         name = get_table_name(X)
-        X_is_spark_with_index = _is_spark_with_index(X)
         group_by_keys = []
         for by_element in self.by if self.by is not None else []:
             expr_to_parse = by_element._expr
@@ -58,11 +56,10 @@ class _GroupByImpl:
                     col_not_in_X
                 )
             )
-        if X_is_spark_with_index:
-            X = X.drop(*get_index_names(X))
         if _is_pandas_df(X):
             grouped_df = X.groupby(group_by_keys, sort=False)
         elif _is_spark_df(X):
+            X = X.drop(*get_index_names(X))
             grouped_df = X.groupby(group_by_keys)
         else:
             raise ValueError(
