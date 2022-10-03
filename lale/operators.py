@@ -1784,7 +1784,7 @@ class IndividualOp(Operator):
 
         Parameters
         ----------
-        schema_kind : string, 'hyperparams' or 'input_fit' or 'input_transform'  or 'input_transform_X_y' or 'input_predict' or 'input_predict_proba' or 'input_decision_function' or 'output_transform' or 'output_transform_X_y' or 'output_predict' or 'output_predict_proba' or 'output_decision_function'
+        schema_kind : string, 'hyperparams' or 'input_fit' or 'input_partial_fit' or 'input_transform'  or 'input_transform_X_y' or 'input_predict' or 'input_predict_proba' or 'input_decision_function' or 'output_transform' or 'output_transform_X_y' or 'output_predict' or 'output_predict_proba' or 'output_decision_function'
                 Type of the schema to be returned.
 
         Returns
@@ -1805,7 +1805,7 @@ class IndividualOp(Operator):
 
         Parameters
         ----------
-        schema_kind : string, 'hyperparams' or 'input_fit' or 'input_transform'  or 'input_transform_X_y' or 'input_predict' or 'input_predict_proba' or 'input_decision_function' or 'output_transform' or 'output_transform_X_y' or 'output_predict' or 'output_predict_proba' or 'output_decision_function' or 'input_score_samples' or 'output_score_samples'
+        schema_kind : string, 'hyperparams' or 'input_fit' or 'input_partial_fit' or 'input_transform'  or 'input_transform_X_y' or 'input_predict' or 'input_predict_proba' or 'input_decision_function' or 'output_transform' or 'output_transform_X_y' or 'output_predict' or 'output_predict_proba' or 'output_decision_function' or 'input_score_samples' or 'output_score_samples'
                 Type of the schema to be returned.
 
         Returns
@@ -1860,6 +1860,10 @@ class IndividualOp(Operator):
     def input_schema_fit(self) -> JSON_TYPE:
         """Input schema for the fit method."""
         return self.get_schema("input_fit")
+
+    def input_schema_partial_fit(self) -> JSON_TYPE:
+        """Input schema for the partial_fit method."""
+        return self.get_schema("input_partial_fit")
 
     def input_schema_transform(self) -> JSON_TYPE:
         """Input schema for the transform method."""
@@ -2441,8 +2445,10 @@ class IndividualOp(Operator):
             return arg
 
         if not is_empty_dict(arg):
-            if method == "fit" or method == "partial_fit":
+            if method == "fit":
                 schema = self.input_schema_fit()
+            elif method == "partial_fit":
+                schema = self.input_schema_partial_fit()
             elif method == "transform":
                 schema = self.input_schema_transform()
             elif method == "transform_X_y":

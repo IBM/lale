@@ -444,6 +444,7 @@ _input_fit_schema = {
         },
     },
 }
+
 _input_predict_schema = {
     "description": "Return the predicted value for each sample.",
     "additionalProperties": False,
@@ -523,6 +524,7 @@ _input_predict_proba_schema = {
         },
     },
 }
+
 _output_predict_proba_schema = {
     "description": "Return the predicted probability for each class for each sample.",
     "type": "array",
@@ -531,6 +533,7 @@ _output_predict_proba_schema = {
         "items": {"type": "number"},
     },
 }
+
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Combined schema for expected data and hyperparameters.",
@@ -541,6 +544,7 @@ _combined_schemas = {
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,
+        "input_partial_fit": _input_fit_schema,
         "input_predict": _input_predict_schema,
         "output_predict": _output_predict_schema,
         "input_predict_proba": _input_predict_proba_schema,

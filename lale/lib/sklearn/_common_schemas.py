@@ -52,3 +52,12 @@ schema_2D_numbers = {
     "type": "array",
     "items": {"type": "array", "items": {"type": "number"}},
 }
+
+schema_sample_weight = {
+    "anyOf": [
+        {"type": "array", "items": {"type": "number"}},
+        {"enum": [None], "description": "Uniform weights."},
+    ],
+    "default": None,
+    "description": "Weights applied to individual samples.",
+}

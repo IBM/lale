@@ -17,7 +17,12 @@ import sklearn.linear_model
 import lale.docstrings
 import lale.operators
 
-from ._common_schemas import schema_1D_cats, schema_X_numbers
+from ._common_schemas import (
+    schema_1D_cats,
+    schema_2D_numbers,
+    schema_sample_weight,
+    schema_X_numbers,
+)
 
 _hyperparams_schema = {
     "allOf": [
@@ -179,23 +184,8 @@ _input_fit_schema = {
     "type": "object",
     "required": ["X", "y"],
     "properties": {
-        "X": {
-            "type": "array",
-            "description": "The outer array is over samples aka rows.",
-            "items": {
-                "type": "array",
-                "description": "The inner array is over features aka columns.",
-                "items": {"type": "number"},
-            },
-        },
-        "y": {
-            "description": "The predicted classes.",
-            "anyOf": [
-                {"type": "array", "items": {"type": "number"}},
-                {"type": "array", "items": {"type": "string"}},
-                {"type": "array", "items": {"type": "boolean"}},
-            ],
-        },
+        "X": schema_2D_numbers,
+        "y": schema_1D_cats,
         "coef_init": {
             "anyOf": [
                 {
@@ -213,14 +203,18 @@ _input_fit_schema = {
             ],
             "description": "The initial intercept to warm-start the optimization.",
         },
-        "sample_weight": {
-            "anyOf": [
-                {"type": "array", "items": {"type": "number"}},
-                {"enum": [None], "description": "Uniform weights."},
-            ],
-            "default": None,
-            "description": "Weights applied to individual samples",
-        },
+        "sample_weight": schema_sample_weight,
+    },
+}
+
+_input_partial_fit_schema = {
+    "type": "object",
+    "required": ["X", "y"],
+    "properties": {
+        "X": schema_2D_numbers,
+        "y": schema_1D_cats,
+        "classes": schema_1D_cats,
+        "sample_weight": schema_sample_weight,
     },
 }
 
@@ -252,6 +246,7 @@ _combined_schemas = {
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,
+        "input_partial_fit": _input_partial_fit_schema,
         "input_predict": schema_X_numbers,
         "output_predict": schema_1D_cats,
         "input_decision_function": schema_X_numbers,
