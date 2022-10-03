@@ -511,6 +511,7 @@ _combined_schemas = {
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,
+        "input_partial_fit": _input_fit_schema,
         "input_predict": _input_predict_schema,
         "output_predict": _output_predict_schema,
         "input_predict_proba": _input_predict_proba_schema,

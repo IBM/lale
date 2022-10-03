@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,6 +17,13 @@ import sklearn.linear_model
 
 import lale.docstrings
 import lale.operators
+
+from ._common_schemas import (
+    schema_1D_numbers,
+    schema_2D_numbers,
+    schema_sample_weight,
+    schema_X_numbers,
+)
 
 _hyperparams_schema = {
     "description": "inherited docstring for SGDRegressor    Linear model fitted by minimizing a regularized empirical loss with SGD",
@@ -233,19 +240,8 @@ _input_fit_schema = {
     "required": ["X", "y"],
     "type": "object",
     "properties": {
-        "X": {
-            "type": "array",
-            "items": {
-                "type": "array",
-                "items": {"type": "number"},
-            },
-            "description": "Training data",
-        },
-        "y": {
-            "type": "array",
-            "items": {"type": "number"},
-            "description": "Target values",
-        },
+        "X": schema_2D_numbers,
+        "y": schema_1D_numbers,
         "coef_init": {
             "type": "array",
             "items": {"type": "number"},
@@ -256,37 +252,21 @@ _input_fit_schema = {
             "items": {"type": "number"},
             "description": "The initial intercept to warm-start the optimization.",
         },
-        "sample_weight": {
-            "anyOf": [
-                {
-                    "type": "array",
-                    "items": {"type": "number"},
-                },
-                {"enum": [None]},
-            ],
-            "default": None,
-            "description": "Weights applied to individual samples (1. for unweighted).",
-        },
+        "sample_weight": schema_sample_weight,
     },
 }
-_input_predict_schema = {
-    "description": "Predict using the linear model",
+
+_input_partial_fit_schema = {
     "type": "object",
+    "required": ["X", "y"],
     "properties": {
-        "X": {
-            "type": "array",
-            "items": {
-                "type": "array",
-                "items": {"type": "number"},
-            },
-        },
+        "X": schema_2D_numbers,
+        "y": schema_1D_numbers,
+        "classes": schema_1D_numbers,
+        "sample_weight": schema_sample_weight,
     },
 }
-_output_predict_schema = {
-    "description": "Predicted target values per element in X.",
-    "type": "array",
-    "items": {"type": "number"},
-}
+
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": """`SGD regressor`_ from scikit-learn uses linear regressors (SVM, logistic regression, a.o.) with stochastic gradient descent training.
@@ -300,8 +280,9 @@ _combined_schemas = {
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,
-        "input_predict": _input_predict_schema,
-        "output_predict": _output_predict_schema,
+        "input_partial_fit": _input_partial_fit_schema,
+        "input_predict": schema_X_numbers,
+        "output_predict": schema_1D_numbers,
     },
 }
 

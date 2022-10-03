@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@ import sklearn.linear_model
 import lale.docstrings
 import lale.operators
 from lale.schemas import Int
+
+from ._common_schemas import schema_1D_cats, schema_2D_numbers, schema_X_numbers
 
 _hyperparams_schema = {
     "description": "Passive Aggressive Classifier",
@@ -171,19 +173,8 @@ _input_fit_schema = {
     "type": "object",
     "required": ["X", "y"],
     "properties": {
-        "X": {
-            "description": "Training data",
-            "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
-        },
-        "y": {
-            "description": "Target values",
-            "anyOf": [
-                {"type": "array", "items": {"type": "number"}},
-                {"type": "array", "items": {"type": "string"}},
-                {"type": "array", "items": {"type": "boolean"}},
-            ],
-        },
+        "X": schema_2D_numbers,
+        "y": schema_1D_cats,
         "coef_init": {
             "type": "array",
             "items": {"type": "array", "items": {"type": "number"}},
@@ -196,37 +187,14 @@ _input_fit_schema = {
         },
     },
 }
-_input_predict_schema = {
-    "description": "Predict class labels for samples in X.",
-    "type": "object",
-    "required": ["X"],
-    "properties": {
-        "X": {
-            "description": "Test data",
-            "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
-        },
-    },
-}
-_output_predict_schema = {
-    "description": "Predict class labels for samples in X.",
-    "anyOf": [
-        {"type": "array", "items": {"type": "number"}},
-        {"type": "array", "items": {"type": "string"}},
-        {"type": "array", "items": {"type": "boolean"}},
-    ],
-}
 
-_input_decision_function_schema = {
+_input_partial_fit_schema = {
     "type": "object",
-    "required": ["X"],
-    "additionalProperties": False,
+    "required": ["X", "y"],
     "properties": {
-        "X": {
-            "description": "Features; the outer array is over samples.",
-            "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
-        }
+        "X": schema_2D_numbers,
+        "y": schema_1D_cats,
+        "classes": schema_1D_cats,
     },
 }
 
@@ -259,9 +227,10 @@ _combined_schemas = {
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,
-        "input_predict": _input_predict_schema,
-        "output_predict": _output_predict_schema,
-        "input_decision_function": _input_decision_function_schema,
+        "input_partial_fit": _input_partial_fit_schema,
+        "input_predict": schema_X_numbers,
+        "output_predict": schema_1D_cats,
+        "input_decision_function": schema_X_numbers,
         "output_decision_function": _output_decision_function_schema,
     },
 }
