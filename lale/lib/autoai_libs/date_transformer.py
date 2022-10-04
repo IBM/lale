@@ -189,7 +189,7 @@ _combined_schemas = {
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs""",
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.date_transformer.html",
-    "import_from": "autoai_libs.transformers.date_time",
+    "import_from": "autoai_libs.transformers.date_time.date_time_transformer",
     "type": "object",
     "tags": {"pre": [], "op": ["transformer"], "post": []},
     "properties": {
