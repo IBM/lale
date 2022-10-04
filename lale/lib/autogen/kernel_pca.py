@@ -180,7 +180,20 @@ _hyperparams_schema = {
                     "description": "The number of parallel jobs to run",
                 },
             },
-        }
+        },
+        {
+            "description": "Cannot fit_inverse_transform with a precomputed kernel.",
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {"fit_inverse_transform": {"enum": [False]}},
+                },
+                {
+                    "type": "object",
+                    "properties": {"kernel": {"not": {"enum": ["precomputed"]}}},
+                },
+            ],
+        },
     ],
 }
 _input_fit_schema = {

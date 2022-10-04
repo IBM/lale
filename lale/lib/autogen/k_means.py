@@ -1,8 +1,11 @@
+import typing
+
+import sklearn
 from numpy import inf, nan
 from sklearn.cluster import KMeans as Op
 
 from lale.docstrings import set_docstrings
-from lale.operators import make_operator
+from lale.operators import PlannedIndividualOp, make_operator
 
 
 class _KMeansImpl:
@@ -131,6 +134,7 @@ _hyperparams_schema = {
         }
     ],
 }
+
 _input_fit_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Compute k-means clustering.",
@@ -161,6 +165,7 @@ _input_fit_schema = {
         },
     },
 }
+
 _input_transform_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Transform X to a cluster-distance space.",
@@ -174,12 +179,14 @@ _input_transform_schema = {
         }
     },
 }
+
 _output_transform_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "X transformed in the new space.",
     "type": "array",
     "items": {"type": "array", "items": {"type": "number"}},
 }
+
 _input_predict_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Predict the closest cluster each sample in X belongs to.",
@@ -198,12 +205,14 @@ _input_predict_schema = {
         },
     },
 }
+
 _output_predict_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Index of the cluster each sample belongs to.",
     "type": "array",
     "items": {"type": "number"},
 }
+
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Combined schema for expected data and hyperparameters.",
@@ -220,6 +229,18 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
+
 KMeans = make_operator(_KMeansImpl, _combined_schemas)
+
+if sklearn.__version__ >= "1.0":
+    # old: https://scikit-learn.org/0.24/modules/generated/sklearn.cluster.KMeans.html
+    # new: https://scikit-learn.org/1.0/modules/generated/sklearn.cluster.KMeans.html
+    KMeans = typing.cast(
+        PlannedIndividualOp,
+        KMeans.customize_schema(
+            n_jobs=None,
+            precompute_distances=None,
+        ),
+    )
 
 set_docstrings(KMeans)
