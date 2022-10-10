@@ -3169,7 +3169,10 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
     def fit(self, X, y=None, **fit_params) -> "TrainedIndividualOp":
         if self.has_method("fit") and not self.is_frozen_trained():
             filtered_fit_params = _fixup_hyperparams_dict(fit_params)
-            return super(TrainedIndividualOp, self).fit(X, y, **filtered_fit_params)
+            try:
+                return super(TrainedIndividualOp, self).fit(X, y, **filtered_fit_params)
+            except AttributeError:
+                return self  # for Project with static columns after clone()
         else:
             return self
 
