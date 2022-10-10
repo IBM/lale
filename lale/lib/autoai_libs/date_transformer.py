@@ -25,7 +25,7 @@ class _DateTransformerImpl:
     def __init__(
         self,
         options=None,
-        delete_source_columns=False,
+        delete_source_columns=True,
         column_headers_list=None,
         missing_values_reference_list=None,
         activate_flag=True,
