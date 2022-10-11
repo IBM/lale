@@ -1,4 +1,4 @@
-# Copyright 2021 IBM Corporation
+# Copyright 2021-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ except ModuleNotFoundError:
 import lale.docstrings
 import lale.operators
 from lale.datasets.data_schemas import forward_metadata
-from lale.expressions import it
+from lale.expressions import it, ite
 from lale.expressions import max as agg_max
 from lale.expressions import min as agg_min
 from lale.helpers import _is_spark_df
@@ -75,8 +75,6 @@ class _MinMaxScalerImpl(MonoidableOperator[_MinMaxScalerMonoid]):
     def __init__(self, feature_range=(0, 1), *, copy=True, clip=False):
         if not copy:
             raise ValueError("`copy=False` is not supported by this implementation")
-        if clip:
-            raise ValueError("`clip=True` is not supported by this implementation")
         self._hyperparams = {"feature_range": feature_range, "copy": copy, "clip": clip}
 
     def transform(self, X):
@@ -112,6 +110,7 @@ class _MinMaxScalerImpl(MonoidableOperator[_MinMaxScalerMonoid]):
 
     def _build_transformer(self):
         range_min, range_max = self._hyperparams["feature_range"]
+        clip = self._hyperparams["clip"]
         ops = {}
         dmin = self.data_min_
         assert dmin is not None
@@ -120,7 +119,15 @@ class _MinMaxScalerImpl(MonoidableOperator[_MinMaxScalerMonoid]):
         for i, c in enumerate(self.feature_names_in_):
             c_std = (it[c] - dmin[i]) / _handle_zeros_in_scale(dmax[i] - dmin[i])
             c_scaled = c_std * (range_max - range_min) + range_min
-            ops.update({c: c_scaled})
+            if clip:
+                c_clipped = ite(
+                    it[c] < range_min,
+                    range_min,
+                    ite(it[c] > range_max, range_max, it[c]),
+                )
+            else:
+                c_clipped = c_scaled
+            ops.update({c: c_clipped})
         return Map(columns=ops)
 
     def to_monoid(self, v: Tuple[Any, Any]) -> _MinMaxScalerMonoid:
@@ -178,11 +185,11 @@ MinMaxScaler = typing.cast(
             desc="`copy=True` is the only value currently supported by this implementation",
             default=True,
         ),
-        clip=Enum(
-            values=[False],
-            desc="`clip=False` is the only value currently supported by this implementation",
-            default=False,
-        ),
+        clip={
+            "type": "boolean",
+            "description": "Set to True to clip transformed values of held-out data to provided feature range.",
+            "default": False,
+        },
     ),
 )
 

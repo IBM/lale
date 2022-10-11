@@ -1,4 +1,4 @@
-# Copyright 2021 IBM Corporation
+# Copyright 2021-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -122,10 +122,14 @@ def astype(df: Any, call: ast.Call):
 
 
 def ite(df: Any, call: ast.Call):
-    column_c = _eval_ast_expr_pandas_df(df, call.args[0])  # type: ignore
-    v1 = ast.literal_eval(call.args[1])
-    v2 = ast.literal_eval(call.args[2])
-    return column_c.map(lambda b: v1 if b else v2)
+    cond = _eval_ast_expr_pandas_df(df, call.args[0])  # type: ignore
+    v1 = _eval_ast_expr_pandas_df(df, call.args[1])  # type: ignore
+    if not isinstance(v1, pd.Series):
+        v1 = pd.Series(v1, index=df.index)
+    v2 = _eval_ast_expr_pandas_df(df, call.args[2])  # type: ignore
+    if not isinstance(v2, pd.Series):
+        v2 = pd.Series(v2, index=df.index)
+    return v1.where(cond, v2)
 
 
 def hash(df: Any, call: ast.Call):

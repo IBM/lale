@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -58,6 +58,7 @@ from lale.expressions import (
     isnotnull,
     isnull,
     it,
+    ite,
     max,
     mean,
     median,
@@ -2150,6 +2151,32 @@ class TestMap(unittest.TestCase):
             self.assertSeriesEqual(
                 transformed_df["height<=3|>5"], (df["height"] <= 3) | (df["height"] > 5)
             )
+
+    def test_if_then_else_function(self):
+        pretrained = Map(
+            columns={
+                "weight": it["weight"],
+                "w<50": ite(it["weight"] < 50, "<50", ">=50"),
+                "clip_50_inf": ite(it["weight"] < 50, 50, it["weight"]),
+                "clip_50_150": ite(
+                    it["weight"] < 50, 50, ite(it["weight"] > 150, 150, it["weight"])
+                ),
+            }
+        )
+        for tgt, datasets in self.tgt2datasets.items():
+            df = datasets["df_num"]
+            transformed_df = pretrained.transform(df)
+            df, transformed_df = _ensure_pandas(df), _ensure_pandas(transformed_df)
+            print(f"df\n{df}\n")
+            print(f"transformed_df\n{transformed_df}\n")
+            self.assertEqual(transformed_df.shape, (5, 4), tgt)
+            self.assertSeriesEqual(df["weight"], transformed_df["weight"], tgt)
+            self.assertEqual(transformed_df["w<50"][0], "<50", tgt)
+            self.assertEqual(transformed_df["w<50"][2], ">=50", tgt)
+            self.assertEqual(transformed_df["clip_50_inf"][0], 50, tgt)
+            self.assertEqual(transformed_df["clip_50_inf"][2], 170, tgt)
+            self.assertEqual(transformed_df["clip_50_150"][0], 50, tgt)
+            self.assertEqual(transformed_df["clip_50_150"][2], 150, tgt)
 
 
 class TestRelationalOperator(unittest.TestCase):

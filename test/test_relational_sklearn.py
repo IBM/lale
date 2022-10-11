@@ -154,16 +154,12 @@ class TestMinMaxScaler(unittest.TestCase):
         self.assertDictContainsSubset(sk_params, rasl_params)
 
     def test_error(self):
+        _ = RaslMinMaxScaler(clip=True)  # should raise no error
         with self.assertRaisesRegex(
             jsonschema.ValidationError,
             re.compile(r"MinMaxScaler\(copy=False\)", re.MULTILINE | re.DOTALL),
         ):
             _ = RaslMinMaxScaler(copy=False)
-        with self.assertRaisesRegex(
-            jsonschema.ValidationError,
-            re.compile(r"MinMaxScaler\(clip=True\)", re.MULTILINE | re.DOTALL),
-        ):
-            _ = RaslMinMaxScaler(clip=True)
 
     def test_fit(self):
         columns = ["Product number", "Quantity", "Retailer code"]
