@@ -110,25 +110,31 @@ class _MinMaxScalerImpl(MonoidableOperator[_MinMaxScalerMonoid]):
 
     def _build_transformer(self):
         range_min, range_max = self._hyperparams["feature_range"]
-        clip = self._hyperparams["clip"]
-        ops = {}
+        scale_columns = {}
         dmin = self.data_min_
         assert dmin is not None
         dmax = self.data_max_
         assert dmax is not None
+        assert self.feature_names_in_ is not None
         for i, c in enumerate(self.feature_names_in_):
             c_std = (it[c] - dmin[i]) / _handle_zeros_in_scale(dmax[i] - dmin[i])
             c_scaled = c_std * (range_max - range_min) + range_min
-            if clip:
-                c_clipped = ite(
-                    c_scaled < range_min,
-                    range_min,
-                    ite(c_scaled > range_max, range_max, c_scaled),
-                )
-            else:
-                c_clipped = c_scaled
-            ops.update({c: c_clipped})
-        return Map(columns=ops)
+            scale_columns.update({c: c_scaled})
+        scale_map = Map(columns=scale_columns)
+        if self._hyperparams["clip"]:
+            clip_map = Map(
+                columns={
+                    c: ite(
+                        it[c] < range_min,
+                        range_min,
+                        ite(it[c] > range_max, range_max, it[c]),
+                    )
+                    for c in self.feature_names_in_
+                }
+            )
+            return scale_map >> clip_map
+        else:
+            return scale_map
 
     def to_monoid(self, v: Tuple[Any, Any]) -> _MinMaxScalerMonoid:
         X, _ = v
