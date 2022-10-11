@@ -2167,8 +2167,6 @@ class TestMap(unittest.TestCase):
             df = datasets["df_num"]
             transformed_df = pretrained.transform(df)
             df, transformed_df = _ensure_pandas(df), _ensure_pandas(transformed_df)
-            print(f"df\n{df}\n")
-            print(f"transformed_df\n{transformed_df}\n")
             self.assertEqual(transformed_df.shape, (5, 4), tgt)
             self.assertSeriesEqual(df["weight"], transformed_df["weight"], tgt)
             self.assertEqual(transformed_df["w<50"][0], "<50", tgt)

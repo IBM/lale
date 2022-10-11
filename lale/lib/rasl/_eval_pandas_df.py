@@ -124,12 +124,15 @@ def astype(df: Any, call: ast.Call):
 def ite(df: Any, call: ast.Call):
     cond = _eval_ast_expr_pandas_df(df, call.args[0])  # type: ignore
     v1 = _eval_ast_expr_pandas_df(df, call.args[1])  # type: ignore
-    if not isinstance(v1, pd.Series):
-        v1 = pd.Series(v1, index=df.index)
     v2 = _eval_ast_expr_pandas_df(df, call.args[2])  # type: ignore
-    if not isinstance(v2, pd.Series):
-        v2 = pd.Series(v2, index=df.index)
-    return v1.where(cond, v2)
+    if not isinstance(v1, pd.Series):
+        if not isinstance(v2, pd.Series):
+            result = cond.map(lambda b: v1 if b else v2)
+        else:
+            result = pd.Series(v1, index=df.index).where(cond, v2)
+    else:
+        result = v1.where(cond, v2)
+    return result
 
 
 def hash(df: Any, call: ast.Call):

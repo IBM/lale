@@ -121,20 +121,23 @@ class _MinMaxScalerImpl(MonoidableOperator[_MinMaxScalerMonoid]):
             c_scaled = c_std * (range_max - range_min) + range_min
             scale_columns.update({c: c_scaled})
         scale_map = Map(columns=scale_columns)
-        if self._hyperparams["clip"]:
-            clip_map = Map(
-                columns={
-                    c: ite(
-                        it[c] < range_min,
-                        range_min,
-                        ite(it[c] > range_max, range_max, it[c]),
-                    )
-                    for c in self.feature_names_in_
-                }
-            )
-            return scale_map >> clip_map
-        else:
+        if not self._hyperparams["clip"]:
             return scale_map
+        clip_map = Map(
+            columns={
+                c: ite(
+                    it[c] >= range_min,
+                    ite(
+                        it[c] <= range_max,
+                        it[c],
+                        range_max,
+                    ),
+                    range_min,
+                )
+                for c in self.feature_names_in_
+            }
+        )
+        return scale_map >> clip_map
 
     def to_monoid(self, v: Tuple[Any, Any]) -> _MinMaxScalerMonoid:
         X, _ = v
