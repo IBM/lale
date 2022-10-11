@@ -194,7 +194,7 @@ MinMaxScaler = typing.cast(
             desc="`copy=True` is the only value currently supported by this implementation",
             default=True,
         ),
-        clip={
+        clip={  # missing from min_max_scaler._hyperparams_schema pre sklearn 0.24
             "type": "boolean",
             "description": "Set to True to clip transformed values of held-out data to provided feature range.",
             "default": False,
