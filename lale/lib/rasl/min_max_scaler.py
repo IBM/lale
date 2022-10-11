@@ -121,9 +121,9 @@ class _MinMaxScalerImpl(MonoidableOperator[_MinMaxScalerMonoid]):
             c_scaled = c_std * (range_max - range_min) + range_min
             if clip:
                 c_clipped = ite(
-                    it[c] < range_min,
+                    c_scaled < range_min,
                     range_min,
-                    ite(it[c] > range_max, range_max, it[c]),
+                    ite(c_scaled > range_max, range_max, c_scaled),
                 )
             else:
                 c_clipped = c_scaled

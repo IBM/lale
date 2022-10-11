@@ -200,6 +200,32 @@ class TestMinMaxScaler(unittest.TestCase):
             self.assertAlmostEqual(sk_transformed[20, 1], rasl_transformed.iloc[20, 1])
             self.assertAlmostEqual(sk_transformed[20, 2], rasl_transformed.iloc[20, 2])
 
+    def test_transform_clipped(self):
+        columns = ["Product number", "Quantity", "Retailer code"]
+        pandas_data = self.tgt2datasets["pandas"][0][columns]
+        sk_scaler = SkMinMaxScaler(clip=True)
+        sk_trained = sk_scaler.fit(pandas_data)
+        sk_transformed = sk_trained.transform(pandas_data)
+        rasl_scaler = RaslMinMaxScaler(clip=True)
+        for tgt, go_sales in self.tgt2datasets.items():
+            data = go_sales[0][columns]
+            if tgt == "spark":
+                data = SparkDataFrameWithIndex(data)
+            rasl_trained = rasl_scaler.fit(data)
+            rasl_transformed = rasl_trained.transform(data)
+            if tgt == "spark":
+                self.assertEqual(get_index_name(rasl_transformed), "index")
+            rasl_transformed = _ensure_pandas(rasl_transformed)
+            self.assertAlmostEqual(sk_transformed[0, 0], rasl_transformed.iloc[0, 0])
+            self.assertAlmostEqual(sk_transformed[0, 1], rasl_transformed.iloc[0, 1])
+            self.assertAlmostEqual(sk_transformed[0, 2], rasl_transformed.iloc[0, 2])
+            self.assertAlmostEqual(sk_transformed[10, 0], rasl_transformed.iloc[10, 0])
+            self.assertAlmostEqual(sk_transformed[10, 1], rasl_transformed.iloc[10, 1])
+            self.assertAlmostEqual(sk_transformed[10, 2], rasl_transformed.iloc[10, 2])
+            self.assertAlmostEqual(sk_transformed[20, 0], rasl_transformed.iloc[20, 0])
+            self.assertAlmostEqual(sk_transformed[20, 1], rasl_transformed.iloc[20, 1])
+            self.assertAlmostEqual(sk_transformed[20, 2], rasl_transformed.iloc[20, 2])
+
     def test_zero_scale(self):
         pandas_data = pd.DataFrame({"a": [0.5]})
         sk_scaler = SkMinMaxScaler()
