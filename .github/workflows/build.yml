@@ -10,12 +10,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: [3.7, 3.8, 3.9, '3.10']
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache pip
@@ -33,8 +33,8 @@ jobs:
     - name: Install autoai-libs from regular pypi for Python 3.7 and 3.8
       if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
       run: pip install autoai-libs>=1.12.6
-    - name: Install autoai-libs from test pypi for Python 3.9
-      if: ${{ matrix.python-version == 3.9}}
+    - name: Install autoai-libs from test pypi for Python 3.9 and 3.10
+      if: ${{ matrix.python-version == 3.9 || matrix.python-version == '3.10'}}
       run: pip install autoai-libs>=1.13.6
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager .[full,test]
@@ -74,23 +74,23 @@ jobs:
         - test/test_autogen_lib.py
         - test/test_snapml.py
         - test/test_relational.py
-        python-version: [3.8]
+        python-version: [3.9]
         setup-target: ['.[full,test]']
         include:
         - test-case: test/test_autoai_libs.py
           python-version: 3.7
           setup-target: '.[full,test]'
         - test-case: test/test_autoai_libs.py
-          python-version: 3.8
+          python-version: 3.9
           setup-target: '.[full,test]'
         - test-case: test/test_core_misc.py
           python-version: 3.7
           setup-target: '.[full,test]'
         - test-case: test/test_core_misc.py
-          python-version: 3.8
+          python-version: 3.9
           setup-target: '.[full,test]'
         - test-case: test/test_core_misc.py
-          python-version: 3.9
+          python-version: '3.10'
           setup-target: '.[full,test]'
         - test-case: test/test_autogen_lib.py
           python-version: 3.7
@@ -131,8 +131,8 @@ jobs:
     - name: Install autoai-libs from regular pypi for Python 3.7 and 3.8
       if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
       run: pip install autoai-libs>=1.12.6
-    - name: Install autoai-libs from test pypi for Python 3.9
-      if: ${{ matrix.python-version == 3.9}}
+    - name: Install autoai-libs from test pypi for Python 3.9 and 3.10
+      if: ${{ matrix.python-version == 3.9 || matrix.python-version == '3.10'}}
       run: pip install autoai-libs>=1.13.6
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
@@ -190,7 +190,7 @@ jobs:
         - test/test_autoai_output_consumption.py
         - test/test_autogen_lib.py
         - test/test_relational.py
-        python-version: [3.7, 3.8, 3.9]
+        python-version: [3.7, 3.8, 3.9, '3.10']
         setup-target: ['.[full,test]']
         include:
         - test-case: test/test_autoai_libs.py
@@ -241,8 +241,8 @@ jobs:
     - name: Install autoai-libs from regular pypi for Python 3.7 and 3.8
       if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
       run: pip install autoai-libs>=1.12.6
-    - name: Install autoai-libs from test pypi for Python 3.9
-      if: ${{ matrix.python-version == 3.9}}
+    - name: Install autoai-libs from test pypi for Python 3.9 and 3.10
+      if: ${{ matrix.python-version == 3.9  || matrix.python-version == '3.10'}}
       run: pip install autoai-libs>=1.13.6
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
@@ -284,7 +284,7 @@ jobs:
         - test/test_core_classifiers.py
         - test/test_core_regressors.py
         - test/test_core_transformers.py
-        python-version: [3.9]
+        python-version: ['3.10']
         setup-target: ['.']
     steps:
     - uses: actions/checkout@v2
@@ -335,14 +335,14 @@ jobs:
         - demo_
         - docs_
         - talk_
-        python-version: [3.8]
+        python-version: [3.9]
         setup-target: ['.[full,test]']
         test-case: ['test/test_notebooks.py']
         dir: ['examples']
         nbexcludes: ['']
         include:
         - dir: 'examples/kdd22'
-          python-version: 3.8
+          python-version: 3.9
           setup-target: '.[tutorial,test]'
           test-case: 'test/test_notebooks.py'
           # nbexcludes: '06_multobj.ipynb'
@@ -396,7 +396,7 @@ jobs:
         - demo_
         - docs_
         - talk_
-        python-version: [3.7, 3.8, 3.9]
+        python-version: [3.7, 3.8, 3.9, '3.10']
         setup-target: ['.[full,test]']
         test-case: ['test/test_notebooks.py']
         dir: ['examples']
@@ -414,6 +414,11 @@ jobs:
           # nbexcludes: '06_multobj.ipynb'
         - dir: 'examples/kdd22'
           python-version: 3.9
+          setup-target: '.[tutorial,test]'
+          test-case: 'test/test_notebooks.py'
+          # nbexcludes: '06_multobj.ipynb'
+        - dir: 'examples/kdd22'
+          python-version: '3.10'
           setup-target: '.[tutorial,test]'
           test-case: 'test/test_notebooks.py'
           # nbexcludes: '06_multobj.ipynb'
