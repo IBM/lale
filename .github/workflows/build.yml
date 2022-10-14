@@ -187,7 +187,6 @@ jobs:
         - test/test_interoperability.py
         - test/test_optimizers.py
         - test/test_pipeline.py
-        - test/test_autoai_output_consumption.py
         - test/test_autogen_lib.py
         - test/test_relational.py
         python-version: [3.7, 3.8, 3.9, '3.10']
@@ -215,6 +214,12 @@ jobs:
           python-version: 3.8
           setup-target: '.[full,test]'
         - test-case: test/test_snapml.py
+          python-version: 3.9
+          setup-target: '.[full,test]'
+        - test-case: test/test_autoai_output_consumption.py
+          python-version: 3.8
+          setup-target: '.[full,test]'
+        - test-case: test/test_autoai_output_consumption.py
           python-version: 3.9
           setup-target: '.[full,test]'
 
