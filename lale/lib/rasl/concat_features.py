@@ -85,7 +85,10 @@ class _ConcatFeaturesImpl:
                 deduplicated = [ls[-1] for _, ls in name2series.items()]
                 result = pd.concat(deduplicated, axis=1)
         elif all([_is_spark_df(d) for d in X]):
-            from lale.datasets.data_schemas import SparkDataFrameWithIndex#TODO:Is the import ok here?
+            from lale.datasets.data_schemas import (
+                SparkDataFrameWithIndex,  # TODO:Is the import ok here?
+            )
+
             def join(d1, d2):
                 n1 = get_table_name(d1)
                 n2 = get_table_name(d2)
@@ -95,9 +98,9 @@ class _ConcatFeaturesImpl:
                 if n2 is None:
                     n2 = _gen_table_name([n1])
                     d2 = Alias(name=n2).transform(d2)
-                d1=d1.drop_indexes()
-                d2=d2.drop_indexes()
-                d1 = SparkDataFrameWithIndex(d1)#TODO: is it ok to change the index?
+                d1 = d1.drop_indexes()
+                d2 = d2.drop_indexes()
+                d1 = SparkDataFrameWithIndex(d1)  # TODO: is it ok to change the index?
                 d2 = SparkDataFrameWithIndex(d2)
                 indexes_col1 = get_index_names(d1)
                 indexes_col2 = get_index_names(d2)
