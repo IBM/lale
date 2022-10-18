@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,6 +17,13 @@ from sklearn.linear_model import SGDClassifier as SKLModel
 
 import lale.docstrings
 import lale.operators
+
+from ._common_schemas import (
+    schema_1D_cats,
+    schema_2D_numbers,
+    schema_sample_weight,
+    schema_X_numbers,
+)
 
 _hyperparams_schema = {
     "description": "inherited docstring for SGDClassifier Linear classifiers (SVM, logistic regression, a.o.) with SGD training.",
@@ -245,22 +252,8 @@ _input_fit_schema = {
     "required": ["X", "y"],
     "type": "object",
     "properties": {
-        "X": {
-            "type": "array",
-            "items": {
-                "type": "array",
-                "items": {"type": "number"},
-            },
-            "description": "Training data",
-        },
-        "y": {
-            "anyOf": [
-                {"type": "array", "items": {"type": "number"}},
-                {"type": "array", "items": {"type": "string"}},
-                {"type": "array", "items": {"type": "boolean"}},
-            ],
-            "description": "Target values",
-        },
+        "X": schema_2D_numbers,
+        "y": schema_1D_cats,
         "coef_init": {
             "type": "array",
             "items": {
@@ -274,74 +267,27 @@ _input_fit_schema = {
             "items": {"type": "number"},
             "description": "The initial intercept to warm-start the optimization.",
         },
-        "sample_weight": {
-            "anyOf": [
-                {
-                    "type": "array",
-                    "items": {"type": "number"},
-                },
-                {"enum": [None]},
-            ],
-            "default": None,
-            "description": "Weights applied to individual samples.",
-        },
+        "sample_weight": schema_sample_weight,
     },
-}
-_input_predict_schema = {
-    "description": "Predict class labels for samples in X.",
-    "type": "object",
-    "properties": {
-        "X": {
-            "type": "array",
-            "items": {
-                "type": "array",
-                "items": {"type": "number"},
-            },
-            "description": "Training data",
-        },
-    },
-}
-_output_predict_schema = {
-    "description": "Predicted class label per sample.",
-    "anyOf": [
-        {"type": "array", "items": {"type": "number"}},
-        {"type": "array", "items": {"type": "string"}},
-        {"type": "array", "items": {"type": "boolean"}},
-    ],
 }
 
-_input_predict_proba_schema = {
-    "description": "Probability estimates.",
+_input_partial_fit_schema = {
     "type": "object",
+    "required": ["X", "y"],
     "properties": {
-        "X": {
-            "type": "array",
-            "items": {
-                "type": "array",
-                "items": {"type": "number"},
-            },
-        },
+        "X": schema_2D_numbers,
+        "y": schema_1D_cats,
+        "classes": schema_1D_cats,
+        "sample_weight": schema_sample_weight,
     },
 }
+
 _output_predict_proba_schema = {
     "description": "Returns the probability of the sample for each class in the model,",
     "type": "array",
     "items": {
         "type": "array",
         "items": {"type": "number"},
-    },
-}
-
-_input_decision_function_schema = {
-    "type": "object",
-    "required": ["X"],
-    "additionalProperties": False,
-    "properties": {
-        "X": {
-            "description": "Features; the outer array is over samples.",
-            "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
-        }
     },
 }
 
@@ -374,11 +320,12 @@ _combined_schemas = {
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,
-        "input_predict": _input_predict_schema,
-        "output_predict": _output_predict_schema,
-        "input_predict_proba": _input_predict_proba_schema,
+        "input_partial_fit": _input_partial_fit_schema,
+        "input_predict": schema_X_numbers,
+        "output_predict": schema_1D_cats,
+        "input_predict_proba": schema_X_numbers,
         "output_predict_proba": _output_predict_proba_schema,
-        "input_decision_function": _input_decision_function_schema,
+        "input_decision_function": schema_X_numbers,
         "output_decision_function": _output_decision_function_schema,
     },
 }

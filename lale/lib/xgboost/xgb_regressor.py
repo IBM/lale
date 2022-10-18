@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 
 import lale.docstrings
+import lale.helpers
 import lale.operators
 
 from ._common_schemas import schema_silent
@@ -71,6 +72,7 @@ class _XGBRegressorImpl:
         return self
 
     def partial_fit(self, X, y, **fit_params):
+        fit_params = lale.helpers.dict_without(fit_params, "classes")
         if self._wrapped_model.__sklearn_is_fitted__():
             booster = self._wrapped_model.get_booster()
             fit_params = {**fit_params, "xgb_model": booster}
@@ -80,9 +82,6 @@ class _XGBRegressorImpl:
         renamed_X = _rename_all_features(X)
         result = self._wrapped_model.predict(renamed_X, **predict_params)
         return result
-
-    def predict_proba(self, X):
-        return self._wrapped_model.predict_proba(X)
 
     def score(self, X, y):
         from sklearn.metrics import r2_score
@@ -327,6 +326,7 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
         }
     ],
 }
+
 _input_fit_schema = {
     "description": "Fit gradient boosting classifier",
     "type": "object",
@@ -449,29 +449,11 @@ _input_predict_schema = {
         },
     },
 }
+
 _output_predict_schema = {
     "description": "Output data schema for predictions (target class labels).",
     "type": "array",
     "items": {"type": "number"},
-}
-
-_input_predict_proba_schema = {
-    "type": "object",
-    "required": ["X"],
-    "properties": {
-        "X": {
-            "type": "array",
-            "items": {
-                "type": "array",
-                "items": {"type": "number"},
-            },
-        }
-    },
-}
-
-_output_predict_probaschema = {
-    "type": "array",
-    "items": {"type": "array", "items": {"type": "number"}},
 }
 
 _combined_schemas = {
@@ -486,10 +468,9 @@ _combined_schemas = {
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,
+        "input_partial_fit": _input_fit_schema,
         "input_predict": _input_predict_schema,
         "output_predict": _output_predict_schema,
-        "input_predict_proba": _input_predict_schema,
-        "output_predict_proba": _output_predict_schema,
     },
 }
 

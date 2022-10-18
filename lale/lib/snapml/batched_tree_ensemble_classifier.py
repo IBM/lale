@@ -18,9 +18,17 @@ try:
 except ImportError:
     snapml_installed = False
 
+import pandas as pd
+
 import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
+
+
+def _ensure_numpy(data):
+    if isinstance(data, (pd.DataFrame, pd.Series)):
+        return data.to_numpy()
+    return lale.datasets.data_schemas.strip_schema(data)
 
 
 class _BatchedTreeEnsembleClassifierImpl:
@@ -47,22 +55,22 @@ class _BatchedTreeEnsembleClassifierImpl:
         self._wrapped_model = snapml.BatchedTreeEnsembleClassifier(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
-        X = lale.datasets.data_schemas.strip_schema(X)
-        y = lale.datasets.data_schemas.strip_schema(y)
+        X = _ensure_numpy(X)
+        y = _ensure_numpy(y)
         self._wrapped_model.fit(X, y, **fit_params)
         return self
 
     def predict(self, X, **predict_params):
-        X = lale.datasets.data_schemas.strip_schema(X)
+        X = _ensure_numpy(X)
         return self._wrapped_model.predict(X, **predict_params)
 
     def predict_proba(self, X, **predict_proba_params):
-        X = lale.datasets.data_schemas.strip_schema(X)
+        X = _ensure_numpy(X)
         return self._wrapped_model.predict_proba(X, **predict_proba_params)
 
     def partial_fit(self, X, y, **fit_params):
-        X = lale.datasets.data_schemas.strip_schema(X)
-        y = lale.datasets.data_schemas.strip_schema(y)
+        X = _ensure_numpy(X)
+        y = _ensure_numpy(y)
         self._wrapped_model.partial_fit(X, y, **fit_params)
         return self
 

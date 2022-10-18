@@ -1,4 +1,4 @@
-# Copyright 2019, 2020, 2021 IBM Corporation
+# Copyright 2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,15 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Schema-enhanced versions of some of the operators from `category_encoders`_ to enable hyperparameter tuning.
+
+.. _`category_encoders`: https://contrib.scikit-learn.org/category_encoders
+
+Operators
+=========
+* lale.lib.category_encoders. `HashingEncoder`_
+
+.. _`HashingEncoder`: lale.category_encoders.hashing_encoder.html
+
+"""
+
 # Note: all imports should be done as
 # from .xxx import XXX as XXX
 # this ensures that pyright considers them to be publicly available
 # and not private imports (this affects lale users that use pyright)
 
-from .movie_review import load_movie_review as load_movie_review
-from .sklearn_to_pandas import boston_housing_df as boston_housing_df
-from .sklearn_to_pandas import california_housing_df as california_housing_df
-from .sklearn_to_pandas import covtype_df as covtype_df
-from .sklearn_to_pandas import digits_df as digits_df
-from .sklearn_to_pandas import load_iris_df as load_iris_df
-from .util import pandas2spark as pandas2spark
+from .hashing_encoder import HashingEncoder as HashingEncoder

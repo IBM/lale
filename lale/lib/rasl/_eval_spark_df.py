@@ -1,4 +1,4 @@
-# Copyright 2021 IBM Corporation
+# Copyright 2021-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -146,8 +146,8 @@ def astype(call: ast.Call):
 
 def ite(call: ast.Call):
     cond = _eval_ast_expr_spark_df(call.args[0])  # type: ignore
-    v1 = ast.literal_eval(call.args[1])
-    v2 = ast.literal_eval(call.args[2])
+    v1 = _eval_ast_expr_spark_df(call.args[1])  # type: ignore
+    v2 = _eval_ast_expr_spark_df(call.args[2])  # type: ignore
     return spark_when(cond, v1).otherwise(v2)  # type: ignore
 
 

@@ -95,41 +95,44 @@ Functions:
 .. _`spark_explainer`: lale.lib.rasl.spark_explainer.html
 """
 
-from lale.lib.rasl import (
-    Aggregate,
-    Alias,
-    Batching,
-    ConcatFeatures,
-    Filter,
-    GroupBy,
-    Join,
-    Map,
-    OrderBy,
-    Project,
-    Relational,
-    Scan,
-    SplitXy,
-    categorical,
-    date_time,
-    spark_explainer,
-)
+# Note: all imports should be done as
+# from .xxx import XXX as XXX
+# this ensures that pyright considers them to be publicly available
+# and not private imports (this affects lale users that use pyright)
+
+from lale.lib.rasl import Aggregate as Aggregate
+from lale.lib.rasl import Alias as Alias
+from lale.lib.rasl import Batching as Batching
+from lale.lib.rasl import ConcatFeatures as ConcatFeatures
+from lale.lib.rasl import Filter as Filter
+from lale.lib.rasl import GroupBy as GroupBy
+from lale.lib.rasl import Join as Join
+from lale.lib.rasl import Map as Map
+from lale.lib.rasl import OrderBy as OrderBy
+from lale.lib.rasl import Project as Project
+from lale.lib.rasl import Relational as Relational
+from lale.lib.rasl import Scan as Scan
+from lale.lib.rasl import SplitXy as SplitXy
+from lale.lib.rasl import categorical as categorical
+from lale.lib.rasl import date_time as date_time
+from lale.lib.rasl import spark_explainer as spark_explainer
 
 # estimators
-from .auto_pipeline import AutoPipeline
+from .auto_pipeline import AutoPipeline as AutoPipeline
 
 # estimators and transformers
-from .both import Both
+from .both import Both as Both
 
 # functions
-from .grid_search_cv import GridSearchCV
-from .halving_grid_search_cv import HalvingGridSearchCV
-from .hyperopt import Hyperopt
-from .identity_wrapper import IdentityWrapper
-from .no_op import NoOp
-from .observing import Observing
-from .optimize_last import OptimizeLast
-from .optimize_suffix import OptimizeSuffix
-from .sample_based_voting import SampleBasedVoting
-from .smac import SMAC
-from .tee import Tee
-from .topk_voting_classifier import TopKVotingClassifier
+from .grid_search_cv import GridSearchCV as GridSearchCV
+from .halving_grid_search_cv import HalvingGridSearchCV as HalvingGridSearchCV
+from .hyperopt import Hyperopt as Hyperopt
+from .identity_wrapper import IdentityWrapper as IdentityWrapper
+from .no_op import NoOp as NoOp
+from .observing import Observing as Observing
+from .optimize_last import OptimizeLast as OptimizeLast
+from .optimize_suffix import OptimizeSuffix as OptimizeSuffix
+from .sample_based_voting import SampleBasedVoting as SampleBasedVoting
+from .smac import SMAC as SMAC
+from .tee import Tee as Tee
+from .topk_voting_classifier import TopKVotingClassifier as TopKVotingClassifier

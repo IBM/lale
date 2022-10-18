@@ -47,8 +47,6 @@ def get_data_from_csv(datatype, data_file_name):
                 data_file_name, header=True
             )
             if datatype == "spark":
-                return df
-            elif datatype == "spark-with-index":
                 return SparkDataFrameWithIndex(df)
         else:
             raise ValueError("Spark is not installed on this machine.")
@@ -81,12 +79,6 @@ def fetch_go_sales_dataset(datatype="pandas"):
       dataframe consisting of the data.
 
       If 'spark',
-      Returns a list of singleton dictionaries (each element of the list is one
-      table from the dataset) after reading the downloaded CSV files. The key of
-      each dictionary is the name of the table and the value contains a spark
-      dataframe consisting of the data.
-
-      If 'spark-with-index',
       Returns a list of singleton dictionaries (each element of the list is one
       table from the dataset) after reading the downloaded CSV files. The key of
       each dictionary is the name of the table and the value contains a spark
@@ -147,12 +139,6 @@ def fetch_imdb_dataset(datatype="pandas"):
       a pandas dataframe consisting of the data.
 
       If 'spark',
-      Returns a list of singleton dictionaries (each element of the list is one
-      table from the dataset) after reading the already existing CSV files.
-      The key of each dictionary is the name of the table and the value contains
-      a spark dataframe consisting of the data.
-
-      If 'spark-with-index',
       Returns a list of singleton dictionaries (each element of the list is one
       table from the dataset) after reading the downloaded CSV files. The key of
       each dictionary is the name of the table and the value contains a spark

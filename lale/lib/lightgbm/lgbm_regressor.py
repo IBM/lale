@@ -15,6 +15,7 @@
 from typing import TYPE_CHECKING
 
 import lale.docstrings
+import lale.helpers
 import lale.operators
 
 try:
@@ -88,6 +89,7 @@ or with
         return self
 
     def partial_fit(self, X, y, **fit_params):
+        fit_params = lale.helpers.dict_without(fit_params, "classes")
         if self._wrapped_model.__sklearn_is_fitted__():
             booster = self._wrapped_model.booster_
             fit_params = {**fit_params, "init_model": booster}
@@ -95,9 +97,6 @@ or with
 
     def predict(self, X, **predict_params):
         return self._wrapped_model.predict(X, **predict_params)
-
-    def predict_proba(self, X):
-        return self._wrapped_model.predict_proba(X)
 
     def score(self, X, y):
         from sklearn.metrics import r2_score
@@ -422,6 +421,7 @@ _input_fit_schema = {
         },
     },
 }
+
 _input_predict_schema = {
     "description": "Return the predicted value for each sample.",
     "type": "object",
@@ -456,53 +456,13 @@ _input_predict_schema = {
         },
     },
 }
+
 _output_predict_schema = {
     "description": "Return the predicted value for each sample.",
     "type": "array",
     "items": {"type": "number"},
 }
-_input_predict_proba_schema = {
-    "description": "Return the predicted probability for each class for each sample.",
-    "type": "object",
-    "properties": {
-        "X": {
-            "type": "array",
-            "items": {
-                "type": "array",
-                "items": {"type": "number"},
-            },
-            "description": " Input features matrix.",
-        },
-        "raw_score": {
-            "type": "boolean",
-            "default": False,
-            "description": "Whether to predict raw scores.",
-        },
-        "num_iteration": {
-            "anyOf": [{"type": "integer"}, {"enum": [None]}],
-            "default": None,
-            "description": "Limit number of iterations in the prediction.",
-        },
-        "pred_leaf": {
-            "type": "boolean",
-            "default": False,
-            "description": "Whether to predict leaf index.",
-        },
-        "pred_contrib": {
-            "type": "boolean",
-            "default": False,
-            "description": "Whether to predict feature contributions.",
-        },
-    },
-}
-_output_predict_proba_schema = {
-    "description": "Return the predicted probability for each class for each sample.",
-    "type": "array",
-    "items": {
-        "type": "array",
-        "items": {"type": "number"},
-    },
-}
+
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Combined schema for expected data and hyperparameters.",
@@ -513,10 +473,9 @@ _combined_schemas = {
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,
+        "input_partial_fit": _input_fit_schema,
         "input_predict": _input_predict_schema,
         "output_predict": _output_predict_schema,
-        "input_predict_proba": _input_predict_proba_schema,
-        "output_predict_proba": _output_predict_proba_schema,
     },
 }
 

@@ -92,31 +92,41 @@ Feature transformation:
 
 from lale import register_lale_wrapper_modules
 
-from .boolean2float import boolean2float
-from .cat_encoder import CatEncoder
-from .cat_imputer import CatImputer
-from .column_selector import ColumnSelector
-from .compress_strings import CompressStrings
-from .date_transformer import DateTransformer
-from .float32_transform import float32_transform
-from .float_str2_float import FloatStr2Float
-from .fs1 import FS1
-from .fs2 import FS2
-from .num_imputer import NumImputer
-from .numpy_column_selector import NumpyColumnSelector
-from .numpy_permute_array import NumpyPermuteArray
-from .numpy_replace_missing_values import NumpyReplaceMissingValues
-from .numpy_replace_unknown_values import NumpyReplaceUnknownValues
-from .opt_standard_scaler import OptStandardScaler
-from .t_no_op import TNoOp
-from .ta1 import TA1
-from .ta2 import TA2
-from .tam import TAM
-from .tb1 import TB1
-from .tb2 import TB2
-from .text_transformer import TextTransformer
-from .tgen import TGen
-from .util import wrap_pipeline_segments
-from .word2vec_transformer import Word2VecTransformer
+from .boolean2float import boolean2float as boolean2float
+from .cat_encoder import CatEncoder as CatEncoder
+from .cat_imputer import CatImputer as CatImputer
+from .column_selector import ColumnSelector as ColumnSelector
+from .compress_strings import CompressStrings as CompressStrings
+from .date_transformer import DateTransformer as DateTransformer
+from .float32_transform import float32_transform as float32_transform
+from .float_str2_float import FloatStr2Float as FloatStr2Float
+from .fs1 import FS1 as FS1
+from .fs2 import FS2 as FS2
+from .num_imputer import NumImputer as NumImputer
+from .numpy_column_selector import NumpyColumnSelector as NumpyColumnSelector
+from .numpy_permute_array import NumpyPermuteArray as NumpyPermuteArray
+from .numpy_replace_missing_values import (
+    NumpyReplaceMissingValues as NumpyReplaceMissingValues,
+)
+from .numpy_replace_unknown_values import (
+    NumpyReplaceUnknownValues as NumpyReplaceUnknownValues,
+)
+from .opt_standard_scaler import OptStandardScaler as OptStandardScaler
+from .t_no_op import TNoOp as TNoOp
+from .ta1 import TA1 as TA1
+from .ta2 import TA2 as TA2
+from .tam import TAM as TAM
+from .tb1 import TB1 as TB1
+from .tb2 import TB2 as TB2
+from .text_transformer import TextTransformer as TextTransformer
+from .tgen import TGen as TGen
+from .util import wrap_pipeline_segments as wrap_pipeline_segments
+from .word2vec_transformer import Word2VecTransformer as Word2VecTransformer
+
+# Note: all imports should be done as
+# from .xxx import XXX as XXX
+# this ensures that pyright considers them to be publicly available
+# and not private imports (this affects lale users that use pyright)
+
 
 register_lale_wrapper_modules(__name__)

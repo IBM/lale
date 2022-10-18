@@ -350,6 +350,17 @@ to create an init method with the appropriate parameter list, an exception was r
         "input_fit",
     )
 
+    def partial_fit(self, X, y=None, **fit_params):
+        pass
+
+    make_fun(
+        "partial_fit",
+        partial_fit,
+        "Incremental fit to train train the operator on a batch of samples.",
+        "The partial_fit method is not available until this operator is trainable.",
+        "input_partial_fit",
+    )
+
     def transform(self, X, y=None):
         pass
 

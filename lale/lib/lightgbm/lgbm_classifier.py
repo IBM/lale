@@ -15,6 +15,7 @@
 from typing import TYPE_CHECKING
 
 import lale.docstrings
+import lale.helpers
 import lale.operators
 
 try:
@@ -90,6 +91,7 @@ or with
         return self
 
     def partial_fit(self, X, y, **fit_params):
+        fit_params = lale.helpers.dict_without(fit_params, "classes")
         if self._wrapped_model.__sklearn_is_fitted__():
             booster = self._wrapped_model.booster_
             fit_params = {**fit_params, "init_model": booster}
@@ -442,6 +444,7 @@ _input_fit_schema = {
         },
     },
 }
+
 _input_predict_schema = {
     "description": "Return the predicted value for each sample.",
     "additionalProperties": False,
@@ -521,6 +524,7 @@ _input_predict_proba_schema = {
         },
     },
 }
+
 _output_predict_proba_schema = {
     "description": "Return the predicted probability for each class for each sample.",
     "type": "array",
@@ -529,6 +533,7 @@ _output_predict_proba_schema = {
         "items": {"type": "number"},
     },
 }
+
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Combined schema for expected data and hyperparameters.",
@@ -539,6 +544,7 @@ _combined_schemas = {
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,
+        "input_partial_fit": _input_fit_schema,
         "input_predict": _input_predict_schema,
         "output_predict": _output_predict_schema,
         "input_predict_proba": _input_predict_proba_schema,

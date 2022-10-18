@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,6 +16,13 @@ import sklearn.naive_bayes
 
 import lale.docstrings
 import lale.operators
+
+from ._common_schemas import (
+    schema_1D_cats,
+    schema_2D_numbers,
+    schema_sample_weight,
+    schema_X_numbers,
+)
 
 _hyperparams_schema = {
     "description": "Naive Bayes classifier for multinomial models",
@@ -50,61 +57,35 @@ _hyperparams_schema = {
         }
     ],
 }
+
 _input_fit_schema = {
     "description": "Fit Naive Bayes classifier according to X, y",
     "type": "object",
     "required": ["X", "y"],
     "properties": {
-        "X": {
-            "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
-            "description": "Training vectors, where n_samples is the number of samples and n_features is the number of features.",
-        },
-        "y": {
-            "anyOf": [
-                {"type": "array", "items": {"type": "number"}},
-                {"type": "array", "items": {"type": "string"}},
-                {"type": "array", "items": {"type": "boolean"}},
-            ],
-            "description": "Target values.",
-        },
-        "sample_weight": {
-            "anyOf": [{"type": "array", "items": {"type": "number"}}, {"enum": [None]}],
-            "default": None,
-            "description": "Weights applied to individual samples (1. for unweighted).",
-        },
+        "X": schema_2D_numbers,
+        "y": schema_1D_cats,
+        "sample_weight": schema_sample_weight,
     },
-}
-_input_predict_schema = {
-    "description": "Perform classification on an array of test vectors X.",
-    "type": "object",
-    "required": ["X"],
-    "properties": {
-        "X": {"type": "array", "items": {"type": "array", "items": {"type": "number"}}},
-    },
-}
-_output_predict_schema = {
-    "description": "Perform classification on an array of test vectors X.",
-    "anyOf": [
-        {"type": "array", "items": {"type": "number"}},
-        {"type": "array", "items": {"type": "string"}},
-        {"type": "array", "items": {"type": "boolean"}},
-    ],
 }
 
-_input_predict_proba_schema = {
-    "description": "Perform classification on an array of test vectors X.",
+_input_partial_fit_schema = {
     "type": "object",
-    "required": ["X"],
+    "required": ["X", "y"],
     "properties": {
-        "X": {"type": "array", "items": {"type": "array", "items": {"type": "number"}}},
+        "X": schema_2D_numbers,
+        "y": schema_1D_cats,
+        "classes": schema_1D_cats,
+        "sample_weight": schema_sample_weight,
     },
 }
+
 _output_predict_proba_schema = {
     "description": "Returns the probability of the samples for each class in the model. The columns correspond to the classes in sorted order, as they appear in the attribute `classes_`.",
     "type": "array",
     "items": {"type": "array", "items": {"type": "number"}},
 }
+
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": """`Multinomial Naive Bayes`_ classifier from scikit-learn.
@@ -118,9 +99,10 @@ _combined_schemas = {
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,
-        "input_predict": _input_predict_schema,
-        "output_predict": _output_predict_schema,
-        "input_predict_proba": _input_predict_proba_schema,
+        "input_partial_fit": _input_partial_fit_schema,
+        "input_predict": schema_X_numbers,
+        "output_predict": schema_1D_cats,
+        "input_predict_proba": schema_X_numbers,
         "output_predict_proba": _output_predict_proba_schema,
     },
 }

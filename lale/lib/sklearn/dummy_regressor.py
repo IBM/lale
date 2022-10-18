@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -54,11 +54,8 @@ _hyperparams_schema = {
                 },
                 "constant": {
                     "description": "The explicit constant as predicted by the “constant” strategy. This parameter is useful only for the “constant” strategy.",
-                    "anyOf": [
-                        {"type": ["integer", "string"]},
-                        {"enum": [None]},
-                        {"default": None},
-                    ],
+                    "anyOf": [{"type": "number"}, {"enum": [None]}],
+                    "default": None,
                 },
                 "quantile": {
                     "description": "The quantile to predict using the “quantile” strategy. A quantile of 0.5 corresponds to the median, while 0.0 to the minimum and 1.0 to the maximum.",

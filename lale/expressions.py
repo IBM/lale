@@ -1,4 +1,4 @@
-# Copyright 2020 IBM Corporation
+# Copyright 2020-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -514,11 +514,15 @@ def replace(
 
 
 def ite(
-    c: Union[Expr, AstExpr, int, float, bool, str],
-    v1: Union[Expr, AstExpr, int, float, bool, str],
-    v2: Union[Expr, AstExpr, int, float, bool, str],
+    cond: Expr,
+    v1: Union[Expr, int, float, bool, str],
+    v2: Union[Expr, int, float, bool, str],
 ) -> Expr:
-    return _make_call_expr("ite", c, v1, v2)
+    if not isinstance(v1, Expr):
+        v1 = Expr(ast.Constant(value=v1))
+    if not isinstance(v2, Expr):
+        v2 = Expr(ast.Constant(value=v2))
+    return _make_call_expr("ite", cond, v1, v2)
 
 
 def identity(subject: Expr) -> Expr:

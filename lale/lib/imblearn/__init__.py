@@ -45,14 +45,27 @@ Operators:
 
 """
 
-from .adasyn import ADASYN
-from .all_knn import AllKNN
-from .borderline_smote import BorderlineSMOTE
-from .condensed_nearest_neighbour import CondensedNearestNeighbour
-from .edited_nearest_neighbours import EditedNearestNeighbours
-from .instance_hardness_threshold import InstanceHardnessThreshold
-from .random_over_sampler import RandomOverSampler
-from .repeated_edited_nearest_neighbours import RepeatedEditedNearestNeighbours
-from .smote import SMOTE
-from .smoteenn import SMOTEENN
-from .svm_smote import SVMSMOTE
+# Note: all imports should be done as
+# from .xxx import XXX as XXX
+# this ensures that pyright considers them to be publicly available
+# and not private imports (this affects lale users that use pyright)
+
+from .adasyn import ADASYN as ADASYN
+from .all_knn import AllKNN as AllKNN
+from .borderline_smote import BorderlineSMOTE as BorderlineSMOTE
+from .condensed_nearest_neighbour import (
+    CondensedNearestNeighbour as CondensedNearestNeighbour,
+)
+from .edited_nearest_neighbours import (
+    EditedNearestNeighbours as EditedNearestNeighbours,
+)
+from .instance_hardness_threshold import (
+    InstanceHardnessThreshold as InstanceHardnessThreshold,
+)
+from .random_over_sampler import RandomOverSampler as RandomOverSampler
+from .repeated_edited_nearest_neighbours import (
+    RepeatedEditedNearestNeighbours as RepeatedEditedNearestNeighbours,
+)
+from .smote import SMOTE as SMOTE
+from .smoteenn import SMOTEENN as SMOTEENN
+from .svm_smote import SVMSMOTE as SVMSMOTE
