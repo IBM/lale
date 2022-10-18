@@ -45,6 +45,8 @@ def _convert(data, astype, X_or_y):
             result = data
         elif astype == "spark":
             result = pandas2spark(data)
+        elif astype == "numpy":
+            result = data.to_numpy()
         else:
             assert False, astype
     elif isinstance(data, (list, np.ndarray)):
@@ -89,7 +91,7 @@ _hyperparams_schema = {
             "properties": {
                 "astype": {
                     "description": "Type to convert to.",
-                    "enum": ["pandas", "spark"],
+                    "enum": ["pandas", "spark", "numpy"],
                     "default": "pandas",
                 },
             },

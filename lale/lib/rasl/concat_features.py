@@ -29,6 +29,7 @@ from lale.helpers import _is_spark_df
 from lale.json_operator import JSON_TYPE
 from lale.lib.rasl.alias import Alias
 from lale.lib.rasl.join import Join
+from lale.lib.rasl.orderby import OrderBy
 from lale.type_checking import is_subschema, join_schemas, validate_is_schema
 
 logger = logging.getLogger(__name__)
@@ -84,7 +85,7 @@ class _ConcatFeaturesImpl:
                 deduplicated = [ls[-1] for _, ls in name2series.items()]
                 result = pd.concat(deduplicated, axis=1)
         elif all([_is_spark_df(d) for d in X]):
-
+            from lale.datasets.data_schemas import SparkDataFrameWithIndex#TODO:Is the import ok here?
             def join(d1, d2):
                 n1 = get_table_name(d1)
                 n2 = get_table_name(d2)
@@ -94,6 +95,10 @@ class _ConcatFeaturesImpl:
                 if n2 is None:
                     n2 = _gen_table_name([n1])
                     d2 = Alias(name=n2).transform(d2)
+                d1=d1.drop_indexes()
+                d2=d2.drop_indexes()
+                d1 = SparkDataFrameWithIndex(d1)#TODO: is it ok to change the index?
+                d2 = SparkDataFrameWithIndex(d2)
                 indexes_col1 = get_index_names(d1)
                 indexes_col2 = get_index_names(d2)
                 if indexes_col1 is None or indexes_col2 is None:
@@ -105,7 +110,7 @@ class _ConcatFeaturesImpl:
                         it[n1][index_col1] == it[n2][index_col2]
                         for index_col1, index_col2 in zip(indexes_col1, indexes_col2)
                     ]
-                )
+                ) >> OrderBy(by=indexes_col1)
                 return transformer.transform([d1, d2])
 
             result = reduce(join, X)
