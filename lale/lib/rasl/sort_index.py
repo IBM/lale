@@ -11,19 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import ast
-from typing import List, Tuple
 
 import lale.docstrings
 import lale.operators
 from lale.datasets.data_schemas import forward_metadata, get_index_names
-from lale.expressions import Expr
-from lale.helpers import (
-    _is_ast_attribute,
-    _is_ast_subscript,
-    _is_pandas_df,
-    _is_spark_df,
-)
+from lale.helpers import _is_pandas_df, _is_pandas_series, _is_spark_df
 
 
 class _SortIndexImpl:
@@ -37,7 +29,7 @@ class _SortIndexImpl:
         if _is_pandas_df(X):
             ordered_df = X.sort_index(ascending=self.ascending)
         elif _is_spark_df(X):
-            index_cols = get_index_names(X) #type:ignore
+            index_cols = get_index_names(X)  # type:ignore
             ordered_df = X.orderBy(index_cols, ascending=self.ascending)
         else:
             raise ValueError(
@@ -47,12 +39,17 @@ class _SortIndexImpl:
         return ordered_df
 
     def transform_X_y(self, X, y=None):
-        result_y=None
+        result_y = None
         if y is not None:
-            assert _is_pandas_df(y), "transform_X_y is supported only when y is a Pandas Series or DataFrame."
-            result_y = y.sort_index(ascending=self.ascending) #assumes that y is always Pandas
+            assert _is_pandas_df(y) or _is_pandas_series(
+                y
+            ), "transform_X_y is supported only when y is a Pandas Series or DataFrame."
+            result_y = y.sort_index(
+                ascending=self.ascending
+            )  # assumes that y is always Pandas
         result_X = self.transform(X)
         return result_X, result_y
+
 
 _hyperparams_schema = {
     "allOf": [
@@ -67,9 +64,9 @@ _hyperparams_schema = {
                 "ascending": {
                     "description": "Sort by index of the dataframe.",
                     "type": "boolean",
-                    "default":True
+                    "default": True,
                 }
-            }
+            },
         }
     ]
 }
