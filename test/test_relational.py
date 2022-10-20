@@ -83,6 +83,7 @@ from lale.lib.rasl import (
     OrderBy,
     Relational,
     Scan,
+    SortIndex,
 )
 from lale.lib.sklearn import PCA, KNeighborsClassifier, LogisticRegression
 
@@ -2525,3 +2526,60 @@ class TestConvert(unittest.TestCase):
                         pd_dst.iloc[row_idx, col_idx],
                         msg=(row_idx, col_idx, tgt),
                     )
+
+
+class TestSortIndex(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        targets = ["pandas", "spark"]
+        cls.tgt2datasets = {tgt: {} for tgt in targets}
+
+        def add_df(name, df):
+            cls.tgt2datasets["pandas"][name] = df
+            cls.tgt2datasets["spark"][name] = pandas2spark(df)
+
+        df = pd.DataFrame(
+            {
+                "gender": ["m", "f", "m", "m", "f"],
+                "state": ["NY", "NY", "CA", "NY", "CA"],
+                "status": [0, 1, 1, 0, 1],
+                "id": [9, 20, 35, 7, 100],
+            }
+        )
+        df = df.set_index("id")
+        add_df("df", df)
+        cls.y = pd.Series([1, 1, 1, 0, 0])
+
+    def test_sort_asc(self):
+        trainable = SortIndex()
+        for tgt, datasets in self.tgt2datasets.items():
+            df = datasets["df"]
+            trained = trainable.fit(df)
+            transformed_df = trained.transform(df)
+            if tgt == "spark":
+                self.assertEqual(get_index_name(transformed_df), get_index_name(df))
+            transformed_df = _ensure_pandas(transformed_df)
+            self.assertTrue((transformed_df["status"]).is_monotonic_increasing)
+            transformed_X, transformed_y = trained.transform_X_y(df, self.y)
+            if tgt == "spark":
+                self.assertEqual(get_index_name(transformed_X), get_index_name(df))
+            transformed_X = _ensure_pandas(transformed_X)
+            self.assertTrue((transformed_X["status"]).is_monotonic_increasing)
+            self.assertTrue((transformed_y).is_monotonic_decreasing)
+
+    def test_sort_desc(self):
+        trainable = SortIndex(ascending=False)
+        for tgt, datasets in self.tgt2datasets.items():
+            df = datasets["df"]
+            trained = trainable.fit(df)
+            transformed_df = trained.transform(df)
+            if tgt == "spark":
+                self.assertEqual(get_index_name(transformed_df), get_index_name(df))
+            transformed_df = _ensure_pandas(transformed_df)
+            self.assertTrue((transformed_df["status"]).is_monotonic_decreasing)
+            transformed_X, transformed_y = trained.transform_X_y(df, self.y)
+            if tgt == "spark":
+                self.assertEqual(get_index_name(transformed_X), get_index_name(df))
+            transformed_X = _ensure_pandas(transformed_X)
+            self.assertTrue((transformed_X["status"]).is_monotonic_decreasing)
+            self.assertTrue((transformed_y).is_monotonic_increasing)
