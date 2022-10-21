@@ -107,7 +107,7 @@ extras_require = {
         "xgboost<=1.5.1",
         "imbalanced-learn",
         "liac-arff>=2.4.0",
-        "aif360<0.4.0",
+        "aif360==0.5.0",
         "protobuf<=3.20.1",
         "BlackBoxAuditing",
         "typing-extensions",

@@ -450,9 +450,6 @@ jobs:
       run: pip install -U numpy
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
-    - name: Install updated version of aif360 when needed
-      if: ${{ matrix.dir == 'examples/kdd22' && matrix.python-version == 3.10}}
-      run: pip install 'aif360==0.5.0'
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
