@@ -19,7 +19,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache pip
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         # This path is specific to Ubuntu
         path: ${{ env.pythonLocation }}
@@ -117,7 +117,7 @@ jobs:
     - name: Install system packages
       run: sudo apt-get install graphviz swig
     - name: Cache pip
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         # This path is specific to Ubuntu
         path: ${{ env.pythonLocation }}
@@ -232,7 +232,7 @@ jobs:
     - name: Install system packages
       run: sudo apt-get install graphviz swig
     - name: Cache pip
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         # This path is specific to Ubuntu
         path: ${{ env.pythonLocation }}
@@ -300,7 +300,7 @@ jobs:
     - name: Install system packages
       run: sudo apt-get install graphviz swig
     - name: Cache pip
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         # This path is specific to Ubuntu
         path: ${{ env.pythonLocation }}
@@ -359,7 +359,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache pip
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         # This path is specific to Ubuntu
         path: ${{ env.pythonLocation }}
@@ -435,7 +435,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache pip
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         # This path is specific to Ubuntu
         path: ${{ env.pythonLocation }}
