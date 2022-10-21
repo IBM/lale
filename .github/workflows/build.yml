@@ -19,7 +19,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache pip
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         # This path is specific to Ubuntu
         path: ${{ env.pythonLocation }}
@@ -45,7 +45,7 @@ jobs:
         pip install pipdeptree
         pipdeptree -fl
     - name: pre-commit checks
-      uses: pre-commit/action@v2.0.0
+      uses: pre-commit/action@v3.0.0
 
   # test_matrix_pr and test_matrix_master have a lot of redundancy
   # If GitHub actions adds support for conditional matrix expressions
@@ -117,7 +117,7 @@ jobs:
     - name: Install system packages
       run: sudo apt-get install graphviz swig
     - name: Cache pip
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         # This path is specific to Ubuntu
         path: ${{ env.pythonLocation }}
@@ -232,7 +232,7 @@ jobs:
     - name: Install system packages
       run: sudo apt-get install graphviz swig
     - name: Cache pip
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         # This path is specific to Ubuntu
         path: ${{ env.pythonLocation }}
@@ -300,7 +300,7 @@ jobs:
     - name: Install system packages
       run: sudo apt-get install graphviz swig
     - name: Cache pip
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         # This path is specific to Ubuntu
         path: ${{ env.pythonLocation }}
@@ -359,7 +359,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache pip
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         # This path is specific to Ubuntu
         path: ${{ env.pythonLocation }}
@@ -435,7 +435,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache pip
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       with:
         # This path is specific to Ubuntu
         path: ${{ env.pythonLocation }}
@@ -450,9 +450,6 @@ jobs:
       run: pip install -U numpy
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
-    - name: Install updated version of aif360 when needed
-      if: ${{ matrix.dir == 'examples/kdd22' && matrix.python-version == 3.10}}
-      run: pip install 'aif360==0.5.0'
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
@@ -524,7 +521,7 @@ jobs:
         TRAVIS: " "
       run: python setup.py sdist bdist_wheel
     - name: Publish package to TestPyPI
-      uses: pypa/gh-action-pypi-publish@master
+      uses: pypa/gh-action-pypi-publish@release/v1
       with:
         user: __token__
         password: ${{ secrets.test_pypi_password }}

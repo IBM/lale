@@ -35,6 +35,7 @@ Transformers
 * lale.lib.rasl. `ConcatFeatures`_
 * lale.lib.rasl. `Convert`_
 * lale.lib.rasl. `Scan`_
+* lale.lib.rasl. `SortIndex`_
 * lale.lib.rasl. `SplitXy`_
 
 Scikit-learn Operators
@@ -102,6 +103,7 @@ Other Facilities
 .. _`Convert`: lale.lib.rasl.convert.html
 .. _`Scan`: lale.lib.rasl.scan.html
 .. _`SplitXy`: lale.lib.rasl.split_xy.html
+.. _`SortIndex`: lale.lib.rasl.sort_index.html
 
 .. _`MinMaxScaler`: lale.lib.rasl.min_max_scaler.html
 .. _`OneHotEncoder`: lale.lib.rasl.one_hot_encoder.html
@@ -173,6 +175,7 @@ from .relational import Relational as Relational
 from .scan import Scan as Scan
 from .select_k_best import SelectKBest as SelectKBest
 from .simple_imputer import SimpleImputer as SimpleImputer
+from .sort_index import SortIndex as SortIndex
 from .spark_explainer import SparkExplainer as SparkExplainer
 from .split_xy import SplitXy as SplitXy
 from .standard_scaler import StandardScaler as StandardScaler
