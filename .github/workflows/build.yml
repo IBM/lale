@@ -45,7 +45,7 @@ jobs:
         pip install pipdeptree
         pipdeptree -fl
     - name: pre-commit checks
-      uses: pre-commit/action@v2.0.0
+      uses: pre-commit/action@v3.0.0
 
   # test_matrix_pr and test_matrix_master have a lot of redundancy
   # If GitHub actions adds support for conditional matrix expressions
