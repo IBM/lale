@@ -22,10 +22,10 @@ try:
 
     # noqa in the imports here because those get used dynamically and flake fails.
     from pyspark.sql.functions import col  # noqa
-    from pyspark.sql.functions import isnan  # noqa
     from pyspark.sql.functions import lit  # noqa
     from pyspark.sql.functions import to_timestamp  # noqa
     from pyspark.sql.functions import hour as spark_hour  # noqa
+    from pyspark.sql.functions import isnan, isnull  # noqa
     from pyspark.sql.functions import minute as spark_minute  # noqa
     from pyspark.sql.functions import month as spark_month  # noqa
     from pyspark.sql.types import LongType
@@ -191,6 +191,8 @@ def replace(call: ast.Call):
     for key, value in mapping_dict.items():
         if key == "nan":
             when_expr = isnan(column)  # type: ignore
+        elif key is None:
+            when_expr = isnull(column)  # type: ignore
         else:
             when_expr = column == key  # type: ignore
         if chain_of_whens is None:
