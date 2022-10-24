@@ -17,8 +17,7 @@ import pandas as pd
 from lale.datasets.data_schemas import add_table_name, get_table_name
 
 try:
-    import pyspark.sql
-    from pyspark import SparkConf, SparkContext
+    from pyspark.sql import SparkSession
 
     from lale.datasets.data_schemas import SparkDataFrameWithIndex
 
@@ -29,11 +28,11 @@ except ImportError:
 
 def pandas2spark(pandas_df):
     assert spark_installed
-    spark_conf = (
-        SparkConf().setMaster("local[2]").set("spark.driver.bindAddress", "127.0.0.1")
+    spark_session = (
+        SparkSession.builder.master("local[2]")
+        .config("spark.driver.memory", "64g")
+        .getOrCreate()
     )
-    spark_context = SparkContext.getOrCreate(conf=spark_conf)
-    spark_sql_context = pyspark.sql.SQLContext(spark_context)
     name = get_table_name(pandas_df)
     if isinstance(pandas_df, pd.Series):
         pandas_df = pandas_df.to_frame()
@@ -42,6 +41,6 @@ def pandas2spark(pandas_df):
         index_names = ["index"]
     cols = list(pandas_df.columns) + list(index_names)
     pandas_df = pandas_df.reset_index().reindex(columns=cols)
-    spark_dataframe = spark_sql_context.createDataFrame(pandas_df)
+    spark_dataframe = spark_session.createDataFrame(pandas_df)
     spark_dataframe_with_index = SparkDataFrameWithIndex(spark_dataframe, index_names)
     return add_table_name(spark_dataframe_with_index, name)
