@@ -24,7 +24,7 @@ from lale.operator_wrapper import wrap_imported_operators
 
 try:
     from pyspark import SparkConf, SparkContext
-    from pyspark.sql import Row, SQLContext
+    from pyspark.sql import Row, SQLContext, SparkSession
 
     from lale.datasets.data_schemas import SparkDataFrameWithIndex
 
@@ -2176,6 +2176,18 @@ class TestMap(unittest.TestCase):
             self.assertEqual(transformed_df["clip_50_inf"][2], 170, tgt)
             self.assertEqual(transformed_df["clip_50_150"][0], 50, tgt)
             self.assertEqual(transformed_df["clip_50_150"][2], 150, tgt)
+
+    def test_spark_null(self):
+        spark_session = (
+            SparkSession.builder.master("local[2]")
+            .config("spark.driver.memory", "64g")
+            .getOrCreate()
+        )
+        df = spark_session.createDataFrame([(1, None), (2, "li")], ["num", "name"])
+        transformer = Map(
+            columns=[replace(it.name, {None:"ABC"})])
+        transformed_df = transformer.transform(SparkDataFrameWithIndex(df))
+        self.assertEqual(transformed_df.collect()[0][0], "ABC")
 
 
 class TestRelationalOperator(unittest.TestCase):
