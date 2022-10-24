@@ -24,7 +24,7 @@ from lale.operator_wrapper import wrap_imported_operators
 
 try:
     from pyspark import SparkConf, SparkContext
-    from pyspark.sql import Row, SQLContext, SparkSession
+    from pyspark.sql import Row, SparkSession, SQLContext
 
     from lale.datasets.data_schemas import SparkDataFrameWithIndex
 
@@ -2184,8 +2184,7 @@ class TestMap(unittest.TestCase):
             .getOrCreate()
         )
         df = spark_session.createDataFrame([(1, None), (2, "li")], ["num", "name"])
-        transformer = Map(
-            columns=[replace(it.name, {None:"ABC"})])
+        transformer = Map(columns=[replace(it.name, {None: "ABC"})])
         transformed_df = transformer.transform(SparkDataFrameWithIndex(df))
         self.assertEqual(transformed_df.collect()[0][0], "ABC")
 
