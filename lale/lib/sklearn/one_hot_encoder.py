@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import pandas as pd
-import scipy.sparse.csr
+import scipy.sparse
 import sklearn
 import sklearn.preprocessing
 from packaging import version
@@ -155,7 +155,7 @@ class _OneHotEncoderImpl:
                 columns = self._wrapped_model.get_feature_names_out(X.columns)
             else:
                 columns = self._wrapped_model.get_feature_names(X.columns)
-            if isinstance(result, scipy.sparse.csr.csr_matrix):
+            if isinstance(result, scipy.sparse.csr_matrix):
                 result = result.toarray()
             result = pd.DataFrame(data=result, index=X.index, columns=columns)
         return result
