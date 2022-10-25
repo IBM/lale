@@ -832,7 +832,7 @@ def create_data_loader(X, y=None, batch_size=1, num_workers=0, shuffle=True):
     elif isinstance(X, pd.DataFrame):
         dataset = PandasTorchDataset(X, y)
         collate_fn = pandas_collate_fn
-    elif isinstance(X, scipy.sparse.csr.csr_matrix):
+    elif isinstance(X, scipy.sparse.csr_matrix):
         # unfortunately, NumpyTorchDataset won't accept a subclass of np.ndarray
         X = X.toarray()  # type: ignore
         if isinstance(y, lale.datasets.data_schemas.NDArrayWithSchema):
