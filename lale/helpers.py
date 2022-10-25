@@ -827,7 +827,7 @@ def create_data_loader(X, y=None, batch_size=1, num_workers=0, shuffle=True):
     collate_fn = None
     worker_init_fn = None
 
-    if isinstance(X, Dataset):
+    if isinstance(X, Dataset) and not isinstance(X, BatchDataDict):
         dataset = X
     elif isinstance(X, pd.DataFrame):
         dataset = PandasTorchDataset(X, y)
