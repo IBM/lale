@@ -1,9 +1,10 @@
 import sklearn
 from numpy import inf, nan
+from packaging import version
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as Op
 
 from lale.docstrings import set_docstrings
-from lale.operators import make_operator
+from lale.operators import make_operator, sklearn_version
 
 
 class _LinearDiscriminantAnalysisImpl:
@@ -265,7 +266,7 @@ LinearDiscriminantAnalysis = make_operator(
     _LinearDiscriminantAnalysisImpl, _combined_schemas
 )
 
-if sklearn.__version__ >= "0.24":
+if sklearn_version >= version.Version("0.24"):
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.discriminant_analysis.LinearDiscriminantAnalysis#sklearn-discriminant_analysis-lineardiscriminantanalysis
     # new: https://scikit-learn.org/0.24/modules/generated/sklearn.discriminant_analysis.LinearDiscriminantAnalysis#sklearn-discriminant_analysis-lineardiscriminantanalysis
     LinearDiscriminantAnalysis = LinearDiscriminantAnalysis.customize_schema(

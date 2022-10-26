@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sklearn
+from packaging import version
 from sklearn.linear_model import SGDClassifier as SKLModel
 
 import lale.docstrings
@@ -333,7 +333,7 @@ _combined_schemas = {
 
 SGDClassifier = lale.operators.make_operator(SKLModel, _combined_schemas)
 
-if sklearn.__version__ >= "1.0":
+if lale.operators.sklearn_version >= version.Version("1.0"):
     # old: https://scikit-learn.org/0.24/modules/generated/sklearn.linear_model.SGDClassifer.html
     # new: https://scikit-learn.org/1.0/modules/generated/sklearn.linear_model.SGDClassifier.html
     SGDClassifier = SGDClassifier.customize_schema(

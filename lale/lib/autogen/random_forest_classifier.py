@@ -1,9 +1,10 @@
 import sklearn
 from numpy import inf, nan
+from packaging import version
 from sklearn.ensemble import RandomForestClassifier as Op
 
 from lale.docstrings import set_docstrings
-from lale.operators import make_operator
+from lale.operators import make_operator, sklearn_version
 
 
 class _RandomForestClassifierImpl:
@@ -316,7 +317,7 @@ _combined_schemas = {
 }
 RandomForestClassifier = make_operator(_RandomForestClassifierImpl, _combined_schemas)
 
-if sklearn.__version__ >= "0.22":
+if sklearn_version >= version.Version("0.22"):
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.RandomForestClassifier.html
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.ensemble.RandomForestClassifier.html
     from lale.schemas import AnyOf, Float, Int, Null
@@ -354,7 +355,7 @@ if sklearn.__version__ >= "0.22":
         set_as_available=True,
     )
 
-if sklearn.__version__ >= "1.0":
+if sklearn_version >= version.Version("1.0"):
     # old: https://scikit-learn.org/0.24/modules/generated/sklearn.ensemble.RandomForestClassifier.html
     # new: https://scikit-learn.org/1.0/modules/generated/sklearn.ensemble.RandomForestClassifier.html
     from lale.schemas import AnyOf, Float, Int, Null

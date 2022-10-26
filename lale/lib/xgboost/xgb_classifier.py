@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
+from packaging import version
 
 import lale.docstrings
 import lale.helpers
@@ -29,9 +30,10 @@ with warnings.catch_warnings():
     try:
         import xgboost  # type: ignore
 
-        xgboost_installed = True
+        xgboost_version = version.parse(getattr(xgboost, "__version__"))
+
     except ImportError:
-        xgboost_installed = False
+        xgboost_version = None
         if TYPE_CHECKING:
             import xgboost  # type: ignore
 
@@ -59,7 +61,9 @@ class _XGBClassifierImpl:
 
     @classmethod
     def validate_hyperparams(cls, **hyperparams):
-        assert xgboost_installed, """Your Python environment does not have xgboost installed. You can install it with
+        assert (
+            xgboost_version is not None
+        ), """Your Python environment does not have xgboost installed. You can install it with
             pip install xgboost
         or with
             pip install 'lale[full]'"""
@@ -71,7 +75,11 @@ class _XGBClassifierImpl:
 
     def fit(self, X, y, **fit_params):
         renamed_X = _rename_all_features(X)
-        if xgboost.__version__ >= "1.3.0" and "eval_metric" not in fit_params:
+        assert xgboost_version is not None
+        if (
+            xgboost_version >= version.Version("1.3.0")
+            and "eval_metric" not in fit_params
+        ):
             # set eval_metric explicitly to avoid spurious warning
             fit_params = {"eval_metric": "logloss", **fit_params}
         with warnings.catch_warnings():
@@ -522,7 +530,7 @@ _combined_schemas = {
 XGBClassifier: lale.operators.PlannedIndividualOp
 XGBClassifier = lale.operators.make_operator(_XGBClassifierImpl, _combined_schemas)
 
-if xgboost_installed and xgboost.__version__ >= "0.90":
+if xgboost_version is not None and xgboost_version >= version.Version("0.90"):
     # page 58 of https://readthedocs.org/projects/xgboost/downloads/pdf/release_0.90/
     import lale.schemas
 
@@ -548,7 +556,7 @@ if xgboost_installed and xgboost.__version__ >= "0.90":
         set_as_available=True,
     )
 
-if xgboost_installed and xgboost.__version__ >= "1.3":
+if xgboost_version is not None and xgboost_version >= version.Version("1.3"):
     # https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn
     XGBClassifier = XGBClassifier.customize_schema(
         monotone_constraints={
@@ -784,7 +792,7 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
         set_as_available=True,
     )
 
-if xgboost_installed and xgboost.__version__ >= "1.5":
+if xgboost_version is not None and xgboost_version >= version.Version("1.5"):
     # https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn
     XGBClassifier = XGBClassifier.customize_schema(
         enable_categorical={
@@ -803,7 +811,7 @@ available choices are [cpu_predictor, gpu_predictor].""",
         set_as_available=True,
     )
 
-if xgboost_installed and xgboost.__version__ >= "1.6":
+if xgboost_version is not None and xgboost_version >= version.Version("1.6"):
     # https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn
     XGBClassifier = XGBClassifier.customize_schema(
         use_label_encoder={

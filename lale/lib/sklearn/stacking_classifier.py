@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import pandas as pd
-import sklearn
+from packaging import version
 from sklearn.ensemble import StackingClassifier as SKLModel
 
 import lale.docstrings
@@ -251,7 +251,7 @@ StackingClassifier = lale.operators.make_operator(
     _StackingClassifierImpl, _combined_schemas
 )
 
-if sklearn.__version__ >= "1.1":
+if lale.operators.sklearn_version >= version.Version("1.1"):
     from lale.lib._common_schemas import schema_cv_1_1
 
     StackingClassifier = StackingClassifier.customize_schema(

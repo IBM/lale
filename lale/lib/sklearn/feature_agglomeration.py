@@ -15,6 +15,7 @@
 import numpy as np
 import sklearn
 import sklearn.cluster
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -183,7 +184,7 @@ FeatureAgglomeration = lale.operators.make_operator(
     sklearn.cluster.FeatureAgglomeration, _combined_schemas
 )
 
-if sklearn.__version__ >= "0.21":
+if lale.operators.sklearn_version >= version.Version("0.21"):
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.cluster.FeatureAgglomeration.html
     # new: https://scikit-learn.org/0.21/modules/generated/sklearn.cluster.FeatureAgglomeration.html
     from lale.schemas import AnyOf, Enum, Float, Int, Null, Object
@@ -224,7 +225,7 @@ if sklearn.__version__ >= "0.21":
         set_as_available=True,
     )
 
-if sklearn.__version__ >= "0.24":
+if lale.operators.sklearn_version >= version.Version("0.24"):
     # old: https://scikit-learn.org/0.21/modules/generated/sklearn.cluster.FeatureAgglomeration.html
     # new: https://scikit-learn.org/0.24/modules/generated/sklearn.cluster.FeatureAgglomeration.html
     from lale.schemas import Bool

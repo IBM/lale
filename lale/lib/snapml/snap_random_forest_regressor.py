@@ -11,12 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from packaging import version
+
 try:
     import snapml  # type: ignore
 
-    snapml_installed = True
+    snapml_version = version.parse(getattr(snapml, "__version__"))
 except ImportError:
-    snapml_installed = False
+    snapml_version = None
 
 import lale.datasets.data_schemas
 import lale.docstrings
@@ -42,7 +44,7 @@ class _SnapRandomForestRegressorImpl:
         compress_trees=False,
     ):
         assert (
-            snapml_installed
+            snapml_version is not None
         ), """Your Python environment does not have snapml installed. Install using: pip install snapml"""
         self._hyperparams = {
             "n_estimators": n_estimators,
@@ -59,7 +61,7 @@ class _SnapRandomForestRegressorImpl:
             "use_gpu": use_gpu,
             "gpu_ids": gpu_ids,
         }
-        if snapml.__version__ > "1.7.8":
+        if snapml_version > version.Version("1.7.8"):
             self._hyperparams["compress_trees"] = compress_trees
 
         modified_hps = {**self._hyperparams}
@@ -306,7 +308,7 @@ SnapRandomForestRegressor = lale.operators.make_operator(
     _SnapRandomForestRegressorImpl, _combined_schemas
 )
 
-if snapml_installed and snapml.__version__ > "1.7.8":  # type: ignore # noqa
+if snapml_version is not None and snapml_version > version.Version("1.7.8"):  # type: ignore # noqa
     from lale.schemas import Bool
 
     SnapRandomForestRegressor = SnapRandomForestRegressor.customize_schema(

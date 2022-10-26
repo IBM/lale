@@ -14,6 +14,7 @@
 
 import sklearn
 import sklearn.linear_model
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -133,7 +134,7 @@ LinearRegression = lale.operators.make_operator(
     sklearn.linear_model.LinearRegression, _combined_schemas
 )
 
-if sklearn.__version__ >= "0.24":
+if lale.operators.sklearn_version >= version.Version("0.24"):
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.LinearRegression.html
     # new: https://scikit-learn.org/0.24/modules/generated/sklearn.linear_model.LinearRegression.html
     LinearRegression = LinearRegression.customize_schema(
@@ -155,7 +156,7 @@ if sklearn.__version__ >= "0.24":
         set_as_available=True,
     )
 
-if sklearn.__version__ >= "1.0":
+if lale.operators.sklearn_version >= version.Version("1.0"):
     # old: https://scikit-learn.org/0.24/modules/generated/sklearn.linear_model.LinearRegression.html
     # new: https://scikit-learn.org/1.0/modules/generated/sklearn.linear_model.LinearRegression.html
     LinearRegression = LinearRegression.customize_schema(

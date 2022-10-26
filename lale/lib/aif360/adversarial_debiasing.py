@@ -62,7 +62,11 @@ class _AdversarialDebiasingImpl(_BaseInEstimatorImpl):
     pip install tensorflow
 or with
     pip install 'lale[full]'"""
-        assert "1.13.1" <= tf.__version__
+        from packaging import version
+
+        tf_version = version.parse(getattr(tf, "__version__"))
+        assert version.Version("1.13.1") <= tf_version
+
         self.scope_name = scope_name
         self.protected_attributes = protected_attributes
         self.seed = seed

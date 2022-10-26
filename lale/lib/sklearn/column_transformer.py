@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sklearn
 import sklearn.compose
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -206,7 +206,7 @@ ColumnTransformer = lale.operators.make_operator(
     sklearn.compose.ColumnTransformer, _combined_schemas
 )
 
-if sklearn.__version__ >= "0.21":
+if lale.operators.sklearn_version >= version.Version("0.21"):
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.compose.ColumnTransformer.html
     # new: https://scikit-learn.org/0.21/modules/generated/sklearn.compose.ColumnTransformer.html
     ColumnTransformer = ColumnTransformer.customize_schema(
@@ -218,7 +218,7 @@ if sklearn.__version__ >= "0.21":
         set_as_available=True,
     )
 
-if sklearn.__version__ >= "1.0":
+if lale.operators.sklearn_version >= version.Version("1.0"):
     # old: https://scikit-learn.org/0.24/modules/generated/sklearn.compose.ColumnTransformer.html
     # new: https://scikit-learn.org/1.0/modules/generated/sklearn.compose.ColumnTransformer.html
     ColumnTransformer = ColumnTransformer.customize_schema(

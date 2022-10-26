@@ -11,12 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from packaging import version
+
 try:
     import snapml  # type: ignore
 
-    snapml_installed = True
+    snapml_version = version.parse(getattr(snapml, "__version__"))
+
 except ImportError:
-    snapml_installed = False
+    snapml_version = None
+
 
 import lale.datasets.data_schemas
 import lale.docstrings
@@ -53,7 +57,7 @@ class _SnapBoostingMachineClassifierImpl:
         gpu_ids=[0],
     ):
         assert (
-            snapml_installed
+            snapml_version is not None
         ), """Your Python environment does not have snapml installed. Install using: pip install snapml"""
         self._hyperparams = {
             "num_round": num_round,
@@ -80,7 +84,7 @@ class _SnapBoostingMachineClassifierImpl:
             "gamma": gamma,
             "n_components": n_components,
         }
-        if snapml.__version__ > "1.7.8":
+        if snapml_version > version.Version("1.7.8"):
             self._hyperparams["gpu_ids"] = gpu_ids
         else:
             self._hyperparams["gpu_id"] = gpu_id
@@ -470,7 +474,7 @@ SnapBoostingMachineClassifier = lale.operators.make_operator(
     _SnapBoostingMachineClassifierImpl, _combined_schemas
 )
 
-if snapml_installed and snapml.__version__ > "1.7.8":  # type: ignore # noqa
+if snapml_version is not None and snapml_version > version.Version("1.7.8"):  # type: ignore # noqa
     from lale.schemas import Array, Int
 
     SnapBoostingMachineClassifier = SnapBoostingMachineClassifier.customize_schema(

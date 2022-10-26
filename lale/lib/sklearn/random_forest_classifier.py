@@ -14,6 +14,7 @@
 
 import sklearn
 import sklearn.ensemble
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -356,7 +357,7 @@ RandomForestClassifier = lale.operators.make_operator(
     sklearn.ensemble.RandomForestClassifier, _combined_schemas
 )
 
-if sklearn.__version__ >= "0.22":
+if lale.operators.sklearn_version >= version.Version("0.22"):
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.RandomForestClassifier.html
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.ensemble.RandomForestClassifier.html
     from lale.schemas import AnyOf, Float, Int, Null
@@ -395,7 +396,7 @@ if sklearn.__version__ >= "0.22":
         set_as_available=True,
     )
 
-if sklearn.__version__ >= "1.0":
+if lale.operators.sklearn_version >= version.Version("1.0"):
     # old: https://scikit-learn.org/0.24/modules/generated/sklearn.ensemble.RandomForestClassifier.html
     # new: https://scikit-learn.org/1.0/modules/generated/sklearn.ensemble.RandomForestClassifier.html
     from lale.schemas import AnyOf, Float, Int, Null
@@ -404,7 +405,7 @@ if sklearn.__version__ >= "1.0":
         min_impurity_split=None, set_as_available=True
     )
 
-if sklearn.__version__ >= "1.1":
+if lale.operators.sklearn_version >= version.Version("1.1"):
     # old: https://scikit-learn.org/1.0/modules/generated/sklearn.ensemble.RandomForestClassifier.html
     # new: https://scikit-learn.org/1.1/modules/generated/sklearn.ensemble.RandomForestClassifier.html
     RandomForestClassifier = RandomForestClassifier.customize_schema(

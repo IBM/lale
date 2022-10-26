@@ -17,6 +17,7 @@ import numpy as np
 import pandas as pd
 import sklearn
 import sklearn.impute
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -187,7 +188,7 @@ _combined_schemas = {
 
 SimpleImputer = lale.operators.make_operator(_SimpleImputerImpl, _combined_schemas)
 
-if sklearn.__version__ >= "1.1":
+if lale.operators.sklearn_version >= version.Version("1.1"):
     # old: https://scikit-learn.org/1.0/modules/generated/sklearn.impute.SimpleImputer.html#sklearn.impute.SimpleImputer
     # new: https://scikit-learn.org/1.1/modules/generated/sklearn.impute.SimpleImputer.html#sklearn.impute.SimpleImputer
     SimpleImputer = SimpleImputer.customize_schema(

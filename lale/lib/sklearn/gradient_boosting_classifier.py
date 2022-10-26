@@ -14,6 +14,7 @@
 
 import sklearn
 import sklearn.ensemble
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -380,7 +381,7 @@ GradientBoostingClassifier = lale.operators.make_operator(
     sklearn.ensemble.GradientBoostingClassifier, _combined_schemas
 )
 
-if sklearn.__version__ >= "0.22":
+if lale.operators.sklearn_version >= version.Version("0.22"):
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
     # new: https://scikit-learn.org/0.22/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
     from lale.schemas import AnyOf, Bool, Enum, Float
@@ -401,7 +402,7 @@ if sklearn.__version__ >= "0.22":
         set_as_available=True,
     )
 
-if sklearn.__version__ >= "0.24":
+if lale.operators.sklearn_version >= version.Version("0.24"):
     # old: https://scikit-learn.org/0.22/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
     # new: https://scikit-learn.org/0.24/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
     GradientBoostingClassifier = GradientBoostingClassifier.customize_schema(
@@ -421,7 +422,7 @@ if sklearn.__version__ >= "0.24":
         set_as_available=True,
     )
 
-if sklearn.__version__ >= "1.0":
+if lale.operators.sklearn_version >= version.Version("1.0"):
     # old: https://scikit-learn.org/0.24/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
     # new: https://scikit-learn.org/1.0/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
     GradientBoostingClassifier = GradientBoostingClassifier.customize_schema(
@@ -444,7 +445,7 @@ The default value of ‘friedman_mse’ is generally the best as it can provide 
         set_as_available=True,
     )
 
-if sklearn.__version__ >= "1.1":
+if lale.operators.sklearn_version >= version.Version("1.1"):
     # old: https://scikit-learn.org/1.0/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
     # new: https://scikit-learn.org/1.1/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
     GradientBoostingClassifier = GradientBoostingClassifier.customize_schema(

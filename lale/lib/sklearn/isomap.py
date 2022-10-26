@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sklearn
+from packaging import version
 from sklearn.manifold import Isomap as SKLModel
 
 from lale.docstrings import set_docstrings
-from lale.operators import make_operator
+from lale.operators import make_operator, sklearn_version
 
 _hyperparams_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
@@ -164,7 +164,7 @@ _combined_schemas = {
 }
 Isomap = make_operator(SKLModel, _combined_schemas)
 
-if sklearn.__version__ >= "1.1":
+if sklearn_version >= version.Version("1.1"):
     # old: https://scikit-learn.org/0.23/modules/generated/sklearn.manifold.Isomap.html
     # new: https://scikit-learn.org/1.1/modules/generated/sklearn.manifold.Isomap.html
     from lale.schemas import AllOf, AnyOf, Float, Int, Null, Object

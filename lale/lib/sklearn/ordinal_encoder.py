@@ -19,6 +19,7 @@ import numpy as np
 import pandas as pd
 import sklearn
 import sklearn.preprocessing
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -31,7 +32,7 @@ class _OrdinalEncoderImpl:
             "categories": hyperparams["categories"],
             "dtype": hyperparams["dtype"],
         }
-        if sklearn.__version__ >= "0.24.1":
+        if lale.operators.sklearn_version >= version.Version("0.24.1"):
             if hyperparams["handle_unknown"] != "ignore":
                 base_hyperparams["handle_unknown"] = hyperparams["handle_unknown"]
                 base_hyperparams["unknown_value"] = hyperparams["unknown_value"]
@@ -246,7 +247,7 @@ _combined_schemas = {
 
 OrdinalEncoder = lale.operators.make_operator(_OrdinalEncoderImpl, _combined_schemas)
 
-if sklearn.__version__ >= "0.24.1":
+if lale.operators.sklearn_version >= version.Version("0.24.1"):
     OrdinalEncoder = typing.cast(
         lale.operators.PlannedIndividualOp,
         OrdinalEncoder.customize_schema(
@@ -306,7 +307,7 @@ It has to be distinct from the values used to encode any of the categories in fi
         set_as_available=True,
     )
 
-if sklearn.__version__ >= "1.1":
+if lale.operators.sklearn_version >= version.Version("1.1"):
     OrdinalEncoder = OrdinalEncoder.customize_schema(
         encoded_missing_value=AnyOf(
             desc="Encoded value of missing categories. If set to ``np.nan``, then the ``dtype`` parameter must be a float dtype.",

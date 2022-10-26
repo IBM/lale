@@ -159,7 +159,9 @@ Clustering:
 .. _`StackingRegressor`: lale.lib.sklearn.stacking_regressor.html
 """
 
-from sklearn import __version__ as sklearn_version
+from packaging import version
+
+from lale.operators import sklearn_version
 
 from .ada_boost_classifier import AdaBoostClassifier as AdaBoostClassifier
 from .ada_boost_regressor import AdaBoostRegressor as AdaBoostRegressor
@@ -228,7 +230,7 @@ from .simple_imputer import SimpleImputer as SimpleImputer
 # and not private imports (this affects lale users that use pyright)
 
 
-if sklearn_version >= "0.21":
+if sklearn_version >= version.Version("0.21"):
     from .stacking_classifier import StackingClassifier as StackingClassifier
     from .stacking_regressor import StackingRegressor as StackingRegressor
     from .voting_regressor import VotingRegressor as VotingRegressor

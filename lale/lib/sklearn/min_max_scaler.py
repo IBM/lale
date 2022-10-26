@@ -14,6 +14,7 @@
 
 import sklearn
 import sklearn.preprocessing
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -127,7 +128,7 @@ MinMaxScaler = lale.operators.make_operator(
     sklearn.preprocessing.MinMaxScaler, _combined_schemas
 )
 
-if sklearn.__version__ >= "0.24":
+if lale.operators.sklearn_version >= version.Version("0.24"):
     # old: https://scikit-learn.org/0.22/modules/generated/sklearn.preprocessing.MinMaxScaler.html
     # new: https://scikit-learn.org/0.24/modules/generated/sklearn.preprocessing.MinMaxScaler.html
     MinMaxScaler = MinMaxScaler.customize_schema(
