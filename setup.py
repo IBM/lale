@@ -50,6 +50,7 @@ else:
         "scikit-learn>=1.0.0,<=1.1.1",
         "scipy<1.9",
         "pandas",
+        "packaging",
         "decorator",
         "astunparse",
         "typing-extensions",
