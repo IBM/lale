@@ -14,6 +14,7 @@
 
 import sklearn
 import sklearn.preprocessing
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -109,7 +110,7 @@ PolynomialFeatures = lale.operators.make_operator(
     sklearn.preprocessing.PolynomialFeatures, _combined_schemas
 )
 
-if sklearn.__version__ >= "0.21":
+if lale.operators.sklearn_version >= version.Version("0.21"):
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.PolynomialFeatures.html
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.preprocessing.PolynomialFeatures.html
     from lale.schemas import Enum

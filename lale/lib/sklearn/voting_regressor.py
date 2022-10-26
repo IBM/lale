@@ -14,6 +14,7 @@
 
 import sklearn
 import sklearn.ensemble
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -236,7 +237,7 @@ VotingRegressor = lale.operators.make_operator(
     sklearn.ensemble.VotingRegressor, _combined_schemas
 )
 
-if sklearn.__version__ >= "0.21":
+if lale.operators.sklearn_version >= version.Version("0.21"):
     # old: N/A (new in this version)
     # new: https://scikit-learn.org/0.21/modules/generated/sklearn.ensemble.VotingRegressor.html
     VotingRegressor = VotingRegressor.customize_schema(
@@ -255,7 +256,7 @@ if sklearn.__version__ >= "0.21":
         set_as_available=True,
     )
 
-if sklearn.__version__ >= "0.24":
+if lale.operators.sklearn_version >= version.Version("0.24"):
     # old: https://scikit-learn.org/0.21/modules/generated/sklearn.ensemble.VotingRegressor.html
     # new: https://scikit-learn.org/0.24/modules/generated/sklearn.ensemble.VotingRegressor.html
     VotingRegressor = VotingRegressor.customize_schema(

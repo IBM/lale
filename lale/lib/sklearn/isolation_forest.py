@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sklearn
+from packaging import version
 from sklearn.ensemble import IsolationForest as SKLModel
 
 import lale.docstrings
@@ -264,7 +264,7 @@ _combined_schemas = {
 
 IsolationForest = lale.operators.make_operator(SKLModel, _combined_schemas)
 
-if sklearn.__version__ >= "0.24":
+if lale.operators.sklearn_version >= version.Version("0.24"):
     # old: https://scikit-learn.org/0.22/modules/generated/sklearn.ensemble.IsolationForest.html
     # new: https://scikit-learn.org/0.24/modules/generated/sklearn.ensemble.IsolationForest.html
     IsolationForest = IsolationForest.customize_schema(

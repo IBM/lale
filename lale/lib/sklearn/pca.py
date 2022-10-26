@@ -14,6 +14,7 @@
 
 import sklearn
 import sklearn.decomposition
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -242,7 +243,7 @@ _combined_schemas = {
 
 PCA = lale.operators.make_operator(sklearn.decomposition.PCA, _combined_schemas)
 
-if sklearn.__version__ >= "1.1":
+if lale.operators.sklearn_version >= version.Version("1.1"):
     PCA = PCA.customize_schema(
         n_oversamples={
             "description": 'This parameter is only relevant when ``svd_solver="randomized"``. It corresponds to the additional number of random vectors to sample the range of X so as to ensure proper conditioning. See randomized_svd for more details.',

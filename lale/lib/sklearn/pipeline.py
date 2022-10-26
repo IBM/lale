@@ -15,22 +15,21 @@
 import logging
 import typing
 
-import sklearn
-import sklearn.pipeline
+from packaging import version
+
+import lale.operators
 
 try:
     from sklearn.pipeline import if_delegate_has_method
 except ImportError as e:
-    import sklearn
 
-    if sklearn.__version__ >= "1.0":
+    if lale.operators.sklearn_version >= version.Version("1.0"):
         from sklearn.utils.metaestimators import if_delegate_has_method
     else:
         raise e
 
 import lale.docstrings
 import lale.helpers
-import lale.operators
 from lale.schemas import Bool
 
 logger = logging.getLogger(__name__)
@@ -213,7 +212,7 @@ _combined_schemas = {
 
 Pipeline = lale.operators.make_operator(_PipelineImpl, _combined_schemas)
 
-if sklearn.__version__ >= "0.21":
+if lale.operators.sklearn_version >= version.Version("0.21"):
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.pipeline.Pipeline.html
     # new: https://scikit-learn.org/0.21/modules/generated/sklearn.pipeline.Pipeline.html
     Pipeline = typing.cast(

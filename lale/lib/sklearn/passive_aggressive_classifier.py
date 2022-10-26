@@ -14,6 +14,7 @@
 
 import sklearn
 import sklearn.linear_model
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -241,7 +242,7 @@ PassiveAggressiveClassifier = lale.operators.make_operator(
 )
 
 
-if sklearn.__version__ >= "0.21":
+if lale.operators.sklearn_version >= version.Version("0.21"):
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html
     # new: https://scikit-learn.org/0.21/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html
     PassiveAggressiveClassifier = PassiveAggressiveClassifier.customize_schema(
@@ -255,7 +256,7 @@ if sklearn.__version__ >= "0.21":
         set_as_available=True,
     )
 
-if sklearn.__version__ >= "0.22":
+if lale.operators.sklearn_version >= version.Version("0.22"):
     # old: https://scikit-learn.org/0.21/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html
     # new: https://scikit-learn.org/0.22/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html
     PassiveAggressiveClassifier = PassiveAggressiveClassifier.customize_schema(

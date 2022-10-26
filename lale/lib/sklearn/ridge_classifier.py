@@ -14,6 +14,7 @@
 
 import sklearn
 import sklearn.linear_model
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -258,7 +259,7 @@ RidgeClassifier = lale.operators.make_operator(
     sklearn.linear_model.RidgeClassifier, _combined_schemas
 )
 
-if sklearn.__version__ >= "1.0":
+if lale.operators.sklearn_version >= version.Version("1.0"):
     # old: https://scikit-learn.org/0.24/modules/generated/sklearn.linear_model.RidgeClassifier.html
     # new: https://scikit-learn.org/1.0/modules/generated/sklearn.linear_model.RidgeClassifier.html
     from lale.schemas import Bool

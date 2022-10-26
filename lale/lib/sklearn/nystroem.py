@@ -14,6 +14,7 @@
 
 import sklearn
 import sklearn.kernel_approximation
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -187,7 +188,7 @@ Nystroem = lale.operators.make_operator(
     sklearn.kernel_approximation.Nystroem, _combined_schemas
 )
 
-if sklearn.__version__ >= "0.24":
+if lale.operators.sklearn_version >= version.Version("0.24"):
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.kernel_approximation.Nystroem.html
     # new: https://scikit-learn.org/0.24/modules/generated/sklearn.kernel_approximation.Nystroem.html
     Nystroem = Nystroem.customize_schema(

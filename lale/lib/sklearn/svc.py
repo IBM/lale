@@ -14,6 +14,7 @@
 
 import sklearn
 import sklearn.svm
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -317,7 +318,7 @@ _combined_schemas = {
 SVC: lale.operators.PlannedIndividualOp
 SVC = lale.operators.make_operator(sklearn.svm.SVC, _combined_schemas)
 
-if sklearn.__version__ >= "0.22":
+if lale.operators.sklearn_version >= version.Version("0.22"):
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.svm.SVC.html
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.svm.SVC.html
     from lale.schemas import AnyOf, Bool, Enum, Float

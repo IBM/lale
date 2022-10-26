@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
+from packaging import version
 
 import lale.docstrings
 import lale.helpers
@@ -26,9 +27,10 @@ from ._common_schemas import schema_silent
 try:
     import xgboost  # type: ignore
 
-    xgboost_installed = True
+    xgboost_version = version.parse(getattr(xgboost, "__version__"))
+
 except ImportError:
-    xgboost_installed = False
+    xgboost_version = None
     if TYPE_CHECKING:
         import xgboost  # type: ignore
 
@@ -56,7 +58,9 @@ class _XGBRegressorImpl:
 
     @classmethod
     def validate_hyperparams(cls, **hyperparams):
-        assert xgboost_installed, """Your Python environment does not have xgboost installed. You can install it with
+        assert (
+            xgboost_version is not None
+        ), """Your Python environment does not have xgboost installed. You can install it with
             pip install xgboost
         or with
             pip install 'lale[full]'"""
@@ -477,7 +481,7 @@ _combined_schemas = {
 XGBRegressor: lale.operators.PlannedIndividualOp
 XGBRegressor = lale.operators.make_operator(_XGBRegressorImpl, _combined_schemas)
 
-if xgboost_installed and xgboost.__version__ >= "0.90":
+if xgboost_version is not None and xgboost_version >= version.Version("0.90"):
     # page 58 of https://readthedocs.org/projects/xgboost/downloads/pdf/release_0.90/
     import lale.schemas
 
@@ -503,7 +507,7 @@ if xgboost_installed and xgboost.__version__ >= "0.90":
         set_as_available=True,
     )
 
-if xgboost_installed and xgboost.__version__ >= "1.3":
+if xgboost_version is not None and xgboost_version >= version.Version("1.3"):
     # https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn
     XGBRegressor = XGBRegressor.customize_schema(
         monotone_constraints={
@@ -728,7 +732,7 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
         set_as_available=True,
     )
 
-if xgboost_installed and xgboost.__version__ >= "1.5":
+if xgboost_version is not None and xgboost_version >= version.Version("1.5"):
     # https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn
     XGBRegressor = XGBRegressor.customize_schema(
         enable_categorical={
@@ -747,7 +751,7 @@ available choices are [cpu_predictor, gpu_predictor].""",
         set_as_available=True,
     )
 
-if xgboost_installed and xgboost.__version__ >= "1.6":
+if xgboost_version is not None and xgboost_version >= version.Version("1.6"):
     # https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn
     XGBRegressor = XGBRegressor.customize_schema(
         max_leaves={

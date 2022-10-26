@@ -11,12 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from packaging import version
+
 try:
     import snapml  # type: ignore
 
-    snapml_installed = True
+    snapml_version = version.parse(getattr(snapml, "__version__"))
+
 except ImportError:
-    snapml_installed = False
+    snapml_version = None
 
 import lale.datasets.data_schemas
 import lale.docstrings
@@ -46,7 +49,7 @@ class _SnapSVMClassifierImpl:
     ):
 
         assert (
-            snapml_installed
+            snapml_version is not None
         ), """Your Python environment does not have snapml installed. Install using: pip install snapml"""
         self._hyperparams = {
             "max_iter": max_iter,
@@ -66,7 +69,7 @@ class _SnapSVMClassifierImpl:
             "n_components": n_components,
             "random_state": random_state,
         }
-        if snapml.__version__ > "1.8.0":
+        if snapml_version > version.Version("1.8.0"):
             self._hyperparams["loss"] = loss
         modified_hps = {**self._hyperparams}
         if modified_hps["device_ids"] is None:
@@ -332,7 +335,7 @@ SnapSVMClassifier = lale.operators.make_operator(
     _SnapSVMClassifierImpl, _combined_schemas
 )
 
-if snapml_installed and snapml.__version__ > "1.8.0":  # type: ignore # noqa
+if snapml_version is not None and snapml_version > version.Version("1.8.0"):  # type: ignore # noqa
     from lale.schemas import Enum
 
     SnapSVMClassifier = SnapSVMClassifier.customize_schema(

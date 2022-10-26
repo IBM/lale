@@ -176,6 +176,7 @@ from typing import (
     overload,
 )
 
+from packaging import version
 from sklearn.base import clone
 
 if sys.version_info >= (3, 8):
@@ -185,17 +186,8 @@ else:
 
 import jsonschema
 import pandas as pd
+import sklearn
 import sklearn.base
-
-try:
-    from sklearn.pipeline import if_delegate_has_method
-except ImportError as e:
-    import sklearn
-
-    if sklearn.__version__ >= "1.0":
-        from sklearn.utils.metaestimators import if_delegate_has_method
-    else:
-        raise e
 
 import lale.datasets.data_schemas
 import lale.json_operator
@@ -240,6 +232,18 @@ from lale.type_checking import (
     validate_schema_directly,
 )
 from lale.util.VisitorMeta import AbstractVisitorMeta
+
+sklearn_version = version.parse(getattr(sklearn, "__version__"))
+
+try:
+    from sklearn.pipeline import if_delegate_has_method
+except ImportError as e:
+    import sklearn
+
+    if sklearn_version >= version.Version("1.0"):
+        from sklearn.utils.metaestimators import if_delegate_has_method
+    else:
+        raise e
 
 logger = logging.getLogger(__name__)
 
