@@ -104,7 +104,17 @@ def count_fairness_groups(
     encoded_y = pd.Series(encoded_y, index=encoded_y.index, name=gensym("y_true"))
     counts = pd.Series(data=1, index=encoded_y.index, name=gensym("count"))
     enc = pd.concat([encoded_y, encoded_X, counts], axis=1)
-    result = enc.groupby([encoded_y.name] + prot_attr_names).count()
+    grouped = enc.groupby([encoded_y.name] + prot_attr_names).count()
+    count_column = grouped["count"]
+    ratio_column = pd.Series(0.0, count_column.index, name="ratio")
+    for group, count in count_column.items():
+        comp_group = tuple(
+            1 - group[k] if k == 0 else group[k] for k in range(len(group))
+        )
+        comp_count = count_column[comp_group]
+        ratio = count / (count + comp_count)
+        ratio_column[group] = ratio
+    result = pd.DataFrame({"count": count_column, "ratio": ratio_column})
     return result
 
 
