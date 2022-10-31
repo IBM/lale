@@ -28,12 +28,24 @@ _hyperparams_schema = {
             "additionalProperties": False,
             "properties": {
                 "threshold": {
-                    "type": "number",
-                    "description": "Features with a training-set variance lower than this threshold will be removed. The default is to keep all features with non-zero variance, i.e. remove the features that have the same value in all samples.",
+                    # note that a loguniform distribution can't start at 0
+                    "anyOf": [
+                        {
+                            "type": "number",
+                            "description": "Features with a training-set variance lower than this threshold will be removed. The default is to keep all features with non-zero variance, i.e. remove the features that have the same value in all samples.",
+                            "default": 0,
+                            "exclusiveMinimum": True,
+                            "minimum": 0,
+                            "maximumForOptimizer": 1,
+                            "distribution": "loguniform",
+                        },
+                        {
+                            "enum": [0],
+                            "description": "Keep all features with non-zero variance, i.e. remove the features that have the same value in all samples",
+                        },
+                    ],
                     "default": 0,
-                    "minimumForOptimizer": 0,
-                    "maximumForOptimizer": 1,
-                    "distribution": "loguniform",
+                    "description": "Features with a training-set variance lower than this threshold will be removed. The default is to keep all features with non-zero variance, i.e. remove the features that have the same value in all samples.",
                 },
             },
         }
