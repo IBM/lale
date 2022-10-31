@@ -190,7 +190,6 @@ preprocess the data with a scaler from sklearn.preprocessing.""",
                 "tol": {
                     "description": "Tolerance for stopping criteria.",
                     "type": "number",
-                    "distribution": "loguniform",
                     "minimum": 0.0,
                     "exclusiveMinimum": True,
                     "default": 0.0001,

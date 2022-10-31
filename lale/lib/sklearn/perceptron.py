@@ -87,7 +87,6 @@ _hyperparams_schema = {
                             "type": "number",
                             "minimumForOptimizer": 1e-08,
                             "maximumForOptimizer": 0.01,
-                            "distribution": "loguniform",
                             "description": "If not None, the iterations will stop when (loss > previous_loss - tol).",
                         },
                         {"enum": [None]},

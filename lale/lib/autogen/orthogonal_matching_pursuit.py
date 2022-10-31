@@ -62,7 +62,6 @@ _hyperparams_schema = {
                             "type": "number",
                             "minimumForOptimizer": 1e-08,
                             "maximumForOptimizer": 0.01,
-                            "distribution": "loguniform",
                         },
                         {"enum": [None]},
                     ],

@@ -58,7 +58,6 @@ Note that the value of this parameter depends on the scale of the target variabl
                     "type": "number",
                     "minimumForOptimizer": 1e-08,
                     "maximumForOptimizer": 0.01,
-                    "distribution": "loguniform",
                     "default": 0.0001,
                     "description": "Tolerance for stopping criteria.",
                 },

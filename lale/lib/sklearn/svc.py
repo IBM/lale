@@ -103,7 +103,6 @@ _hyperparams_schema = {
                 },
                 "tol": {
                     "type": "number",
-                    "distribution": "loguniform",
                     "minimum": 0.0,
                     "exclusiveMinimum": True,
                     "maximumForOptimizer": 0.01,
