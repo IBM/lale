@@ -181,7 +181,6 @@ _hyperparams_schema = {
                     '"adaptive", convergence is considered to be reached and '
                     "training stops.",
                     "type": "number",
-                    "distribution": "loguniform",
                     "minimumForOptimizer": 1e-08,
                     "maximumForOptimizer": 0.01,
                     "default": 0.0001,
