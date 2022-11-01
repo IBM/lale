@@ -20,8 +20,10 @@ Schema-enhanced versions of some of the operators from `category_encoders`_ to e
 Operators
 =========
 * lale.lib.category_encoders. `HashingEncoder`_
+* lale.lib.category_encoders. `TargetEncoder`_
 
-.. _`HashingEncoder`: lale.category_encoders.hashing_encoder.html
+.. _`HashingEncoder`: lale.lib.category_encoders.hashing_encoder.html
+.. _`HashingEncoder`: lale.lib.category_encoders.target_encoder.html
 
 """
 
@@ -31,3 +33,4 @@ Operators
 # and not private imports (this affects lale users that use pyright)
 
 from .hashing_encoder import HashingEncoder as HashingEncoder
+from .target_encoder import TargetEncoder as TargetEncoder
