@@ -751,11 +751,38 @@ class TestAIF360Cat(unittest.TestCase):
         return result
 
     @classmethod
+    def _creditg_pd_repeated(cls):
+        X, y, fairness_info = lale.lib.aif360.fetch_creditg_df(preprocess=False)
+        cv = lale.lib.aif360.FairStratifiedKFold(
+            **fairness_info, n_splits=3, n_repeats=3
+        )
+        splits = []
+        lr = LogisticRegression()
+        for train, test in cv.split(X, y):
+            train_X, train_y = lale.helpers.split_with_schemas(lr, X, y, train)
+            assert isinstance(train_X, pd.DataFrame), type(train_X)
+            assert isinstance(train_y, pd.Series), type(train_y)
+            test_X, test_y = lale.helpers.split_with_schemas(lr, X, y, test, train)
+            assert isinstance(test_X, pd.DataFrame), type(test_X)
+            assert isinstance(test_y, pd.Series), type(test_y)
+            splits.append(
+                {
+                    "train_X": train_X,
+                    "train_y": train_y,
+                    "test_X": test_X,
+                    "test_y": test_y,
+                }
+            )
+        result = {"splits": splits, "fairness_info": fairness_info}
+        return result
+
+    @classmethod
     def setUpClass(cls):
         cls.prep_pd_cat = cls._prep_pd_cat()
         cls.creditg_pd_cat = cls._creditg_pd_cat()
         cls.creditg_np_cat = cls._creditg_np_cat()
         cls.creditg_pd_ternary = cls._creditg_pd_ternary()
+        cls.creditg_pd_repeated = cls._creditg_pd_repeated()
 
     def test_encoder_pd_cat(self):
         info = self.creditg_pd_cat["fairness_info"]
