@@ -90,6 +90,43 @@ def count_fairness_groups(
     protected_attributes: List[JSON_TYPE],
     unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
 ) -> pd.DataFrame:
+    """
+    Count size of each intersection of groups induced by the fairness info.
+
+    Parameters
+    ----------
+    X : array
+
+      Features including protected attributes as numpy ndarray or pandas dataframe.
+
+    y : array
+
+      Labels as numpy ndarray or pandas series.
+
+    favorable_labels : array
+
+      Label values which are considered favorable (i.e. "positive").
+
+    protected_attributes : array
+
+      Features for which fairness is desired.
+
+    unfavorable_labels : array or None, default None
+
+      Label values which are considered unfavorable (i.e. "negative").
+
+    Returns
+    -------
+    result : pd.DataFrame
+
+        DataFrame with a multi-level index on the rows, where the first level
+        indicates the binarized outcome, and the remaining levels indicate the
+        binarized group membership according to the protected attributes.
+        Column "count" specifies the number of instances for each group.
+        Column "ratio" gives the ratio of the given outcome relative to the
+        total number of instances with any outcome but the same encoded
+        protected attributes.
+    """
     from lale.lib.aif360 import ProtectedAttributesEncoder
 
     prot_attr_enc = ProtectedAttributesEncoder(
@@ -2066,20 +2103,24 @@ class FairStratifiedKFold:
     """
     Stratified k-folds cross-validator by labels and protected attributes.
 
-    Behaves similar to the `StratifiedKFold`_ class from scikit-learn.
+    Behaves similar to the `StratifiedKFold`_ and `RepeatedStratifiedKFold`_
+    cross-validation iterators from scikit-learn.
     This cross-validation object can be passed to the `cv` argument of
     the `auto_configure`_ method.
 
     .. _`StratifiedKFold`: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.StratifiedKFold.html
+    .. _`RepeatedStratifiedKFold`: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.RepeatedStratifiedKFold.html
     .. _`auto_configure`: https://lale.readthedocs.io/en/latest/modules/lale.operators.html#lale.operators.PlannedOperator.auto_configure
     """
 
     def __init__(
         self,
+        *,
         favorable_labels: _FAV_LABELS_TYPE,
         protected_attributes: List[JSON_TYPE],
         unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
         n_splits: int = 5,
+        n_repeats: int = 1,
         shuffle: bool = False,
         random_state=None,
     ):
@@ -2102,9 +2143,15 @@ class FairStratifiedKFold:
 
           Number of folds. Must be at least 2.
 
+        n_repeats : integer, optional, default 1
+
+          Number of times the cross-validator needs to be repeated.
+          When >1, this behaves like RepeatedStratifiedKFold.
+
         shuffle : boolean, optional, default False
 
           Whether to shuffle each class's samples before splitting into batches.
+          Ignored when n_repeats>1.
 
         random_state : union type, not for optimizer, default None
 
@@ -2130,9 +2177,14 @@ class FairStratifiedKFold:
             "protected_attributes": protected_attributes,
             "unfavorable_labels": unfavorable_labels,
         }
-        self._stratified_k_fold = sklearn.model_selection.StratifiedKFold(
-            n_splits=n_splits, shuffle=shuffle, random_state=random_state
-        )
+        if n_repeats == 1:
+            self._stratified_k_fold = sklearn.model_selection.StratifiedKFold(
+                n_splits=n_splits, shuffle=shuffle, random_state=random_state
+            )
+        else:
+            self._stratified_k_fold = sklearn.model_selection.RepeatedStratifiedKFold(
+                n_splits=n_splits, n_repeats=n_repeats, random_state=random_state
+            )
 
     def get_n_splits(self, X=None, y=None, groups=None) -> int:
         """
