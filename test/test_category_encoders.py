@@ -35,7 +35,9 @@ class TestCategoryEncoders(unittest.TestCase):
         (train_X, train_y), (test_X, test_y) = self.creditg
         cat_prep = Project(columns={"type": "string"}) >> HashingEncoder()
         num_prep = Project(columns={"type": "number"})
-        trainable = (cat_prep & num_prep) >> ConcatFeatures >> LogisticRegression()
+        trainable = (
+            (cat_prep & num_prep) >> ConcatFeatures >> LogisticRegression(max_iter=1000)
+        )
         trained = trainable.fit(train_X, train_y)
         _ = trained.predict(test_X)
 
@@ -43,6 +45,8 @@ class TestCategoryEncoders(unittest.TestCase):
         (train_X, train_y), (test_X, test_y) = self.creditg
         cat_prep = Project(columns={"type": "string"}) >> TargetEncoder()
         num_prep = Project(columns={"type": "number"})
-        trainable = (cat_prep & num_prep) >> ConcatFeatures >> LogisticRegression()
+        trainable = (
+            (cat_prep & num_prep) >> ConcatFeatures >> LogisticRegression(max_iter=1000)
+        )
         trained = trainable.fit(train_X, train_y)
         _ = trained.predict(test_X)

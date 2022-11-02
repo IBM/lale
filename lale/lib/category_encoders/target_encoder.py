@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import warnings
+
 import numpy as np
 from packaging import version
 
@@ -169,7 +171,9 @@ class _TargetEncoderImpl:
     def __init__(self, **hyperparams):
         if catenc_version is None:
             raise ValueError("The package 'category_encoders' is not installed.")
-        self._wrapped_model = category_encoders.TargetEncoder(**hyperparams)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=FutureWarning)
+            self._wrapped_model = category_encoders.TargetEncoder(**hyperparams)
 
     def fit(self, X, y):
         if catenc_version is None:
