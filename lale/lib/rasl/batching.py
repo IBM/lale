@@ -93,7 +93,7 @@ class _BatchingImpl:
             pipeline=self.operator,
             batches_train=data_loader,  # type:ignore
             batches_valid=None,
-            unique_class_labels=classes,
+            unique_class_labels=classes,  # type:ignore
             max_resident=self.max_resident,
             prio=prio,
             partial_transform=self.partial_transform,

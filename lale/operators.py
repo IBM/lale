@@ -757,7 +757,25 @@ class Operator(metaclass=AbstractVisitorMeta):
                     return True
             return False
 
-        def _replace(subject, original_op, replacement_op):
+        @overload
+        def _replace(
+            subject: "Operator", original_op: "Operator", replacement_op: "Operator"
+        ) -> "Operator":
+            ...
+
+        @overload
+        def _replace(
+            subject: list, original_op: "Operator", replacement_op: "Operator"
+        ) -> list:
+            ...
+
+        @overload
+        def _replace(
+            subject: dict, original_op: "Operator", replacement_op: "Operator"
+        ) -> dict:
+            ...
+
+        def _replace(subject, original_op: "Operator", replacement_op: "Operator"):
 
             # if operator has steps, recursively iterate through steps and recombine
             if hasattr(subject, "steps"):

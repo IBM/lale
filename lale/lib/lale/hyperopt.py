@@ -193,7 +193,7 @@ class _HyperoptImpl:
             if self.max_eval_time:
                 # Run hyperopt in a subprocess that can be interupted
                 manager = multiprocessing.Manager()
-                proc_dict: Dict[str, Any] = manager.dict()
+                proc_dict: Dict[str, Any] = manager.dict()  # type: ignore
                 p = multiprocessing.Process(
                     target=_proc_train_test,
                     args=(

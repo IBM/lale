@@ -398,7 +398,7 @@ def _make_ast_expr(arg: Union[None, Expr, int, float, str, AstExpr]) -> AstExpr:
 
 
 def _make_call_expr(
-    name: str, *args: Union[Expr, AstExpr, int, float, bool, str]
+    name: str, *args: Union[Expr, AstExpr, int, float, bool, str, None]
 ) -> Expr:
     func_ast = ast.Name(id=name)
     args_asts = [_make_ast_expr(arg) for arg in args]
@@ -497,7 +497,7 @@ def recent_gap_to_cutoff(series: Expr, cutoff: Expr, age: int) -> Expr:
 def replace(
     subject: Expr,
     old2new: Dict[Any, Any],
-    handle_unknown="identity",
+    handle_unknown: str = "identity",
     unknown_value=None,
 ) -> Expr:
     old2new_str = pprint.pformat(old2new)

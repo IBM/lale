@@ -69,12 +69,12 @@ def numpy_collate_fn(batch):
             if return_y is None:
                 return_y = item[1]
             else:
-                return_y = np.vstack((return_y, item[1]))
+                return_y = np.vstack((return_y, item[1]))  # type: ignore
         else:
             if return_X is None:
                 return_X = item
             else:
-                return_X = np.vstack((return_X, item))
+                return_X = np.vstack((return_X, item))  # type: ignore
     if return_y is not None:
         if len(return_y.shape) > 1 and return_y.shape[1] == 1:
             return_y = np.reshape(return_y, (len(return_y),))

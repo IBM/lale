@@ -303,7 +303,12 @@ class SearchSpaceOperatorVisitor(Visitor):
                     if maximum is not None:
                         exclusive_maximum = schema.get("exclusiveMaximum", False)
 
-                distribution = schema.get("distribution", None)
+                distribution = schema.get("distribution", "uniform")
+                if not isinstance(distribution, str):
+                    raise OperatorSchemaError(
+                        path,
+                        f"specified distribution should be a string, not: {distribution}.",
+                    )
 
                 laleType = schema.get("laleType", None)
                 if laleType is None:
