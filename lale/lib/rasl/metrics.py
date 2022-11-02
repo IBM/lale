@@ -18,7 +18,7 @@ from typing import Dict, Iterable, Optional, Tuple, TypeVar, Union, cast
 
 import numpy as np
 import pandas as pd
-from typing_extensions import Protocol
+from typing_extensions import Protocol, TypeAlias
 
 from lale.expressions import astype, count, it
 from lale.expressions import sum as lale_sum
@@ -34,26 +34,31 @@ MetricMonoid = Monoid
 
 _M = TypeVar("_M", bound=MetricMonoid)
 
+_PandasBatch: TypeAlias = Tuple[pd.DataFrame, pd.Series]
+
 if spark_installed:
     from pyspark.sql.dataframe import DataFrame as SparkDataFrame
 
-    _Batch_Xy = Union[
-        Tuple[pd.DataFrame, pd.Series],
-        Tuple[SparkDataFrame, SparkDataFrame],
-    ]
+    _SparkBatch: TypeAlias = Tuple[SparkDataFrame, SparkDataFrame]
 
-    _Batch_yyX = Tuple[
+    _Batch_XyAux = Union[_PandasBatch, _SparkBatch]
+
+    _Batch_yyXAux = Tuple[
         Union[pd.Series, np.ndarray, SparkDataFrame],
         Union[pd.Series, np.ndarray, SparkDataFrame],
         Union[pd.DataFrame, SparkDataFrame],
     ]
 
 else:
-    _Batch_Xy = Tuple[pd.DataFrame, pd.Series]  # type: ignore
+    _Batch_XyAux = _PandasBatch  # type: ignore
 
-    _Batch_yyX = Tuple[  # type: ignore
+    _Batch_yyXAux = Tuple[  # type: ignore
         Union[pd.Series, np.ndarray], Union[pd.Series, np.ndarray], pd.DataFrame
     ]
+
+# pyright does not currently accept a TypeAlias with conditional definitions
+_Batch_Xy: TypeAlias = _Batch_XyAux  # type: ignore
+_Batch_yyX: TypeAlias = _Batch_yyXAux  # type: ignore
 
 
 class MetricMonoidFactory(MonoidFactory[_Batch_yyX, float, _M], Protocol):

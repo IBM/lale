@@ -12,28 +12,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Iterable, Tuple, Union, cast
+from typing import Iterable, Tuple, Union, cast, overload
 
 import pandas as pd
 import sklearn.model_selection
 import sklearn.tree
+from typing_extensions import Literal, TypeAlias
 
 import lale.helpers
 from lale.datasets import pandas2spark
 
 from .split_xy import SplitXy
 
-_PandasBatch = Tuple[pd.DataFrame, pd.Series]
+_PandasBatch: TypeAlias = Tuple[pd.DataFrame, pd.Series]
 
 if lale.helpers.spark_installed:
     from pyspark.sql.dataframe import DataFrame as SparkDataFrame
 
-    _PandasOrSparkBatch = Union[
-        Tuple[pd.DataFrame, pd.Series],
-        Tuple[SparkDataFrame, SparkDataFrame],
+    _SparkBatch: TypeAlias = Tuple[SparkDataFrame, SparkDataFrame]
+
+    _PandasOrSparkBatchAux = Union[
+        _PandasBatch,
+        _SparkBatch,
     ]
+
 else:
-    _PandasOrSparkBatch = _PandasBatch  # type: ignore
+    _PandasOrSparkBatchAux = _PandasBatch  # type: ignore
+
+# pyright does not currently accept a TypeAlias with conditional definitions
+_PandasOrSparkBatch: TypeAlias = _PandasOrSparkBatchAux  # type: ignore
 
 try:
     import arff
@@ -83,6 +90,20 @@ def csv_data_loader(
         for df in reader:
             X, y = split_x_y.transform_X_y(df, None)
             yield X, y
+
+
+@overload
+def mockup_data_loader(
+    X: pd.DataFrame, y: pd.Series, n_batches: int, astype: Literal["pandas"]
+) -> Iterable[_PandasBatch]:
+    ...
+
+
+@overload
+def mockup_data_loader(
+    X: pd.DataFrame, y: pd.Series, n_batches: int, astype: str
+) -> Iterable[_PandasOrSparkBatch]:
+    ...
 
 
 def mockup_data_loader(
