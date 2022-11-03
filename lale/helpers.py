@@ -16,9 +16,6 @@ import ast
 import copy
 import importlib
 import logging
-import os
-import re
-import sys
 import time
 import traceback
 from typing import (
@@ -403,20 +400,6 @@ def to_graphviz(
     jsn = lale.json_operator.to_json(lale_operator, call_depth=call_depth + 1)
     dot = lale.visualize.json_to_graphviz(jsn, ipython_display, dot_graph_attr)
     return dot
-
-
-def println_pos(message, out_file=sys.stdout):
-    tb = traceback.extract_stack()[-2]
-    match = re.search(r"<ipython-input-([0-9]+)-", tb[0])
-    if match:
-        pos = "notebook cell [{}] line {}".format(match[1], tb[1])
-    else:
-        pos = "{}:{}".format(tb[0], tb[1])
-    strtime = time.strftime("%Y-%m-%d_%H-%M-%S")
-    to_log = "{}: {} {}".format(pos, strtime, message)
-    print(to_log, file=out_file)
-    if match:
-        os.system("echo {}".format(to_log))
 
 
 def instantiate_from_hyperopt_search_space(obj_hyperparams, new_hyperparams):
