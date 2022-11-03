@@ -29,6 +29,12 @@ class VisitorMeta(type):
 
     def __init__(cls, *args, **kwargs):
         super(VisitorMeta, cls).__init__(*args, **kwargs)
+
+        method_name = getattr(cls, "__name__", "???")
+        # ensure that only idenifiers are used
+        if not isinstance(method_name, str) or not method_name.isidentifier():
+            method_name = "???"
+
         selector = """
         from lale.util import VisitorPathError
         try:
@@ -39,13 +45,15 @@ class VisitorMeta(type):
         except BaseException as e:
             raise VisitorPathError([self]) from e
         """.format(
-            getattr(cls, "__name__", "???")
+            method_name
         )
         _accept_code = "def _accept(self, visitor, *args, **kwargs):\n\t{}".format(
             selector
         )
         ll = {}
-        exec(_accept_code, globals(), ll)
+        # This is safe since the only user manipulatable part of the code is
+        # cls.__name__, which we sanitize to ensure that it is a valid identifier
+        exec(_accept_code, globals(), ll)  # nosec
         setattr(cls, "_accept", ll["_accept"])
 
 

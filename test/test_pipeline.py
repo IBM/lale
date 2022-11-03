@@ -376,7 +376,8 @@ xgb_regressor = XGBRegressor(missing=float('nan'), n_jobs=4, random_state=33, si
 pipeline = make_pipeline(union, numpy_permute_array, ta1_0, fs1_0, ta1_1, fs1_1, ta1_2, fs1_2, xgb_regressor)
 """
         globals2 = {}
-        exec(pipeline_str, globals2)
+        # This call to exec should be safe since we are using a fixed (completely specified) string
+        exec(pipeline_str, globals2)  # nosec
         pipeline2 = globals2["pipeline"]
         sklearn_pipeline = pipeline2.export_to_sklearn_pipeline()
         from lale import helpers

@@ -31,7 +31,8 @@ def load_movie_review():
     if not os.path.exists(download_data_dir):
         os.makedirs(download_data_dir)
         print("created directory {}".format(download_data_dir))
-        urllib.request.urlretrieve(download_base_url, data_file_path)
+        # this request is to a hardcoded https url, so does not risk leaking local data
+        urllib.request.urlretrieve(download_base_url, data_file_path)  # nosec
 
     X = []
     y = []

@@ -570,7 +570,9 @@ def download_if_missing(dataset_name, verbose=False):
         if not os.path.exists(download_data_dir):
             os.makedirs(download_data_dir)
         url = cast(str, experiments_dict[dataset_name]["download_arff_url"])
-        urllib.request.urlretrieve(url, file_name)
+
+        # This should be safe, since all of these strings are all explicitly listed, not user injectable
+        urllib.request.urlretrieve(url, file_name)  # nosec
     assert os.path.exists(file_name)
     return file_name
 

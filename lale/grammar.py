@@ -208,7 +208,8 @@ class Grammar(Operator):
             else:
                 return None
         if isinstance(op, OperatorChoice):
-            return self._sample(random.choice(op.steps_list()), n)
+            # This choice does not need to be cryptographically secure or hard to predict
+            return self._sample(random.choice(op.steps_list()), n)  # nosec
         if isinstance(op, NonTerminal):
             return self._sample(getattr(self, op.name()), n - 1) if n > 0 else None
         if isinstance(op, IndividualOp):

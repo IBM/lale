@@ -319,7 +319,8 @@ def _try_download_compas(violent_recidivism=False):
     filepath = _get_compas_filepath(filename)
     csv_exists = os.path.exists(filepath)
     if not csv_exists:
-        urllib.request.urlretrieve(
+        # this request is to a string that begins with a hardcoded https url, so does not risk leaking local data
+        urllib.request.urlretrieve(  # nosec
             f"https://raw.githubusercontent.com/propublica/compas-analysis/master/{filename}",
             filepath,
         )
