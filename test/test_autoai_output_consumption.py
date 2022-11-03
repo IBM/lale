@@ -1,4 +1,8 @@
 import os
+import re
+import sys
+import time
+import traceback
 import unittest
 import urllib.request
 from typing import Optional
@@ -10,12 +14,24 @@ from sklearn.linear_model import LogisticRegression as LR
 from sklearn.neighbors import KNeighborsClassifier as KNN
 from sklearn.tree import DecisionTreeClassifier as Tree
 
-import lale
 import lale.operators
-from lale.helpers import println_pos
 from lale.lib.autoai_libs import wrap_pipeline_segments
 
 assert sklearn.__version__ == "0.23.1", "This test is for scikit-learn 0.23.1."
+
+
+def _println_pos(message, out_file=sys.stdout):
+    tb = traceback.extract_stack()[-2]
+    match = re.search(r"<ipython-input-([0-9]+)-", tb[0])
+    if match:
+        pos = "notebook cell [{}] line {}".format(match[1], tb[1])
+    else:
+        pos = "{}:{}".format(tb[0], tb[1])
+    strtime = time.strftime("%Y-%m-%d_%H-%M-%S")
+    to_log = "{}: {} {}".format(pos, strtime, message)
+    print(to_log, file=out_file)
+    if match:
+        os.system("echo {}".format(to_log))
 
 
 class TestAutoAIOutputConsumption(unittest.TestCase):
@@ -48,8 +64,8 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
         try:
             old_model = joblib.load(TestAutoAIOutputConsumption.pickled_model_path)
             TestAutoAIOutputConsumption.model = old_model
-            println_pos(f"type(model) {type(TestAutoAIOutputConsumption.model)}")
-            println_pos(f"model {str(TestAutoAIOutputConsumption.model)}")
+            _println_pos(f"type(model) {type(TestAutoAIOutputConsumption.model)}")
+            _println_pos(f"model {str(TestAutoAIOutputConsumption.model)}")
         except Exception as e:
             assert False, f"Exception was thrown during model pickle: {e}"
 
@@ -76,7 +92,7 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
         TestAutoAIOutputConsumption.pipeline_content = wrapped_pipeline.pretty_print()
         assert type(TestAutoAIOutputConsumption.pipeline_content) is str
         assert len(TestAutoAIOutputConsumption.pipeline_content) > 0
-        println_pos(
+        _println_pos(
             f'pretty-printed """{TestAutoAIOutputConsumption.pipeline_content}"""'
         )
         assert (
@@ -113,7 +129,7 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
             try:
                 os.remove("pp_pipeline.py")
             except OSError:
-                println_pos("Couldn't remove pp_pipeline.py file")
+                _println_pos("Couldn't remove pp_pipeline.py file")
 
     def test_05_train_pretty_print_pipeline(self):
         t_df = TestAutoAIOutputConsumption.training_df
@@ -166,10 +182,10 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
 
         wrap_imported_operators()
         try:
-            println_pos(
+            _println_pos(
                 f"type(prefix_model) {type(TestAutoAIOutputConsumption.prefix_model)}"
             )
-            println_pos(f"type(LR) {type(LR)}")
+            _println_pos(f"type(LR) {type(LR)}")
             # This is for classifiers, regressors needs to have different operators & different scoring metrics (e.g 'r2')
             pm = TestAutoAIOutputConsumption.prefix_model
             assert pm is not None
