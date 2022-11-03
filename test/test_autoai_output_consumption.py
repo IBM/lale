@@ -20,7 +20,7 @@ from lale.lib.autoai_libs import wrap_pipeline_segments
 assert sklearn.__version__ == "0.23.1", "This test is for scikit-learn 0.23.1."
 
 
-def _println_pos(message, out_file=sys.stdout):
+def _println_pos(message):
     tb = traceback.extract_stack()[-2]
     match = re.search(r"<ipython-input-([0-9]+)-", tb[0])
     if match:
@@ -29,9 +29,13 @@ def _println_pos(message, out_file=sys.stdout):
         pos = "{}:{}".format(tb[0], tb[1])
     strtime = time.strftime("%Y-%m-%d_%H-%M-%S")
     to_log = "{}: {} {}".format(pos, strtime, message)
+
+    # if we are running in a notebook, then we also want to print to the console
+    # (stored in sys.__stdout__) instead of just the (redirected) sys.stdout
+    # that goes only to the notebook
+    # This simplifies finding where the notbook ran into a problem when a test fails
+    out_file = sys.__stdout__ if match else sys.stdout
     print(to_log, file=out_file)
-    if match:
-        os.system("echo {}".format(to_log))
 
 
 class TestAutoAIOutputConsumption(unittest.TestCase):
