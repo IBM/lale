@@ -107,7 +107,8 @@ def fetch_go_sales_dataset(datatype="pandas"):
         if not os.path.exists(data_file_name):
             if not os.path.exists(download_data_dir):
                 os.makedirs(download_data_dir)
-            urllib.request.urlretrieve(base_url + file, data_file_name)
+            # this request is to a hardcoded https url, so does not risk leaking local data
+            urllib.request.urlretrieve(base_url + file, data_file_name)  # nosec
             logger.info(" Created: {}".format(data_file_name))
         table_name = file.split(".")[0]
         data_frame = get_data_from_csv(datatype, data_file_name)

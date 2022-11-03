@@ -1,0 +1,16 @@
+---
+# This is the configuration file for the bandit python static analysis tool
+exclude_dirs:
+  - build
+# We are less worried about tests, as they are not a part of the library meant to be used by users
+# with untrusted inputs.
+  - test
+skips:
+  - B101 # allow the use of assert
+
+# We would like to allow the use of some things like B311: random.choice/randrange/... in tests.
+# The ability to specify this is requested as
+# https://github.com/PyCQA/bandit/issues/943
+# for now, just disable the check, but if this issue becomes solved,
+# then we should re-enable it for the other code
+# For now, we are just excluding the test directory from scanning

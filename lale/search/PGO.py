@@ -178,12 +178,14 @@ class FrequencyDistribution(Generic[T]):
 
     def sample(self) -> T:
         ll = len(self)
-        i = random.randrange(ll)
+        # This choice does not need to be cryptographically secure or hard to predict
+        i = random.randrange(ll)  # nosec
         return self[i]
 
     def samples(self, count: int) -> Sequence[T]:
         ll = len(self)
-        i: Sequence[int] = [random.randrange(ll) for _ in range(count)]
+        # This choice does not need to be cryptographically secure or hard to predict
+        i: Sequence[int] = [random.randrange(ll) for _ in range(count)]  # nosec
         return self[i]
 
 

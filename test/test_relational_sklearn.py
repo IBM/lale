@@ -112,7 +112,8 @@ class TestDatasets(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir_name:
             url = "https://raw.githubusercontent.com/pmservice/wml-sample-models/master/autoai/credit-risk-prediction/data/german_credit_data_biased_training.csv"
             file_name = os.path.join(tmpdir_name, "credit-g.csv")
-            urllib.request.urlretrieve(url, file_name)
+            # this request is to a hardcoded https url, so does not risk leaking local data
+            urllib.request.urlretrieve(url, file_name)  # nosec
             assert os.path.exists(file_name)
             n_rows = 5000
             n_batches = 3

@@ -296,7 +296,13 @@ def __init__(self{args}):
                 import math
 
                 d = {}
-                exec(code, {"nan": math.nan, "inf": math.inf}, d)
+                # this should be safe, since the user controllable
+                # part is created by _paramlist_docstring.
+                # While this can include user (schema) specified defaults,
+                # they would need to be objects (that were already run),
+                # not code that is executed (since that would be invalid in a schema)
+                # so that would not cause user provided code to run here (only to be referenced)
+                exec(code, {"nan": math.nan, "inf": math.inf}, d)  # nosec
                 __init__ = d["__init__"]  # type: ignore
             except BaseException as e:
                 import warnings
