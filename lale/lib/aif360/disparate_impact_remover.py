@@ -1,4 +1,4 @@
-# Copyright 2019, 2020, 2021 IBM Corporation
+# Copyright 2019-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -110,10 +110,16 @@ class _DisparateImpactRemoverImpl:
             assert isinstance(encoded_X, np.ndarray)
             features = encoded_X.tolist()
             index = sensitive_attribute
+        # workaround for "Matplotlib is currently using agg, which is a non-GUI backend"
+        import matplotlib
+
+        old_matplotlib_use_function = matplotlib.use
+        matplotlib.use = lambda _: None
         # since DisparateImpactRemover does not have separate fit and transform
         di_remover = aif360.algorithms.preprocessing.DisparateImpactRemover(
             repair_level=self.repair_level, sensitive_attribute=sensitive_attribute
         )
+        matplotlib.use = old_matplotlib_use_function
         self.mitigator = di_remover.Repairer(features, index, self.repair_level, False)
         return self
 
