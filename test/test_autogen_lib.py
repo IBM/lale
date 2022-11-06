@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from sklearn import datasets
 
-import lale.lib.autogen as autogen
+from lale.lib import autogen
 from lale.lib.lale import Hyperopt
 from lale.lib.lale.hyperopt import logger
 from lale.lib.sklearn import LogisticRegression
@@ -35,7 +35,7 @@ def base_test(name, pipeline, data_loader, max_evals=250, scoring="accuracy"):
             clf = Hyperopt(estimator=pipeline, max_evals=i, scoring=scoring)
             trained_pipeline = clf.fit(X, y)
             trained_pipeline.predict(X)
-            return True
+            return
         except Exception:
             test(3 * i)
 

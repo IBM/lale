@@ -98,6 +98,8 @@ class MetricMonoidFactory(MonoidFactory[_Batch_yyX, float, _M], Protocol):
 
 
 class _MetricMonoidMixin(MetricMonoidFactory[_M], Protocol):
+    # pylint:disable=abstract-method
+    # This is an abstract class as well
     def score_data(
         self, y_true: pd.Series, y_pred: pd.Series, X: Optional[pd.DataFrame] = None
     ) -> float:

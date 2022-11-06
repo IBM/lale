@@ -60,12 +60,14 @@ class MonoidFactory(Generic[_InputType, _OutputType, _M], Protocol):
     a base class.
     """
 
+    @abstractmethod
     def to_monoid(self, v: _InputType) -> _M:
         """
         Create a monoid instance representing the input data
         """
         ...
 
+    @abstractmethod
     def from_monoid(self, v: _M) -> _OutputType:
         """
         Given the monoid instance, return the appropriate type of output.

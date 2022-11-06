@@ -432,6 +432,8 @@ def _task_to_string(
     return f"{trace_id_s}{operation_s}{sep}{step_s}({batches_s}){held_out_s}"
 
 
+# TODO: Maybe we can address this another way?
+# pylint: disable=E1101
 class _RunStats:
     _values: Dict[str, float]
 

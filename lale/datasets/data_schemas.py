@@ -56,7 +56,7 @@ class NDArrayWithSchema(ndarray):
         json_schema=None,
         table_name=None,
     ):
-        result = super(NDArrayWithSchema, cls).__new__(
+        result = super(NDArrayWithSchema, cls).__new__(  # pylint:disable=E1121
             cls, shape, dtype, buffer, offset, strides, order  # type: ignore
         )
         result.json_schema = json_schema
@@ -123,9 +123,7 @@ if spark_installed:
             table_name = get_table_name(df)
             if table_name is not None:
                 df_with_index = df_with_index.alias(table_name)
-            super(self.__class__, self).__init__(
-                df_with_index._jdf, df_with_index.sql_ctx
-            )
+            super().__init__(df_with_index._jdf, df_with_index.sql_ctx)
             self.index_name = index_name
             self.index_names = index_names
             for f in df.schema.fieldNames():
@@ -144,7 +142,7 @@ if spark_installed:
             return cols
 
         def toPandas(self, *args, **kwargs):
-            df = super(self.__class__, self).toPandas(*args, **kwargs)
+            df = super().toPandas(*args, **kwargs)
             return df.set_index(self.index_names)
 
 else:

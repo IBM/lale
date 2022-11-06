@@ -21,7 +21,7 @@ from .schema_utils import JsonSchema, SchemaEnum
 logger = logging.getLogger(__name__)
 
 
-class DiscoveredEnums(object):
+class DiscoveredEnums:
     def __init__(
         self,
         enums: Optional[SchemaEnum] = None,

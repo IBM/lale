@@ -372,7 +372,10 @@ def simplifyAll(schemas: List[JsonSchema], floatAny: bool) -> JsonSchema:
 
     if s_enum_list:
         # if there are enumeration constraints, we want their intersection
-        s_enum = set_with_str_for_keys.intersection(*s_enum_list)
+        # pylint note: s_enum_list must be non-empty, and the first element will be used as self
+        s_enum = set_with_str_for_keys.intersection(  # pylint:disable=E1120
+            *s_enum_list
+        )
         if not s_enum:
             # This means that enumeration values where specified
             # but none are possible, so this schema is impossible to satisfy
@@ -381,7 +384,10 @@ def simplifyAll(schemas: List[JsonSchema], floatAny: bool) -> JsonSchema:
             )
             return impossible()
     if s_not_enum_list:
-        s_not_enum = set_with_str_for_keys.union(*s_not_enum_list)
+        # pylint note: s_enum_list must be non-empty, and the first element will be used as self
+        s_not_enum = set_with_str_for_keys.union(  # pylint:disable=E1120
+            *s_not_enum_list
+        )
 
     if s_enum and s_not_enum:
         s_enum_diff = set_with_str_for_keys.difference(s_enum, s_not_enum)
@@ -845,10 +851,14 @@ def simplifyAny(schema: List[JsonSchema], floatAny: bool) -> JsonSchema:
 
     if s_enum_list:
         # if there are enumeration constraints, we want their intersection
-        s_enum = set_with_str_for_keys.union(*s_enum_list)
+        # pylint note: s_enum_list must be non-empty, and the first element will be used as self
+        s_enum = set_with_str_for_keys.union(*s_enum_list)  # pylint:disable=E1120
 
     if s_not_enum_list:
-        s_not_enum = set_with_str_for_keys.intersection(*s_not_enum_list)
+        # pylint note: s_enum_list must be non-empty, and the first element will be used as self
+        s_not_enum = set_with_str_for_keys.intersection(  # pylint:disable=E1120
+            *s_not_enum_list
+        )
 
     if s_enum and s_not_enum:
         s_not_enum = set_with_str_for_keys.difference(s_not_enum, s_enum)

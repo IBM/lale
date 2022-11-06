@@ -1451,32 +1451,32 @@ class IndividualOp(Operator):
         return not inspect.isclass(self._impl)
 
     def _get_masked_attr_list(self):
-        if hasattr(self, "_cached_masked_attr_list"):
-            return self._cached_masked_attr_list
-        else:
-            found_ops = [
-                "get_pipeline",
-                "summary",
-                "transform",
-                "predict",
-                "predict_proba",
-                "decision_function",
-                "score",
-                "score_samples",
-                "predict_log_proba",
-                "_schemas",
-                "_impl",
-                "_impl_class",
-                "_hyperparams",
-                "_frozen_hyperparams",
-                "_trained",
-                "_enum_attributes",
-                "_cached_masked_attr_list",
-            ]
-            found_ops.extend(dir(TrainedIndividualOp))
-            found_ops.extend(dir(self))
-            self._cached_masked_attr_list = found_ops
-            return found_ops
+        prev_cached_value = getattr(self, "_cached_masked_attr_list", None)
+        if prev_cached_value is not None:
+            return prev_cached_value
+        found_ops = [
+            "get_pipeline",
+            "summary",
+            "transform",
+            "predict",
+            "predict_proba",
+            "decision_function",
+            "score",
+            "score_samples",
+            "predict_log_proba",
+            "_schemas",
+            "_impl",
+            "_impl_class",
+            "_hyperparams",
+            "_frozen_hyperparams",
+            "_trained",
+            "_enum_attributes",
+            "_cached_masked_attr_list",
+        ]
+        found_ops.extend(dir(TrainedIndividualOp))
+        found_ops.extend(dir(self))
+        self._cached_masked_attr_list = found_ops
+        return found_ops
 
     def _check_schemas(self):
         from lale.settings import disable_hyperparams_schema_validation
@@ -1662,7 +1662,7 @@ class IndividualOp(Operator):
         return getattr(self, "_hyperparams", None)
 
     def frozen_hyperparams(self) -> Optional[List[str]]:
-        return getattr(self, "_frozen_hyperparams", None)
+        return self._frozen_hyperparams
 
     def _hyperparams_helper(self) -> Optional[Dict[str, Any]]:
         actuals = self.hyperparams_all()
