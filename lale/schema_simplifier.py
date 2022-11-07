@@ -91,16 +91,19 @@ class set_with_str_for_keys(Generic[VV]):
     def __str__(self):
         return str(list(self._elems.values()))
 
+    def __contains__(self, key):
+        return key in self._elems
+
     def union(self, *others):
         return set_with_str_for_keys(
             [elem for subl in [self] + list(others) for elem in subl]
         )
 
-    def intersection(self, *others):
+    def intersection(self, *others: "set_with_str_for_keys[VV]"):
         d: Dict[str, VV] = dict(self._elems)
         for ssk in others:
             for k in list(d.keys()):
-                if k not in ssk._elems:
+                if k not in ssk:
                     del d[k]
         return set_with_str_for_keys(d)
 
@@ -108,7 +111,7 @@ class set_with_str_for_keys(Generic[VV]):
         d: Dict[str, VV] = dict(self._elems)
         for ssk in others:
             for k in list(d.keys()):
-                if k in ssk._elems:
+                if k in ssk:
                     del d[k]
         return set_with_str_for_keys(d)
 

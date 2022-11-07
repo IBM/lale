@@ -25,7 +25,7 @@ from lale.helpers import _ast_func_id
 
 
 def eval_expr_pandas_df(X, expr: Expr) -> pd.Series:
-    return _eval_ast_expr_pandas_df(X, expr._expr)
+    return _eval_ast_expr_pandas_df(X, expr.expr)
 
 
 def _eval_ast_expr_pandas_df(X, expr: AstExpr) -> pd.Series:

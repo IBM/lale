@@ -74,6 +74,10 @@ def fixedUnparse(tree):
 class Expr:
     _expr: AstExpr
 
+    @property
+    def expr(self):
+        return self._expr
+
     def __init__(self, expr: AstExpr, istrue=None):
         # _istrue variable is used to check the boolean nature of
         # '==' and '!=' operator's results.
@@ -374,7 +378,7 @@ def _make_binop(
     op, left: Any, other: Union[Expr, str, int, float, bool, None]
 ) -> Union["Expr", Literal[False]]:
     if isinstance(other, Expr):
-        e = ast.BinOp(left=left, op=op, right=other._expr)
+        e = ast.BinOp(left=left, op=op, right=other.expr)
         return Expr(e)
     elif other is not None:
         e = ast.BinOp(left=left, op=op, right=ast.Constant(value=other))
@@ -387,7 +391,7 @@ def _make_ast_expr(arg: Union[None, Expr, int, float, str, AstExpr]) -> AstExpr:
     if arg is None:
         return ast.Constant(value=None)
     elif isinstance(arg, Expr):
-        return arg._expr
+        return arg.expr
     elif isinstance(arg, (int, float)):
         return ast.Num(n=arg)
     elif isinstance(arg, str):

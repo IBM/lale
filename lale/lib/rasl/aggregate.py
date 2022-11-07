@@ -60,12 +60,12 @@ class _AggregateImpl:
 
         agg_info = []
         for new_col_name, expr in self.columns.items():
-            if isinstance(expr._expr, ast.Call):
-                agg_func_name = expr._expr.func.id  # type: ignore
-                old_col_name = lale.expressions._it_column(expr._expr.args[0])
+            if isinstance(expr.expr, ast.Call):
+                agg_func_name = expr.expr.func.id  # type: ignore
+                old_col_name = lale.expressions._it_column(expr.expr.args[0])
             else:
                 agg_func_name = "first"
-                old_col_name = lale.expressions._it_column(expr._expr)
+                old_col_name = lale.expressions._it_column(expr.expr)
             agg_info.append((new_col_name, old_col_name, agg_func_name))
         if isinstance(X, (pd.DataFrame, pd.core.groupby.generic.DataFrameGroupBy)):
             aggregated_df = self._transform_pandas(X, agg_info)

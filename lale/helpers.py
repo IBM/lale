@@ -530,7 +530,7 @@ def create_instance_from_hyperopt_search_space(
         except KeyError as e:
             raise ValueError(
                 "An edge was found with an endpoint that is not a step (" + str(e) + ")"
-            )
+            ) from e
 
         return TrainablePipeline(op_instances, trainable_edges, ordered=True)  # type: ignore
     elif isinstance(lale_object, OperatorChoice):
@@ -799,7 +799,6 @@ def create_data_loader(X, y=None, batch_size=1, num_workers=0, shuffle=True):
     TypeError
         Raises a TypeError if the input format is not supported.
     """
-    import torch
     from torch.utils.data import DataLoader, Dataset, TensorDataset
 
     from lale.util.batch_data_dictionary_dataset import BatchDataDict

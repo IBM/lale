@@ -158,7 +158,9 @@ class _HalvingGridSearchCVImpl:
                 )
             try:
                 # explicitly require this experimental feature
-                from sklearn.experimental import enable_halving_search_cv  # noqa
+                from sklearn.experimental import (  # noqa  # pylint:disable=W0611
+                    enable_halving_search_cv,
+                )
 
                 import sklearn.model_selection  # isort: skip
 
@@ -175,8 +177,10 @@ class _HalvingGridSearchCVImpl:
                             func_timeout(
                                 self._hyperparams["max_opt_time"], self.grid.fit, (X, y)
                             )
-                        except FunctionTimedOut:
-                            raise BaseException("HalvingGridSearchCV timed out.")
+                        except FunctionTimedOut as exc:
+                            raise BaseException(
+                                "HalvingGridSearchCV timed out."
+                            ) from exc
                     else:
                         raise ValueError(
                             f"""max_opt_time is set to {self._hyperparams["max_opt_time"]} but the Python package

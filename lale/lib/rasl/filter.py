@@ -45,7 +45,7 @@ class _FilterImpl:
     # @classmethod
     # def validate_hyperparams(cls, pred=None, X=None, **hyperparams):
     #     for pred_element in pred:
-    #         if not isinstance(pred_element._expr, ast.Compare):
+    #         if not isinstance(pred_element.expr, ast.Compare):
     #             raise ValueError(
     #                 (
     #                     "Filter predicate '{}' not a comparison. All filter predicates should be comparisons."
@@ -242,7 +242,7 @@ class _FilterImpl:
                 )
 
         for pred_element in self.pred if self.pred is not None else []:
-            expr_to_parse = pred_element._expr
+            expr_to_parse = pred_element.expr
             lhs, op, rhs = self._get_filter_info(expr_to_parse, X)
             filtered_df = filter(filtered_df)
             filtered_df = forward_metadata(X, filtered_df)

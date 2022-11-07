@@ -46,7 +46,7 @@ except ImportError:
 
 
 def eval_expr_spark_df(expr: Expr):
-    return _eval_ast_expr_spark_df(expr._expr)
+    return _eval_ast_expr_spark_df(expr.expr)
 
 
 def _eval_ast_expr_spark_df(expr: AstExpr):

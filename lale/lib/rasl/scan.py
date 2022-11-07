@@ -25,19 +25,19 @@ from lale.helpers import _get_subscript_value
 class _ScanImpl:
     def __init__(self, table=None):
         assert table is not None
-        if isinstance(table._expr, ast.Attribute):
-            self.table_name = table._expr.attr
-        elif isinstance(table._expr, ast.Subscript):
-            self.table_name = _get_subscript_value(table._expr)
+        if isinstance(table.expr, ast.Attribute):
+            self.table_name = table.expr.attr
+        elif isinstance(table.expr, ast.Subscript):
+            self.table_name = _get_subscript_value(table.expr)
 
     @classmethod
     def validate_hyperparams(cls, table: Optional[Expr] = None, X=None, **hyperparams):
         assert table is not None
-        if isinstance(table._expr, (ast.Attribute, ast.Subscript)):
-            base = table._expr.value
+        if isinstance(table.expr, (ast.Attribute, ast.Subscript)):
+            base = table.expr.value
             if isinstance(base, ast.Name) and base.id == "it":
-                if isinstance(table._expr, ast.Subscript):
-                    sub = table._expr.slice
+                if isinstance(table.expr, ast.Subscript):
+                    sub = table.expr.slice
                     if isinstance(sub, ast.Constant) or (
                         isinstance(sub, ast.Index)
                         and isinstance(getattr(sub, "value", None), ast.Str)

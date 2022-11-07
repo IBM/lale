@@ -46,7 +46,7 @@ class _SampleBasedVotingImpl:
                     X = X.as_matrix()
             for index in end_index_list:
                 labels = X[prev_index:index]
-                (values, counts) = np.unique(labels, return_counts=True)
+                (_, counts) = np.unique(labels, return_counts=True)
                 ind = np.argmax(
                     counts
                 )  # If two labels are in majority, this will pick the first one.

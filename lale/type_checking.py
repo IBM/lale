@@ -50,7 +50,7 @@ import lale.operators
 JSON_TYPE = Dict[str, Any]
 
 
-def _validate_lale_type(validator, laleType, instance, schema):
+def _validate_lale_type(validator, laleType, instance, schema):  # pylint:disable=W0613
     # https://github.com/Julian/jsonschema/blob/master/jsonschema/_validators.py
     if laleType == "Any":
         return
@@ -118,7 +118,8 @@ def always_validate_schema(value, schema: JSON_TYPE, subsample_array: bool = Tru
     try:
         validator = _lale_validator(sch)
         validator.validate(json_value)
-    except Exception:
+    # FIXME: narrow the Exception and remove the pylint disable
+    except Exception:  # pylint:disable=W0703
         jsonschema.validate(json_value, sch, _lale_validator)
 
 
@@ -245,10 +246,10 @@ class SubschemaError(Exception):
 
     def __str__(self):
         summary = f"Expected {self.sub_name} to be a subschema of {self.sup_name}."
-        import lale.pretty_print
+        from lale.pretty_print import json_to_string
 
-        sub = lale.pretty_print.json_to_string(self.sub)
-        sup = lale.pretty_print.json_to_string(self.sup)
+        sub = json_to_string(self.sub)
+        sup = json_to_string(self.sup)
         details = f"\n{self.sub_name} = {sub}\n{self.sup_name} = {sup}"
         return summary + details
 

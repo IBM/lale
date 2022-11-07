@@ -61,12 +61,12 @@ class _BatchingImpl:
         else:
             try:
                 from torch.utils.data import DataLoader
-            except ImportError:
+            except ImportError as exc:
                 raise ImportError(
                     """Batching uses Pytorch for data loading. It is not
                 installed in the current environment, please install
                 the package and try again."""
-                )
+                ) from exc
             if isinstance(X, DataLoader):
                 assert (
                     y is None
@@ -112,12 +112,12 @@ class _BatchingImpl:
         else:
             try:
                 from torch.utils.data import DataLoader
-            except ImportError:
+            except ImportError as exc:
                 raise ImportError(
                     """Batching uses Pytorch for data loading. It is not
                 installed in the current environment, please install
                 the package and try again."""
-                )
+                ) from exc
             if isinstance(X, DataLoader):
                 assert (
                     y is None

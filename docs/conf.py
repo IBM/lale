@@ -40,7 +40,7 @@ from lale.settings import set_disable_hyperparams_schema_validation
 # -- Project information -----------------------------------------------------
 
 project = "LALE"
-copyright = "2019, IBM AI Research"
+project_copyright = "2019, IBM AI Research"
 author = "IBM AI Research"
 
 # The short X.Y version

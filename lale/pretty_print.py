@@ -129,7 +129,7 @@ def hyperparams_to_string(
             return f"np.{value.__name__}"  # type: ignore
         elif isinstance(value, lale.expressions.Expr):
             v: lale.expressions.Expr = value
-            e = v._expr
+            e = v.expr
             if gen is not None:
                 gen.imports.append("from lale.expressions import it")
                 for node in ast.walk(e):

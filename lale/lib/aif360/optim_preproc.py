@@ -15,7 +15,8 @@
 import aif360.algorithms.preprocessing
 
 try:
-    import cvxpy  # noqa because the import is only done as a check and flake fails.
+    # because the import is only done as a check and flake fails.
+    import cvxpy  # noqa  # pylint:disable=W0611
 
     cvxpy_installed = True
 except ImportError:

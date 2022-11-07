@@ -47,7 +47,7 @@ class _GroupByImpl:
         name = get_table_name(X)
         group_by_keys = []
         for by_element in self.by if self.by is not None else []:
-            expr_to_parse = by_element._expr
+            expr_to_parse = by_element.expr
             group_by_keys.append(self._get_group_key(expr_to_parse))
         col_not_in_X = np.setdiff1d(group_by_keys, get_columns(X))
         if col_not_in_X.size > 0:

@@ -142,9 +142,6 @@ class SearchSpaceToGridVisitor(Visitor):
         else:
             return space
 
-    def __init__(self):
-        super(SearchSpaceToGridVisitor, self).__init__()
-
     def visitSearchSpacePrimitive(
         self, space: SearchSpacePrimitive
     ) -> SearchSpacePrimitive:

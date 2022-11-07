@@ -107,7 +107,7 @@ class _JoinImpl:
                         left_key_col,
                         right_table_name,
                         right_key_col,
-                    ) = cls._get_join_info(sub_key._expr)
+                    ) = cls._get_join_info(sub_key.expr)
                     if sub_list_tables and not (
                         left_table_name in sub_list_tables
                         and right_table_name in sub_list_tables
@@ -140,7 +140,7 @@ class _JoinImpl:
                     left_key_col,
                     right_table_name,
                     right_key_col,
-                ) = cls._get_join_info(key._expr)
+                ) = cls._get_join_info(key.expr)
                 if tables_encountered and not (
                     left_table_name in tables_encountered
                     or right_table_name in tables_encountered
@@ -265,7 +265,7 @@ class _JoinImpl:
                         temp_left_key,
                         right_table_name,
                         temp_right_key,
-                    ) = self._get_join_info(sub_pred_element._expr)
+                    ) = self._get_join_info(sub_pred_element.expr)
                     left_key_col.extend(temp_left_key)
                     right_key_col.extend(temp_right_key)
             else:
@@ -274,7 +274,7 @@ class _JoinImpl:
                     left_key_col,
                     right_table_name,
                     right_key_col,
-                ) = self._get_join_info(pred_element._expr)
+                ) = self._get_join_info(pred_element.expr)
             left_df, right_df = fetch_df(left_table_name, right_table_name)
             if not _is_df(left_df) or not _is_df(right_df):
                 raise ValueError(

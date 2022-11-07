@@ -237,13 +237,13 @@ sklearn_version = version.parse(getattr(sklearn, "__version__"))
 
 try:
     from sklearn.pipeline import if_delegate_has_method
-except ImportError as e:
+except ImportError as imp_exc:
     import sklearn
 
     if sklearn_version >= version.Version("1.0"):
         from sklearn.utils.metaestimators import if_delegate_has_method
     else:
-        raise e
+        raise imp_exc
 
 logger = logging.getLogger(__name__)
 
@@ -3087,10 +3087,10 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         if self.has_method("transform_schema"):
             try:
                 return self._impl_instance().transform_schema(s_X)
-            except BaseException as e:
+            except BaseException as exc:
                 raise ValueError(
                     f"unexpected error in {self.name()}.transform_schema({lale.pretty_print.to_string(s_X)}"
-                ) from e
+                ) from exc
         else:
             return super(TrainableIndividualOp, self).transform_schema(s_X)
 

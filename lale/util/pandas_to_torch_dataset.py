@@ -16,13 +16,13 @@ import pandas as pd
 
 try:
     from torch.utils.data import Dataset
-except ModuleNotFoundError:
+except ModuleNotFoundError as exc:
     raise ModuleNotFoundError(
         """Your Python environment does not have torch installed. You can install it with
                                 pip install torch
                                 or with
                                     pip install 'lale[full]'"""
-    )
+    ) from exc
 
 
 class PandasTorchDataset(Dataset):
