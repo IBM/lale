@@ -4384,8 +4384,8 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         warnings.warn(_mutation_warning("transform"), DeprecationWarning)
         try:
             return self._trained.transform(X, y=None)
-        except AttributeError:
-            raise ValueError("Must call `fit` before `transform`.")
+        except AttributeError as exc:
+            raise ValueError("Must call `fit` before `transform`.") from exc
 
     def predict(self, X, **predict_params) -> Any:
         """
@@ -4399,8 +4399,8 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         warnings.warn(_mutation_warning("predict"), DeprecationWarning)
         try:
             return self._trained.predict(X, **predict_params)
-        except AttributeError:
-            raise ValueError("Must call `fit` before `predict`.")
+        except AttributeError as exc:
+            raise ValueError("Must call `fit` before `predict`.") from exc
 
     def predict_proba(self, X):
         """
@@ -4414,8 +4414,8 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         warnings.warn(_mutation_warning("predict_proba"), DeprecationWarning)
         try:
             return self._trained.predict_proba(X)
-        except AttributeError:
-            raise ValueError("Must call `fit` before `predict_proba`.")
+        except AttributeError as exc:
+            raise ValueError("Must call `fit` before `predict_proba`.") from exc
 
     def decision_function(self, X):
         """
@@ -4429,8 +4429,8 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         warnings.warn(_mutation_warning("decision_function"), DeprecationWarning)
         try:
             return self._trained.decision_function(X)
-        except AttributeError:
-            raise ValueError("Must call `fit` before `decision_function`.")
+        except AttributeError as exc:
+            raise ValueError("Must call `fit` before `decision_function`.") from exc
 
     def score(self, X, y, **score_params):
         """
@@ -4444,8 +4444,8 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         warnings.warn(_mutation_warning("score"), DeprecationWarning)
         try:
             return self._trained.score(X, y, **score_params)
-        except AttributeError:
-            raise ValueError("Must call `fit` before `score`.")
+        except AttributeError as exc:
+            raise ValueError("Must call `fit` before `score`.") from exc
 
     def score_samples(self, X=None):
         """
@@ -4459,8 +4459,8 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         warnings.warn(_mutation_warning("score_samples"), DeprecationWarning)
         try:
             return self._trained.score_samples(X)
-        except AttributeError:
-            raise ValueError("Must call `fit` before `score_samples`.")
+        except AttributeError as exc:
+            raise ValueError("Must call `fit` before `score_samples`.") from exc
 
     def predict_log_proba(self, X):
         """
@@ -4474,8 +4474,8 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         warnings.warn(_mutation_warning("predict_log_proba"), DeprecationWarning)
         try:
             return self._trained.predict_log_proba(X)
-        except AttributeError:
-            raise ValueError("Must call `fit` before `predict_log_proba`.")
+        except AttributeError as exc:
+            raise ValueError("Must call `fit` before `predict_log_proba`.") from exc
 
     def freeze_trainable(self) -> "TrainablePipeline":
         frozen_steps: List[TrainableOperator] = []

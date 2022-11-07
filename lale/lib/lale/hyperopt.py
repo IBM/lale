@@ -250,12 +250,12 @@ class _HyperoptImpl:
                 logger.warning(
                     "Maximum alloted optimization time exceeded. Optimization exited prematurely"
                 )
-            except AllTrialsFailed:
+            except AllTrialsFailed as exc:
                 self._best_estimator = None
                 if hyperopt.STATUS_OK not in self._trials.statuses():
                     raise ValueError(
                         "Error from hyperopt, none of the trials succeeded."
-                    )
+                    ) from exc
 
         try:
             hyperopt.fmin(
@@ -271,11 +271,13 @@ class _HyperoptImpl:
             logger.warning(
                 "Maximum alloted optimization time exceeded. Optimization exited prematurely"
             )
-        except AllTrialsFailed:
+        except AllTrialsFailed as exc:
             self._best_estimator = None
             if hyperopt.STATUS_OK not in self._trials.statuses():
                 self._summarize_statuses()
-                raise ValueError("Error from hyperopt, none of the trials succeeded.")
+                raise ValueError(
+                    "Error from hyperopt, none of the trials succeeded."
+                ) from exc
         self._trials = merge_trials(self._trials, self._default_trials)
         if self.show_progressbar:
             self._summarize_statuses()
@@ -307,7 +309,6 @@ class _HyperoptImpl:
         return self
 
     def predict(self, X_eval, **predict_params):
-        import warnings
 
         warnings.filterwarnings("ignore")
         if self._best_estimator is None:

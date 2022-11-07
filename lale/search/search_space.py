@@ -426,7 +426,7 @@ _print_search_space_env_options: Optional[Set[str]] = None
 
 
 def _get_print_search_space_options() -> Set[str]:
-    global _print_search_space_env_options
+    global _print_search_space_env_options  # pylint:disable=W0603
     options: Set[str]
     if _print_search_space_env_options is None:
         debug = os.environ.get("LALE_PRINT_SEARCH_SPACE", None)

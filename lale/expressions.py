@@ -454,7 +454,7 @@ def item(group: Expr, value: Union[int, str]) -> Expr:
     return _make_call_expr("item", group, value)
 
 
-def max(group: Expr) -> Expr:
+def max(group: Expr) -> Expr:  # pylint:disable=W0622
     return _make_call_expr("max", group)
 
 
@@ -466,7 +466,7 @@ def mean(group: Expr) -> Expr:
     return _make_call_expr("mean", group)
 
 
-def min(group: Expr) -> Expr:
+def min(group: Expr) -> Expr:  # pylint:disable=W0622
     return _make_call_expr("min", group)
 
 
@@ -537,7 +537,7 @@ def astype(dtype, subject: Expr) -> Expr:
     return _make_call_expr("astype", dtype, subject)
 
 
-def hash(hash_method: str, subject: Expr) -> Expr:
+def hash(hash_method: str, subject: Expr) -> Expr:  # pylint:disable=W0622
     return _make_call_expr("hash", hash_method, subject)
 
 
@@ -545,7 +545,7 @@ def hash_mod(hash_method: str, subject: Expr, n: Expr) -> Expr:
     return _make_call_expr("hash_mod", hash_method, subject, n)
 
 
-def sum(group: Expr) -> Expr:
+def sum(group: Expr) -> Expr:  # pylint:disable=W0622
     return _make_call_expr("sum", group)
 
 

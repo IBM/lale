@@ -456,7 +456,7 @@ def set_docstrings(lale_op: "IndividualOp"):
                 module.__dict__[name] = new_class
 
                 _set_docstrings_helper(new_class, lale_op, combined_schemas)
-            except NameError as e:
-                raise ValueError(e)
+            except NameError as exc:
+                raise ValueError(exc) from exc
     except NameError:
         pass

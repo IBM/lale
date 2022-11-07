@@ -13,7 +13,7 @@ def set_disable_data_schema_validation(flag: bool):
         A value of True will disable the data schema validation, and a value of False will enable it.
         It is True by default.
     """
-    global disable_data_schema_validation
+    global disable_data_schema_validation  # pylint:disable=W0603
     disable_data_schema_validation = flag
 
 
@@ -28,5 +28,5 @@ def set_disable_hyperparams_schema_validation(flag: bool):
         A value of True will disable the hyperparameter schema validation, and a value of False will enable it.
         It is False by default.
     """
-    global disable_hyperparams_schema_validation
+    global disable_hyperparams_schema_validation  # pylint:disable=W0603
     disable_hyperparams_schema_validation = flag
