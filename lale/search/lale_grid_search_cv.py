@@ -128,14 +128,14 @@ def SearchSpaceNumberToGSValues(
         raise ValueError(
             f"maximum not specified for a number with distribution {dist} for {key}"
         )
-    max = hp.getInclusiveMax()
-    assert max is not None
+    space_max = hp.getInclusiveMax()
+    assert space_max is not None
     if hp.minimum is None:
         raise ValueError(
             f"minimum not specified for a number with distribution {dist} for {key}"
         )
-    min = hp.getInclusiveMin()
-    assert min is not None
+    space_min = hp.getInclusiveMin()
+    assert space_min is not None
 
     dt: np.dtype
     if hp.discrete:
@@ -151,9 +151,9 @@ def SearchSpaceNumberToGSValues(
             return [default]
         samples = samples - 1
     if dist == "uniform" or dist == "integer":
-        ret = np.linspace(min, max, num=samples, dtype=dt).tolist()
+        ret = np.linspace(space_min, space_max, num=samples, dtype=dt).tolist()
     elif dist == "loguniform":
-        ret = np.logspace(min, max, num=samples, dtype=dt).tolist()
+        ret = np.logspace(space_min, space_max, num=samples, dtype=dt).tolist()
     else:
         raise ValueError(f"unknown/unsupported distribution {dist} for {key}")
     if default is not None:

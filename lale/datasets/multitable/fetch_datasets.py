@@ -256,12 +256,12 @@ def fetch_creditg_multitable_dataset(datatype="pandas"):
     df_col = X["existing_credits"]
     records = []
     for row in df_col.iteritems():
-        id = row[0]
+        row_id = row[0]
         credit_count = int(row[1])
         for i in range(credit_count):
             records.append(
                 {
-                    "id": id,
+                    "id": row_id,
                     "credit_number": np.random.randint(1, 1000000),
                     "type": "credit",
                     "status": "on",

@@ -134,12 +134,12 @@ def SearchSpaceNumberToSMAC(key: str, hp: SearchSpaceNumber) -> Hyperparameter:
         raise ValueError(
             f"maximum not specified for a number with distribution {dist} for {key}"
         )
-    max = hp.getInclusiveMax()
+    space_max = hp.getInclusiveMax()
     if hp.minimum is None:
         raise ValueError(
             f"minimum not specified for a number with distribution {dist} for {key}"
         )
-    min = hp.getInclusiveMin()
+    space_min = hp.getInclusiveMin()
 
     log: bool
     if dist == "uniform" or dist == "integer":
@@ -150,9 +150,9 @@ def SearchSpaceNumberToSMAC(key: str, hp: SearchSpaceNumber) -> Hyperparameter:
         raise ValueError(f"unknown/unsupported distribution {dist} for {key}")
 
     if hp.discrete:
-        return UniformIntegerHyperparameter(key, min, max, log=log)
+        return UniformIntegerHyperparameter(key, space_min, space_max, log=log)
     else:
-        return UniformFloatHyperparameter(key, min, max, log=log)
+        return UniformFloatHyperparameter(key, space_min, space_max, log=log)
 
 
 class FakeNone(object):

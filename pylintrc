@@ -12,6 +12,8 @@
 # W0122: exec-used
 #   We already check for this with bandit, so no need to double up on comments marking exceptions
 
+# W0611: Unused import
+#   We already check for this with flake8, so no need to double up on comments marking exceptions
 
 # W0511: fixme
 
@@ -57,7 +59,8 @@
 
 disable=
    E0401,
-   W0107,W1201,W1202,W1203,W0122,W0511,W0612,W0613,W0201,W0246,W0212,W0703,
+   W0122,W0611,  # already checked by other tools
+   W0107,W1201,W1202,W1203,W0511,W0612,W0613,W0201,W0246,W0212,W0703,
    C0301,C0414,C0103,C0114,C0115,C0116,
    R0801,R1705,
    W0102,

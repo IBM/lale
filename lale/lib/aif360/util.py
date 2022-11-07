@@ -29,7 +29,7 @@ import lale.datasets.openml
 import lale.lib.lale
 import lale.lib.rasl
 from lale.datasets.data_schemas import add_schema_adjusting_n_rows
-from lale.expressions import astype, it, sum
+from lale.expressions import astype, it, sum  # pylint:disable=redefined-builtin
 from lale.helpers import GenSym, _ensure_pandas
 from lale.lib.dataframe import get_columns
 from lale.lib.rasl import Aggregate, ConcatFeatures, Map

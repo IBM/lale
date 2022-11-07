@@ -158,9 +158,7 @@ class _HalvingGridSearchCVImpl:
                 )
             try:
                 # explicitly require this experimental feature
-                from sklearn.experimental import (  # noqa  # pylint:disable=W0611
-                    enable_halving_search_cv,
-                )
+                from sklearn.experimental import enable_halving_search_cv  # noqa
 
                 import sklearn.model_selection  # isort: skip
 

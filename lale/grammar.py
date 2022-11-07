@@ -46,7 +46,7 @@ class NonTerminal(Operator):
     def __init__(self, name):
         self._name = name
 
-    def _has_same_impl(self):
+    def _has_same_impl(self, other: Operator):
         pass
 
     def is_supervised(self):
@@ -108,7 +108,7 @@ class Grammar(Operator):
         else:
             self._variables[name] = value
 
-    def _has_same_impl(self):
+    def _has_same_impl(self, other: Operator):
         pass
 
     def is_supervised(self):

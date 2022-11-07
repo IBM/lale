@@ -266,8 +266,6 @@ class SearchSpaceOperatorVisitor(Visitor):
         typ = schema.get("laleType", None)
         if typ is None:
             typ = schema.get("type", None)
-        else:
-            typ = typ
 
         if "enum" in schema and typ != "operator":
             vals = schema["enum"]

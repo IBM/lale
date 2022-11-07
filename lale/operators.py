@@ -238,7 +238,6 @@ sklearn_version = version.parse(getattr(sklearn, "__version__"))
 try:
     from sklearn.pipeline import if_delegate_has_method
 except ImportError as imp_exc:
-    import sklearn
 
     if sklearn_version >= version.Version("1.0"):
         from sklearn.utils.metaestimators import if_delegate_has_method
@@ -1005,6 +1004,8 @@ Operator.__doc__ = cast(str, Operator.__doc__) + "\n" + _combinators_docstrings
 
 class PlannedOperator(Operator):
     """Abstract class for Lale operators in the planned lifecycle state."""
+
+    # pylint:disable=abstract-method
 
     def auto_configure(
         self, X, y=None, optimizer=None, cv=None, scoring=None, **kwargs
@@ -2497,7 +2498,7 @@ class IndividualOp(Operator):
                     sup_str: str = lale.pretty_print.json_to_string(e.sup)
                     raise ValueError(
                         f"{self.name()}.{method}() invalid {arg_name}, the schema of the actual data is not a subschema of the expected schema of the argument.\nactual_schema = {sub_str}\nexpected_schema = {sup_str}"
-                    )
+                    ) from None
                 except Exception as e:
                     exception_type = f"{type(e).__module__}.{type(e).__name__}"
                     raise ValueError(
@@ -3931,7 +3932,7 @@ class BasePipeline(Operator, Generic[OpType]):
         return [(s.name(), s) for s in self._steps]
 
     def _subst_steps(self, m: Dict[OpType, OpType]) -> None:
-        if dict:
+        if m:
             # for i, s in enumerate(self._steps):
             #     self._steps[i] = m.get(s,s)
             self._steps = [m.get(s, s) for s in self._steps]
@@ -4187,10 +4188,10 @@ class BasePipeline(Operator, Generic[OpType]):
                 if isinstance(sklearn_steps_list, list)
                 else make_pipeline(sklearn_steps_list)
             )
-        except TypeError:
+        except TypeError as exc:
             raise TypeError(
                 "Error creating a scikit-learn pipeline, most likely because the steps are not scikit compatible."
-            )
+            ) from exc
         return sklearn_pipeline
 
     def is_classifier(self) -> bool:
