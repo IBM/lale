@@ -422,7 +422,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         show_imports: bool = True,
         combinators: bool = True,
         assign_nested: bool = True,
-        customize_schema: bool = False,
+        include_customize_schema: bool = False,
         astype: Union[Literal["lale"], Literal["sklearn"]] = "lale",
         ipython_display: Literal[False] = False,
     ) -> str:
@@ -435,7 +435,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         show_imports: bool = True,
         combinators: bool = True,
         assign_nested: bool = True,
-        customize_schema: bool = False,
+        include_customize_schema: bool = False,
         astype: Union[Literal["lale"], Literal["sklearn"]] = "lale",
         ipython_display: Union[bool, Literal["input"]] = False,
     ) -> Optional[str]:
@@ -447,7 +447,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         show_imports: bool = True,
         combinators: bool = True,
         assign_nested: bool = True,
-        customize_schema: bool = False,
+        include_customize_schema: bool = False,
         astype: Union[Literal["lale"], Literal["sklearn"]] = "lale",
         ipython_display: Union[bool, Literal["input"]] = False,
     ) -> Optional[str]:
@@ -467,7 +467,7 @@ class Operator(metaclass=AbstractVisitorMeta):
 
             If True, then nested operators, such as the base estimator for an ensemble, get assigned to fresh intermediate variables if configured with non-trivial arguments of their own.
 
-        customize_schema : bool, default False
+        include_customize_schema : bool, default False
 
             If True, then individual operators whose schema differs from the lale.lib version of the operator will be printed with calls to `customize_schema` that reproduce this difference.
 
@@ -504,7 +504,7 @@ class Operator(metaclass=AbstractVisitorMeta):
             self,
             show_imports=show_imports,
             combinators=combinators,
-            customize_schema=customize_schema,
+            include_customize_schema=include_customize_schema,
             assign_nested=assign_nested,
             astype=astype,
             call_depth=2,
@@ -531,7 +531,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         self,
         other: "Operator",
         show_imports: bool = True,
-        customize_schema: bool = False,
+        include_customize_schema: bool = False,
         ipython_display: Literal[False] = False,
     ) -> str:
         ...
@@ -541,7 +541,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         self,
         other: "Operator",
         show_imports: bool = True,
-        customize_schema: bool = False,
+        include_customize_schema: bool = False,
         ipython_display: bool = False,
     ) -> Optional[str]:
         ...
@@ -550,7 +550,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         self,
         other: "Operator",
         show_imports: bool = True,
-        customize_schema: bool = False,
+        include_customize_schema: bool = False,
         ipython_display: bool = False,
     ) -> Optional[str]:
         """Displays a diff between this operator and the given other operator.
@@ -563,7 +563,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         show_imports : bool, default True
             Whether to include import statements in the pretty-printed code.
 
-        customize_schema : bool, default False
+        include_customize_schema : bool, default False
             If True, then individual operators whose schema differs from the lale.lib version of the operator will be printed with calls to `customize_schema` that reproduce this difference.
 
         ipython_display : bool, default False
@@ -577,14 +577,14 @@ class Operator(metaclass=AbstractVisitorMeta):
         """
 
         self_str = self.pretty_print(
-            customize_schema=customize_schema,
+            include_customize_schema=include_customize_schema,
             show_imports=show_imports,
             ipython_display=False,
         )
         self_lines = self_str.splitlines()
 
         other_str = other.pretty_print(
-            customize_schema=customize_schema,
+            include_customize_schema=include_customize_schema,
             show_imports=show_imports,
             ipython_display=False,
         )
@@ -2901,7 +2901,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
 
     @if_delegate_has_method(delegate="_impl")
     def get_pipeline(
-        self, pipeline_name=None, astype="lale"
+        self, pipeline_name: Optional[str] = None, astype: str = "lale"
     ) -> Optional[TrainableOperator]:
         """
         .. deprecated:: 0.0.0
@@ -3414,7 +3414,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         ...
 
     @overload
-    def get_pipeline(
+    def get_pipeline(  # pylint:disable=signature-differs
         self, pipeline_name: str, astype: str = "lale"
     ) -> Optional[TrainableOperator]:
         ...
@@ -4082,7 +4082,8 @@ class BasePipeline(Operator, Generic[OpType]):
             return old_clf
 
     def export_to_sklearn_pipeline(self):
-        from sklearn.pipeline import FeatureUnion, make_pipeline
+        from sklearn.pipeline import FeatureUnion
+        from sklearn.pipeline import make_pipeline as sklearn_make_pipeline
 
         from lale.lib.lale.no_op import NoOp
         from lale.lib.rasl.concat_features import ConcatFeatures
@@ -4128,7 +4129,7 @@ class BasePipeline(Operator, Generic[OpType]):
                     list_of_transformers.append(
                         (
                             pred.name() + "_" + str(id(pred)),
-                            make_pipeline(*pred_transformer)
+                            sklearn_make_pipeline(*pred_transformer)
                             if isinstance(pred_transformer, list)
                             else pred_transformer,
                         )
@@ -4184,9 +4185,9 @@ class BasePipeline(Operator, Generic[OpType]):
             # not checking for isinstance(sklearn_steps_list, NoOp) here as there is no valid sklearn pipeline with just one NoOp.
         try:
             sklearn_pipeline = (
-                make_pipeline(*sklearn_steps_list)
+                sklearn_make_pipeline(*sklearn_steps_list)
                 if isinstance(sklearn_steps_list, list)
-                else make_pipeline(sklearn_steps_list)
+                else sklearn_make_pipeline(sklearn_steps_list)
             )
         except TypeError as exc:
             raise TypeError(

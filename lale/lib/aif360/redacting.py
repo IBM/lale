@@ -54,9 +54,13 @@ class _RedactingImpl:
 
     def transform(self, X):
         if isinstance(X, pd.DataFrame):
+
+            def get_reduction_values(name):
+                return lambda val: self.redaction_values[name]
+
             new_columns = [
                 (
-                    X[name].map(lambda val: self.redaction_values[name])
+                    X[name].map(get_reduction_values(name))
                     if name in self.redaction_values
                     else X[name]
                 )

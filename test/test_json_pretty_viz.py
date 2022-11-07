@@ -982,7 +982,7 @@ pipeline = LogisticRegression.customize_schema(
         "default": 0.0001,
     },
 )(solver="lbfgs")"""
-        self._roundtrip(expected, pipeline.pretty_print(customize_schema=True))
+        self._roundtrip(expected, pipeline.pretty_print(include_customize_schema=True))
 
     def test_customize_schema_none_and_boolean(self):
         from lale.lib.sklearn import RandomForestRegressor
@@ -1018,7 +1018,7 @@ pipeline = RandomForestRegressor.customize_schema(
 )(n_estimators=50)"""
         # this should not include "random_state=33" because that would be
         # redundant with the schema, and would prevent automated search
-        self._roundtrip(expected, pipeline.pretty_print(customize_schema=True))
+        self._roundtrip(expected, pipeline.pretty_print(include_customize_schema=True))
 
     def test_customize_schema_print_defaults(self):
         from lale.lib.sklearn import RandomForestRegressor
@@ -1040,7 +1040,7 @@ import lale
 lale.wrap_imported_operators()
 pipeline = RandomForestRegressor(n_estimators=50, random_state=33)"""
         # print exactly those defaults that changed
-        self._roundtrip(expected, pipeline.pretty_print(customize_schema=False))
+        self._roundtrip(expected, pipeline.pretty_print(include_customize_schema=False))
 
     def test_user_operator_in_toplevel_module(self):
         import importlib
@@ -1627,6 +1627,6 @@ class TestDiff(unittest.TestCase):
             '+ pipeline = LogisticRegression.customize_schema(solver={"enum": ["saga"]})()'
         )
         diff_str_no_schema = single_op.diff(
-            single_op_schema, customize_schema=True, ipython_display=False
+            single_op_schema, include_customize_schema=True, ipython_display=False
         )
         self.assertEqual(diff_str_no_schema, expected_diff_no_schema)

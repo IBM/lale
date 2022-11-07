@@ -63,7 +63,7 @@ def remove_defaults_dict(d: Dict[XDK, Union[DefaultValue, XDV]]) -> Dict[XDK, XD
 
 # utilites to load a pgo from json-ish
 def load_pgo_file(filepath) -> PGO:
-    with open(filepath) as json_file:
+    with open(filepath) as json_file:  # pylint:disable=unspecified-encoding
         json_data = json.load(json_file)
         return load_pgo_data(json_data)
 
