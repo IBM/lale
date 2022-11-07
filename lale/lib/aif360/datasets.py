@@ -471,14 +471,14 @@ def _perform_custom_preprocessing(df):
         else:
             return 0.0
 
-    dfcutQ["priors_count"] = dfcutQ["priors_count"].apply(lambda x: quantizePrior(x))
-    dfcutQ["length_of_stay"] = dfcutQ["length_of_stay"].apply(lambda x: quantizeLOS(x))
-    dfcutQ["score_text"] = dfcutQ["score_text"].apply(lambda x: quantizeScore(x))
-    dfcutQ["age_cat"] = dfcutQ["age_cat"].apply(lambda x: adjustAge(x))
+    dfcutQ["priors_count"] = dfcutQ["priors_count"].apply(quantizePrior)
+    dfcutQ["length_of_stay"] = dfcutQ["length_of_stay"].apply(quantizeLOS)
+    dfcutQ["score_text"] = dfcutQ["score_text"].apply(quantizeScore)
+    dfcutQ["age_cat"] = dfcutQ["age_cat"].apply(adjustAge)
 
     # Recode sex and race
     dfcutQ["sex"] = dfcutQ["sex"].replace({"Female": 1.0, "Male": 0.0})
-    dfcutQ["race"] = dfcutQ["race"].apply(lambda x: group_race(x))
+    dfcutQ["race"] = dfcutQ["race"].apply(group_race)
 
     features = [
         "two_year_recid",
@@ -1224,7 +1224,7 @@ def _fetch_meps_raw_df(panel, fiscal_year):
 
         sys.exit(1)
 
-    df["RACEV2X"] = df.apply(lambda row: _race(row), axis=1)
+    df["RACEV2X"] = df.apply(_race, axis=1)
     df = df.rename(columns={"RACEV2X": "RACE"})
     df = df[df["PANEL"] == panel.value]
 

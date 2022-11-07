@@ -2885,8 +2885,8 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         warnings.warn(_mutation_warning("freeze_trained"), DeprecationWarning)
         try:
             return self._trained.freeze_trained()
-        except AttributeError:
-            raise ValueError("Must call `fit` before `freeze_trained`.")
+        except AttributeError as exc:
+            raise ValueError("Must call `fit` before `freeze_trained`.") from exc
 
     def __repr__(self):
         name = self.name()
@@ -2913,8 +2913,8 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         warnings.warn(_mutation_warning("get_pipeline"), DeprecationWarning)
         try:
             return self._trained.get_pipeline(pipeline_name, astype)
-        except AttributeError:
-            raise ValueError("Must call `fit` before `get_pipeline`.")
+        except AttributeError as exc:
+            raise ValueError("Must call `fit` before `get_pipeline`.") from exc
 
     @if_delegate_has_method(delegate="_impl")
     def summary(self) -> pd.DataFrame:
@@ -2929,8 +2929,8 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         warnings.warn(_mutation_warning("summary"), DeprecationWarning)
         try:
             return self._trained.summary()
-        except AttributeError:
-            raise ValueError("Must call `fit` before `summary`.")
+        except AttributeError as exc:
+            raise ValueError("Must call `fit` before `summary`.") from exc
 
     @if_delegate_has_method(delegate="_impl")
     def transform(self, X, y=None) -> Any:
@@ -2945,8 +2945,8 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         warnings.warn(_mutation_warning("transform"), DeprecationWarning)
         try:
             return self._trained.transform(X, y)
-        except AttributeError:
-            raise ValueError("Must call `fit` before `transform`.")
+        except AttributeError as exc:
+            raise ValueError("Must call `fit` before `transform`.") from exc
 
     @if_delegate_has_method(delegate="_impl")
     def predict(self, X=None, **predict_params) -> Any:
@@ -2961,8 +2961,8 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         warnings.warn(_mutation_warning("predict"), DeprecationWarning)
         try:
             return self._trained.predict(X)
-        except AttributeError:
-            raise ValueError("Must call `fit` before `predict`.")
+        except AttributeError as exc:
+            raise ValueError("Must call `fit` before `predict`.") from exc
 
     @if_delegate_has_method(delegate="_impl")
     def predict_proba(self, X=None):
@@ -2977,8 +2977,8 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         warnings.warn(_mutation_warning("predict_proba"), DeprecationWarning)
         try:
             return self._trained.predict_proba(X)
-        except AttributeError:
-            raise ValueError("Must call `fit` before `predict_proba`.")
+        except AttributeError as exc:
+            raise ValueError("Must call `fit` before `predict_proba`.") from exc
 
     @if_delegate_has_method(delegate="_impl")
     def decision_function(self, X=None):
@@ -2993,8 +2993,8 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         warnings.warn(_mutation_warning("decision_function"), DeprecationWarning)
         try:
             return self._trained.decision_function(X)
-        except AttributeError:
-            raise ValueError("Must call `fit` before `decision_function`.")
+        except AttributeError as exc:
+            raise ValueError("Must call `fit` before `decision_function`.") from exc
 
     @if_delegate_has_method(delegate="_impl")
     def score(self, X, y, **score_params) -> Any:
@@ -3012,8 +3012,8 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
                 return self._trained.score(X, y)
             else:
                 return self._trained.score(X, y, **score_params)
-        except AttributeError:
-            raise ValueError("Must call `fit` before `score`.")
+        except AttributeError as exc:
+            raise ValueError("Must call `fit` before `score`.") from exc
 
     @if_delegate_has_method(delegate="_impl")
     def score_samples(self, X=None):
@@ -3028,8 +3028,8 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         warnings.warn(_mutation_warning("score_samples"), DeprecationWarning)
         try:
             return self._trained.score_samples(X)
-        except AttributeError:
-            raise ValueError("Must call `fit` before `score_samples`.")
+        except AttributeError as exc:
+            raise ValueError("Must call `fit` before `score_samples`.") from exc
 
     @if_delegate_has_method(delegate="_impl")
     def predict_log_proba(self, X=None):
@@ -3044,8 +3044,8 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         warnings.warn(_mutation_warning("predict_log_proba"), DeprecationWarning)
         try:
             return self._trained.predict_log_proba(X)
-        except AttributeError:
-            raise ValueError("Must call `fit` before `predict_log_proba`.")
+        except AttributeError as exc:
+            raise ValueError("Must call `fit` before `predict_log_proba`.") from exc
 
     def free_hyperparams(self) -> Set[str]:
         hyperparam_schema = self.hyperparam_schema()
@@ -3603,14 +3603,14 @@ def get_available_operators(
     singleton = set([tag])
     tags = singleton if (more_tags is None) else singleton.union(more_tags)
 
-    def filter(op):
+    def filter_by_tags(op):
         tags_dict = op.get_tags()
         if tags_dict is None:
             return False
         tags_set = {tag for prefix in tags_dict for tag in tags_dict[prefix]}
         return tags.issubset(tags_set)
 
-    return [op for op in _all_available_operators if filter(op)]
+    return [op for op in _all_available_operators if filter_by_tags(op)]
 
 
 def get_available_estimators(

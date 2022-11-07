@@ -181,27 +181,27 @@ class SearchSpaceNumber(SearchSpacePrimitive):
 
     def getInclusiveMax(self) -> Optional[float]:
         """Return the maximum as an inclusive maximum (exclusive maxima are adjusted accordingly)"""
-        max = self.maximum
-        if max is None:
+        schema_max = self.maximum
+        if schema_max is None:
             return None
         if self.exclusiveMaximum:
             if self.discrete:
-                max = max - 1
+                schema_max = schema_max - 1
             else:
-                max = numpy.nextafter(max, float("-inf"))
-        return max
+                schema_max = numpy.nextafter(schema_max, float("-inf"))
+        return schema_max
 
     def getInclusiveMin(self) -> Optional[float]:
         """Return the maximum as an inclusive minimum (exclusive minima are adjusted accordingly)"""
-        min = self.minimum
-        if min is None:
+        schema_min = self.minimum
+        if schema_min is None:
             return None
         if self.exclusiveMinimum:
             if self.discrete:
-                min = min + 1
+                schema_min = schema_min + 1
             else:
-                min = numpy.nextafter(min, float("+inf"))
-        return min
+                schema_min = numpy.nextafter(schema_min, float("+inf"))
+        return schema_min
 
     def _focused_str(self, path: Optional[List[SearchSpace]] = None) -> str:
         ret: str = ""
@@ -284,7 +284,7 @@ class SearchSpaceArray(SearchSpace):
             ret += "]"
         return ret
 
-    def items(self, max: Optional[int] = None) -> Iterable[SearchSpace]:
+    def items(self, max_elts: Optional[int] = None) -> Iterable[SearchSpace]:
         prefix_len: int
         if self.prefix is not None:
             prefix_len = len(self.prefix)
@@ -292,8 +292,8 @@ class SearchSpaceArray(SearchSpace):
             prefix_len = 0
 
         num_elts = self.maximum
-        if max is not None:
-            num_elts = min(num_elts, max)
+        if max_elts is not None:
+            num_elts = min(num_elts, max_elts)
 
         for i in range(num_elts):
             if self.prefix is not None and i < prefix_len:

@@ -40,7 +40,7 @@ from .util import (
 
 
 class _AdversarialDebiasingImpl(_BaseInEstimatorImpl):
-    def __init__(
+    def __init__(  # pylint:disable=W0231
         self,
         *,
         favorable_labels,

@@ -157,7 +157,7 @@ class SearchSpaceToGridVisitor(Visitor):
     def _searchSpaceList(
         self, space: SearchSpaceArray, *, size: int
     ) -> List[SearchSpaceGrid]:
-        sub_spaces = space.items(max=size)
+        sub_spaces = space.items(max_elts=size)
 
         param_grids: List[List[SearchSpaceGrid]] = [
             nest_all_HPparams(

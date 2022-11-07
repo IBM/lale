@@ -25,10 +25,10 @@ class Visitor(object):
         return self.__getattribute__(attr)
 
     def _visitAll(self, iterable, *args, **kwargs):
-        def filter(x):
+        def filter_none(x):
             return (x is not None) or None
 
-        return [filter(x) and accept(x, self, *args, **kwargs) for x in iterable]
+        return [filter_none(x) and accept(x, self, *args, **kwargs) for x in iterable]
 
 
 # Because of the magic way we add accept methods, mypy does not know they exist

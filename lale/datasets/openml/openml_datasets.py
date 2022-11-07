@@ -600,7 +600,7 @@ def fetch(
         ) from exc
 
     data_file_name = download_if_missing(dataset_name, verbose)
-    with open(data_file_name) as f:
+    with open(data_file_name) as f:  # pylint:disable=W1514
         dataDictionary = arff.load(f)
         f.close()
 
