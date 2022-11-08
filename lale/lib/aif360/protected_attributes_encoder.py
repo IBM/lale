@@ -291,6 +291,10 @@ class _ProtectedAttributesEncoderImpl:
             X_pd = X
         assert isinstance(X_pd, pd.DataFrame), type(X_pd)
         protected = {}
+
+        def flag_grouper(pos_groups, other_groups):
+            return lambda v: _group_flag(v, pos_groups, other_groups)
+
         for prot_attr in self.protected_attributes:
             feature = prot_attr["feature"]
             pos_groups = prot_attr["reference_group"]
@@ -299,7 +303,7 @@ class _ProtectedAttributesEncoderImpl:
                 column = X_pd[feature]
             else:
                 column = X_pd.iloc[:, feature]
-            series = column.apply(lambda v: _group_flag(v, pos_groups, other_groups))
+            series = column.apply(flag_grouper(pos_groups, other_groups))
             protected[feature] = series
         if self.combine in ["and", "or"]:
             prot_attr_names = [
