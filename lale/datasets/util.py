@@ -19,8 +19,8 @@ from lale.datasets.data_schemas import add_table_name, get_table_name
 try:
     from pyspark.sql import SparkSession
 
-    from lale.datasets.data_schemas import (
-        SparkDataFrameWithIndex,  # pylint:disable=ungrouped-imports
+    from lale.datasets.data_schemas import (  # pylint:disable=ungrouped-imports
+        SparkDataFrameWithIndex,
     )
 
     spark_installed = True

@@ -112,7 +112,7 @@ def fetch_go_sales_dataset(datatype="pandas"):
             # this request is to a hardcoded https url, so does not risk leaking local data
             urllib.request.urlretrieve(base_url + file, data_file_name)  # nosec
             logger.info(" Created: {}".format(data_file_name))
-        table_name = file.split(".")[0]
+        table_name = file.split(".", maxsplit=1)[0]
         data_frame = get_data_from_csv(datatype, data_file_name)
         go_sales_list.append(add_table_name(data_frame, table_name))
     logger.info(" Fetched the Go_Sales dataset. Process completed.")

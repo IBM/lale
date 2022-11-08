@@ -553,7 +553,7 @@ def simplifyAll(schemas: List[JsonSchema], floatAny: bool) -> JsonSchema:
             # Remove all existing properties that are
             # not in our schema
             if not o_additionalProperties:
-                for p in s_props:
+                for p in s_props:  # pylint:disable=consider-using-dict-items
                     if p not in o_props:
                         del s_props[p]
             # now go through our properties and add them
@@ -573,7 +573,7 @@ def simplifyAll(schemas: List[JsonSchema], floatAny: bool) -> JsonSchema:
                     )
                     return impossible()
 
-        merged_props = {p: simplifyAll(s_props[p], False) for p in s_props}
+        merged_props = {p: simplifyAll(v, False) for p, v in s_props.items()}
         if s_required:
             for k in s_required:
                 # if the schema is not present, it could be in another branch (such as an anyOf conjunct)

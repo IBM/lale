@@ -309,7 +309,7 @@ class _ProtectedAttributesEncoderImpl:
             prot_attr_names = [
                 _ensure_str(pa["feature"]) for pa in self.protected_attributes
             ]
-            comb_df = pd.concat([protected[f] for f in protected], axis=1)
+            comb_df = pd.concat(list(protected.values()), axis=1)
             if self.combine == "and":
                 comb_series = comb_df.min(axis=1)
             elif self.combine == "or":
@@ -321,7 +321,7 @@ class _ProtectedAttributesEncoderImpl:
             comb_series.name = comb_name
             protected = {comb_name: comb_series}
         if self.remainder == "drop":
-            result_X = pd.concat([protected[f] for f in protected], axis=1)
+            result_X = pd.concat(list(protected.values()), axis=1)
         else:
             result_X = _dataframe_replace(X_pd, protected)
         s_X = lale.datasets.data_schemas.to_schema(X_pd)

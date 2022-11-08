@@ -2740,7 +2740,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         frozen = self.frozen_hyperparams()
         self._hyperparams = hyperparams
         if frozen:
-            frozen.extend((k for k in impl_params.keys() if k not in frozen))
+            frozen.extend((k for k in impl_params if k not in frozen))
         else:
             self._frozen_hyperparams = list(impl_params.keys())
 
@@ -3743,7 +3743,7 @@ class BasePipeline(Operator, Generic[OpType_co]):
                 step_map[s] = new_s  # type: ignore
         # make sure that no parameters were passed in for operations
         # that are not actually part of this pipeline
-        for k in partitioned_sub_params.keys():
+        for k in partitioned_sub_params:
             n, i = get_name_and_index(k)
             assert n in found_names and i <= found_names[n]
 
@@ -5469,8 +5469,7 @@ def customize_schema(
             assert isinstance(forwards, (bool, list))
             op._schemas["forwards"] = forwards
 
-        for arg in kwargs:
-            value = kwargs[arg]
+        for arg, value in kwargs.items():
             if value is not None and isinstance(value, Schema):
                 value = value.schema
             if value is not None:
