@@ -93,7 +93,6 @@ disable=
    no-else-return,
    C,R,I,
    # These should be addressed and removed from this list
-   deprecated-method,
    dangerous-default-value,
    cell-var-from-loop,
    arguments-renamed

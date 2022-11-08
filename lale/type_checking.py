@@ -347,7 +347,9 @@ def get_hyperparam_names(op: "lale.operators.IndividualOp") -> List[str]:
         return list(params.keys())
     else:
         c: Any = op.impl_class
-        return inspect.getargspec(c.__init__).args
+        sig = inspect.signature(c.__init__)
+        params = sig.parameters
+        return list(params.keys())
 
 
 def validate_method(op: "lale.operators.IndividualOp", schema_name: str):
