@@ -5190,7 +5190,7 @@ class _PipelineFactory:
             "lale.operators.Pipeline is deprecated, use sklearn.pipeline.Pipeline or lale.lib.sklearn.Pipeline instead",
             DeprecationWarning,
         )
-        for i in range(len(steps)):
+        for i in range(len(steps)):  # pylint:disable=consider-using-enumerate
             op = steps[i]
             if isinstance(op, tuple):
                 assert isinstance(op[1], Operator)

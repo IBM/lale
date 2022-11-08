@@ -327,7 +327,7 @@ def _introduce_structure(pipeline: JSON_TYPE, gen: _CodeGenState) -> JSON_TYPE:
         graph: JSON_TYPE,
     ) -> Optional[Tuple[Dict[str, JSON_TYPE], Dict[str, JSON_TYPE]]]:
         step_uids = list(graph["steps"].keys())
-        for i0 in range(len(step_uids)):
+        for i0 in range(len(step_uids)):  # pylint:disable=consider-using-enumerate
             for i1 in range(i0 + 1, len(step_uids)):
                 s0, s1 = step_uids[i0], step_uids[i1]
                 preds0, preds1 = graph["preds"][s0], graph["preds"][s1]
@@ -580,7 +580,7 @@ def _combine_lonely_literals(printed_code):
     regex = re.compile(
         r' +("[^"]*"|\d+\.?\d*|\[\]|float\("nan"\)|np\.dtype\("[^"]+"\)),'
     )
-    for i in range(len(lines)):
+    for i in range(len(lines)):  # pylint:disable=consider-using-enumerate
         if lines[i] is not None:
             match_i = regex.fullmatch(lines[i])
             if match_i is not None:

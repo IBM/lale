@@ -188,13 +188,13 @@ def _json_replace(subject, old, new):
         return new
     if isinstance(subject, list):
         result = [_json_replace(s, old, new) for s in subject]
-        for i in range(len(subject)):
-            if subject[i] != result[i]:
+        for s, r in zip(subject, result):
+            if s != r:
                 return result
     elif isinstance(subject, tuple):
         result = tuple([_json_replace(s, old, new) for s in subject])
-        for i in range(len(subject)):
-            if subject[i] != result[i]:
+        for s, r in zip(subject, result):
+            if s != r:
                 return result
     elif isinstance(subject, dict):
         if isinstance(old, dict):

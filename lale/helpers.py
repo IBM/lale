@@ -616,7 +616,10 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
             )
             for nested_pipeline_step in nested_pipeline_steps.items()
         ]
-        if type(sklearn_pipeline) == sklearn.pipeline.Pipeline:
+        if (
+            type(sklearn_pipeline)  # pylint:disable=unidiomatic-typecheck
+            == sklearn.pipeline.Pipeline
+        ):
             nested_pipeline_lale_objects = [
                 nested_pipeline_lale_named_step[1]
                 for nested_pipeline_lale_named_step in nested_pipeline_lale_named_steps

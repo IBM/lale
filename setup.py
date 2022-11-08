@@ -56,7 +56,7 @@ else:
         "typing-extensions",
     ]
 
-import lale  # noqa: E402
+import lale  # noqa: E402  # pylint:disable=wrong-import-position
 
 if "TRAVIS" in os.environ:
     now = datetime.now().strftime("%y%m%d%H%M")

@@ -354,8 +354,8 @@ def _get_customize_schema(after, before):
     def list_equal_modulo(l1, l2, mod):
         if len(l1) != len(l2):
             return False
-        for i in range(len(l1)):
-            if i != mod and l1[i] != l2[i]:
+        for i, (v1, v2) in enumerate(zip(l1, l2)):
+            if i != mod and v1 != v2:
                 return False
         return True
 
