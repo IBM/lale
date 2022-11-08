@@ -46,7 +46,7 @@ try:
     from smac.scenario.scenario import Scenario
     from smac.tae.execute_ta_run import BudgetExhaustedException
 
-    from lale.search.lale_smac import (
+    from lale.search.lale_smac import (  # pylint:disable=wrong-import-position,ungrouped-imports
         get_smac_space,
         lale_op_smac_tae,
         lale_trainable_op_from_config,

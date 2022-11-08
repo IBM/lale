@@ -18,6 +18,7 @@ import importlib
 import logging
 import time
 import traceback
+from importlib import util
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -49,7 +50,6 @@ try:
 except ImportError:
     torch_installed = False
 
-from importlib import util
 
 spark_loader = util.find_spec("pyspark")
 spark_installed = spark_loader is not None
@@ -106,16 +106,16 @@ def arg_name(pos=0, level=1) -> Optional[str]:
 
 
 def data_to_json(data, subsample_array: bool = True) -> Union[list, dict, int, float]:
-    if type(data) is tuple:
+    if isinstance(data, tuple):
         # convert to list
         return [data_to_json(elem, subsample_array) for elem in data]
-    if type(data) is list:
+    if isinstance(data, list):
         return [data_to_json(elem, subsample_array) for elem in data]
-    elif type(data) is dict:
+    elif isinstance(data, dict):
         return {key: data_to_json(data[key], subsample_array) for key in data}
     elif isinstance(data, np.ndarray):
         return ndarray_to_json(data, subsample_array)
-    elif type(data) is scipy.sparse.csr_matrix:
+    elif isinstance(data, scipy.sparse.csr_matrix):
         return ndarray_to_json(data.toarray(), subsample_array)
     elif isinstance(data, pd.DataFrame) or isinstance(data, pd.Series):
         np_array = data.values

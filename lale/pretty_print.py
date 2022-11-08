@@ -108,11 +108,11 @@ def hyperparams_to_string(
         elif isinstance(value, np.dtype):
             if gen is not None:
                 gen.imports.append("import numpy as np")
-            return f"np.{value.__repr__()}"
+            return f"np.{repr(value)}"
         elif isinstance(value, np.ndarray):
             if gen is not None:
                 gen.imports.append("import numpy as np")
-            array_expr = f"np.{value.__repr__()}"
+            array_expr = f"np.{repr(value)}"
             # For an array string representation, numpy includes dtype for some data types
             # we need to insert "np." for the dtype so that executing the pretty printed code
             # does not give any error for the dtype. The following code manipulates the

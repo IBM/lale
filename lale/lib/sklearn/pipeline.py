@@ -17,7 +17,10 @@ import typing
 
 from packaging import version
 
+import lale.docstrings
+import lale.helpers
 import lale.operators
+from lale.schemas import Bool
 
 try:
     from sklearn.pipeline import if_delegate_has_method
@@ -27,10 +30,6 @@ except ImportError as e:
         from sklearn.utils.metaestimators import if_delegate_has_method
     else:
         raise e
-
-import lale.docstrings
-import lale.helpers
-from lale.schemas import Bool
 
 logger = logging.getLogger(__name__)
 

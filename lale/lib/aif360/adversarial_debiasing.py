@@ -12,18 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import aif360.algorithms.inprocessing
-
-try:
-    import tensorflow as tf
-
-    tensorflow_installed = True
-except ImportError:
-    tensorflow_installed = False
-
 import contextlib
 import io
 import uuid
+
+import aif360.algorithms.inprocessing
 
 import lale.docstrings
 import lale.operators
@@ -37,6 +30,13 @@ from .util import (
     _categorical_output_predict_schema,
     _categorical_supervised_input_fit_schema,
 )
+
+try:
+    import tensorflow as tf
+
+    tensorflow_installed = True
+except ImportError:
+    tensorflow_installed = False
 
 
 class _AdversarialDebiasingImpl(_BaseInEstimatorImpl):

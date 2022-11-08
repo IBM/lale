@@ -29,7 +29,9 @@ logger.setLevel(logging.INFO)
 try:
     from pyspark.sql import SparkSession
 
-    from lale.datasets.data_schemas import SparkDataFrameWithIndex
+    from lale.datasets.data_schemas import (  # pylint:disable=ungrouped-imports
+        SparkDataFrameWithIndex,
+    )
 
     spark_installed = True
 except ImportError:

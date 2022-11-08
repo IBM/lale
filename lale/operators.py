@@ -176,18 +176,12 @@ from typing import (
     overload,
 )
 
-from packaging import version
-from sklearn.base import clone
-
-if sys.version_info >= (3, 8):
-    from typing import Literal  # raises a mypy error for <3.8
-else:
-    from typing_extensions import Literal
-
 import jsonschema
 import pandas as pd
 import sklearn
 import sklearn.base
+from packaging import version
+from sklearn.base import clone
 
 import lale.datasets.data_schemas
 import lale.json_operator
@@ -235,8 +229,15 @@ from lale.util.VisitorMeta import AbstractVisitorMeta
 
 sklearn_version = version.parse(getattr(sklearn, "__version__"))
 
+if sys.version_info >= (3, 8):
+    from typing import Literal  # raises a mypy error for <3.8
+else:
+    from typing_extensions import Literal
+
 try:
-    from sklearn.pipeline import if_delegate_has_method
+    from sklearn.pipeline import (  # pylint:disable=ungrouped-imports
+        if_delegate_has_method,
+    )
 except ImportError as imp_exc:
 
     if sklearn_version >= version.Version("1.0"):
@@ -3630,20 +3631,20 @@ def get_available_transformers(
     return get_available_operators("transformer", tags)
 
 
-OpType = TypeVar("OpType", bound=Operator, covariant=True)
+OpType_co = TypeVar("OpType_co", bound=Operator, covariant=True)
 
 
-class BasePipeline(Operator, Generic[OpType]):
+class BasePipeline(Operator, Generic[OpType_co]):
     """
     This is a concrete class that can instantiate a new pipeline operator and provide access to its meta data.
     """
 
-    _steps: List[OpType]
-    _preds: Dict[OpType, List[OpType]]
+    _steps: List[OpType_co]
+    _preds: Dict[OpType_co, List[OpType_co]]
     _cached_preds: Optional[Dict[int, List[int]]]
     _name: str
 
-    def _steps_to_indices(self) -> Dict[OpType, int]:
+    def _steps_to_indices(self) -> Dict[OpType_co, int]:
         return dict([(op, i) for (i, op) in enumerate(self._steps)])
 
     def _preds_to_indices(self) -> Dict[int, List[int]]:
@@ -3669,8 +3670,8 @@ class BasePipeline(Operator, Generic[OpType]):
 
     @classmethod
     def _indices_to_preds(
-        cls, _steps: List[OpType], _pred_indices: Dict[int, List[int]]
-    ) -> Dict[OpType, List[OpType]]:
+        cls, _steps: List[OpType_co], _pred_indices: Dict[int, List[int]]
+    ) -> Dict[OpType_co, List[OpType_co]]:
         return {
             _steps[k]: ([_steps[v] for v in vs]) for (k, vs) in _pred_indices.items()
         }
@@ -3709,12 +3710,14 @@ class BasePipeline(Operator, Generic[OpType]):
         extended as documented in the module docstring"""
         return self._with_params(True, **impl_params)
 
-    def _with_params(self, try_mutate: bool, **impl_params) -> "BasePipeline[OpType]":
+    def _with_params(
+        self, try_mutate: bool, **impl_params
+    ) -> "BasePipeline[OpType_co]":
         steps = self.steps_list()
         main_params, partitioned_sub_params = partition_sklearn_params(impl_params)
         assert not main_params, f"Unexpected non-nested arguments {main_params}"
         found_names: Dict[str, int] = {}
-        step_map: Dict[OpType, OpType] = {}
+        step_map: Dict[OpType_co, OpType_co] = {}
         for s in steps:
             name = s.name()
             name_index = 0
@@ -3773,10 +3776,10 @@ class BasePipeline(Operator, Generic[OpType]):
 
     def __init__(
         self,
-        steps: List[OpType],
-        edges: Optional[Iterable[Tuple[OpType, OpType]]] = None,
+        steps: List[OpType_co],
+        edges: Optional[Iterable[Tuple[OpType_co, OpType_co]]] = None,
         _lale_preds: Optional[
-            Union[Dict[int, List[int]], Dict[OpType, List[OpType]]]
+            Union[Dict[int, List[int]], Dict[OpType_co, List[OpType_co]]]
         ] = None,
         ordered: bool = False,
     ) -> None:
@@ -3824,7 +3827,7 @@ class BasePipeline(Operator, Generic[OpType]):
                     # then its steps must all be at least OpType as well
                     # this invariant is not expressible in the type system due to
                     # the open world assumption, but is intended to hold
-                    tstep: BasePipeline[OpType] = step
+                    tstep: BasePipeline[OpType_co] = step
 
                     # Flatten out the steps and edges
                     self._steps.extend(tstep.steps_list())
@@ -3836,7 +3839,7 @@ class BasePipeline(Operator, Generic[OpType]):
                     ]
                     sink_nodes = tstep._find_sink_nodes()
                     # Now replace the edges to and from the inner pipeline to to and from source and sink nodes respectively
-                    new_edges: List[Tuple[OpType, OpType]] = tstep.edges()
+                    new_edges: List[Tuple[OpType_co, OpType_co]] = tstep.edges()
                     # list comprehension at the cost of iterating edges thrice
                     new_edges.extend(
                         [
@@ -3871,18 +3874,18 @@ class BasePipeline(Operator, Generic[OpType]):
                 self.__sort_topologically()
             assert self.__is_in_topological_order()
 
-    def __constructor_for_cloning(self, steps: List[OpType]):
-        edges: List[Tuple[OpType, OpType]] = []
-        prev_op: Optional[OpType] = None
+    def __constructor_for_cloning(self, steps: List[OpType_co]):
+        edges: List[Tuple[OpType_co, OpType_co]] = []
+        prev_op: Optional[OpType_co] = None
         # This is due to scikit base's clone method that needs the same list object
         self._steps = steps
-        prev_leaves: List[OpType]
-        curr_roots: List[OpType]
+        prev_leaves: List[OpType_co]
+        curr_roots: List[OpType_co]
 
         for curr_op in self._steps:
             if isinstance(prev_op, BasePipeline):
                 # using tprev_op as per PIPELINE_TYPE_INVARIANT_NOTE above
-                tprev_op: BasePipeline[OpType] = prev_op
+                tprev_op: BasePipeline[OpType_co] = prev_op
                 prev_leaves = tprev_op._find_sink_nodes()
             else:
                 prev_leaves = [] if prev_op is None else [prev_op]
@@ -3890,7 +3893,7 @@ class BasePipeline(Operator, Generic[OpType]):
 
             if isinstance(curr_op, BasePipeline):
                 # using tcurr_op as per PIPELINE_TYPE_INVARIANT_NOTE above
-                tcurr_op: BasePipeline[OpType] = curr_op
+                tcurr_op: BasePipeline[OpType_co] = curr_op
                 curr_roots = tcurr_op._find_source_nodes()
                 self._steps.extend(tcurr_op.steps_list())
                 edges.extend(tcurr_op.edges())
@@ -3898,7 +3901,7 @@ class BasePipeline(Operator, Generic[OpType]):
                 curr_roots = [curr_op]
             edges.extend([(src, tgt) for src in prev_leaves for tgt in curr_roots])
 
-        seen_steps: List[OpType] = []
+        seen_steps: List[OpType_co] = []
         for step in self._steps:
             if step in seen_steps:
                 raise ValueError(
@@ -3913,11 +3916,11 @@ class BasePipeline(Operator, Generic[OpType]):
         # expected to be in topological order
         assert self.__is_in_topological_order()
 
-    def edges(self) -> List[Tuple[OpType, OpType]]:
+    def edges(self) -> List[Tuple[OpType_co, OpType_co]]:
         return [(src, dst) for dst in self._steps for src in self._preds[dst]]
 
     def __is_in_topological_order(self) -> bool:
-        seen: Dict[OpType, bool] = {}
+        seen: Dict[OpType_co, bool] = {}
         for operator in self._steps:
             for pred in self._preds[operator]:
                 if pred not in seen:
@@ -3925,17 +3928,17 @@ class BasePipeline(Operator, Generic[OpType]):
             seen[operator] = True
         return True
 
-    def steps_list(self) -> List[OpType]:
+    def steps_list(self) -> List[OpType_co]:
         return self._steps
 
     @property
-    def steps(self) -> List[Tuple[str, OpType]]:
+    def steps(self) -> List[Tuple[str, OpType_co]]:
         """This is meant to function similarly to the scikit-learn steps property
         and for linear pipelines, should behave the same
         """
         return [(s.name(), s) for s in self._steps]
 
-    def _subst_steps(self, m: Dict[OpType, OpType]) -> None:
+    def _subst_steps(self, m: Dict[OpType_co, OpType_co]) -> None:
         if m:
             # for i, s in enumerate(self._steps):
             #     self._steps[i] = m.get(s,s)
@@ -3950,13 +3953,13 @@ class BasePipeline(Operator, Generic[OpType]):
             DOING = (enumeration.auto(),)
             DONE = enumeration.auto()
 
-        states: Dict[OpType, state] = {op: state.TODO for op in self._steps}
-        result: List[OpType] = []
+        states: Dict[OpType_co, state] = {op: state.TODO for op in self._steps}
+        result: List[OpType_co] = []
 
         # Since OpType is covariant, this is disallowed by mypy for safety
         # in this case it is safe, since while the value of result will be written
         # into _steps, all the values in result came from _steps originally
-        def dfs(operator: OpType) -> None:  # type: ignore
+        def dfs(operator: OpType_co) -> None:  # type: ignore
             if states[operator] is state.DONE:
                 return
             if states[operator] is state.DOING:
@@ -3986,14 +3989,14 @@ class BasePipeline(Operator, Generic[OpType]):
                 return False
         return True
 
-    def _find_sink_nodes(self) -> List[OpType]:
+    def _find_sink_nodes(self) -> List[OpType_co]:
         is_sink = {s: True for s in self.steps_list()}
         for src, _ in self.edges():
             is_sink[src] = False
         result = [s for s in self.steps_list() if is_sink[s]]
         return result
 
-    def _find_source_nodes(self) -> List[OpType]:
+    def _find_source_nodes(self) -> List[OpType_co]:
         is_source = {s: True for s in self.steps_list()}
         for _, dst in self.edges():
             is_source[dst] = False
@@ -4059,7 +4062,7 @@ class BasePipeline(Operator, Generic[OpType]):
             return False
         return self.steps_list()[-1].is_supervised()
 
-    def remove_last(self, inplace: bool = False) -> "BasePipeline[OpType]":
+    def remove_last(self, inplace: bool = False) -> "BasePipeline[OpType_co]":
         sink_nodes = self._find_sink_nodes()
         if len(sink_nodes) > 1:
             raise ValueError(
@@ -4077,7 +4080,7 @@ class BasePipeline(Operator, Generic[OpType]):
             del self._preds[old_clf]
             return self
 
-    def get_last(self) -> Optional[OpType]:
+    def get_last(self) -> Optional[OpType_co]:
         sink_nodes = self._find_sink_nodes()
         if len(sink_nodes) > 1:
             return None
@@ -4228,14 +4231,14 @@ class BasePipeline(Operator, Generic[OpType]):
             return op._final_individual_op
 
 
-PlannedOpType = TypeVar("PlannedOpType", bound=PlannedOperator, covariant=True)
+PlannedOpType_co = TypeVar("PlannedOpType_co", bound=PlannedOperator, covariant=True)
 
 
-class PlannedPipeline(BasePipeline[PlannedOpType], PlannedOperator):
+class PlannedPipeline(BasePipeline[PlannedOpType_co], PlannedOperator):
     def __init__(
         self,
-        steps: List[PlannedOpType],
-        edges: Optional[Iterable[Tuple[PlannedOpType, PlannedOpType]]] = None,
+        steps: List[PlannedOpType_co],
+        edges: Optional[Iterable[Tuple[PlannedOpType_co, PlannedOpType_co]]] = None,
         _lale_preds: Optional[Dict[int, List[int]]] = None,
         ordered: bool = False,
     ) -> None:
@@ -4253,7 +4256,7 @@ class PlannedPipeline(BasePipeline[PlannedOpType], PlannedOperator):
         assert isinstance(trained, TrainedPipeline)
         return trained
 
-    def remove_last(self, inplace: bool = False) -> "PlannedPipeline[PlannedOpType]":
+    def remove_last(self, inplace: bool = False) -> "PlannedPipeline[PlannedOpType_co]":
         pipe = super().remove_last(inplace=inplace)
         assert isinstance(pipe, PlannedPipeline)
         return pipe
@@ -4265,16 +4268,16 @@ class PlannedPipeline(BasePipeline[PlannedOpType], PlannedOperator):
         return all([step.is_frozen_trained() for step in self.steps_list()])
 
 
-TrainableOpType = TypeVar(
-    "TrainableOpType", bound=TrainableIndividualOp, covariant=True  # type: ignore
+TrainableOpType_co = TypeVar(
+    "TrainableOpType_co", bound=TrainableIndividualOp, covariant=True  # type: ignore
 )
 
 
-class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
+class TrainablePipeline(PlannedPipeline[TrainableOpType_co], TrainableOperator):
     def __init__(
         self,
-        steps: List[TrainableOpType],
-        edges: Optional[Iterable[Tuple[TrainableOpType, TrainableOpType]]] = None,
+        steps: List[TrainableOpType_co],
+        edges: Optional[Iterable[Tuple[TrainableOpType_co, TrainableOpType_co]]] = None,
         _lale_preds: Optional[Dict[int, List[int]]] = None,
         ordered: bool = False,
         _lale_trained=False,
@@ -4285,7 +4288,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
 
     def remove_last(
         self, inplace: bool = False
-    ) -> "TrainablePipeline[TrainableOpType]":
+    ) -> "TrainablePipeline[TrainableOpType_co]":
         pipe = super().remove_last(inplace=inplace)
         assert isinstance(pipe, TrainablePipeline)
         return pipe
@@ -4298,8 +4301,8 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         trained_steps: List[TrainedIndividualOp] = []
         outputs: Dict[Operator, Tuple[Any, Any]] = {}
         meta_outputs: Dict[Operator, Any] = {}
-        edges: List[Tuple[TrainableOpType, TrainableOpType]] = self.edges()
-        trained_map: Dict[TrainableOpType, TrainedIndividualOp] = {}
+        edges: List[Tuple[TrainableOpType_co, TrainableOpType_co]] = self.edges()
+        trained_map: Dict[TrainableOpType_co, TrainedIndividualOp] = {}
 
         sink_nodes = self._find_sink_nodes()
         for operator in self._steps:
@@ -4509,7 +4512,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
 
     def convert_to_trained(self) -> "TrainedPipeline[TrainedIndividualOp]":
         trained_steps: List[TrainedIndividualOp] = []
-        trained_map: Dict[TrainableOpType, TrainedIndividualOp] = {}
+        trained_map: Dict[TrainableOpType_co, TrainedIndividualOp] = {}
         for step in self.steps_list():
             trained_step = step.convert_to_trained()
             trained_steps.append(trained_step)
@@ -4607,10 +4610,10 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         return result
 
 
-TrainedOpType = TypeVar("TrainedOpType", bound=TrainedIndividualOp, covariant=True)  # type: ignore
+TrainedOpType_co = TypeVar("TrainedOpType_co", bound=TrainedIndividualOp, covariant=True)  # type: ignore
 
 
-class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
+class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
     def __new__(cls, *args, _lale_trained=False, **kwargs):
         if "steps" not in kwargs or _lale_trained:
             obj = super(TrainedPipeline, cls).__new__(TrainedPipeline)
@@ -4625,8 +4628,8 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
 
     def __init__(
         self,
-        steps: List[TrainedOpType],
-        edges: Optional[List[Tuple[TrainedOpType, TrainedOpType]]] = None,
+        steps: List[TrainedOpType_co],
+        edges: Optional[List[Tuple[TrainedOpType_co, TrainedOpType_co]]] = None,
         _lale_preds: Optional[Dict[int, List[int]]] = None,
         ordered: bool = False,
         _lale_trained=False,
@@ -4635,7 +4638,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             steps, edges=edges, _lale_preds=_lale_preds, ordered=ordered
         )
 
-    def remove_last(self, inplace: bool = False) -> "TrainedPipeline[TrainedOpType]":
+    def remove_last(self, inplace: bool = False) -> "TrainedPipeline[TrainedOpType_co]":
         pipe = super().remove_last(inplace)
         assert isinstance(pipe, TrainedPipeline)
         return pipe
@@ -5028,12 +5031,12 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         return trained_pipeline
 
 
-OperatorChoiceType = TypeVar("OperatorChoiceType", bound=Operator, covariant=True)
+OperatorChoiceType_co = TypeVar("OperatorChoiceType_co", bound=Operator, covariant=True)
 
 
-class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
+class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType_co]):
     _name: str
-    _steps: List[OperatorChoiceType]
+    _steps: List[OperatorChoiceType_co]
 
     def get_params(self, deep: bool = True) -> Dict[str, Any]:
         out: Dict[str, Any] = {}
@@ -5099,11 +5102,11 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
         self._name = name
         self._steps = steps
 
-    def steps_list(self) -> List[OperatorChoiceType]:
+    def steps_list(self) -> List[OperatorChoiceType_co]:
         return self._steps
 
     @property
-    def steps(self) -> List[Tuple[str, OperatorChoiceType]]:
+    def steps(self) -> List[Tuple[str, OperatorChoiceType_co]]:
         """This is meant to function similarly to the scikit-learn steps property
         and for linear pipelines, should behave the same
         """
@@ -5117,7 +5120,10 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
                 if f is not None:
                     return f(X, y, **fit_params)
         else:
-            self.__getattr__("fit")
+            # This call is to get the correct error message
+            # calling getattr(self, "fit") would result in
+            # infinite recursion, but this explicit call works
+            self.__getattr__("fit")  # pylint:disable=unnecessary-dunder-call
 
     def _has_same_impl(self, other: Operator) -> bool:
         """Checks if the type of the operator imnplementations are compatible"""

@@ -334,13 +334,13 @@ def forward_metadata(old, new):
 def strip_schema(obj):
     if isinstance(obj, NDArrayWithSchema):
         result = np.array(obj)
-        assert type(result) == ndarray
+        assert type(result) == ndarray  # pylint:disable=unidiomatic-typecheck
     elif isinstance(obj, SeriesWithSchema):
         result = Series(obj)
-        assert type(result) == Series
+        assert type(result) == Series  # pylint:disable=unidiomatic-typecheck
     elif isinstance(obj, DataFrameWithSchema):
         result = DataFrame(obj)
-        assert type(result) == DataFrame
+        assert type(result) == DataFrame  # pylint:disable=unidiomatic-typecheck
     else:
         result = obj
     return result

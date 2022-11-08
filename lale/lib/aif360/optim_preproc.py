@@ -14,17 +14,6 @@
 
 import aif360.algorithms.preprocessing
 
-try:
-    # because the import is only done as a check and flake fails.
-    import cvxpy  # noqa
-
-    cvxpy_installed = True
-except ImportError:
-    cvxpy_installed = False
-
-if cvxpy_installed:
-    import aif360.algorithms.preprocessing.optim_preproc_helpers.opt_tools
-
 import lale.docstrings
 import lale.operators
 
@@ -35,6 +24,17 @@ from .util import (
     _PandasToDatasetConverter,
     dataset_to_pandas,
 )
+
+try:
+    # because the import is only done as a check and flake fails.
+    import cvxpy  # noqa
+
+    cvxpy_installed = True
+except ImportError:
+    cvxpy_installed = False
+
+if cvxpy_installed:
+    import aif360.algorithms.preprocessing.optim_preproc_helpers.opt_tools  # pylint:disable=ungrouped-imports
 
 
 class _OptimPreprocImpl:

@@ -50,7 +50,7 @@ release = ""
 
 
 sys.path.append(os.path.join(os.path.dirname(__name__), "../lale"))
-import sphinx_rtd_theme  # isort:skip # noqa:E402
+import sphinx_rtd_theme  # isort:skip # noqa:E402  # pylint:disable=wrong-import-position,wrong-import-order
 
 # For packages with mock imports, if we have wrappers without our impl classes,
 # schema validation fails as the mocking adds methods such as `transform`, `predict` etc.
