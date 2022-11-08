@@ -117,9 +117,9 @@ class _SimpleImputerImpl(MonoidableOperator[_SimpleImputerMonoid]):
         # the `indicator_`` property is always None as we do not support `add_indicator=True`
         self.indicator_ = None
 
-    def to_monoid(self, v: Tuple[Any, Any]):
+    def to_monoid(self, batch: Tuple[Any, Any]):
         hyperparams = self._hyperparams
-        X, _ = v
+        X, _ = batch
         feature_names_in_ = get_columns(X)
         agg_data = None
         # learn the values to be imputed
@@ -156,11 +156,11 @@ class _SimpleImputerImpl(MonoidableOperator[_SimpleImputerMonoid]):
             strategy=strategy,
         )
 
-    def from_monoid(self, lifted):
-        self._monoid = lifted
-        self.feature_names_in_ = lifted.feature_names_in_
+    def from_monoid(self, monoid: _SimpleImputerMonoid):
+        self._monoid = monoid
+        self.feature_names_in_ = monoid.feature_names_in_
         self.n_features_in_ = len(self.feature_names_in_)
-        _lifted_statistics = lifted.lifted_statistics
+        _lifted_statistics = monoid.lifted_statistics
         strategy = self._hyperparams["strategy"]
         if strategy == "constant":
             self.statistics_ = _lifted_statistics.to_numpy()[0]

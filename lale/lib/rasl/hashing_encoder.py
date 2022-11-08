@@ -98,8 +98,8 @@ class _HashingEncoderImpl(MonoidableOperator[_HashingEncoderMonoid]):
     def feature_names(self):
         return getattr(self._monoid, "feature_names", None)
 
-    def from_monoid(self, lifted):
-        self._monoid = lifted
+    def from_monoid(self, monoid: _HashingEncoderMonoid):
+        self._monoid = monoid
         self._transformer = None
 
     def _build_transformer(self, X):
@@ -120,8 +120,8 @@ class _HashingEncoderImpl(MonoidableOperator[_HashingEncoderMonoid]):
         encode = Map(columns=columns_cat, remainder="passthrough")
         return hash >> encode
 
-    def to_monoid(self, v: Tuple[Any, Any]):
-        X, y = v
+    def to_monoid(self, batch: Tuple[Any, Any]):
+        X, y = batch
         cols = self._hyperparams["cols"]
         if cols is None:
             cols = get_obj_cols(X)

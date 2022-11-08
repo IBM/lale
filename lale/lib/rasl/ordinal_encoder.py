@@ -85,9 +85,9 @@ class _OrdinalEncoderImpl(MonoidableOperator[_OrdinalEncoderMonoid]):
     def feature_names_in_(self):
         return getattr(self._monoid, "feature_names_in_", None)
 
-    def from_monoid(self, lifted: _OrdinalEncoderMonoid):
-        self._monoid = lifted
-        self.n_features_in_ = len(lifted.feature_names_in_)
+    def from_monoid(self, monoid: _OrdinalEncoderMonoid):
+        self._monoid = monoid
+        self.n_features_in_ = len(monoid.feature_names_in_)
         self._transformer = None
 
     def _build_transformer(self):
@@ -110,9 +110,9 @@ class _OrdinalEncoderImpl(MonoidableOperator[_OrdinalEncoderMonoid]):
         )
         return result
 
-    def to_monoid(self, v: Tuple[Any, Any]):
+    def to_monoid(self, batch: Tuple[Any, Any]):
         hyperparams = self._hyperparams
-        X, _ = v
+        X, _ = batch
         n_samples_seen_ = count(X)
         feature_names_in_ = get_columns(X)
         if hyperparams["categories"] == "auto":

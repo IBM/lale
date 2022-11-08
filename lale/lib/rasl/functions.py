@@ -80,12 +80,12 @@ class count_distinct_column(MonoidFactory[_Batch, int, _column_distinct_count_da
         self._col = col
         self._limit = limit
 
-    def to_monoid(self, df) -> _column_distinct_count_data:
-        c = select_col(df, self._col)
+    def to_monoid(self, batch) -> _column_distinct_count_data:
+        c = select_col(batch, self._col)
         return _column_distinct_count_data(c, limit=self._limit)
 
-    def from_monoid(self, v: _column_distinct_count_data) -> int:
-        return len(v)
+    def from_monoid(self, monoid: _column_distinct_count_data) -> int:
+        return len(monoid)
 
 
 class categorical_column(MonoidFactory[_Batch, bool, _column_distinct_count_data]):
@@ -98,12 +98,12 @@ class categorical_column(MonoidFactory[_Batch, bool, _column_distinct_count_data
         self._col = col
         self._threshold = threshold
 
-    def to_monoid(self, df) -> _column_distinct_count_data:
-        c = select_col(df, self._col)
+    def to_monoid(self, batch) -> _column_distinct_count_data:
+        c = select_col(batch, self._col)
         return _column_distinct_count_data(c, limit=self._threshold)
 
-    def from_monoid(self, v: _column_distinct_count_data) -> bool:
-        return not v.is_absorbing
+    def from_monoid(self, monoid: _column_distinct_count_data) -> bool:
+        return not monoid.is_absorbing
 
 
 class make_categorical_column:
@@ -161,14 +161,14 @@ class ColumnMonoidFactory(ColumnSelector[DictMonoid[_D]]):
             self._makers = makers
         return makers
 
-    def to_monoid(self, df):
-        makers = self._get_makers(df)
-        return DictMonoid({k: v.to_monoid(df) for k, v in makers.items()})
+    def to_monoid(self, batch):
+        makers = self._get_makers(batch)
+        return DictMonoid({k: v.to_monoid(batch) for k, v in makers.items()})
 
-    def from_monoid(self, d: DictMonoid[_D]) -> List[column_index]:
+    def from_monoid(self, monoid: DictMonoid[_D]) -> List[column_index]:
         makers = self._makers
         assert makers is not None
-        return [k for k, v in makers.items() if v.from_monoid(d._m[k])]
+        return [k for k, v in makers.items() if v.from_monoid(monoid._m[k])]
 
 
 class categorical(ColumnMonoidFactory):

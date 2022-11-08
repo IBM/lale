@@ -61,14 +61,14 @@ class MonoidFactory(Generic[_InputType, _OutputType, _M], Protocol):
     """
 
     @abstractmethod
-    def to_monoid(self, v: _InputType) -> _M:
+    def to_monoid(self, batch: _InputType) -> _M:
         """
         Create a monoid instance representing the input data
         """
         ...
 
     @abstractmethod
-    def from_monoid(self, v: _M) -> _OutputType:
+    def from_monoid(self, monoid: _M) -> _OutputType:
         """
         Given the monoid instance, return the appropriate type of output.
         This method may also modify self based on the monoid instance.

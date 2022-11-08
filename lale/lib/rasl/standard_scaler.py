@@ -85,21 +85,21 @@ class _StandardScalerImpl(MonoidableOperator[_StandardScalerMonoid]):
     def feature_names_in_(self):
         return getattr(self._monoid, "feature_names_in_", None)
 
-    def from_monoid(self, lifted):
-        self._monoid = lifted
-        n = lifted.n_samples_seen_
+    def from_monoid(self, monoid: _StandardScalerMonoid):
+        self._monoid = monoid
+        n = monoid.n_samples_seen_
         if self._hyperparams["with_std"]:
             # Table 1 of http://www.vldb.org/pvldb/vol8/p702-tangwongsan.pdf
-            self.var_ = (lifted._sum2 - lifted._sum1 * lifted._sum1 / n) / n
+            self.var_ = (monoid._sum2 - monoid._sum1 * monoid._sum1 / n) / n
             self.scale_ = np.where(self.var_ == 0.0, 1.0, np.sqrt(self.var_))
         else:
             self.var_ = None
             self.scale_ = None
         if self._hyperparams["with_mean"]:
-            self.mean_ = lifted._sum1 / n
+            self.mean_ = monoid._sum1 / n
         else:
             self.mean_ = None
-        self.n_features_in_ = len(lifted.feature_names_in_)
+        self.n_features_in_ = len(monoid.feature_names_in_)
         self._transformer = None
 
     def _build_transformer(self):
@@ -120,8 +120,8 @@ class _StandardScalerImpl(MonoidableOperator[_StandardScalerMonoid]):
         )
         return result
 
-    def to_monoid(self, v: Tuple[Any, Any]):
-        X, _ = v
+    def to_monoid(self, batch: Tuple[Any, Any]):
+        X, _ = batch
         hyperparams = self._hyperparams
         feature_names_in = get_columns(X)
         n_samples_seen = count(X)
