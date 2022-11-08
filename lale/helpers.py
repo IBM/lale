@@ -857,7 +857,7 @@ def create_data_loader(X, y=None, batch_size=1, num_workers=0, shuffle=True):
         dataset = TensorDataset(X)
     else:
         raise TypeError(
-            "Can not create a data loader for a dataset with type {}".format(type(X))
+            f"Can not create a data loader for a dataset with type {type(X)}"
         )
     return DataLoader(
         dataset,

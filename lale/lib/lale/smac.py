@@ -147,9 +147,7 @@ or with
                         logloss = 0
                         logger.debug("Warning, log loss cannot be computed")
                 else:
-                    logger.debug(
-                        "Error {} with pipeline:{}".format(e, trainable.to_json())
-                    )
+                    logger.debug(f"Error {e} with pipeline:{trainable.to_json()}")
                     raise e
             return cv_score, logloss, execution_time
 
@@ -188,7 +186,7 @@ or with
                 "Maximum alloted optimization time exceeded. Optimization exited prematurely"
             )
         except BaseException as e:
-            logger.warning("Error during optimization: {}".format(e))
+            logger.warning(f"Error during optimization: {e}")
             self._best_estimator = None
 
         return self
@@ -206,9 +204,7 @@ or with
             predictions = trained.predict(X_eval, **predict_params)
         except ValueError as e:
             logger.warning(
-                "ValueError in predicting using SMACCV:{}, the error is:{}".format(
-                    trained, e
-                )
+                f"ValueError in predicting using SMACCV:{trained}, the error is:{e}"
             )
             predictions = None
 

@@ -1717,14 +1717,12 @@ class IndividualOp(Operator):
         for k, v in _fixup_hyperparams_dict(kwargs).items():
 
             if k in hyperparams:
-                raise ValueError("Duplicate argument {}.".format(k))
+                raise ValueError(f"Duplicate argument {k}.")
             v = val_wrapper.unwrap(v)
             if isinstance(v, enumeration.Enum):
                 k2, v2 = self._enum_to_strings(v)
                 if k != k2:
-                    raise ValueError(
-                        "Invalid keyword {} for argument {}.".format(k2, v2)
-                    )
+                    raise ValueError(f"Invalid keyword {k2} for argument {v2}.")
             else:
                 v2 = v
             hyperparams[k] = v2
@@ -2201,7 +2199,7 @@ class IndividualOp(Operator):
         """
 
         if not isinstance(arg, enumeration.Enum):
-            raise ValueError("Missing keyword on argument {}.".format(arg))
+            raise ValueError(f"Missing keyword on argument {arg}.")
         return arg.__class__.__name__, arg.value
 
     def _wrapped_impl_class(self):
@@ -3816,8 +3814,8 @@ class BasePipeline(Operator, Generic[OpType_co]):
             for step in steps:
                 if step in self._steps:
                     raise ValueError(
-                        "Same instance of {} already exists in the pipeline. "
-                        "This is not allowed.".format(step.name())
+                        f"Same instance of {step.name()} already exists in the pipeline. "
+                        f"This is not allowed."
                     )
                 if isinstance(step, BasePipeline):
                     # PIPELINE_TYPE_INVARIANT_NOTE
@@ -3905,8 +3903,8 @@ class BasePipeline(Operator, Generic[OpType_co]):
         for step in self._steps:
             if step in seen_steps:
                 raise ValueError(
-                    "Same instance of {} already exists in the pipeline. "
-                    "This is not allowed.".format(step.name())
+                    f"Same instance of {step.name()} already exists in the pipeline. "
+                    f"This is not allowed."
                 )
             seen_steps.append(step)
         self._preds = {step: [] for step in self._steps}
@@ -4123,8 +4121,8 @@ class BasePipeline(Operator, Generic[OpType_co]):
             # Inspect the node and convert any data with schema objects to original data types
             if isinstance(sink_node, OperatorChoice):
                 raise ValueError(
-                    "A pipeline that has an OperatorChoice can not be converted to "
-                    " a scikit-learn pipeline:{}".format(self.to_json())
+                    f"A pipeline that has an OperatorChoice can not be converted to "
+                    f" a scikit-learn pipeline:{self.to_json()}"
                 )
             if sink_node.impl_class == Relational.impl_class:
                 return None
@@ -4146,10 +4144,8 @@ class BasePipeline(Operator, Generic[OpType_co]):
                 preds = self._preds[sink_node]
                 if preds is not None and len(preds) > 1:
                     raise ValueError(
-                        "A pipeline graph that has operators other than ConcatFeatures with "
-                        "multiple incoming edges is not a valid scikit-learn pipeline:{}".format(
-                            self.to_json()
-                        )
+                        f"A pipeline graph that has operators other than ConcatFeatures with "
+                        f"multiple incoming edges is not a valid scikit-learn pipeline:{self.to_json()}"
                     )
                 else:
                     if hasattr(sink_node.shallow_impl, "_wrapped_model"):
@@ -4184,8 +4180,8 @@ class BasePipeline(Operator, Generic[OpType_co]):
         # For a trained pipeline that is scikit compatible, there should be only one sink node
         if len(sink_nodes) != 1:
             raise ValueError(
-                "A pipeline graph that ends with more than one estimator is not a"
-                " valid scikit-learn pipeline:{}".format(self.to_json())
+                f"A pipeline graph that ends with more than one estimator is not a"
+                f" valid scikit-learn pipeline:{self.to_json()}"
             )
         else:
             sklearn_steps_list = create_pipeline_from_sink_node(sink_nodes[0])

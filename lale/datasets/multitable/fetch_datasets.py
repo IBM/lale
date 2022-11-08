@@ -111,7 +111,7 @@ def fetch_go_sales_dataset(datatype="pandas"):
                 os.makedirs(download_data_dir)
             # this request is to a hardcoded https url, so does not risk leaking local data
             urllib.request.urlretrieve(base_url + file, data_file_name)  # nosec
-            logger.info(" Created: {}".format(data_file_name))
+            logger.info(f" Created: {data_file_name}")
         table_name = file.split(".", maxsplit=1)[0]
         data_frame = get_data_from_csv(datatype, data_file_name)
         go_sales_list.append(add_table_name(data_frame, table_name))
@@ -159,9 +159,7 @@ def fetch_imdb_dataset(datatype="pandas"):
     imdb_list = []
     if not os.path.exists(download_data_dir):
         raise ValueError(
-            "IMDB dataset not found at {}. Please download it using lalegpl repository.".format(
-                download_data_dir
-            )
+            f"IMDB dataset not found at {download_data_dir}. Please download it using lalegpl repository."
         )
     else:
         for root, dirs, files in os.walk(download_data_dir):
@@ -176,9 +174,7 @@ def fetch_imdb_dataset(datatype="pandas"):
             logger.info(" Fetched the IMDB dataset. Process completed.")
         else:
             raise ValueError(
-                "Incomplete IMDB dataset found at {}. Please download complete dataset using lalegpl repository.".format(
-                    download_data_dir
-                )
+                f"Incomplete IMDB dataset found at {download_data_dir}. Please download complete dataset using lalegpl repository."
             )
     return imdb_list
 

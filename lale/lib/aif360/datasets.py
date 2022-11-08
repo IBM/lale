@@ -348,13 +348,13 @@ def _get_dataframe_from_compas_csv(violent_recidivism=False):
         df = pd.read_csv(filepath, index_col="id", na_values=[])
     except IOError as err:
         # In practice should not get here because of the _try_download_compas call above, but adding failure logic just in case
-        logger.error("IOError: {}".format(err))
+        logger.error(f"IOError: {err}")
         logger.error("To use this class, please download the following file:")
         logger.error(
             "\n\thttps://raw.githubusercontent.com/propublica/compas-analysis/master/compas-scores-two-years.csv"
         )
         logger.error("\nand place it, as-is, in the folder:")
-        logger.error("\n\t{}\n".format(os.path.abspath(os.path.dirname(filepath))))
+        logger.error(f"\n\t{os.path.abspath(os.path.dirname(filepath))}\n")
         import sys
 
         sys.exit(1)
@@ -1209,17 +1209,15 @@ def _fetch_meps_raw_df(panel, fiscal_year):
     try:
         df = pd.read_csv(filepath, sep=",", na_values=[])
     except IOError as err:
-        logger.error("IOError: {}".format(err))
+        logger.error(f"IOError: {err}")
         logger.error("To use this class, please follow the instructions found here:")
         logger.error(
-            "\n\t{}\n".format(
-                "https://github.com/Trusted-AI/AIF360/tree/master/aif360/data/raw/meps"
-            )
+            f"\n\t{'https://github.com/Trusted-AI/AIF360/tree/master/aif360/data/raw/meps'}\n"
         )
         logger.error(
             f"\n to download and convert the data and place the final {filename} file, as-is, in the folder:"
         )
-        logger.error("\n\t{}\n".format(os.path.abspath(os.path.dirname(filepath))))
+        logger.error(f"\n\t{os.path.abspath(os.path.dirname(filepath))}\n")
         import sys
 
         sys.exit(1)

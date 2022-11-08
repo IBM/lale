@@ -35,21 +35,17 @@ class VisitorMeta(type):
         if not isinstance(method_name, str) or not method_name.isidentifier():
             method_name = "???"
 
-        selector = """
+        selector = f"""
         from lale.util import VisitorPathError
         try:
-            return visitor.visit{}(self, *args, **kwargs)
+            return visitor.visit{method_name}(self, *args, **kwargs)
         except VisitorPathError as e:
             e.push_parent_path(self)
             raise
         except BaseException as e:
             raise VisitorPathError([self]) from e
-        """.format(
-            method_name
-        )
-        _accept_code = "def _accept(self, visitor, *args, **kwargs):\n\t{}".format(
-            selector
-        )
+        """
+        _accept_code = f"def _accept(self, visitor, *args, **kwargs):\n\t{selector}"
         ll = {}
         # This is safe since the only user manipulatable part of the code is
         # cls.__name__, which we sanitize to ensure that it is a valid identifier

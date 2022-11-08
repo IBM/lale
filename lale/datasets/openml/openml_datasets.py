@@ -590,13 +590,11 @@ def fetch(
     try:
         if experiments_dict[dataset_name]["task_type"] != task_type.lower():
             raise ValueError(
-                "The task type {} does not match with the given datasets task type {}".format(
-                    task_type, experiments_dict[dataset_name]["task_type"]
-                )
+                f"The task type {task_type} does not match with the given datasets task type {experiments_dict[dataset_name]['task_type']}"
             )
     except KeyError as exc:
         raise KeyError(
-            "Dataset name {} not found in the supported datasets".format(dataset_name)
+            f"Dataset name {dataset_name} not found in the supported datasets"
         ) from exc
 
     data_file_name = download_if_missing(dataset_name, verbose)

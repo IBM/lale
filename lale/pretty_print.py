@@ -465,17 +465,15 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
                 gen.assigns.append(f"{step_uid} = {expr}")
         make_pipeline = "make_pipeline_graph"
         gen.imports.append(f"from lale.operators import {make_pipeline}")
-        result = "{}(steps=[{}], edges=[{}])".format(
-            make_pipeline,
-            ", ".join([step2name[step] for step in steps]),
-            ", ".join(
-                [
-                    f"({step2name[src]},{step2name[tgt]})"
-                    for src in steps
-                    for tgt in succs[src]
-                ]
-            ),
+        steps_string = ", ".join([step2name[step] for step in steps])
+        edges_string = ", ".join(
+            [
+                f"({step2name[src]},{step2name[tgt]})"
+                for src in steps
+                for tgt in succs[src]
+            ]
         )
+        result = f"{make_pipeline}(steps=[{steps_string}], edges=[{edges_string}])"
         return result
     elif _op_kind(jsn) in ["Seq", "Par", "OperatorChoice", "Union"]:
         if gen.combinators:
@@ -496,7 +494,7 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
             combinator = _OP_KIND_TO_COMBINATOR[_op_kind(jsn)]
             if len(printed_steps.values()) == 1 and combinator == ">>":
                 gen.imports.append("from lale.operators import make_pipeline")
-                op_expr = "make_pipeline({})".format(", ".join(printed_steps.values()))
+                op_expr = f"make_pipeline({', '.join(printed_steps.values())})"
                 return op_expr
             return f" {combinator} ".join(printed_steps.values())
         else:
@@ -509,7 +507,7 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
                 gen.imports.append(f"from sklearn.pipeline import {function}")
             else:
                 gen.imports.append(f"from lale.operators import {function}")
-            op_expr = "{}({})".format(function, ", ".join(printed_steps.values()))
+            op_expr = f"{function}({', '.join(printed_steps.values())})"
             gen.assigns.append(f"{uid} = {op_expr}")
             return uid
     elif _op_kind(jsn) == "IndividualOp":
