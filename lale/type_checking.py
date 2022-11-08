@@ -50,7 +50,9 @@ import lale.operators
 JSON_TYPE = Dict[str, Any]
 
 
-def _validate_lale_type(validator, laleType, instance, schema):  # pylint:disable=W0613
+def _validate_lale_type(
+    validator, laleType, instance, schema
+):  # pylint:disable=unused-argument
     # https://github.com/Julian/jsonschema/blob/master/jsonschema/_validators.py
     if laleType == "Any":
         return
@@ -119,7 +121,7 @@ def always_validate_schema(value, schema: JSON_TYPE, subsample_array: bool = Tru
         validator = _lale_validator(sch)
         validator.validate(json_value)
     # FIXME: narrow the Exception and remove the pylint disable
-    except Exception:  # pylint:disable=W0703
+    except Exception:  # pylint:disable=broad-except
         jsonschema.validate(json_value, sch, _lale_validator)
 
 

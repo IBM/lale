@@ -376,8 +376,10 @@ def simplifyAll(schemas: List[JsonSchema], floatAny: bool) -> JsonSchema:
     if s_enum_list:
         # if there are enumeration constraints, we want their intersection
         # pylint note: s_enum_list must be non-empty, and the first element will be used as self
-        s_enum = set_with_str_for_keys.intersection(  # pylint:disable=E1120
-            *s_enum_list
+        s_enum = (
+            set_with_str_for_keys.intersection(  # pylint:disable=no-value-for-parameter
+                *s_enum_list
+            )
         )
         if not s_enum:
             # This means that enumeration values where specified
@@ -388,8 +390,10 @@ def simplifyAll(schemas: List[JsonSchema], floatAny: bool) -> JsonSchema:
             return impossible()
     if s_not_enum_list:
         # pylint note: s_enum_list must be non-empty, and the first element will be used as self
-        s_not_enum = set_with_str_for_keys.union(  # pylint:disable=E1120
-            *s_not_enum_list
+        s_not_enum = (
+            set_with_str_for_keys.union(  # pylint:disable=no-value-for-parameter
+                *s_not_enum_list
+            )
         )
 
     if s_enum and s_not_enum:
@@ -855,12 +859,16 @@ def simplifyAny(schema: List[JsonSchema], floatAny: bool) -> JsonSchema:
     if s_enum_list:
         # if there are enumeration constraints, we want their intersection
         # pylint note: s_enum_list must be non-empty, and the first element will be used as self
-        s_enum = set_with_str_for_keys.union(*s_enum_list)  # pylint:disable=E1120
+        s_enum = set_with_str_for_keys.union(  # pylint:disable=no-value-for-parameter
+            *s_enum_list
+        )
 
     if s_not_enum_list:
         # pylint note: s_enum_list must be non-empty, and the first element will be used as self
-        s_not_enum = set_with_str_for_keys.intersection(  # pylint:disable=E1120
-            *s_not_enum_list
+        s_not_enum = (
+            set_with_str_for_keys.intersection(  # pylint:disable=no-value-for-parameter
+                *s_not_enum_list
+            )
         )
 
     if s_enum and s_not_enum:

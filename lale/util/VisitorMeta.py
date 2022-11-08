@@ -60,7 +60,7 @@ class VisitorMeta(type):
 if sys.version_info < (3, 7, 0):
     from typing import GenericMeta  # type: ignore
 else:
-    global GenericMeta  # pylint:disable=W0604
+    global GenericMeta  # pylint:disable=global-at-module-level
     GenericMeta = ABCMeta  # type: ignore
 
 

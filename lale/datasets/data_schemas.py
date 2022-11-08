@@ -56,7 +56,9 @@ class NDArrayWithSchema(ndarray):
         json_schema=None,
         table_name=None,
     ):
-        result = super(NDArrayWithSchema, cls).__new__(  # pylint:disable=E1121
+        result = super(  # pylint:disable=too-many-function-args
+            NDArrayWithSchema, cls
+        ).__new__(
             cls, shape, dtype, buffer, offset, strides, order  # type: ignore
         )
         result.json_schema = json_schema

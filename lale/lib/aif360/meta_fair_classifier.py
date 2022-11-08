@@ -35,7 +35,7 @@ class _MetaFairClassifierImpl(_BaseInEstimatorImpl):
         redact=True,
         preparation=None,
         tau=0.8,
-        type="fdr",  # pylint:disable=W0622
+        type="fdr",  # pylint:disable=redefined-builtin
     ):
         prot_attr_names = [pa["feature"] for pa in protected_attributes]
         mitigator = aif360.algorithms.inprocessing.MetaFairClassifier(
