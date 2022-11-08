@@ -63,9 +63,6 @@
 # no-else-return (R1705):
 #   I don't agree with this one
 
-# deprecated-method (W4902)
-#   fixme: this one should be fixed and enabled
-
 # dangerous-default-value (W0102)
 #   fixme: This one should fixed and enabled
 
@@ -93,7 +90,6 @@ disable=
    no-else-return,
    C,R,I,
    # These should be addressed and removed from this list
-   dangerous-default-value,
    cell-var-from-loop,
    arguments-renamed
 

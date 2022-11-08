@@ -2631,7 +2631,9 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
     def __call__(self, *args, **kwargs) -> "TrainableIndividualOp":
         return self._configure(*args, **kwargs)
 
-    def _hyperparam_schema_with_hyperparams(self, data_schema={}):
+    def _hyperparam_schema_with_hyperparams(
+        self, data_schema: Optional[Dict[str, Any]] = None
+    ):
         def fix_hyperparams(schema):
             hyperparams = self.hyperparams()
             if not hyperparams:
@@ -2645,6 +2647,8 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
 
         s_1 = self.hyperparam_schema()
         s_2 = fix_hyperparams(s_1)
+        if data_schema is None:
+            data_schema = {}
         s_3 = replace_data_constraints(s_2, data_schema)
         return s_3
 

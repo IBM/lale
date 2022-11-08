@@ -64,7 +64,7 @@ def get_search_space_grids(
     op: "PlannedOperator",
     num_grids: Optional[float] = None,
     pgo: Optional[PGO] = None,
-    data_schema: Dict[str, Any] = {},
+    data_schema: Optional[Dict[str, Any]] = None,
 ) -> List[SearchSpaceGrid]:
     """Top level function: given a lale operator, returns a list of hp grids.
 
@@ -114,7 +114,9 @@ def search_space_to_grids(hp: SearchSpace) -> List[SearchSpaceGrid]:
 
 
 def op_to_search_space_grids(
-    op: PlannedOperator, pgo: Optional[PGO] = None, data_schema: Dict[str, Any] = {}
+    op: PlannedOperator,
+    pgo: Optional[PGO] = None,
+    data_schema: Optional[Dict[str, Any]] = None,
 ) -> List[SearchSpaceGrid]:
     search_space = op_to_search_space(op, pgo=pgo, data_schema=data_schema)
     grids = search_space_to_grids(search_space)

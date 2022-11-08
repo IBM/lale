@@ -52,7 +52,7 @@ def get_parameter_grids(
     num_samples: Optional[int] = None,
     num_grids: Optional[float] = None,
     pgo: Optional[PGO] = None,
-    data_schema: Dict[str, Any] = {},
+    data_schema: Optional[Dict[str, Any]] = None,
 ):
     """
     Parameters
@@ -79,7 +79,7 @@ def get_grid_search_parameter_grids(
     num_samples: Optional[int] = None,
     num_grids: Optional[float] = None,
     pgo: Optional[PGO] = None,
-    data_schema: Dict[str, Any] = {},
+    data_schema: Optional[Dict[str, Any]] = None,
 ) -> List[Dict[str, List[Any]]]:
     """Top level function: given a lale operator, returns a list of parameter grids
     suitable for passing to GridSearchCV.

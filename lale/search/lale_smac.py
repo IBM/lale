@@ -72,7 +72,7 @@ def get_smac_space(
     op: "Ops.PlannedOperator",
     lale_num_grids: Optional[float] = None,
     lale_pgo: Optional[PGO] = None,
-    data_schema: Dict[str, Any] = {},
+    data_schema: Optional[Dict[str, Any]] = None,
 ) -> ConfigurationSpace:
     """Top level function: given a lale operator, returns a ConfigurationSpace for use with SMAC.
 

@@ -92,7 +92,9 @@ class Grammar(Operator):
         # from this point of view, Grammar is just a higher order operator
         raise NotImplementedError("setting Grammar parameters is not yet supported")
 
-    def __init__(self, variables: Dict[str, Operator] = {}):
+    def __init__(self, variables: Optional[Dict[str, Operator]] = None):
+        if variables is None:
+            variables = {}
         self._variables = variables
 
     def __getattr__(self, name):

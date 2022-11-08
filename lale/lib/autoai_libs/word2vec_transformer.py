@@ -21,7 +21,7 @@ import lale.operators
 # This is currently needed just to hide get_params so that lale does not call clone
 # when doing a defensive copy
 class _Word2VecTransformerImpl:
-    def __init__(
+    def __init__(  # pylint:disable=dangerous-default-value
         self,
         output_dim=30,
         column_headers_list=[],

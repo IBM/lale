@@ -78,7 +78,9 @@ class OperatorSchemaError(VisitorPathError):
 
 
 def op_to_search_space(
-    op: PlannedOperator, pgo: Optional[PGO] = None, data_schema={}
+    op: PlannedOperator,
+    pgo: Optional[PGO] = None,
+    data_schema: Optional[Dict[str, Any]] = None,
 ) -> SearchSpace:
     """Given an operator, this method compiles its schemas into a SearchSpace"""
     search_space = SearchSpaceOperatorVisitor.run(op, pgo=pgo, data_schema=data_schema)
@@ -166,15 +168,21 @@ def add_sub_space(space, k, v):
 # or do we just add the paths later as needed?
 class SearchSpaceOperatorVisitor(Visitor):
     pgo: Optional[PGO]
+    data_schema: Optional[Dict[str, Any]]
 
     @classmethod
     def run(
-        cls, op: PlannedOperator, pgo: Optional[PGO] = None, data_schema={}
+        cls,
+        op: PlannedOperator,
+        pgo: Optional[PGO] = None,
+        data_schema: Optional[Dict[str, Any]] = None,
     ) -> SearchSpace:
         visitor = cls(pgo=pgo, data_schema=data_schema)
         return accept(op, visitor)
 
-    def __init__(self, pgo: Optional[PGO] = None, data_schema={}):
+    def __init__(
+        self, pgo: Optional[PGO] = None, data_schema: Optional[Dict[str, Any]] = None
+    ):
         super(SearchSpaceOperatorVisitor, self).__init__()
         self.pgo = pgo
         self.data_schema = data_schema
