@@ -31,8 +31,8 @@ from lale.lib.dataframe import get_columns
 try:
     from pyspark.sql.functions import col
 
-    from lale.datasets.data_schemas import (
-        SparkDataFrameWithIndex,  # pylint:disable=ungrouped-imports
+    from lale.datasets.data_schemas import (  # pylint:disable=ungrouped-imports
+        SparkDataFrameWithIndex,
     )
 
     spark_installed = True

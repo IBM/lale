@@ -116,9 +116,9 @@ class _HashingEncoderImpl(MonoidableOperator[_HashingEncoderMonoid]):
             )
             for i in range(N)
         }
-        hash = Map(columns=columns_hash, remainder="passthrough")
+        hasher = Map(columns=columns_hash, remainder="passthrough")
         encode = Map(columns=columns_cat, remainder="passthrough")
-        return hash >> encode
+        return hasher >> encode
 
     def to_monoid(self, batch: Tuple[Any, Any]):
         X, y = batch

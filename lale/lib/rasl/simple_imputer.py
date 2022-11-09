@@ -21,7 +21,8 @@ import pandas as pd
 
 import lale.docstrings
 import lale.operators
-from lale.expressions import count, it, median, mode, replace, sum
+from lale.expressions import sum  # pylint:disable=redefined-builtin
+from lale.expressions import count, it, median, mode, replace
 from lale.helpers import _is_df, _is_pandas_df, _is_spark_df
 from lale.lib.dataframe import get_columns
 from lale.lib.sklearn import simple_imputer

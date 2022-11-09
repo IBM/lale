@@ -92,7 +92,7 @@ class _AggregateImpl:
                 agg_func_name = "unique"
             elif agg_func_name == "mode":
                 agg_func_name = (
-                    lambda x: x.value_counts()
+                    lambda x: x.value_counts()  # pylint:disable=unnecessary-lambda-assignment
                     .sort_index(ascending=False)
                     .sort_values(ascending=False)
                     .index[0]

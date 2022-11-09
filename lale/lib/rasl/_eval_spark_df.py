@@ -151,14 +151,14 @@ def ite(call: ast.Call):
     return spark_when(cond, v1).otherwise(v2)  # type: ignore
 
 
-def hash(call: ast.Call):
+def hash(call: ast.Call):  # pylint:disable=redefined-builtin
     hashing_method = ast.literal_eval(call.args[0])
     column = _eval_ast_expr_spark_df(call.args[1])  # type: ignore
     if hashing_method == "md5":
-        hash = spark_md5(column)  # type: ignore
+        hash_fun = spark_md5(column)  # type: ignore
     else:
         raise ValueError(f"Unimplementade hash function in Spark: {hashing_method}")
-    return hash
+    return hash_fun
 
 
 def hash_mod(call: ast.Call):

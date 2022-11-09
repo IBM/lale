@@ -477,9 +477,12 @@ class _RunStats:
 
 
 class _TraceRecord:
-    def __init__(self, task, time):
+    task: _Task
+    time: float
+
+    def __init__(self, task: _Task, task_time: float):
         self.task = task
-        self.time = time
+        self.time = task_time
         if isinstance(task, _ApplyTask) and task.batch is not None:
             self.space = task.batch.space
         else:
@@ -520,7 +523,7 @@ class _TaskGraph:
     def __enter__(self) -> "_TaskGraph":
         return self
 
-    def __exit__(self, value, type, traceback) -> None:
+    def __exit__(self, exc_value, exc_type, traceback) -> None:
         for task in self.all_tasks.values():
             # preds form a garbage collection cycle with succs
             task.preds.clear()
@@ -589,7 +592,7 @@ class _TaskGraph:
         dot = graphviz.Digraph()
         dot.attr("graph", rankdir="LR", nodesep="0.1")
         dot.attr("node", fontsize="11", margin="0.03,0.03", shape="box", height="0.1")
-        next_task = min(self.all_tasks.values(), key=lambda t: prio.task_priority(t))
+        next_task = min(self.all_tasks.values(), key=prio.task_priority)
         task_key2trace_id: Dict[_MemoKey, int] = {}
         if trace is not None:
             task_key2trace_id = {r.task.memo_key(): i for i, r in enumerate(trace)}
@@ -902,7 +905,7 @@ def _create_tasks(
 
 def _analyze_run_trace(stats: _RunStats, trace: List[_TraceRecord]) -> _RunStats:
     memo_key2critical_count: Dict[_MemoKey, int] = {}
-    memo_key2critical_time: Dict[_MemoKey, int] = {}
+    memo_key2critical_time: Dict[_MemoKey, float] = {}
     for record in trace:
         if isinstance(record.task, _TrainTask):
             stats.train_count += 1
@@ -964,7 +967,7 @@ class _BatchCache:
             self.spill_path = pathlib.Path(self.spill_dir.name)
         return self
 
-    def __exit__(self, value, type, traceback) -> None:
+    def __exit__(self, exc_value, exc_type, traceback) -> None:
         if self.spill_dir is not None:
             self.spill_dir.cleanup()
 
@@ -1000,7 +1003,7 @@ class _BatchCache:
             if isinstance(t, _ApplyTask) and t.batch is not None
             if t.batch.status == _BatchStatus.RESIDENT
         ]
-        resident_batches.sort(key=lambda b: self.prio.batch_priority(b))
+        resident_batches.sort(key=self.prio.batch_priority)
         resident_batches_space = sum(b.space for b in resident_batches)
         while resident_batches_space + amount_needed > self.max_resident:
             if len(resident_batches) == 0:
@@ -1347,7 +1350,7 @@ def _run_tasks(
     call_depth: int,
 ) -> None:
     if scoring is None and progress_callback is not None:
-        logger.warn("progress_callback only gets called if scoring is not None")
+        logger.warning("progress_callback only gets called if scoring is not None")
     with _BatchCache(tg.all_tasks, max_resident, prio, verbose) as cache:
         _run_tasks_inner(
             tg,

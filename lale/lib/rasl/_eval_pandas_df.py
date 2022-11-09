@@ -136,16 +136,16 @@ def ite(df: Any, call: ast.Call):
     return result
 
 
-def hash(df: Any, call: ast.Call):
+def hash(df: Any, call: ast.Call):  # pylint:disable=redefined-builtin
     hashing_method = ast.literal_eval(call.args[0])
     column = _eval_ast_expr_pandas_df(df, call.args[1])  # type: ignore
 
-    def hash(v):
+    def hash_fun(v):
         hasher = hashlib.new(hashing_method)
         hasher.update(bytes(str(v), "utf-8"))
         return hasher.hexdigest()
 
-    return column.map(hash)
+    return column.map(hash_fun)
 
 
 def hash_mod(df: Any, call: ast.Call):

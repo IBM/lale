@@ -111,7 +111,7 @@ class _FilterImpl:
     def transform(self, X):
         filtered_df = X
 
-        def filter(X):
+        def filter_fun(X):
             if isinstance(op, ast.Name):
                 # currently only handles single argument predicates
                 functions_module = importlib.import_module("lale.lib.rasl.functions")
@@ -234,7 +234,7 @@ class _FilterImpl:
         for pred_element in self.pred if self.pred is not None else []:
             expr_to_parse = pred_element.expr
             lhs, op, rhs = self._get_filter_info(expr_to_parse, X)
-            filtered_df = filter(filtered_df)
+            filtered_df = filter_fun(filtered_df)
             filtered_df = forward_metadata(X, filtered_df)
         return filtered_df
 

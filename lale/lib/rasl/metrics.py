@@ -282,17 +282,17 @@ def f1_score(
 
 
 class _R2Data(MetricMonoid):
-    def __init__(self, n: int, sum: float, sum_sq: float, res_sum_sq: float):
+    def __init__(self, n: int, tot_sum: float, tot_sum_sq: float, res_sum_sq: float):
         self.n = n
-        self.sum = sum
-        self.sum_sq = sum_sq
+        self.sum = tot_sum
+        self.sum_sq = tot_sum_sq
         self.res_sum_sq = res_sum_sq
 
     def combine(self, other: "_R2Data") -> "_R2Data":
         return _R2Data(
             n=self.n + other.n,
-            sum=self.sum + other.sum,
-            sum_sq=self.sum_sq + other.sum_sq,
+            tot_sum=self.sum + other.sum,
+            tot_sum_sq=self.sum_sq + other.sum_sq,
             res_sum_sq=self.res_sum_sq + other.res_sum_sq,
         )
 
@@ -322,8 +322,8 @@ class _R2(_MetricMonoidMixin[_R2Data]):
         agg_df = self._pipeline.transform(input_df)
         return _R2Data(
             n=agg_df.at[0, "n"],
-            sum=agg_df.at[0, "sum"],
-            sum_sq=agg_df.at[0, "sum_sq"],
+            tot_sum=agg_df.at[0, "sum"],
+            tot_sum_sq=agg_df.at[0, "sum_sq"],
             res_sum_sq=agg_df.at[0, "res_sum_sq"],
         )
 
