@@ -69,6 +69,9 @@
 # too-many-lines (C0302)
 #   yes, some of our files are a bit long
 
+# cyclic-import (R0401)
+#   We have a bunch of these
+
 # duplicate-code (R0801): duplicate code warning
 # no-else-return (R1705):
 #   I don't agree with this one
@@ -107,6 +110,7 @@ disable=
    missing-module-docstring,missing-class-docstring,missing-function-docstring,
    too-many-lines,
    # Refactors
+   cyclic-import,
    duplicate-code,
    no-else-return,
    too-many-ancestors,too-many-instance-attributes,
