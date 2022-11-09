@@ -108,7 +108,7 @@ def get_default(schema) -> Optional[Any]:
     return None
 
 
-class FreqsWrapper(object):
+class FreqsWrapper:
     base: Optional[Dict[str, Freqs]]
 
     def __init__(self, base: Optional[Dict[str, Freqs]]):
@@ -183,7 +183,7 @@ class SearchSpaceOperatorVisitor(Visitor):
     def __init__(
         self, pgo: Optional[PGO] = None, data_schema: Optional[Dict[str, Any]] = None
     ):
-        super(SearchSpaceOperatorVisitor, self).__init__()
+        super().__init__()
         self.pgo = pgo
         self.data_schema = data_schema
 
@@ -286,7 +286,7 @@ class SearchSpaceOperatorVisitor(Visitor):
                 return SearchSpaceBool(
                     pgo=asFreqs(pgo_freqs), default=get_default(schema)
                 )
-            elif typ == "number" or typ == "integer":
+            elif typ in ["number", "integer"]:
                 exclusive_minimum = False
                 minimum = schema.get("minimumForOptimizer", None)
                 if minimum is not None:
@@ -342,7 +342,7 @@ class SearchSpaceOperatorVisitor(Visitor):
                     pgo=asFreqs(pgo_freqs),
                     default=get_default(schema),
                 )
-            elif typ == "array" or typ == "tuple":
+            elif typ in ["array", "tuple"]:
                 laleType = schema.get("laleType", None)
                 if laleType is None:
                     laleType = typ
@@ -447,7 +447,7 @@ class SearchSpaceOperatorVisitor(Visitor):
                 else:
                     all_keys = list(o.keys())
                     all_keys.sort()
-                    o_choice = tuple([o.get(k, None) for k in all_keys])
+                    o_choice = tuple(o.get(k, None) for k in all_keys)
                     return SearchSpaceObject(longName, all_keys, [o_choice])
 
             elif typ == "string":
@@ -518,7 +518,7 @@ class SearchSpaceOperatorVisitor(Visitor):
 
                 anys: Dict[str, Any] = {}
                 for o in objs:
-                    o_choice = tuple([o.get(k, None) for k in all_keys])
+                    o_choice = tuple(o.get(k, None) for k in all_keys)
                     k = str(
                         [as_str(all_keys[idx], c) for idx, c in enumerate(o_choice)]
                     )

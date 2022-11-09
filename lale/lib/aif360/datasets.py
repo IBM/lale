@@ -1190,7 +1190,7 @@ def _should_drop_column(x, fiscal_year):
 def _fetch_meps_raw_df(panel, fiscal_year):
     filename = ""
     if fiscal_year == FiscalYear.FY2015:
-        assert panel == Panel.PANEL19 or panel == Panel.PANEL20
+        assert panel in [Panel.PANEL19, Panel.PANEL20]
         filename = "h181.csv"
     elif fiscal_year == FiscalYear.FY2016:
         assert panel == Panel.PANEL21

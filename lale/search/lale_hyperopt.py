@@ -77,7 +77,7 @@ class SearchSpaceHPExprVisitor(Visitor):
         return accept(space, visitor, name)
 
     def __init__(self, name: str):
-        super(SearchSpaceHPExprVisitor, self).__init__()
+        super().__init__()
         self.names = {}
 
     def get_unique_name(self, name: str) -> str:
@@ -311,7 +311,7 @@ class SearchSpaceHPStrVisitor(Visitor):
         return self.get_unique_name(_mk_label(label, counter, useCounter=useCounter))
 
     def __init__(self, name: str):
-        super(SearchSpaceHPStrVisitor, self).__init__()
+        super().__init__()
         self.pgo_dict = {}
         self.names = {}
         self.pgo_header = None

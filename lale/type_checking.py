@@ -63,8 +63,7 @@ def _validate_lale_type(
             )
     elif laleType == "operator":
         if not (
-            isinstance(instance, lale.operators.Operator)
-            or isinstance(instance, sklearn.base.BaseEstimator)
+            isinstance(instance, (lale.operators.Operator, sklearn.base.BaseEstimator))
             or (
                 inspect.isclass(instance)
                 and issubclass(instance, sklearn.base.BaseEstimator)
@@ -166,7 +165,7 @@ def validate_is_schema(value: Dict[str, Any]):
     from lale.settings import disable_hyperparams_schema_validation
 
     if disable_hyperparams_schema_validation:
-        return True
+        return
 
     if "$schema" in value:
         assert value["$schema"] == _JSON_META_SCHEMA_URL
@@ -192,7 +191,7 @@ def _json_replace(subject, old, new):
             if s != r:
                 return result
     elif isinstance(subject, tuple):
-        result = tuple([_json_replace(s, old, new) for s in subject])
+        result = tuple(_json_replace(s, old, new) for s in subject)
         for s, r in zip(subject, result):
             if s != r:
                 return result
@@ -285,7 +284,7 @@ def validate_schema(lhs: Any, super_schema: JSON_TYPE):
     from lale.settings import disable_data_schema_validation
 
     if disable_data_schema_validation:
-        return True  # If schema validation is disabled, always return as valid
+        return  # If schema validation is disabled, always return as valid
     sub_schema: Optional[JSON_TYPE]
 
     try:

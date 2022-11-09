@@ -36,9 +36,7 @@ class _AllKNNImpl(_BaseResamplerImpl):
             raise ValueError("Operator is a required argument.")
         self._hyperparams = hyperparams
         resampler_instance = OrigModel(**self._hyperparams)
-        super(_AllKNNImpl, self).__init__(
-            operator=operator, resampler=resampler_instance
-        )
+        super().__init__(operator=operator, resampler=resampler_instance)
 
 
 _hyperparams_schema = {

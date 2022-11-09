@@ -647,6 +647,10 @@ def _it_column(expr):
                 return v.value
             elif isinstance(v, ast.Str):
                 return v.s
+            else:
+                raise ValueError(
+                    f"Illegal {fixedUnparse(expr)}. Only the access to `it` is supported"
+                )
         else:
             raise ValueError(
                 f"Illegal {fixedUnparse(expr)}. Only the access to `it` is supported"

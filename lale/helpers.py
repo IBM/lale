@@ -117,7 +117,7 @@ def data_to_json(data, subsample_array: bool = True) -> Union[list, dict, int, f
         return ndarray_to_json(data, subsample_array)
     elif isinstance(data, scipy.sparse.csr_matrix):
         return ndarray_to_json(data.toarray(), subsample_array)
-    elif isinstance(data, pd.DataFrame) or isinstance(data, pd.Series):
+    elif isinstance(data, (pd.DataFrame, pd.Series)):
         np_array = data.values
         return ndarray_to_json(np_array, subsample_array)
     elif torch_installed and isinstance(data, torch.Tensor):
@@ -165,12 +165,7 @@ def ndarray_to_json(arr: np.ndarray, subsample_array: bool = True) -> Union[list
 
     def subarray_to_json(indices: Tuple[int, ...]) -> Any:
         if len(indices) == len(arr.shape):
-            if (
-                isinstance(arr[indices], bool)
-                or isinstance(arr[indices], int)
-                or isinstance(arr[indices], float)
-                or isinstance(arr[indices], str)
-            ):
+            if isinstance(arr[indices], (bool, int, float, str)):
                 return arr[indices]
             elif np.issubdtype(arr.dtype, np.bool_):
                 return bool(arr[indices])
@@ -580,7 +575,6 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
         return lale_wrapper_found, class_
 
     import lale.operators
-    import lale.type_checking
 
     sklearn_obj = sklearn_pipeline
 
@@ -757,7 +751,7 @@ def append_batch(data, batch_data):
     elif torch_installed and isinstance(data, torch.Tensor):
         if isinstance(batch_data, torch.Tensor):
             return torch.cat((data, batch_data))
-    elif isinstance(data, pd.Series) or isinstance(data, pd.DataFrame):
+    elif isinstance(data, (pd.Series, pd.DataFrame)):
         return pd.concat([data, batch_data], axis=0)
     try:
         import h5py
@@ -1044,7 +1038,7 @@ def make_array_index_name(index, is_tuple: bool = False):
 
 def is_numeric_structure(structure_type: str):
 
-    if structure_type == "list" or structure_type == "tuple":
+    if structure_type in ["list", "tuple"]:
         return True
     elif structure_type == "dict":
         return False
@@ -1121,7 +1115,7 @@ def _is_ast_constant(expr):
 
 
 def _is_ast_subs_or_attr(expr):
-    return isinstance(expr, ast.Subscript) or isinstance(expr, ast.Attribute)
+    return isinstance(expr, (ast.Subscript, ast.Attribute))
 
 
 def _is_ast_call(expr):

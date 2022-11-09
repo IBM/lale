@@ -150,7 +150,7 @@ def SearchSpaceNumberToGSValues(
         if samples <= 1:
             return [default]
         samples = samples - 1
-    if dist == "uniform" or dist == "integer":
+    if dist in ["uniform", "integer"]:
         ret = np.linspace(space_min, space_max, num=samples, dtype=dt).tolist()
     elif dist == "loguniform":
         ret = np.logspace(space_min, space_max, num=samples, dtype=dt).tolist()

@@ -160,7 +160,7 @@ def enumValues(
 ) -> set_with_str_for_keys[Any]:
     """Given an enumeration set and a schema, return all the consistent values of the enumeration."""
     # TODO: actually check.  This should call the json schema validator
-    ret = list()
+    ret = []
     for e in es:
         try:
             always_validate_schema(e, s)
@@ -424,7 +424,7 @@ def simplifyAll(schemas: List[JsonSchema], floatAny: bool) -> JsonSchema:
                     del o[k]
         s_typed = [s for s in s_typed if s]
 
-    if s_type == "number" or s_type == "integer":
+    if s_type in ["number", "integer"]:
         # First we combine all the positive number range schemas
         s_range = SchemaRange()
         s_range_for_optimizer = SchemaRange()
@@ -592,7 +592,7 @@ def simplifyAll(schemas: List[JsonSchema], floatAny: bool) -> JsonSchema:
         if len(s_required) != 0:
             obj["required"] = list(s_required)
         s_typed = [obj]
-    elif s_type == "array" or s_type == "tuple":
+    elif s_type in ["array", "tuple"]:
         is_tuple = s_type == "tuple"
         min_size: int = 0
         max_size: Optional[int] = None

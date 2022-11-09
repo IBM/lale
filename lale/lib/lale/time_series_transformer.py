@@ -83,7 +83,7 @@ class Log10:
         return np.log10(data)
 
 
-class Pipeline(object):
+class Pipeline:
     """
     A Pipeline is an object representing the data transformations to make
     on the input data, finally outputting extracted features.

@@ -50,6 +50,10 @@ def get_data_from_csv(datatype, data_file_name):
             )
             if datatype == "spark":
                 return SparkDataFrameWithIndex(df)
+            else:
+                raise ValueError(
+                    "Can fetch the go_sales data in pandas or spark dataframes only. Pass either 'pandas' or 'spark' in datatype parameter."
+                )
         else:
             raise ValueError("Spark is not installed on this machine.")
     else:

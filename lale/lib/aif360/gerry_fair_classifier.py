@@ -68,7 +68,7 @@ class _GerryFairClassifierImpl(_BaseInEstimatorImpl):
             fairness_def=fairness_def,
             predictor=predictor,
         )
-        super(_GerryFairClassifierImpl, self).__init__(
+        super().__init__(
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
             unfavorable_labels=unfavorable_labels,

@@ -112,15 +112,15 @@ def multitable_train_test_split(
         raise ValueError(
             "multitable_train_test_split can only work with a list of Pandas or Spark dataframes."
         )
-    if test_size > 0 and test_size < 1:
+    if 0 < test_size < 1:
         num_test_rows = int(num_rows * test_size)
     else:
         num_test_rows = int(test_size)
     test_indices = random.choice(range(num_rows), num_test_rows, replace=False)
     train_indices = list(set([*range(num_rows)]) - set(test_indices.tolist()))
     assert len(test_indices) + len(train_indices) == num_rows
-    train_dataset = [table for table in dataset]
-    test_dataset = [table for table in dataset]
+    train_dataset = list(dataset)
+    test_dataset = list(dataset)
     if _is_pandas_df(main_table_df):
         train_main_df = main_table_df.iloc[train_indices]
         test_main_df = main_table_df.iloc[test_indices]

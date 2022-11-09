@@ -367,7 +367,7 @@ class _ProtectedAttributesEncoderImpl:
         s_X = lale.datasets.data_schemas.to_schema(s_X)
         if self.remainder == "drop" and self.combine == "keep_separate":
             out_names = [pa["feature"] for pa in self.protected_attributes]
-            if all([isinstance(n, str) for n in out_names]):
+            if all(isinstance(n, str) for n in out_names):
                 result = {
                     **s_X,
                     "items": {

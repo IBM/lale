@@ -156,7 +156,7 @@ class _HyperoptImpl:
             self.evals_with_defaults = 0
 
         def merge_trials(trials1, trials2):
-            max_tid = max([trial["tid"] for trial in trials1.trials])
+            max_tid = max(trial["tid"] for trial in trials1.trials)
 
             for trial in trials2:
                 tid = trial["tid"] + max_tid + 1

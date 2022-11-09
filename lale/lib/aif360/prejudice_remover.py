@@ -40,7 +40,7 @@ class _PrejudiceRemoverImpl(_BaseInEstimatorImpl):
         eta=1.0,
     ):
         mitigator = aif360.algorithms.inprocessing.PrejudiceRemover(eta=eta)
-        super(_PrejudiceRemoverImpl, self).__init__(
+        super().__init__(
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
             unfavorable_labels=unfavorable_labels,

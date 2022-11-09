@@ -226,3 +226,4 @@ class LoggingObserver:
             return failfun
         else:
             logger.debug(f"trying to observe {prop}, which is not a start or stop")
+            return None

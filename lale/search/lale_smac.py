@@ -142,7 +142,7 @@ def SearchSpaceNumberToSMAC(key: str, hp: SearchSpaceNumber) -> Hyperparameter:
     space_min = hp.getInclusiveMin()
 
     log: bool
-    if dist == "uniform" or dist == "integer":
+    if dist in ["uniform", "integer"]:
         log = False
     elif dist == "loguniform":
         log = True
@@ -155,7 +155,7 @@ def SearchSpaceNumberToSMAC(key: str, hp: SearchSpaceNumber) -> Hyperparameter:
         return UniformFloatHyperparameter(key, space_min, space_max, log=log)
 
 
-class FakeNone(object):
+class FakeNone:
     pass
 
 

@@ -49,7 +49,7 @@ class _CalibratedEqOddsPostprocessingImpl(_BasePostEstimatorImpl):
             cost_constraint=cost_constraint,
             seed=seed,
         )
-        super(_CalibratedEqOddsPostprocessingImpl, self).__init__(
+        super().__init__(
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
             unfavorable_labels=unfavorable_labels,

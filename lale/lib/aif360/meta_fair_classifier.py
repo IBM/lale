@@ -43,7 +43,7 @@ class _MetaFairClassifierImpl(_BaseInEstimatorImpl):
             sensitive_attr=prot_attr_names[0],
             type=type,
         )
-        super(_MetaFairClassifierImpl, self).__init__(
+        super().__init__(
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
             unfavorable_labels=unfavorable_labels,

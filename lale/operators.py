@@ -828,7 +828,7 @@ class Operator(metaclass=AbstractVisitorMeta):
                     return [_replace(s, original_op, replacement_op) for s in subject]
                 elif isinstance(subject, tuple):
                     return tuple(
-                        [_replace(s, original_op, replacement_op) for s in subject]
+                        _replace(s, original_op, replacement_op) for s in subject
                     )
                 elif isinstance(subject, dict):
                     return {
@@ -949,7 +949,7 @@ Alternatively, you could use `auto_configure(X, y, Hyperopt, max_evals=5)` on th
 `max_evals` iterations for hyperparameter tuning. `Hyperopt` can be imported as `from lale.lib.lale import Hyperopt`."""
                 error_msg = add_error_msg_for_predict_methods(self, error_msg)
                 raise AttributeError(error_msg)
-            elif isinstance(self, PlannedPipeline) or isinstance(self, OperatorChoice):
+            elif isinstance(self, (PlannedPipeline, OperatorChoice)):
                 error_msg = f"""The pipeline is not trainable, which means you can not call {name} on it.\n
 Suggested fixes:\nFix [A]: You can make the following changes in the pipeline in order to make it trainable:\n"""
                 i = 1
@@ -1361,7 +1361,7 @@ class _DictionaryObjectForEnum:
             raise KeyError("No enumeration found for hyper-parameter: " + key)
 
 
-class _WithoutGetParams(object):
+class _WithoutGetParams:
     """This is a wrapper class whose job is to *NOT* have a get_params method,
     causing sklearn clone to call deepcopy on it (and its contents).
     This is currently used, for example, to wrap the impl class instance
@@ -1593,7 +1593,7 @@ class IndividualOp(Operator):
             Parameter names mapped to their values.
         """
 
-        out: Dict[str, Any] = dict()
+        out: Dict[str, Any] = {}
         if deep is False:
             out["_lale_name"] = self._name
             out["_lale_schemas"] = self._schemas
@@ -2117,7 +2117,7 @@ class IndividualOp(Operator):
                     return schema[key] if key in schema else None
 
                 keys = ["minimumForOptimizer", "maximumForOptimizer", "default"]
-                return tuple([get(schema, key) for key in keys])
+                return tuple(get(schema, key) for key in keys)
 
         def get_cat_idx(schema):
             if "enum" not in schema:
@@ -2161,7 +2161,7 @@ class IndividualOp(Operator):
                 elif isinstance(minimum, int) and isinstance(maximum, int):
                     step = float(maximum - minimum) / (size - 1)
                     fdist = [minimum + i * step for i in range(size)]
-                    dist = list(set([round(f) for f in fdist]))
+                    dist = list(set(round(f) for f in fdist))
                     dist.sort()
                 elif isinstance(minimum, (int, float)):
                     # just in case the minimum or maximum is exclusive
@@ -2322,7 +2322,7 @@ class IndividualOp(Operator):
 
         for depth in range(0, max_depth):
             if found:
-                return None
+                return
             candidate_replacements: Any = list(
                 itertools.combinations(explicit_defaults.items(), depth + 1)
             )
@@ -2606,7 +2606,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         _lale_trained=False,
         **hp,
     ) -> None:
-        super(PlannedIndividualOp, self).__init__(
+        super().__init__(
             _lale_name, _lale_impl, _lale_schemas, _lale_frozen_hyperparameters, **hp
         )
 
@@ -2716,7 +2716,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         _lale_frozen_hyperparameters=None,
         **hp,
     ):
-        super(TrainableIndividualOp, self).__init__(
+        super().__init__(
             _lale_name, _lale_impl, _lale_schemas, _lale_frozen_hyperparameters, **hp
         )
 
@@ -2789,7 +2789,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         from lale.settings import disable_hyperparams_schema_validation
 
         if disable_hyperparams_schema_validation:
-            return True
+            return
         hp_schema = self.hyperparam_schema()
         if not hasattr(self, "__has_data_constraints"):
             has_dc = has_data_constraints(hp_schema)
@@ -3096,13 +3096,13 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
                     f"unexpected error in {self.name()}.transform_schema({lale.pretty_print.to_string(s_X)}"
                 ) from exc
         else:
-            return super(TrainableIndividualOp, self).transform_schema(s_X)
+            return super().transform_schema(s_X)
 
     def input_schema_fit(self) -> JSON_TYPE:
         if self.has_method("input_schema_fit"):
             return self._impl_instance().input_schema_fit()
         else:
-            return super(TrainableIndividualOp, self).input_schema_fit()
+            return super().input_schema_fit()
 
     def customize_schema(
         self,
@@ -3151,11 +3151,11 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
             or _lale_trained
             or (_lale_impl is not None and not hasattr(_lale_impl, "fit"))
         ):
-            obj = super(TrainedIndividualOp, cls).__new__(TrainedIndividualOp)
+            obj = super().__new__(TrainedIndividualOp)
             return obj
         else:
             # unless _lale_trained=True, we actually want to return a Trainable
-            obj = super(TrainedIndividualOp, cls).__new__(TrainableIndividualOp)
+            obj = super().__new__(TrainableIndividualOp)
             # apparently python does not call __ini__ if the type returned is not the
             # expected type
             obj.__init__(*args, **kwargs)
@@ -3170,7 +3170,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         _lale_trained=False,
         **hp,
     ):
-        super(TrainedIndividualOp, self).__init__(
+        super().__init__(
             _lale_name, _lale_impl, _lale_schemas, _lale_frozen_hyperparameters, **hp
         )
         self._frozen_trained = not self.has_method("fit")
@@ -3196,7 +3196,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         if self.has_method("fit") and not self.is_frozen_trained():
             filtered_fit_params = _fixup_hyperparams_dict(fit_params)
             try:
-                return super(TrainedIndividualOp, self).fit(X, y, **filtered_fit_params)
+                return super().fit(X, y, **filtered_fit_params)
             except AttributeError:
                 return self  # for Project with static columns after clone()
         else:
@@ -3643,7 +3643,7 @@ class BasePipeline(Operator, Generic[OpType_co]):
     _name: str
 
     def _steps_to_indices(self) -> Dict[OpType_co, int]:
-        return dict([(op, i) for (i, op) in enumerate(self._steps)])
+        return {op: i for i, op in enumerate(self._steps)}
 
     def _preds_to_indices(self) -> Dict[int, List[int]]:
         step_map = self._steps_to_indices()
@@ -3665,6 +3665,10 @@ class BasePipeline(Operator, Generic[OpType_co]):
         estimator = self._final_individual_op
         if estimator is not None:
             return estimator._estimator_type
+        else:
+            raise ValueError(
+                "Cannot determine the _estimator_type, since this pipeline does not have a unique final operator"
+            )
 
     @classmethod
     def _indices_to_preds(
@@ -3724,7 +3728,7 @@ class BasePipeline(Operator, Generic[OpType_co]):
                 name_index = found_names[name] + 1
                 found_names[name] = name_index
                 uname = make_indexed_name(name, name_index)
-                if uname in partitioned_sub_params:
+                if uname in partitioned_sub_params:  # pylint:disable=consider-using-get
                     params = partitioned_sub_params[uname]
             else:
                 found_names[name] = 0
@@ -3732,7 +3736,9 @@ class BasePipeline(Operator, Generic[OpType_co]):
                 if uname in partitioned_sub_params:
                     params = partitioned_sub_params[uname]
                     assert name not in partitioned_sub_params
-                elif name in partitioned_sub_params:
+                elif (  # pylint:disable=consider-using-get
+                    name in partitioned_sub_params
+                ):
                     params = partitioned_sub_params[name]
             new_s = s._with_params(try_mutate, **params)
             if s != new_s:
@@ -3856,11 +3862,7 @@ class BasePipeline(Operator, Generic[OpType_co]):
                         ]
                     )
                     new_edges.extend(
-                        [
-                            edge
-                            for edge in edges
-                            if (edge[1] != tstep and edge[0] != tstep)
-                        ]
+                        [edge for edge in edges if tstep not in (edge[0], edge[1])]
                     )
                     edges = new_edges
                 else:
@@ -4238,9 +4240,7 @@ class PlannedPipeline(BasePipeline[PlannedOpType_co], PlannedOperator):
         _lale_preds: Optional[Dict[int, List[int]]] = None,
         ordered: bool = False,
     ) -> None:
-        super(PlannedPipeline, self).__init__(
-            steps, edges=edges, _lale_preds=_lale_preds, ordered=ordered
-        )
+        super().__init__(steps, edges=edges, _lale_preds=_lale_preds, ordered=ordered)
 
     # give it a more precise type: if the input is a pipeline, the output is as well
     def auto_configure(
@@ -4258,10 +4258,10 @@ class PlannedPipeline(BasePipeline[PlannedOpType_co], PlannedOperator):
         return pipe
 
     def is_frozen_trainable(self) -> bool:
-        return all([step.is_frozen_trainable() for step in self.steps_list()])
+        return all(step.is_frozen_trainable() for step in self.steps_list())
 
     def is_frozen_trained(self) -> bool:
-        return all([step.is_frozen_trained() for step in self.steps_list()])
+        return all(step.is_frozen_trained() for step in self.steps_list())
 
 
 TrainableOpType_co = TypeVar(
@@ -4278,9 +4278,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType_co], TrainableOperator):
         ordered: bool = False,
         _lale_trained=False,
     ) -> None:
-        super(TrainablePipeline, self).__init__(
-            steps, edges=edges, _lale_preds=_lale_preds, ordered=ordered
-        )
+        super().__init__(steps, edges=edges, _lale_preds=_lale_preds, ordered=ordered)
 
     def remove_last(
         self, inplace: bool = False
@@ -4501,8 +4499,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType_co], TrainableOperator):
         """Checks if the operator is a transformer"""
         sink_nodes = self._find_sink_nodes()
         all_transformers = [
-            True if operator.has_method("transform") else False
-            for operator in sink_nodes
+            bool(operator.has_method("transform")) for operator in sink_nodes
         ]
         return all(all_transformers)
 
@@ -4612,11 +4609,11 @@ TrainedOpType_co = TypeVar("TrainedOpType_co", bound=TrainedIndividualOp, covari
 class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
     def __new__(cls, *args, _lale_trained=False, **kwargs):
         if "steps" not in kwargs or _lale_trained:
-            obj = super(TrainedPipeline, cls).__new__(TrainedPipeline)
+            obj = super().__new__(TrainedPipeline)
             return obj
         else:
             # unless _lale_trained=True, we actually want to return a Trainable
-            obj = super(TrainedPipeline, cls).__new__(TrainablePipeline)
+            obj = super().__new__(TrainablePipeline)
             # apparently python does not call __ini__ if the type returned is not the
             # expected type
             obj.__init__(*args, **kwargs)
@@ -4630,9 +4627,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
         ordered: bool = False,
         _lale_trained=False,
     ) -> None:
-        super(TrainedPipeline, self).__init__(
-            steps, edges=edges, _lale_preds=_lale_preds, ordered=ordered
-        )
+        super().__init__(steps, edges=edges, _lale_preds=_lale_preds, ordered=ordered)
 
     def remove_last(self, inplace: bool = False) -> "TrainedPipeline[TrainedOpType_co]":
         pipe = super().remove_last(inplace)
@@ -4951,7 +4946,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
         return return_data
 
     def freeze_trainable(self) -> "TrainedPipeline":
-        result = super(TrainedPipeline, self).freeze_trainable()
+        result = super().freeze_trainable()
         return cast(TrainedPipeline, result)
 
     def partial_fit(
@@ -5080,7 +5075,7 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType_co]):
         else:
             (choice_index, chosen_params) = partition_sklearn_choice_params(impl_params)
 
-        assert 0 <= choice_index and choice_index < len(choices)
+        assert 0 <= choice_index < len(choices)
         choice: Operator = choices[choice_index]
 
         new_step = choice._with_params(try_mutate, **chosen_params)
@@ -5115,11 +5110,15 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType_co]):
                 f = getattr(s, "fit", None)
                 if f is not None:
                     return f(X, y, **fit_params)
+                else:
+                    return None
+            else:
+                return None
         else:
             # This call is to get the correct error message
             # calling getattr(self, "fit") would result in
             # infinite recursion, but this explicit call works
-            self.__getattr__("fit")  # pylint:disable=unnecessary-dunder-call
+            return self.__getattr__("fit")  # pylint:disable=unnecessary-dunder-call
 
     def _has_same_impl(self, other: Operator) -> bool:
         """Checks if the type of the operator imnplementations are compatible"""
@@ -5161,7 +5160,7 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType_co]):
         return result
 
     def is_frozen_trainable(self) -> bool:
-        return all([step.is_frozen_trainable() for step in self.steps_list()])
+        return all(step.is_frozen_trainable() for step in self.steps_list())
 
     def is_classifier(self) -> bool:
         for op in self.steps_list():
@@ -5574,7 +5573,7 @@ def with_structured_params(
                 sub_op = sub_op[0]
             else:
                 (disc, chosen_params) = partition_sklearn_choice_params(params)
-                assert 0 <= disc and disc < len(sub_op)
+                assert 0 <= disc < len(sub_op)
                 sub_op = sub_op[disc]
                 params = chosen_params
         trainable_sub_op = sub_op._with_params(try_mutate, **params)
