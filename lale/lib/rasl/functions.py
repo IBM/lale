@@ -18,6 +18,8 @@ from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar
 import numpy as np
 from typing_extensions import Protocol
 
+from lale.helpers import _is_pandas_df, _is_spark_df
+
 from ..dataframe import (
     column_index,
     count,
@@ -26,6 +28,7 @@ from ..dataframe import (
     make_series_distinct,
     select_col,
 )
+from .monoid import Monoid, MonoidFactory
 
 try:
     import pyspark.sql.functions
@@ -33,11 +36,6 @@ try:
     spark_installed = True
 except ImportError:
     spark_installed = False
-
-
-from lale.helpers import _is_pandas_df, _is_spark_df
-
-from .monoid import Monoid, MonoidFactory
 
 
 class _column_distinct_count_data(Monoid):

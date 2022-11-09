@@ -110,8 +110,8 @@ class _PandasEvaluator(ast.NodeVisitor):
         function_name = _ast_func_id(node.func)
         try:
             map_func_to_be_called = globals()[function_name]
-        except KeyError:
-            raise ValueError(f"""Unimplemented function {function_name}""")
+        except KeyError as exc:
+            raise ValueError(f"""Unimplemented function {function_name}""") from exc
         self.result = map_func_to_be_called(self.df, node)
 
 

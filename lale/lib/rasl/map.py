@@ -134,8 +134,7 @@ class _MapImpl:
             raise AttributeError(
                 "fit cannot be called on a Map that has a static expression or has already been fit"
             )
-        else:
-            return super().__getattribute__(item)
+        return super().__getattribute__(item)
 
     def transform(self, X):
         if _is_pandas_df(X):

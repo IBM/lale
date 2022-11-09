@@ -31,7 +31,9 @@ from lale.lib.dataframe import get_columns
 try:
     from pyspark.sql.functions import col
 
-    from lale.datasets.data_schemas import SparkDataFrameWithIndex
+    from lale.datasets.data_schemas import (
+        SparkDataFrameWithIndex,  # pylint:disable=ungrouped-imports
+    )
 
     spark_installed = True
 
@@ -100,7 +102,7 @@ class _JoinImpl:
             if isinstance(key, list):
                 sub_list_tables: List[
                     str
-                ] = list()  # use an ordered list to improve error messages
+                ] = []  # use an ordered list to improve error messages
                 for sub_key in key:
                     (
                         left_table_name,
@@ -115,20 +117,16 @@ class _JoinImpl:
                         sub_list_tables.append(left_table_name)
                         first_table_names = ", ".join(sub_list_tables)
                         raise ValueError(
-                            "ERROR: Composite key involving the {}, and {} tables is problematic, since it references more than two tables.".format(
-                                first_table_names, right_table_name
-                            )
+                            f"ERROR: Composite key involving the {first_table_names}, and {right_table_name} tables is problematic, since it references more than two tables."
                         )
-                    elif tables_encountered and not (
+                    if tables_encountered and not (
                         left_table_name in tables_encountered
                         or right_table_name in tables_encountered
                     ):
                         left_expr = f"it.{left_table_name}{left_key_col}"
                         right_expr = f"it.{right_table_name}{right_key_col}"
                         raise ValueError(
-                            "ERROR: Composite key involving {} == {} is problematic, since neither the {} nor the {} tables were used in a previous key. Join operations must be chained (they can't have two disconnected join conditions)".format(
-                                left_expr, right_expr, left_table_name, right_table_name
-                            )
+                            f"ERROR: Composite key involving {left_expr} == {right_expr} is problematic, since neither the {left_table_name} nor the {right_table_name} tables were used in a previous key. Join operations must be chained (they can't have two disconnected join conditions)"
                         )
                     sub_list_tables.append(left_table_name)
                     sub_list_tables.append(right_table_name)
@@ -148,9 +146,7 @@ class _JoinImpl:
                     left_expr = f"it.{left_table_name}{left_key_col}"
                     right_expr = f"it.{right_table_name}{right_key_col}"
                     raise ValueError(
-                        "ERROR: Single key involving {} == {} is problematic, since neither the {} nor the {} tables were used in a previous key. Join operations must be chained (they can't have two disconnected join conditions)".format(
-                            left_expr, right_expr, left_table_name, right_table_name
-                        )
+                        f"ERROR: Single key involving {left_expr} == {right_expr} is problematic, since neither the {left_table_name} nor the {right_table_name} tables were used in a previous key. Join operations must be chained (they can't have two disconnected join conditions)"
                     )
                 tables_encountered.add(left_table_name)
                 tables_encountered.add(right_table_name)
@@ -174,8 +170,8 @@ class _JoinImpl:
 
                 for k, key in enumerate(left_key_col):
                     on.append(
-                        col("{}.{}".format("left_table", key)).eqNullSafe(
-                            col("{}.{}".format("right_table", right_key_col[k]))
+                        col(f"{'left_table'}.{key}").eqNullSafe(
+                            col(f"{'right_table'}.{right_key_col[k]}")
                         )
                     )
                     if key == right_key_col[k]:
@@ -278,9 +274,7 @@ class _JoinImpl:
             left_df, right_df = fetch_df(left_table_name, right_table_name)
             if not _is_df(left_df) or not _is_df(right_df):
                 raise ValueError(
-                    "ERROR: Cannot perform join operation, either '{}' or '{}' table not present in input X!".format(
-                        left_table_name, right_table_name
-                    )
+                    f"ERROR: Cannot perform join operation, either '{left_table_name}' or '{right_table_name}' table not present in input X!"
                 )
             left_df = remove_implicit_col(left_key_col, left_df)
             right_df = remove_implicit_col(right_key_col, right_df)

@@ -89,7 +89,7 @@ def test_classifier(name, Op):
     base_test(name, Op, load_iris)
 
 
-@pytest.mark.parametrize("name, reason", [(n, r) for (n, r) in failed_classifiers])
+@pytest.mark.parametrize("name, reason", failed_classifiers)
 def test_failed_classifier(name, reason):
     pytest.xfail(reason)
 
@@ -158,7 +158,7 @@ def test_regressors(name, Op):
     base_test(name, Op, load_regression, scoring="r2")
 
 
-@pytest.mark.parametrize("name, reason", [(n, r) for (n, r) in failed_regressors])
+@pytest.mark.parametrize("name, reason", failed_regressors)
 def test_failed_regressor(name, reason):
     pytest.xfail(reason)
 
@@ -247,7 +247,7 @@ def test_missing_indicator():
     base_test("MissingIndicator", Op >> LR, data_loader)
 
 
-@pytest.mark.parametrize("name, reason", [(n, r) for (n, r) in failed_transformers])
+@pytest.mark.parametrize("name, reason", failed_transformers)
 def test_failed_transformer(name, reason):
     pytest.xfail(reason)
 

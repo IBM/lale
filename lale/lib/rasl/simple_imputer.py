@@ -241,9 +241,9 @@ class _SimpleImputerImpl(MonoidableOperator[_SimpleImputerMonoid]):
             and not isinstance(fill_value, numbers.Real)
         ):
             raise ValueError(
-                "'fill_value'={0} is invalid. Expected a "
-                "numerical value when imputing numerical "
-                "data".format(fill_value)
+                f"'fill_value'={fill_value} is invalid. Expected a "
+                f"numerical value when imputing numerical "
+                f"data"
             )
         return fill_value
 
@@ -262,9 +262,7 @@ class _SimpleImputerImpl(MonoidableOperator[_SimpleImputerMonoid]):
             "median",
         ]:
             raise ValueError(
-                "Cannot use {} strategy with non-numeric data.".format(
-                    self._hyperparams["strategy"]
-                )
+                f"Cannot use {self._hyperparams['strategy']} strategy with non-numeric data."
             )
 
         # Check that missing_values are the right type
@@ -272,11 +270,9 @@ class _SimpleImputerImpl(MonoidableOperator[_SimpleImputerMonoid]):
             self._hyperparams["missing_values"], numbers.Real
         ):
             raise ValueError(
-                "'X' and 'missing_values' types are expected to be"
-                " both numerical. Got X.dtypes={} and "
-                " type(missing_values)={}.".format(
-                    X.dtypes, type(self._hyperparams["missing_values"])
-                )
+                f"'X' and 'missing_values' types are expected to be"
+                f" both numerical. Got X.dtypes={X.dtypes} and "
+                f" type(missing_values)={type(self._hyperparams['missing_values'])}."
             )
 
 

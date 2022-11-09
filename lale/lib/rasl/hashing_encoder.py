@@ -151,8 +151,7 @@ class _HashingEncoderImpl(MonoidableOperator[_HashingEncoderMonoid]):
             raise ValueError(
                 "Must fit data first. Affected feature names are not known before."
             )
-        else:
-            return self.feature_names
+        return self.feature_names
 
 
 _combined_schemas = {

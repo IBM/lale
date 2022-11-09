@@ -14,8 +14,10 @@
 #   We already check for this with flake8, so no need to double up on comments marking exceptions
 
 
-# unnecessary-pass (W0107): Unnecessary pass statement
+# unnecessary-pass (W0107)
+# unnecessary-ellipsis (W2301)
 #   Technically, a docstring suffices, but this is a style issue that is not so clear
+
 # logging-not-lazy (W1201)
 # logging-format-interpolation (W1202)
 # logging-fstring-interpolation (W1203)
@@ -94,7 +96,7 @@ disable=
    import-error,
    # Warnings
    exec-used,unused-import,  # already checked by other tools
-   unnecessary-pass,
+   unnecessary-pass,unnecessary-ellipsis,
    logging-not-lazy,logging-format-interpolation,logging-fstring-interpolation,
    fixme,
    unused-variable,unused-argument,

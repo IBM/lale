@@ -75,9 +75,7 @@ class _FilterImpl:
                 )
             if lhs not in col_list:
                 raise ValueError(
-                    "Cannot perform filter predicate operation as {} not a column of input dataframe X.".format(
-                        lhs
-                    )
+                    f"Cannot perform filter predicate operation as {lhs} not a column of input dataframe X."
                 )
             return lhs, op, None
 
@@ -91,9 +89,7 @@ class _FilterImpl:
             )
         if lhs not in col_list:
             raise ValueError(
-                "Cannot perform filter operation as {} not a column of input dataframe X.".format(
-                    lhs
-                )
+                f"Cannot perform filter operation as {lhs} not a column of input dataframe X."
             )
         op = expr_to_parse.ops[0]
         if _is_ast_subscript(expr_to_parse.comparators[0]):
@@ -108,9 +104,7 @@ class _FilterImpl:
             )
         if not _is_ast_constant(expr_to_parse.comparators[0]) and rhs not in col_list:
             raise ValueError(
-                "Cannot perform filter operation as {} not a column of input dataframe X.".format(
-                    rhs
-                )
+                f"Cannot perform filter operation as {rhs} not a column of input dataframe X."
             )
         return lhs, op, rhs
 
@@ -176,9 +170,7 @@ class _FilterImpl:
                     )
                 else:
                     raise ValueError(
-                        "{} operator type found. Only ==, !=, >=, <=, >, < operators are supported".format(
-                            op
-                        )
+                        f"{op} operator type found. Only ==, !=, >=, <=, >, < operators are supported"
                     )
             # Filtering pandas dataframes
             if _is_pandas_df(X):
@@ -232,9 +224,7 @@ class _FilterImpl:
                     )
                 else:
                     raise ValueError(
-                        "{} operator type found. Only ==, !=, >=, <=, >, < operators are supported".format(
-                            op
-                        )
+                        f"{op} operator type found. Only ==, !=, >=, <=, >, < operators are supported"
                     )
             else:
                 raise ValueError(

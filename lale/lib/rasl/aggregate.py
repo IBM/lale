@@ -38,7 +38,10 @@ except ImportError:
 
 
 class _AggregateImpl:
-    def __init__(self, columns, group_by=[], exclude_value=None):
+    def __init__(self, columns, group_by=None, exclude_value=None):
+        if group_by is None:
+            group_by = []
+
         self.columns = columns
         self.group_by = group_by
         self.exclude_value = exclude_value
@@ -79,7 +82,7 @@ class _AggregateImpl:
     def _transform_pandas(self, X, agg_info):
         is_grouped = isinstance(X, pd.core.groupby.generic.DataFrameGroupBy)
         if is_grouped:
-            _, first_group = next(X.__iter__())  # TODO: what if zero groups?
+            _, first_group = next(iter(X))  # TODO: what if zero groups?
             value_columns = first_group.columns
         else:
             value_columns = X.columns

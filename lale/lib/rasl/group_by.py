@@ -52,9 +52,7 @@ class _GroupByImpl:
         col_not_in_X = np.setdiff1d(group_by_keys, get_columns(X))
         if col_not_in_X.size > 0:
             raise ValueError(
-                "GroupBy key columns {} not present in input dataframe X.".format(
-                    col_not_in_X
-                )
+                f"GroupBy key columns {col_not_in_X} not present in input dataframe X."
             )
         if _is_pandas_df(X):
             grouped_df = X.groupby(group_by_keys, sort=False)

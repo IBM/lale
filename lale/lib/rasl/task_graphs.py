@@ -406,7 +406,9 @@ class PrioResourceAware(Prio):
 
 
 def _step_id_to_string(
-    step_id: int, pipeline: TrainablePipeline, cls2label: Dict[str, str] = {}
+    step_id: int,
+    pipeline: TrainablePipeline,
+    cls2label: Optional[Dict[str, str]] = None,
 ) -> str:
     if step_id == _DUMMY_INPUT_STEP:
         return "INP"
@@ -414,13 +416,13 @@ def _step_id_to_string(
         return "SCR"
     step = pipeline.steps_list()[step_id]
     cls = step.class_name()
-    return cls2label[cls] if cls in cls2label else step.name()
+    return cls2label[cls] if cls2label and cls in cls2label else step.name()
 
 
 def _task_to_string(
     task: _Task,
     pipeline: TrainablePipeline,
-    cls2label: Dict[str, str] = {},
+    cls2label: Optional[Dict[str, str]] = None,
     sep: str = "\n",
     trace_id: Optional[int] = None,
 ) -> str:
