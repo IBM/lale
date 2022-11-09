@@ -56,17 +56,15 @@
 #  We do this a lot, and often with reason (e.g. circular dependencies)
 
 # invalid-name (C0103): doesn't conform to snake_case naming style
-#   TODO: This probably should be enabled, with exceptions for
-#   names like 'X' and 'y' using good-names (below)
+#   TODO: This probably should be enabled, with relaxations/exceptions for
+#   names like 'X' and 'y' and similar derived names
 
 # missing-module-docstring (C0114)
-#   TODO: We should add them and enable this
-
 # missing-class-docstring (C0115)
-#   TODO: We should probably add them and enable this, but probably lower priority than C0114
-
 # missing-function-docstring (C0116)
-#   TODO: We should probably add them and enable this, but probably lower priority than C0114,C0115
+#   We may want to enable some of these,
+#   but note that our wrapper impls generally don't (currently)
+#   bother with them
 
 # too-many-lines (C0302)
 #   yes, some of our files are a bit long
