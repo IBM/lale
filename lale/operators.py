@@ -690,8 +690,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         op: Optional[IndividualOp] = self._final_individual_op
         if op is None:
             raise ValueError("This pipeline does not end with an individual operator")
-        else:
-            return op.get_param_ranges()
+        return op.get_param_ranges()
 
     def get_param_dist(self, size=10) -> Dict[str, List[Any]]:
         """Returns a dictionary for discretized hyperparameters.
@@ -703,8 +702,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         op: Optional[IndividualOp] = self._final_individual_op
         if op is None:
             raise ValueError("This pipeline does not end with an individual operator")
-        else:
-            return op.get_param_dist(size=size)
+        return op.get_param_dist(size=size)
 
     # should this be abstract?  what do we do for grammars?
     def get_defaults(self) -> Mapping[str, Any]:
@@ -895,13 +893,13 @@ class Operator(metaclass=AbstractVisitorMeta):
                 raise AttributeError(
                     f"The underlying operator implementation class does not define {name}"
                 )
-            elif isinstance(self, TrainableIndividualOp) and not hasattr(
+            if isinstance(self, TrainableIndividualOp) and not hasattr(
                 self, "_trained"
             ):
                 raise AttributeError(
                     f"{self.name()} is not trained. Note that in lale, the result of fit is a new trained operator that should be used with {name}."
                 )
-            elif isinstance(self, PlannedOperator) and not isinstance(
+            if isinstance(self, PlannedOperator) and not isinstance(
                 self, TrainableOperator
             ):
                 pass  # as the plannedOperators are handled in a separate block next
@@ -949,7 +947,7 @@ Alternatively, you could use `auto_configure(X, y, Hyperopt, max_evals=5)` on th
 `max_evals` iterations for hyperparameter tuning. `Hyperopt` can be imported as `from lale.lib.lale import Hyperopt`."""
                 error_msg = add_error_msg_for_predict_methods(self, error_msg)
                 raise AttributeError(error_msg)
-            elif isinstance(self, (PlannedPipeline, OperatorChoice)):
+            if isinstance(self, (PlannedPipeline, OperatorChoice)):
                 error_msg = f"""The pipeline is not trainable, which means you can not call {name} on it.\n
 Suggested fixes:\nFix [A]: You can make the following changes in the pipeline in order to make it trainable:\n"""
                 i = 1
@@ -2455,10 +2453,9 @@ class IndividualOp(Operator):
         if self.is_supervised(default_if_missing=False):
             if y is None:
                 raise ValueError(f"{self.name()}.fit() y cannot be None")
-            else:
-                if self.has_method("fit"):
-                    y = self._validate_input_schema("y", y, "fit")
-                self._validate_input_schema("y", y, method)
+            if self.has_method("fit"):
+                y = self._validate_input_schema("y", y, "fit")
+            self._validate_input_schema("y", y, method)
 
     def _validate_input_schema(self, arg_name: str, arg, method: str):
         from lale.settings import disable_data_schema_validation
@@ -4068,7 +4065,7 @@ class BasePipeline(Operator, Generic[OpType_co]):
             raise ValueError(
                 "This pipeline has more than 1 sink nodes, can not remove last step meaningfully."
             )
-        elif not inplace:
+        if not inplace:
             modified_pipeline = copy.deepcopy(self)
             old_clf = modified_pipeline._steps[-1]
             modified_pipeline._steps.remove(old_clf)
@@ -4149,32 +4146,32 @@ class BasePipeline(Operator, Generic[OpType_co]):
                         f"A pipeline graph that has operators other than ConcatFeatures with "
                         f"multiple incoming edges is not a valid scikit-learn pipeline:{self.to_json()}"
                     )
+
+                if hasattr(sink_node.shallow_impl, "_wrapped_model"):
+                    sklearn_op = sink_node.shallow_impl._wrapped_model
+                    convert_nested_objects(
+                        sklearn_op
+                    )  # This case needs one more level of conversion
                 else:
-                    if hasattr(sink_node.shallow_impl, "_wrapped_model"):
-                        sklearn_op = sink_node.shallow_impl._wrapped_model
-                        convert_nested_objects(
-                            sklearn_op
-                        )  # This case needs one more level of conversion
-                    else:
-                        sklearn_op = sink_node.shallow_impl
-                    sklearn_op = copy.deepcopy(sklearn_op)
-                    if preds is None or len(preds) == 0:
-                        return sklearn_op
-                    else:
-                        output_pipeline_steps = []
-                        previous_sklearn_op = create_pipeline_from_sink_node(preds[0])
-                        if previous_sklearn_op is not None and not isinstance(
-                            previous_sklearn_op, NoOp.impl_class
-                        ):
-                            if isinstance(previous_sklearn_op, list):
-                                output_pipeline_steps = previous_sklearn_op
-                            else:
-                                output_pipeline_steps.append(previous_sklearn_op)
-                        if not isinstance(
-                            sklearn_op, NoOp.impl_class
-                        ):  # Append the current op only if not NoOp
-                            output_pipeline_steps.append(sklearn_op)
-                        return output_pipeline_steps
+                    sklearn_op = sink_node.shallow_impl
+                sklearn_op = copy.deepcopy(sklearn_op)
+                if preds is None or len(preds) == 0:
+                    return sklearn_op
+                else:
+                    output_pipeline_steps = []
+                    previous_sklearn_op = create_pipeline_from_sink_node(preds[0])
+                    if previous_sklearn_op is not None and not isinstance(
+                        previous_sklearn_op, NoOp.impl_class
+                    ):
+                        if isinstance(previous_sklearn_op, list):
+                            output_pipeline_steps = previous_sklearn_op
+                        else:
+                            output_pipeline_steps.append(previous_sklearn_op)
+                    if not isinstance(
+                        sklearn_op, NoOp.impl_class
+                    ):  # Append the current op only if not NoOp
+                        output_pipeline_steps.append(sklearn_op)
+                    return output_pipeline_steps
 
         sklearn_steps_list = []
         # Finding the sink node so that we can do a backward traversal
@@ -4185,9 +4182,9 @@ class BasePipeline(Operator, Generic[OpType_co]):
                 f"A pipeline graph that ends with more than one estimator is not a"
                 f" valid scikit-learn pipeline:{self.to_json()}"
             )
-        else:
-            sklearn_steps_list = create_pipeline_from_sink_node(sink_nodes[0])
-            # not checking for isinstance(sklearn_steps_list, NoOp) here as there is no valid sklearn pipeline with just one NoOp.
+
+        sklearn_steps_list = create_pipeline_from_sink_node(sink_nodes[0])
+        # not checking for isinstance(sklearn_steps_list, NoOp) here as there is no valid sklearn pipeline with just one NoOp.
         try:
             sklearn_pipeline = (
                 sklearn_make_pipeline(*sklearn_steps_list)

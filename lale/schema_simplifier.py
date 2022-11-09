@@ -268,7 +268,7 @@ def simplifyAll(schemas: List[JsonSchema], floatAny: bool) -> JsonSchema:
                 snot = s["not"]
                 if snot is None:
                     continue
-                elif "enum" in snot:
+                if "enum" in snot:
                     ev = enumValues(
                         set_with_str_for_keys(snot["enum"]),
                         {"not": combined_original_schema},

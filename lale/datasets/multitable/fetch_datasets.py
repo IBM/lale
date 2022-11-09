@@ -165,21 +165,21 @@ def fetch_imdb_dataset(datatype="pandas"):
         raise ValueError(
             f"IMDB dataset not found at {download_data_dir}. Please download it using lalegpl repository."
         )
+
+    for root, dirs, files in os.walk(download_data_dir):
+        for file in files:
+            filename, extension = os.path.splitext(file)
+            if extension == ".csv":
+                data_file_name = os.path.join(download_data_dir, file)
+                table_name = filename
+                data_frame = get_data_from_csv(datatype, data_file_name)
+                imdb_list.append(add_table_name(data_frame, table_name))
+    if len(imdb_list) == 7:
+        logger.info(" Fetched the IMDB dataset. Process completed.")
     else:
-        for root, dirs, files in os.walk(download_data_dir):
-            for file in files:
-                filename, extension = os.path.splitext(file)
-                if extension == ".csv":
-                    data_file_name = os.path.join(download_data_dir, file)
-                    table_name = filename
-                    data_frame = get_data_from_csv(datatype, data_file_name)
-                    imdb_list.append(add_table_name(data_frame, table_name))
-        if len(imdb_list) == 7:
-            logger.info(" Fetched the IMDB dataset. Process completed.")
-        else:
-            raise ValueError(
-                f"Incomplete IMDB dataset found at {download_data_dir}. Please download complete dataset using lalegpl repository."
-            )
+        raise ValueError(
+            f"Incomplete IMDB dataset found at {download_data_dir}. Please download complete dataset using lalegpl repository."
+        )
     return imdb_list
 
 

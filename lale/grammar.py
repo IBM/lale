@@ -37,9 +37,8 @@ class NonTerminal(Operator):
                 raise ValueError(
                     f"NonTerminal._with_params called with unknown parameters: {unknowns}"
                 )
-            else:
-                assert "name" in impl_params
-                return NonTerminal(impl_params["name"])
+            assert "name" in impl_params
+            return NonTerminal(impl_params["name"])
         else:
             return self
 
