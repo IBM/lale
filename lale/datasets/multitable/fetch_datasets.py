@@ -42,18 +42,13 @@ def get_data_from_csv(datatype, data_file_name):
     datatype = datatype.casefold()
     if datatype == "pandas":
         return pd.read_csv(data_file_name)
-    elif datatype.startswith("spark"):
+    elif datatype == "spark":
         if spark_installed:
             spark = SparkSession.builder.appName("GoSales Dataset").getOrCreate()
             df = spark.read.options(inferSchema="True", delimiter=",").csv(
                 data_file_name, header=True
             )
-            if datatype == "spark":
-                return SparkDataFrameWithIndex(df)
-            else:
-                raise ValueError(
-                    "Can fetch the go_sales data in pandas or spark dataframes only. Pass either 'pandas' or 'spark' in datatype parameter."
-                )
+            return SparkDataFrameWithIndex(df)
         else:
             raise ValueError("Spark is not installed on this machine.")
     else:

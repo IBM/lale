@@ -755,7 +755,7 @@ class TestSimpleImputer(unittest.TestCase):
                 test_X.loc[
                     test_X[col_name] == value, col_name
                 ] = missing_value  # type:ignore
-            elif tgt.startswith("spark"):
+            elif tgt == "spark":
                 from pyspark.sql.functions import col, when
 
                 train_X_new = train_X.withColumn(
@@ -889,7 +889,7 @@ class TestSimpleImputer(unittest.TestCase):
         rasl_trainable = RaslSimpleImputer()
         for tgt, dataset in self.tgt2adult.items():
             (train_X, _), (_, _) = dataset
-            if tgt.startswith("spark"):
+            if tgt == "spark":
                 # Skip test because of timeout!
                 continue
             with self.assertRaises(ValueError):
