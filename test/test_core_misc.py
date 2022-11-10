@@ -297,7 +297,7 @@ class TestTee(unittest.TestCase):
             self.assertEqual(X.dtypes["x1"], np.float64)
 
         pca = PCA()
-        trainable = Tee(listener=lambda df, y: check_data(df, y)) >> pca
+        trainable = Tee(listener=check_data) >> pca
         (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
         trained = trainable.fit(train_X, train_y)
         _ = trained.transform(test_X)
@@ -871,13 +871,13 @@ class TestCategorical(unittest.TestCase):
 
 class TestHyperparamRanges(unittest.TestCase):
     def exactly_relevant_properties(self, keys1, operator):
-        def sorted(ll):
+        def sorted_copy(ll):
             l_copy = [*ll]
             l_copy.sort()
             return l_copy
 
         keys2 = operator.hyperparam_schema()["allOf"][0]["relevantToOptimizer"]
-        self.assertEqual(sorted(keys1), sorted(keys2))
+        self.assertEqual(sorted_copy(keys1), sorted_copy(keys2))
 
     def validate_get_param_ranges(self, operator):
         ranges, cat_idx = operator.get_param_ranges()
@@ -887,7 +887,7 @@ class TestHyperparamRanges(unittest.TestCase):
             if isinstance(r, tuple):
                 minimum, maximum, default = r
                 if minimum is not None and maximum is not None and default is not None:
-                    assert minimum <= default and default <= maximum
+                    assert minimum <= default <= maximum
             else:
                 minimum, maximum, default = cat_idx[hp]
                 assert minimum == 0 and len(r) - 1 == maximum
@@ -1088,7 +1088,7 @@ class TestFitPlannedOp(unittest.TestCase):
             planned.fit(self.X, self.y)
         except AttributeError as e:
             self.assertEqual(
-                e.__str__(),
+                str(e),
                 """Please use `LogisticRegression()` instead of `LogisticRegression` to make it trainable.
 Alternatively, you could use `auto_configure(X, y, Hyperopt, max_evals=5)` on the operator to use Hyperopt for
 `max_evals` iterations for hyperparameter tuning. `Hyperopt` can be imported as `from lale.lib.lale import Hyperopt`.""",
@@ -1100,7 +1100,7 @@ Alternatively, you could use `auto_configure(X, y, Hyperopt, max_evals=5)` on th
             planned.fit(self.X, self.y)
         except AttributeError as e:
             self.assertEqual(
-                e.__str__(),
+                str(e),
                 """The pipeline is not trainable, which means you can not call fit on it.
 
 Suggested fixes:
@@ -1118,7 +1118,7 @@ to use Hyperopt for `max_evals` iterations for hyperparameter tuning. `Hyperopt`
         except AttributeError as e:
             self.maxDiff = None
             self.assertEqual(
-                e.__str__(),
+                str(e),
                 """The pipeline is not trainable, which means you can not call fit on it.
 
 Suggested fixes:
@@ -1136,7 +1136,7 @@ to use Hyperopt for `max_evals` iterations for hyperparameter tuning. `Hyperopt`
             planned.fit(self.X, self.y)
         except AttributeError as e:
             self.assertEqual(
-                e.__str__(),
+                str(e),
                 """The pipeline is not trainable, which means you can not call fit on it.
 
 Suggested fixes:
@@ -1212,7 +1212,7 @@ _OperatorForwardingTest = Ops.make_operator(
 
 class TestOperatorFowarding(unittest.TestCase):
     def test_fowards_method_list(self):
-        self.assertEquals(
+        self.assertEqual(
             _OperatorForwardingTest.get_forwards(),
             _operator_forwarding_test_combined_schema["forwards"],
         )
@@ -1324,5 +1324,5 @@ class TestSteps(unittest.TestCase):
         op: Ops.PlannedPipeline = pca >> LogisticRegression
 
         self.assertEqual(len(op.steps), 2)
-        self.assertEquals(op.steps[0][0], "PCA")
-        self.assertEquals(op.steps[0][1], pca)
+        self.assertEqual(op.steps[0][0], "PCA")
+        self.assertEqual(op.steps[0][1], pca)

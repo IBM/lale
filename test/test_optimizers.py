@@ -22,7 +22,7 @@ import numpy as np
 import pandas as pd
 import sklearn.datasets
 
-import lale.schemas as schemas
+from lale import schemas
 from lale.lib.lale import SMAC, ConcatFeatures, GridSearchCV, Hyperopt, NoOp
 from lale.lib.sklearn import (
     PCA,
@@ -118,7 +118,7 @@ class TestSMAC(unittest.TestCase):
 
         inc_value = tae(incumbent)
 
-        print("Optimized Value: %.2f" % (inc_value))
+        print(f"Optimized Value: {inc_value:.2f}")
 
     def dont_test_smac_choice(self):
 
@@ -161,7 +161,7 @@ class TestSMAC(unittest.TestCase):
 
         inc_value = tae(incumbent)
 
-        print("Optimized Value: %.2f" % (inc_value))
+        print(f"Optimized Value: {inc_value:.2f}")
 
     def test_smac1(self):
 
@@ -232,9 +232,7 @@ class TestSMAC(unittest.TestCase):
         rel_diff = (opt_time - max_opt_time) / max_opt_time
         assert (
             rel_diff < 1.2
-        ), "Max time: {}, Actual time: {}, relative diff: {}".format(
-            max_opt_time, opt_time, rel_diff
-        )
+        ), f"Max time: {max_opt_time}, Actual time: {opt_time}, relative diff: {rel_diff}"
 
     def test_smac_timeout_regression(self):
         import time
@@ -260,9 +258,7 @@ class TestSMAC(unittest.TestCase):
         rel_diff = (opt_time - max_opt_time) / max_opt_time
         assert (
             rel_diff < 0.5
-        ), "Max time: {}, Actual time: {}, relative diff: {}".format(
-            max_opt_time, opt_time, rel_diff
-        )
+        ), f"Max time: {max_opt_time}, Actual time: {opt_time}, relative diff: {rel_diff}"
 
 
 def run_hyperopt_on_planned_pipeline(planned_pipeline, max_iters=1):
@@ -412,9 +408,7 @@ class TestHyperopt(unittest.TestCase):
         rel_diff = (opt_time - max_opt_time) / max_opt_time
         assert (
             rel_diff < 0.7
-        ), "Max time: {}, Actual time: {}, relative diff: {}".format(
-            max_opt_time, opt_time, rel_diff
-        )
+        ), f"Max time: {max_opt_time}, Actual time: {opt_time}, relative diff: {rel_diff}"
 
     def test_runtime_limit_zero_time_hoc(self):
         planned_pipeline = (MinMaxScaler | Normalizer) >> (
@@ -457,9 +451,7 @@ class TestHyperopt(unittest.TestCase):
         rel_diff = (opt_time - max_opt_time) / max_opt_time
         assert (
             rel_diff < 0.2
-        ), "Max time: {}, Actual time: {}, relative diff: {}".format(
-            max_opt_time, opt_time, rel_diff
-        )
+        ), f"Max time: {max_opt_time}, Actual time: {opt_time}, relative diff: {rel_diff}"
 
     def test_runtime_limit_zero_time_hor(self):
         planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
@@ -676,19 +668,19 @@ class TestHyperopt(unittest.TestCase):
         self.test_X = np.reshape(self.test_X, (self.test_X.shape[0], 1))
         op = OpThatWorksWithFiles()
         optimizer = Hyperopt(estimator=op, cv=None, max_evals=2, verbose=True)
-        tmp = tempfile.NamedTemporaryFile(mode="w")
-        pd.DataFrame(self.train_X).to_csv(tmp.name, header=None, index=None)
-        # np.savetxt(tmp.name, self.train_X, fmt="%s")
-        tmp1 = tempfile.NamedTemporaryFile(mode="w")
-        pd.DataFrame(self.test_X).to_csv(tmp1.name, header=None, index=None)
-        # np.savetxt(tmp1.name, self.test_X, fmt="%s")
-        _ = optimizer.fit(
-            tmp.name,
-            y=self.train_y,
-            X_valid=tmp1.name,
-            y_valid=self.test_y,
-            sample_weight=[],
-        )
+        with tempfile.NamedTemporaryFile(mode="w") as tmp:
+            pd.DataFrame(self.train_X).to_csv(tmp.name, header=None, index=None)
+            # np.savetxt(tmp.name, self.train_X, fmt="%s")
+            with tempfile.NamedTemporaryFile(mode="w") as tmp1:
+                pd.DataFrame(self.test_X).to_csv(tmp1.name, header=None, index=None)
+                # np.savetxt(tmp1.name, self.test_X, fmt="%s")
+                _ = optimizer.fit(
+                    tmp.name,
+                    y=self.train_y,
+                    X_valid=tmp1.name,
+                    y_valid=self.test_y,
+                    sample_weight=[],
+                )
 
 
 class TestAutoConfigureClassification(unittest.TestCase):
@@ -921,9 +913,7 @@ class TestGridSearchCV(unittest.TestCase):
         rel_diff = (opt_time - max_opt_time) / max_opt_time
         assert (
             rel_diff < 0.7
-        ), "Max time: {}, Actual time: {}, relative diff: {}".format(
-            max_opt_time, opt_time, rel_diff
-        )
+        ), f"Max time: {max_opt_time}, Actual time: {opt_time}, relative diff: {rel_diff}"
 
     @unittest.skip("This test has finicky timing")
     def test_runtime_limit_hor(self):
@@ -950,9 +940,7 @@ class TestGridSearchCV(unittest.TestCase):
         rel_diff = (opt_time - max_opt_time) / max_opt_time
         assert (
             rel_diff < 0.2
-        ), "Max time: {}, Actual time: {}, relative diff: {}".format(
-            max_opt_time, opt_time, rel_diff
-        )
+        ), f"Max time: {max_opt_time}, Actual time: {opt_time}, relative diff: {rel_diff}"
 
 
 class TestCrossValidation(unittest.TestCase):

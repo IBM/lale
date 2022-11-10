@@ -217,7 +217,8 @@ class TestImportExport(unittest.TestCase):
 
         trained = pipeline2.fit(self.X_train, self.y_train)
         predictions2 = trained.predict(self.X_test)
-        [self.assertEqual(p1, predictions2[i]) for i, p1 in enumerate(predictions1)]
+        for i, p1 in enumerate(predictions1):
+            self.assertEqual(p1, predictions2[i])
 
     def test_import_from_sklearn_pipeline(self):
         from sklearn.feature_selection import SelectKBest, f_regression

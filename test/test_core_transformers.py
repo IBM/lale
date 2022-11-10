@@ -98,7 +98,7 @@ def create_function_test_feature_preprocessor(fproc_name):
         trained = hyperopt.fit(self.X_train, self.y_train)
         _ = trained.predict(self.X_test)
 
-    test_feature_preprocessor.__name__ = "test_{0}".format(fproc_name.split(".")[-1])
+    test_feature_preprocessor.__name__ = f"test_{fproc_name.split('.')[-1]}"
     return test_feature_preprocessor
 
 
@@ -120,7 +120,7 @@ feature_preprocessors = [
 for fproc in feature_preprocessors:
     setattr(
         TestFeaturePreprocessing,
-        "test_{0}".format(fproc.split(".")[-1]),
+        f"test_{fproc.rsplit('.', maxsplit=1)[-1]}",
         create_function_test_feature_preprocessor(fproc),
     )
 
@@ -451,7 +451,7 @@ class TestConcatFeatures(unittest.TestCase):
         X, y = sklearn.utils.shuffle(digits.data, digits.target, random_state=42)
 
         cv_results = cross_val_score(trainable, X, y)
-        cv_results = ["{0:.1%}".format(score) for score in cv_results]
+        cv_results = [f"{score:.1%}" for score in cv_results]
 
         from sklearn.decomposition import PCA as SklearnPCA
         from sklearn.kernel_approximation import Nystroem as SklearnNystroem
@@ -472,7 +472,7 @@ class TestConcatFeatures(unittest.TestCase):
         pipeline = make_pipeline(union, lr)
 
         scikit_cv_results = cross_val_score(pipeline, X, y, cv=5)
-        scikit_cv_results = ["{0:.1%}".format(score) for score in scikit_cv_results]
+        scikit_cv_results = [f"{score:.1%}" for score in scikit_cv_results]
         self.assertEqual(cv_results, scikit_cv_results)
         warnings.resetwarnings()
 

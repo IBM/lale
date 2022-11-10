@@ -30,7 +30,7 @@ class EnableSchemaValidation:
         set_disable_data_schema_validation(False)
         set_disable_hyperparams_schema_validation(False)
 
-    def __exit__(self, value, type, traceback):
+    def __exit__(self, exc_value, exc_type, traceback):
         from lale.settings import (
             set_disable_data_schema_validation,
             set_disable_hyperparams_schema_validation,

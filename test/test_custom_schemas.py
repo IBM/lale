@@ -23,8 +23,8 @@ from sklearn.linear_model import Lars as foobar
 from xgboost import XGBClassifier as bar
 
 import lale
-import lale.schemas as schemas
 import lale.type_checking
+from lale import schemas
 from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
 
 

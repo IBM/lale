@@ -80,9 +80,7 @@ class TestAutoConfigureClassification(unittest.TestCase):
         rel_diff = (opt_time - max_opt_time) / max_opt_time
         assert (
             rel_diff < 0.7
-        ), "Max time: {}, Actual time: {}, relative diff: {}".format(
-            max_opt_time, opt_time, rel_diff
-        )
+        ), f"Max time: {max_opt_time}, Actual time: {opt_time}, relative diff: {rel_diff}"
 
     def test_runtime_limit_hor(self):
         import time
@@ -107,9 +105,7 @@ class TestAutoConfigureClassification(unittest.TestCase):
         rel_diff = (opt_time - max_opt_time) / max_opt_time
         assert (
             rel_diff < 0.2
-        ), "Max time: {}, Actual time: {}, relative diff: {}".format(
-            max_opt_time, opt_time, rel_diff
-        )
+        ), f"Max time: {max_opt_time}, Actual time: {opt_time}, relative diff: {rel_diff}"
 
 
 class TestGridSearchCV(unittest.TestCase):

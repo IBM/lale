@@ -86,7 +86,7 @@ def create_function_test_classifier(clf_name):
 
         if isinstance(clf, GradientBoostingClassifier):  # type: ignore
             # because exponential loss does not work with iris dataset as it is not binary classification
-            import lale.schemas as schemas
+            from lale import schemas
 
             clf = clf.customize_schema(
                 loss=schemas.Enum(default="deviance", values=["deviance"])
@@ -130,7 +130,7 @@ def create_function_test_classifier(clf_name):
         trained = pipeline.fit(self.X_train, self.y_train)
         _ = trained.predict(self.X_test)
 
-    test_classifier.__name__ = "test_{0}".format(clf.split(".")[-1])
+    test_classifier.__name__ = f"test_{clf.rsplit('.', maxsplit=1)[-1]}"
     return test_classifier
 
 
@@ -161,7 +161,7 @@ classifiers = [
 for clf in classifiers:
     setattr(
         TestClassification,
-        "test_{0}".format(clf.split(".")[-1]),
+        f"test_{clf.rsplit('.', maxsplit=1)[-1]}",
         create_function_test_classifier(clf),
     )
 
@@ -669,14 +669,14 @@ class TestLogisticRegression(unittest.TestCase):
         X_all, y_all = sklearn.utils.shuffle(iris.data, iris.target, random_state=42)
         X_train, y_train = X_all[10:], y_all[10:]
         X_test, y_test = X_all[:10], y_all[:10]
-        print("expected {}".format(y_test))
+        print(f"expected {y_test}")
         import warnings
 
         warnings.filterwarnings("ignore", category=FutureWarning)
         trainable = MyLR(solver="lbfgs", C=0.1)
         trained = trainable.fit(X_train, y_train)
         predictions = trained.predict(X_test)
-        print("actual {}".format(predictions))
+        print(f"actual {predictions}")
 
 
 class TestIsolationForest(unittest.TestCase):

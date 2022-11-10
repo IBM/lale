@@ -408,15 +408,15 @@ class TestExportToSklearnForEstimator(unittest.TestCase):
         from lale.helpers import import_from_sklearn_pipeline
 
         pipeline = self.create_pipeline()
-        self.assertEquals(isinstance(pipeline, Pipeline), True)
+        self.assertEqual(isinstance(pipeline, Pipeline), True)
         pipeline.fit(self.X_train, self.y_train)
         predictions_before = pipeline.predict(self.X_test)
         lale_pipeline = import_from_sklearn_pipeline(pipeline)
         predictions_after = lale_pipeline.predict(self.X_test)
         sklearn_pipeline = lale_pipeline.export_to_sklearn_pipeline()
         predictions_after_1 = sklearn_pipeline.predict(self.X_test)
-        self.assertEquals(np.all(predictions_before == predictions_after), True)
-        self.assertEquals(np.all(predictions_before == predictions_after_1), True)
+        self.assertEqual(np.all(predictions_before == predictions_after), True)
+        self.assertEqual(np.all(predictions_before == predictions_after_1), True)
 
     def test_import_export_trainable(self):
         from sklearn.exceptions import NotFittedError
@@ -425,7 +425,7 @@ class TestExportToSklearnForEstimator(unittest.TestCase):
         from lale.helpers import import_from_sklearn_pipeline
 
         pipeline = self.create_pipeline()
-        self.assertEquals(isinstance(pipeline, Pipeline), True)
+        self.assertEqual(isinstance(pipeline, Pipeline), True)
         pipeline.fit(self.X_train, self.y_train)
         lale_pipeline = import_from_sklearn_pipeline(pipeline, fitted=False)
         with self.assertRaises(ValueError):

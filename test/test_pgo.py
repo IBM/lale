@@ -17,8 +17,8 @@ import warnings
 from typing import Sequence
 
 import lale.lib.lale
-import lale.search.PGO as PGO
 from lale.lib.sklearn import PCA, LogisticRegression
+from lale.search import PGO
 from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
 from lale.search.op2hp import hyperopt_search_space
 

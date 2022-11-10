@@ -1439,7 +1439,7 @@ class TestDisablingSchemaValidation(unittest.TestCase):
     def test_disable_schema_validation_individual_op(self):
         existing_flag = disable_data_schema_validation
         set_disable_data_schema_validation(True)
-        import lale.schemas as schemas
+        from lale import schemas
         from lale.lib.sklearn import PCA
 
         pca_input = schemas.Object(
@@ -1471,7 +1471,7 @@ class TestDisablingSchemaValidation(unittest.TestCase):
 
     def test_enable_schema_validation_individual_op(self):
         with EnableSchemaValidation():
-            import lale.schemas as schemas
+            from lale import schemas
             from lale.lib.sklearn import PCA
 
             pca_input = schemas.Object(
@@ -1504,7 +1504,7 @@ class TestDisablingSchemaValidation(unittest.TestCase):
     def test_disable_schema_validation_pipeline(self):
         existing_flag = disable_data_schema_validation
         set_disable_data_schema_validation(True)
-        import lale.schemas as schemas
+        from lale import schemas
         from lale.lib.sklearn import PCA, LogisticRegression
 
         lr_input = schemas.Object(
@@ -1527,7 +1527,7 @@ class TestDisablingSchemaValidation(unittest.TestCase):
 
     def test_enable_schema_validation_pipeline(self):
         with EnableSchemaValidation():
-            import lale.schemas as schemas
+            from lale import schemas
             from lale.lib.sklearn import PCA, LogisticRegression
 
             lr_input = schemas.Object(

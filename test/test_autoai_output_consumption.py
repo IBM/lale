@@ -24,11 +24,11 @@ def _println_pos(message):
     tb = traceback.extract_stack()[-2]
     match = re.search(r"<ipython-input-([0-9]+)-", tb[0])
     if match:
-        pos = "notebook cell [{}] line {}".format(match[1], tb[1])
+        pos = f"notebook cell [{match[1]}] line {tb[1]}"
     else:
-        pos = "{}:{}".format(tb[0], tb[1])
+        pos = f"{tb[0]}:{tb[1]}"
     strtime = time.strftime("%Y-%m-%d_%H-%M-%S")
-    to_log = "{}: {} {}".format(pos, strtime, message)
+    to_log = f"{pos}: {strtime} {message}"
 
     # if we are running in a notebook, then we also want to print to the console
     # (stored in sys.__stdout__) instead of just the (redirected) sys.stdout
@@ -94,7 +94,7 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
         wrapped_pipeline = wrap_pipeline_segments(lale_pipeline)
         assert wrapped_pipeline is not None
         TestAutoAIOutputConsumption.pipeline_content = wrapped_pipeline.pretty_print()
-        assert type(TestAutoAIOutputConsumption.pipeline_content) is str
+        assert isinstance(TestAutoAIOutputConsumption.pipeline_content, str)
         assert len(TestAutoAIOutputConsumption.pipeline_content) > 0
         _println_pos(
             f'pretty-printed """{TestAutoAIOutputConsumption.pipeline_content}"""'
