@@ -533,8 +533,8 @@ def _check_trained_one_hot_encoder(test, op1, op2, msg):
     if hasattr(op1, "feature_names_in_"):
         test.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
     test.assertEqual(len(op1.categories_), len(op2.categories_), msg)
-    for i in range(len(op1.categories_)):
-        test.assertEqual(list(op1.categories_[i]), list(op2.categories_[i]), msg)
+    for cat1, cat2 in zip(op1.categories_, op2.categories_):
+        test.assertEqual(list(cat1), list(cat2), msg)
 
 
 class TestOneHotEncoder(unittest.TestCase):
@@ -724,8 +724,8 @@ def _check_trained_simple_imputer(test, op1, op2, msg):
         test.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
     if hasattr(op1, "statistics_"):
         test.assertEqual(len(op1.statistics_), len(op2.statistics_), msg)
-        for i in range(len(op1.statistics_)):
-            test.assertEqual(op1.statistics_[i], op2.statistics_[i], msg)
+        for stats1, stats2 in zip(op1.statistics_, op2.statistics_):
+            test.assertEqual(stats1, stats2, msg)
     if hasattr(op1, "n_features_in_"):
         test.assertEqual(op1.n_features_in_, op2.n_features_in_, msg)
     if hasattr(op1, "indicator_"):
@@ -1055,8 +1055,8 @@ class TestSimpleImputer(unittest.TestCase):
                 rasl_statistics_ = rasl_trained.get_last().impl.statistics_  # type: ignore
 
                 self.assertEqual(len(sk_statistics_), len(rasl_statistics_), tgt)
-                for i in range(len(sk_statistics_)):
-                    self.assertEqual(sk_statistics_[i], rasl_statistics_[i])
+                for sk_stats, rasl_stats in zip(sk_statistics_, rasl_statistics_):
+                    self.assertEqual(sk_stats, rasl_stats)
 
                 rasl_transformed = rasl_trained.transform(test_X)
                 rasl_transformed = _ensure_pandas(rasl_transformed)
@@ -1096,22 +1096,22 @@ def _check_trained_standard_scaler(test, op1, op2, msg):
     else:
         test.assertIsNotNone(op2.mean_, msg)
         test.assertEqual(len(op1.mean_), len(op2.mean_), msg)
-        for i in range(len(op1.mean_)):
-            test.assertAlmostEqual(op1.mean_[i], op2.mean_[i], msg=msg)
+        for mean1, mean2 in zip(op1.mean_, op2.mean_):
+            test.assertAlmostEqual(mean1, mean2, msg=msg)
     if op1.var_ is None:
         test.assertIsNone(op2.var_, msg)
     else:
         test.assertIsNotNone(op2.var_, msg)
         test.assertEqual(len(op1.var_), len(op2.var_), msg)
-        for i in range(len(op1.var_)):
-            test.assertAlmostEqual(op1.var_[i], op2.var_[i], msg=msg)
+        for var1, var2 in zip(op1.var_, op2.var_):
+            test.assertAlmostEqual(var1, var2, msg=msg)
     if op1.scale_ is None:
         test.assertIsNone(op2.scale_, msg)
     else:
         test.assertIsNotNone(op2.scale_, msg)
         test.assertEqual(len(op1.scale_), len(op2.scale_), msg)
-        for i in range(len(op1.scale_)):
-            test.assertAlmostEqual(op1.scale_[i], op2.scale_[i], msg=msg)
+        for scale1, scale2 in zip(op1.scale_, op2.scale_):
+            test.assertAlmostEqual(scale1, scale2, msg=msg)
 
 
 class TestStandardScaler(unittest.TestCase):

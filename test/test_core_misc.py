@@ -374,8 +374,8 @@ class TestClone(unittest.TestCase):
             result2 = cross_val_score(
                 trainable2, X, y, scoring=make_scorer(accuracy_score), cv=2
             )
-        for i in range(len(result)):
-            self.assertEqual(result[i], result2[i])
+        for res1, res2 in zip(result, result2):
+            self.assertEqual(res1, res2)
 
     def test_clone_operator_choice(self):
         from sklearn.base import clone
@@ -406,8 +406,8 @@ class TestClone(unittest.TestCase):
             result2 = cross_val_score(
                 trainable2, X, y, scoring=make_scorer(accuracy_score), cv=2
             )
-        for i in range(len(result)):
-            self.assertEqual(result[i], result2[i])
+        for res1, res2 in zip(result, result2):
+            self.assertEqual(res1, res2)
         # Testing clone with nested linear pipelines
         trainable = PCA() >> trainable
         trainable2 = clone(trainable)
@@ -419,8 +419,8 @@ class TestClone(unittest.TestCase):
             result2 = cross_val_score(
                 trainable2, X, y, scoring=make_scorer(accuracy_score), cv=2
             )
-        for i in range(len(result)):
-            self.assertEqual(result[i], result2[i])
+        for res1, res2 in zip(result, result2):
+            self.assertEqual(res1, res2)
 
     def test_clone_of_trained(self):
         from sklearn.base import clone

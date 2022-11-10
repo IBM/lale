@@ -320,11 +320,11 @@ class TestConcatFeatures(unittest.TestCase):
         trained_cf = trainable_cf.fit(X=[A, B])
         transformed: Any = trained_cf.transform([A, B])
         expected = [[11, 12, 13, 14, 15], [21, 22, 23, 24, 25], [31, 32, 33, 34, 35]]
-        for i_sample in range(len(transformed)):
-            for i_feature in range(len(transformed[i_sample])):
-                self.assertEqual(
-                    transformed[i_sample][i_feature], expected[i_sample][i_feature]
-                )
+        for transformed_sample, expected_sample in zip(transformed, expected):
+            for transformed_feature, expected_feature in zip(
+                transformed_sample, expected_sample
+            ):
+                self.assertEqual(transformed_feature, expected_feature)
 
     def test_init_fit_predict_pandas(self):
         trainable_cf = ConcatFeatures()
