@@ -1230,6 +1230,8 @@ class TestAIF360Cat(unittest.TestCase):
 
 class TestAIF360Imports(unittest.TestCase):
     def test_import_split(self):
+        # pylint:disable=reimported
+
         # for backward compatibility, need to support import from `...util`
         from lale.lib.aif360 import fair_stratified_train_test_split as s_init
         from lale.lib.aif360.util import fair_stratified_train_test_split as s_util

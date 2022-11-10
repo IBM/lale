@@ -1537,18 +1537,18 @@ class TestTaskGraphsWithConcat(unittest.TestCase):
 
     @classmethod
     def _make_sk_trainable(cls, final_est):
-        from sklearn.compose import ColumnTransformer
-        from sklearn.ensemble import RandomForestClassifier
-        from sklearn.linear_model import SGDClassifier
+        from sklearn.compose import ColumnTransformer as SkColumnTransformer
+        from sklearn.ensemble import RandomForestClassifier as SkRandomForestClassifier
+        from sklearn.linear_model import SGDClassifier as SkSGDClassifier
 
         if final_est == "sgd":
-            est = SGDClassifier(random_state=97)
+            est = SkSGDClassifier(random_state=97)
         elif final_est == "rfc":
-            est = RandomForestClassifier(random_state=97)
+            est = SkRandomForestClassifier(random_state=97)
         else:
             assert False, final_est
         return sk_make_pipeline(
-            ColumnTransformer(
+            SkColumnTransformer(
                 [
                     (
                         "prep_cat",
@@ -1714,18 +1714,18 @@ class TestTaskGraphsWithCategoricalConcat(unittest.TestCase):
 
     @classmethod
     def _make_sk_trainable(cls, final_est):
-        from sklearn.compose import ColumnTransformer
-        from sklearn.ensemble import RandomForestClassifier
-        from sklearn.linear_model import SGDClassifier
+        from sklearn.compose import SkColumnTransformer
+        from sklearn.ensemble import SkRandomForestClassifier
+        from sklearn.linear_model import SGDClassifier as SkSGDClassifier
 
         if final_est == "sgd":
-            est = SGDClassifier(random_state=97)
+            est = SkSGDClassifier(random_state=97)
         elif final_est == "rfc":
-            est = RandomForestClassifier(random_state=97)
+            est = SkRandomForestClassifier(random_state=97)
         else:
             assert False, final_est
         return sk_make_pipeline(
-            ColumnTransformer(
+            SkColumnTransformer(
                 [
                     (
                         "prep_cat",
@@ -2113,7 +2113,6 @@ class TestBatchedBaggingClassifier(unittest.TestCase):
         self.assertEqual(len(cv_results), 2)
 
         # test_with_gridsearchcv_auto_wrapped
-        from sklearn.metrics import accuracy_score, make_scorer
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -2124,7 +2123,7 @@ class TestBatchedBaggingClassifier(unittest.TestCase):
                 lale_num_samples=1,
                 lale_num_grids=1,
                 cv=2,
-                scoring=make_scorer(accuracy_score),
+                scoring=make_scorer(sk_accuracy_score),
             )
             grid_search.fit(X_train, y_train)
 
@@ -2137,7 +2136,6 @@ class TestBatchedBaggingClassifier(unittest.TestCase):
 
     def test_fit_batching(self):
         (train_X, train_y), (test_X, test_y) = self.creditg
-        from sklearn.metrics import accuracy_score
 
         train_data_space = train_X.memory_usage().sum() + train_y.memory_usage()
         unique_class_labels = list(train_y.unique())
@@ -2158,12 +2156,12 @@ class TestBatchedBaggingClassifier(unittest.TestCase):
                     progress_callback=None,
                 )
                 predictions = rasl_trained.predict(test_X)
-                rasl_acc = accuracy_score(test_y, predictions)
+                rasl_acc = sk_accuracy_score(test_y, predictions)
                 if n_batches == 1:
                     sk_pipeline = self._make_sk_trainable()
                     sk_pipeline.fit(train_X, train_y)
                     predictions = sk_pipeline.predict(test_X)
-                    sk_acc = accuracy_score(test_y, predictions)
+                    sk_acc = sk_accuracy_score(test_y, predictions)
                     self.assertEqual(rasl_acc, sk_acc)
 
     def test_cross_val_score(self):

@@ -44,8 +44,6 @@ class TestResamplers(unittest.TestCase):
 
 def create_function_test_resampler(res_name):
     def test_resampler(self):
-        from lale.lib.sklearn import PCA, LogisticRegression
-
         X_train, y_train = self.X_train, self.y_train
         X_test = self.X_test
         import importlib

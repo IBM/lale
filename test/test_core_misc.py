@@ -14,6 +14,8 @@
 
 # Test cases for miscellaneous functionality of Lale that is also part of the
 # core behavior but does not fall into other test_core* modules.
+
+# pylint:disable=reimported
 import inspect
 import io
 import logging
@@ -80,17 +82,12 @@ class TestOperatorWithoutSchema(unittest.TestCase):
     def test_trainable_pipe_left(self):
         from sklearn.decomposition import PCA
 
-        from lale.lib.sklearn import LogisticRegression
-
         iris = load_iris()
         pipeline = PCA() >> LogisticRegression(random_state=42)
         pipeline.fit(iris.data, iris.target)
 
     def test_trainable_pipe_right(self):
         from sklearn.decomposition import PCA
-
-        from lale.lib.lale import NoOp
-        from lale.lib.sklearn import LogisticRegression
 
         iris = load_iris()
         pipeline = NoOp() >> PCA() >> LogisticRegression(random_state=42)
@@ -964,8 +961,6 @@ class TestHyperparamRanges(unittest.TestCase):
         self.assertEqual(ranges, expected_ranges)
 
     def test_logisticregression(self):
-        from lale.lib.sklearn import LogisticRegression
-
         ranges, dists = LogisticRegression.get_param_ranges()
         expected_ranges = {
             "solver": ["newton-cg", "liblinear", "sag", "saga", "lbfgs"],
@@ -1010,7 +1005,6 @@ class TestHyperparamRanges(unittest.TestCase):
 
 class TestScoreIndividualOp(unittest.TestCase):
     def setUp(self):
-        from sklearn.datasets import load_iris
         from sklearn.model_selection import train_test_split
 
         data = load_iris()
@@ -1018,22 +1012,16 @@ class TestScoreIndividualOp(unittest.TestCase):
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
 
     def test_score_planned_op(self):
-        from lale.lib.sklearn import LogisticRegression
-
         with self.assertRaises(AttributeError):
             LogisticRegression.score(self.X_test, self.y_test)
 
     def test_score_trainable_op(self):
-        from lale.lib.sklearn import LogisticRegression
-
         trainable = LogisticRegression()
         _ = trainable.fit(self.X_train, self.y_train)
         trainable.score(self.X_test, self.y_test)
 
     def test_score_trained_op(self):
         from sklearn.metrics import accuracy_score
-
-        from lale.lib.sklearn import LogisticRegression
 
         trainable = LogisticRegression()
         trained_lr = trainable.fit(self.X_train, self.y_train)
@@ -1045,8 +1033,6 @@ class TestScoreIndividualOp(unittest.TestCase):
     def test_score_trained_op_sample_wt(self):
         import numpy as np
         from sklearn.metrics import accuracy_score
-
-        from lale.lib.sklearn import LogisticRegression
 
         trainable = LogisticRegression()
         trained_lr = trainable.fit(self.X_train, self.y_train)
@@ -1060,8 +1046,6 @@ class TestScoreIndividualOp(unittest.TestCase):
 
 class TestEmptyY(unittest.TestCase):
     def setUp(self):
-        from sklearn.datasets import load_iris
-
         data = load_iris()
         self.X, self.y = data.data, data.target
 
@@ -1072,8 +1056,6 @@ class TestEmptyY(unittest.TestCase):
 
 class TestFitPlannedOp(unittest.TestCase):
     def setUp(self):
-        from sklearn.datasets import load_iris
-
         data = load_iris()
         self.X, self.y = data.data, data.target
 

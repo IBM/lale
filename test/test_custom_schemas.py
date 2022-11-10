@@ -381,12 +381,11 @@ class TestCustomSchema(unittest.TestCase):
                 exclude_classes=["sk_PCA"],
                 wrapper_modules=["test.mock_custom_operators"],
             )
-            from sklearn.decomposition import PCA as sklearn_pca
 
             from lale.operators import PlannedIndividualOp
 
             op_obj = sk_PCA()
-            self.assertIsInstance(op_obj, sklearn_pca)
+            self.assertIsInstance(op_obj, sk_PCA)
             self.assertEqual(alt_xgb._schemas, XGBClassifier._schemas)  # type: ignore
             self.assertEqual(baz._schemas, LGBMClassifier._schemas)  # type: ignore
             self.assertEqual(sk_lars._schemas, Lars._schemas)

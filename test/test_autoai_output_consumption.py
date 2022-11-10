@@ -112,8 +112,6 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
 
             import importlib.util
 
-            import lale.operators
-
             spec = importlib.util.spec_from_file_location(
                 "pp_pipeline", "pp_pipeline.py"
             )
@@ -165,7 +163,6 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
             ), f"Exception was thrown during pretty print model prediction: {e}"
 
     def test_07_convert_model_to_lale(self):
-        import lale.operators
 
         try:
             lale_pipeline = TestAutoAIOutputConsumption.model

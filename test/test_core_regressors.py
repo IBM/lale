@@ -81,7 +81,6 @@ def create_function_test_regressor(clf_name):
         _ = trained.predict(self.X_test)
 
         # test_with_hyperopt
-        from lale.lib.sklearn.ridge import Ridge
 
         if isinstance(regr, Ridge):  # type: ignore
             from lale.lib.lale import Hyperopt

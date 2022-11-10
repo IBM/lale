@@ -198,7 +198,6 @@ class TestVotingClassifier(unittest.TestCase):
         data = load_iris()
         X, y = data.data, data.target
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
-        import warnings
 
         warnings.filterwarnings("ignore")
 
@@ -210,8 +209,6 @@ class TestVotingClassifier(unittest.TestCase):
         trained.predict(self.X_test)
 
     def test_with_lale_pipeline(self):
-        from lale.lib.sklearn import VotingClassifier
-
         clf = VotingClassifier(
             estimators=[
                 ("knn", KNeighborsClassifier()),
@@ -223,7 +220,6 @@ class TestVotingClassifier(unittest.TestCase):
 
     def test_with_hyperopt(self):
         from lale.lib.lale import Hyperopt
-        from lale.lib.sklearn import VotingClassifier
 
         clf = VotingClassifier(
             estimators=[("knn", KNeighborsClassifier()), ("lr", LogisticRegression())]
@@ -234,7 +230,6 @@ class TestVotingClassifier(unittest.TestCase):
         from sklearn.metrics import accuracy_score, make_scorer
 
         from lale.lib.lale import GridSearchCV
-        from lale.lib.sklearn import VotingClassifier
 
         clf = VotingClassifier(
             estimators=[("knn", KNeighborsClassifier()), ("rc", RidgeClassifier())],
@@ -256,7 +251,6 @@ class TestVotingClassifier(unittest.TestCase):
 
         from lale.lib.lale import GridSearchCV
         from lale.lib.lale.observing import LoggingObserver
-        from lale.lib.sklearn import VotingClassifier
 
         clf = VotingClassifier(
             estimators=[("knn", KNeighborsClassifier()), ("rc", RidgeClassifier())],
@@ -281,8 +275,6 @@ class TestBaggingClassifier(unittest.TestCase):
         data = load_iris()
         X, y = data.data, data.target
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
-
-        import warnings
 
         warnings.filterwarnings("ignore")
 
@@ -596,7 +588,6 @@ class TestLogisticRegression(unittest.TestCase):
         _ = trained_lr.decision_function(iris.data)
 
     def test_with_sklearn_gridsearchcv(self):
-        from sklearn.datasets import load_iris
         from sklearn.metrics import accuracy_score, make_scorer
         from sklearn.model_selection import GridSearchCV
 
@@ -670,7 +661,6 @@ class TestLogisticRegression(unittest.TestCase):
         X_train, y_train = X_all[10:], y_all[10:]
         X_test, y_test = X_all[:10], y_all[:10]
         print(f"expected {y_test}")
-        import warnings
 
         warnings.filterwarnings("ignore", category=FutureWarning)
         trainable = MyLR(solver="lbfgs", C=0.1)
@@ -687,7 +677,6 @@ class TestIsolationForest(unittest.TestCase):
         data = load_boston()
         X, y = data.data, data.target
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
-        import warnings
 
         warnings.filterwarnings("ignore")
 
@@ -772,7 +761,6 @@ class TestKMeans(unittest.TestCase):
         data = load_boston()
         X, y = data.data, data.target
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
-        import warnings
 
         warnings.filterwarnings("ignore")
 

@@ -70,6 +70,7 @@ from lale.expressions import (  # pylint:disable=redefined-builtin
     replace,
     string_indexer,
     sum,
+    variance,
 )
 from lale.helpers import _ensure_pandas, _is_pandas_df, _is_spark_df
 from lale.lib.dataframe import get_columns
@@ -1576,8 +1577,6 @@ class TestMap(unittest.TestCase):
                 _ = Map(columns=[123, "hello"])
 
     def test_pandas_with_hyperopt(self):
-        from sklearn.datasets import load_iris
-
         X, y = load_iris(return_X_y=True)
         gender_map = {"m": "Male", "f": "Female"}
         state_map = {"NY": "New York", "CA": "California"}
@@ -1604,7 +1603,6 @@ class TestMap(unittest.TestCase):
                 _ = trained.transform(df)
 
     def test_pands_with_hyperopt2(self):
-        from lale.expressions import count, it, max, mean, min, sum, variance
 
         wrap_imported_operators()
         scan = Scan(table=it["main"])
@@ -1757,7 +1755,6 @@ class TestMap(unittest.TestCase):
             )
         )
         pipeline = relational >> (KNeighborsClassifier | LogisticRegression)
-        from sklearn.datasets import load_iris
 
         X, y = load_iris(return_X_y=True)
 
@@ -2193,9 +2190,6 @@ class TestMap(unittest.TestCase):
 class TestRelationalOperator(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        from sklearn.datasets import load_iris
-        from sklearn.model_selection import train_test_split
-
         targets = ["pandas", "spark"]
         cls.tgt2datasets = {tgt: {} for tgt in targets}
 

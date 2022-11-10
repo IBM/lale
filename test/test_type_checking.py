@@ -19,7 +19,7 @@ import jsonschema
 
 import lale.lib.lale
 from lale.lib.lale import ConcatFeatures, IdentityWrapper, NoOp
-from lale.lib.sklearn import NMF, LogisticRegression, TfidfVectorizer
+from lale.lib.sklearn import NMF, PCA, LogisticRegression, TfidfVectorizer
 from lale.settings import (
     disable_data_schema_validation,
     disable_hyperparams_schema_validation,
@@ -1023,8 +1023,6 @@ class TestHyperparamConstraints(unittest.TestCase):
     def test_logistic_regression_1(self):
         import sklearn
 
-        from lale.lib.sklearn import LogisticRegression
-
         bad_hyperparams = {"solver": "liblinear", "penalty": "none"}
         trainable = sklearn.linear_model.LogisticRegression(**bad_hyperparams)
         with self.assertRaisesRegex(
@@ -1038,8 +1036,6 @@ class TestHyperparamConstraints(unittest.TestCase):
 
     def test_logistic_regression_2(self):
         import sklearn
-
-        from lale.lib.sklearn import LogisticRegression
 
         bad_hyperparams = {
             "penalty": "elasticnet",
@@ -1056,8 +1052,6 @@ class TestHyperparamConstraints(unittest.TestCase):
 
     def test_logistic_regression_3(self):
         import sklearn
-
-        from lale.lib.sklearn import LogisticRegression
 
         bad_hyperparams = {
             "penalty": "elasticnet",
@@ -1440,7 +1434,6 @@ class TestDisablingSchemaValidation(unittest.TestCase):
         existing_flag = disable_data_schema_validation
         set_disable_data_schema_validation(True)
         from lale import schemas
-        from lale.lib.sklearn import PCA
 
         pca_input = schemas.Object(
             X=schemas.AnyOf(
@@ -1472,7 +1465,6 @@ class TestDisablingSchemaValidation(unittest.TestCase):
     def test_enable_schema_validation_individual_op(self):
         with EnableSchemaValidation():
             from lale import schemas
-            from lale.lib.sklearn import PCA
 
             pca_input = schemas.Object(
                 X=schemas.AnyOf(
@@ -1505,7 +1497,6 @@ class TestDisablingSchemaValidation(unittest.TestCase):
         existing_flag = disable_data_schema_validation
         set_disable_data_schema_validation(True)
         from lale import schemas
-        from lale.lib.sklearn import PCA, LogisticRegression
 
         lr_input = schemas.Object(
             required=["X", "y"],
@@ -1528,7 +1519,6 @@ class TestDisablingSchemaValidation(unittest.TestCase):
     def test_enable_schema_validation_pipeline(self):
         with EnableSchemaValidation():
             from lale import schemas
-            from lale.lib.sklearn import PCA, LogisticRegression
 
             lr_input = schemas.Object(
                 required=["X", "y"],
@@ -1549,8 +1539,6 @@ class TestDisablingSchemaValidation(unittest.TestCase):
                 trained_pipeline.predict(self.X_test)
 
     def test_disable_enable_hyperparam_validation(self):
-        from lale.lib.sklearn import PCA
-
         existing_flag = disable_hyperparams_schema_validation
         set_disable_hyperparams_schema_validation(True)
         PCA(n_components=True)

@@ -15,7 +15,7 @@
 import unittest
 import warnings
 
-from lale.lib.lale import HalvingGridSearchCV
+from lale.lib.lale import HalvingGridSearchCV, NoOp
 from lale.lib.sklearn import (
     PCA,
     KNeighborsClassifier,
@@ -38,9 +38,6 @@ class TestAutoConfigureClassification(unittest.TestCase):
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
 
     def test_with_halving_gridsearchcv(self):
-        from lale.lib.lale import HalvingGridSearchCV, NoOp
-        from lale.lib.sklearn import PCA, LogisticRegression
-
         warnings.simplefilter("ignore")
         planned_pipeline = (PCA | NoOp) >> LogisticRegression
         best_pipeline = planned_pipeline.auto_configure(
@@ -112,7 +109,6 @@ class TestGridSearchCV(unittest.TestCase):
     def test_manual_grid(self):
         from sklearn.datasets import load_iris
 
-        from lale.lib.lale import HalvingGridSearchCV
         from lale.lib.sklearn import SVC
 
         warnings.simplefilter("ignore")
@@ -138,7 +134,6 @@ class TestGridSearchCV(unittest.TestCase):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            from lale.lib.lale import HalvingGridSearchCV
 
             clf = HalvingGridSearchCV(
                 estimator=trainable,
@@ -164,7 +159,6 @@ class TestGridSearchCV(unittest.TestCase):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            from lale.lib.lale import HalvingGridSearchCV
 
             clf = HalvingGridSearchCV(
                 estimator=trainable,

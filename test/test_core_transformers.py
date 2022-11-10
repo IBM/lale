@@ -85,7 +85,6 @@ def create_function_test_feature_preprocessor(fproc_name):
 
         # test_in_a_pipeline
         # This test assumes that the output of feature processing is compatible with LogisticRegression
-        from lale.lib.sklearn import LogisticRegression
 
         pipeline = fproc >> LogisticRegression()
         trained = pipeline.fit(self.X_train, self.y_train)
@@ -210,8 +209,6 @@ class TestRFE(unittest.TestCase):
         import sklearn.datasets
         import sklearn.svm
 
-        from lale.lib.sklearn import RFE, LogisticRegression
-
         svm = sklearn.svm.SVR(kernel="linear")
         rfe = RFE(estimator=svm, n_features_to_select=2)
         lr = LogisticRegression()
@@ -227,8 +224,6 @@ class TestRFE(unittest.TestCase):
 
     def test_attrib(self):
         import sklearn.datasets
-
-        from lale.lib.sklearn import RFE, LogisticRegression
 
         svm = lale.lib.sklearn.SVR(kernel="linear")
         rfe = RFE(estimator=svm, n_features_to_select=2)
@@ -257,7 +252,6 @@ class TestOrdinalEncoder(unittest.TestCase):
         from lale.lib.sklearn import OrdinalEncoder
 
         fproc = OrdinalEncoder(handle_unknown="ignore")
-        from lale.lib.sklearn import LogisticRegression
 
         pipeline = fproc >> LogisticRegression()
 
@@ -439,8 +433,7 @@ class TestConcatFeatures(unittest.TestCase):
         import sklearn.datasets
         import sklearn.utils
 
-        from lale.helpers import cross_val_score
-        from lale.lib.sklearn import PCA
+        from lale.helpers import cross_val_score as lale_cross_val_score
 
         pca = PCA(n_components=3, random_state=42, svd_solver="arpack")
         nys = Nystroem(n_components=10, random_state=42)
@@ -450,13 +443,13 @@ class TestConcatFeatures(unittest.TestCase):
         digits = sklearn.datasets.load_digits()
         X, y = sklearn.utils.shuffle(digits.data, digits.target, random_state=42)
 
-        cv_results = cross_val_score(trainable, X, y)
+        cv_results = lale_cross_val_score(trainable, X, y)
         cv_results = [f"{score:.1%}" for score in cv_results]
 
         from sklearn.decomposition import PCA as SklearnPCA
         from sklearn.kernel_approximation import Nystroem as SklearnNystroem
         from sklearn.linear_model import LogisticRegression as SklearnLR
-        from sklearn.model_selection import cross_val_score
+        from sklearn.model_selection import cross_val_score as sklearn_cross_val_score
         from sklearn.pipeline import FeatureUnion, make_pipeline
 
         union = FeatureUnion(
@@ -471,7 +464,7 @@ class TestConcatFeatures(unittest.TestCase):
         lr = SklearnLR(random_state=42, C=0.1, solver="saga")
         pipeline = make_pipeline(union, lr)
 
-        scikit_cv_results = cross_val_score(pipeline, X, y, cv=5)
+        scikit_cv_results = sklearn_cross_val_score(pipeline, X, y, cv=5)
         scikit_cv_results = [f"{score:.1%}" for score in scikit_cv_results]
         self.assertEqual(cv_results, scikit_cv_results)
         warnings.resetwarnings()
