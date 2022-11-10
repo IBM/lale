@@ -20,6 +20,7 @@ import unittest
 import numpy as np
 import sklearn.datasets
 import sklearn.pipeline
+from sklearn.feature_selection import SelectKBest as SkSelectKBest
 from sklearn.metrics import accuracy_score, r2_score
 from sklearn.model_selection import train_test_split
 
@@ -39,6 +40,7 @@ from lale.lib.sklearn import (
     Nystroem,
     OneHotEncoder,
     PassiveAggressiveClassifier,
+    SelectKBest,
     SGDClassifier,
     StandardScaler,
 )
@@ -218,11 +220,11 @@ class TestImportExport(unittest.TestCase):
             self.assertEqual(p1, predictions2[i])
 
     def test_import_from_sklearn_pipeline(self):
-        from sklearn.feature_selection import SelectKBest, f_regression
+        from sklearn.feature_selection import f_regression
         from sklearn.pipeline import Pipeline
         from sklearn.svm import SVC as SklearnSVC
 
-        anova_filter = SelectKBest(f_regression, k=3)
+        anova_filter = SkSelectKBest(f_regression, k=3)
         clf = SklearnSVC(kernel="linear")
         sklearn_pipeline = Pipeline([("anova", anova_filter), ("svc", clf)])
         lale_pipeline = typing.cast(
@@ -285,7 +287,6 @@ class TestImportExport(unittest.TestCase):
 
     def test_import_from_sklearn_pipeline_nested_pipeline(self):
         from sklearn.decomposition import PCA as SklearnPCA
-        from sklearn.feature_selection import SelectKBest
         from sklearn.kernel_approximation import Nystroem as SklearnNystroem
         from sklearn.neighbors import KNeighborsClassifier as SklearnKNN
         from sklearn.pipeline import FeatureUnion
@@ -295,7 +296,7 @@ class TestImportExport(unittest.TestCase):
                 (
                     "selectkbest_pca",
                     sklearn.pipeline.make_pipeline(
-                        SelectKBest(k=3), SklearnPCA(n_components=1)
+                        SkSelectKBest(k=3), SklearnPCA(n_components=1)
                     ),
                 ),
                 ("nys", SklearnNystroem(n_components=2, random_state=42)),
@@ -321,7 +322,6 @@ class TestImportExport(unittest.TestCase):
 
     def test_import_from_sklearn_pipeline_nested_pipeline1(self):
         from sklearn.decomposition import PCA as SklearnPCA
-        from sklearn.feature_selection import SelectKBest
         from sklearn.kernel_approximation import Nystroem as SklearnNystroem
         from sklearn.neighbors import KNeighborsClassifier as SklearnKNN
         from sklearn.pipeline import FeatureUnion
@@ -331,14 +331,14 @@ class TestImportExport(unittest.TestCase):
                 (
                     "selectkbest_pca",
                     sklearn.pipeline.make_pipeline(
-                        SelectKBest(k=3),
+                        SkSelectKBest(k=3),
                         FeatureUnion(
                             [
                                 ("pca", SklearnPCA(n_components=1)),
                                 (
                                     "nested_pipeline",
                                     sklearn.pipeline.make_pipeline(
-                                        SelectKBest(k=2), SklearnNystroem()
+                                        SkSelectKBest(k=2), SklearnNystroem()
                                     ),
                                 ),
                             ]
@@ -376,7 +376,6 @@ class TestImportExport(unittest.TestCase):
 
     def test_import_from_sklearn_pipeline_nested_pipeline2(self):
         from sklearn.decomposition import PCA as SklearnPCA
-        from sklearn.feature_selection import SelectKBest
         from sklearn.kernel_approximation import Nystroem as SklearnNystroem
         from sklearn.neighbors import KNeighborsClassifier as SklearnKNN
         from sklearn.pipeline import FeatureUnion
@@ -386,8 +385,10 @@ class TestImportExport(unittest.TestCase):
                 (
                     "selectkbest_pca",
                     sklearn.pipeline.make_pipeline(
-                        SelectKBest(k=3),
-                        sklearn.pipeline.make_pipeline(SelectKBest(k=2), SklearnPCA()),
+                        SkSelectKBest(k=3),
+                        sklearn.pipeline.make_pipeline(
+                            SkSelectKBest(k=2), SklearnPCA()
+                        ),
                     ),
                 ),
                 ("nys", SklearnNystroem(n_components=2, random_state=42)),
@@ -450,9 +451,7 @@ class TestImportExport(unittest.TestCase):
         self.assert_equal_predictions(sklearn_pipeline, trained_lale_pipeline)
 
     def test_export_to_sklearn_pipeline1(self):
-        from sklearn.feature_selection import SelectKBest
-
-        lale_pipeline = SelectKBest(k=3) >> KNeighborsClassifier()
+        lale_pipeline = SkSelectKBest(k=3) >> KNeighborsClassifier()
         trained_lale_pipeline = lale_pipeline.fit(self.X_train, self.y_train)
         sklearn_pipeline = trained_lale_pipeline.export_to_sklearn_pipeline()
         for i, pipeline_step in enumerate(sklearn_pipeline.named_steps):
@@ -468,13 +467,12 @@ class TestImportExport(unittest.TestCase):
         self.assert_equal_predictions(sklearn_pipeline, trained_lale_pipeline)
 
     def test_export_to_sklearn_pipeline2(self):
-        from sklearn.feature_selection import SelectKBest
         from sklearn.pipeline import FeatureUnion
 
         lale_pipeline = (
             (
                 (
-                    (PCA(svd_solver="randomized", random_state=42) & SelectKBest(k=3))
+                    (PCA(svd_solver="randomized", random_state=42) & SkSelectKBest(k=3))
                     >> ConcatFeatures()
                 )
                 & Nystroem(random_state=42)
@@ -495,17 +493,16 @@ class TestImportExport(unittest.TestCase):
         self.assert_equal_predictions(sklearn_pipeline, trained_lale_pipeline)
 
     def test_export_to_sklearn_pipeline3(self):
-        from sklearn.feature_selection import SelectKBest
         from sklearn.pipeline import FeatureUnion
 
         lale_pipeline = (
             (
-                (PCA() >> SelectKBest(k=2))
-                & (Nystroem(random_state=42) >> SelectKBest(k=3))
-                & (SelectKBest(k=3))
+                (PCA() >> SkSelectKBest(k=2))
+                & (Nystroem(random_state=42) >> SkSelectKBest(k=3))
+                & (SkSelectKBest(k=3))
             )
             >> ConcatFeatures()
-            >> SelectKBest(k=2)
+            >> SkSelectKBest(k=2)
             >> LogisticRegression()
         )
         trained_lale_pipeline = lale_pipeline.fit(self.X_train, self.y_train)
@@ -513,7 +510,9 @@ class TestImportExport(unittest.TestCase):
         self.assertIsInstance(
             sklearn_pipeline.named_steps["featureunion"], FeatureUnion
         )
-        self.assertIsInstance(sklearn_pipeline.named_steps["selectkbest"], SelectKBest)
+        self.assertIsInstance(
+            sklearn_pipeline.named_steps["selectkbest"], SkSelectKBest
+        )
         from sklearn.linear_model import LogisticRegression as SklearnLR
 
         self.assertIsInstance(
@@ -544,11 +543,11 @@ class TestImportExport(unittest.TestCase):
         pickle.dumps(trained_lale_pipeline)
 
     def test_import_from_sklearn_pipeline2(self):
-        from sklearn.feature_selection import SelectKBest, f_regression
+        from sklearn.feature_selection import f_regression
         from sklearn.pipeline import Pipeline
         from sklearn.svm import SVC as SklearnSVC
 
-        anova_filter = SelectKBest(f_regression, k=3)
+        anova_filter = SkSelectKBest(f_regression, k=3)
         clf = SklearnSVC(kernel="linear")
         sklearn_pipeline = Pipeline([("anova", anova_filter), ("svc", clf)])
         sklearn_pipeline.fit(self.X_train, self.y_train)
@@ -559,11 +558,11 @@ class TestImportExport(unittest.TestCase):
         lale_pipeline.predict(self.X_test)
 
     def test_import_from_sklearn_pipeline3(self):
-        from sklearn.feature_selection import SelectKBest, f_regression
+        from sklearn.feature_selection import f_regression
         from sklearn.pipeline import Pipeline
         from sklearn.svm import SVC as SklearnSVC
 
-        anova_filter = SelectKBest(f_regression, k=3)
+        anova_filter = SkSelectKBest(f_regression, k=3)
         clf = SklearnSVC(kernel="linear")
         sklearn_pipeline = Pipeline([("anova", anova_filter), ("svc", clf)])
         lale_pipeline = typing.cast(

@@ -1714,8 +1714,8 @@ class TestTaskGraphsWithCategoricalConcat(unittest.TestCase):
 
     @classmethod
     def _make_sk_trainable(cls, final_est):
-        from sklearn.compose import SkColumnTransformer
-        from sklearn.ensemble import SkRandomForestClassifier
+        from sklearn.compose import ColumnTransformer as SkColumnTransformer
+        from sklearn.ensemble import RandomForestClassifier as SkRandomForestClassifier
         from sklearn.linear_model import SGDClassifier as SkSGDClassifier
 
         if final_est == "sgd":
