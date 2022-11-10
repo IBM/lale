@@ -1451,7 +1451,7 @@ class TestDisablingSchemaValidation(unittest.TestCase):
             )
         )
 
-        foo = PCA.customize_schema(input_fit=pca_input)
+        custom_PCA = PCA.customize_schema(input_fit=pca_input)
 
         pca_output = schemas.Object(
             X=schemas.AnyOf(
@@ -1462,9 +1462,9 @@ class TestDisablingSchemaValidation(unittest.TestCase):
             )
         )
 
-        foo = foo.customize_schema(output_transform=pca_output)
+        custom_PCA = custom_PCA.customize_schema(output_transform=pca_output)
 
-        abc = foo()
+        abc = custom_PCA()
         trained_pca = abc.fit(self.X_train)
         trained_pca.transform(self.X_test)
         set_disable_data_schema_validation(existing_flag)
@@ -1483,7 +1483,7 @@ class TestDisablingSchemaValidation(unittest.TestCase):
                 )
             )
 
-            foo = PCA.customize_schema(input_fit=pca_input)
+            custom_PCA = PCA.customize_schema(input_fit=pca_input)
 
             pca_output = schemas.Object(
                 X=schemas.AnyOf(
@@ -1494,9 +1494,9 @@ class TestDisablingSchemaValidation(unittest.TestCase):
                 )
             )
 
-            foo = foo.customize_schema(output_transform=pca_output)
+            custom_PCA = custom_PCA.customize_schema(output_transform=pca_output)
 
-            abc = foo()
+            abc = custom_PCA()
             with self.assertRaises(ValueError):
                 trained_pca = abc.fit(self.X_train)
                 trained_pca.transform(self.X_test)
@@ -1518,8 +1518,8 @@ class TestDisablingSchemaValidation(unittest.TestCase):
             y=schemas.Array(schemas.String()),
         )
 
-        foo = LogisticRegression.customize_schema(input_fit=lr_input)
-        abc = foo()
+        custom_LR = LogisticRegression.customize_schema(input_fit=lr_input)
+        abc = custom_LR()
         pipeline = PCA() >> abc
         trained_pipeline = pipeline.fit(self.X_train, self.y_train)
         trained_pipeline.predict(self.X_test)
@@ -1541,8 +1541,8 @@ class TestDisablingSchemaValidation(unittest.TestCase):
                 y=schemas.Array(schemas.String()),
             )
 
-            foo = LogisticRegression.customize_schema(input_fit=lr_input)
-            abc = foo()
+            custom_LR = LogisticRegression.customize_schema(input_fit=lr_input)
+            abc = custom_LR()
             pipeline = PCA() >> abc
             with self.assertRaises(ValueError):
                 trained_pipeline = pipeline.fit(self.X_train, self.y_train)
