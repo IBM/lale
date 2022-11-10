@@ -684,7 +684,7 @@ def to_string(
     show_imports: bool = True,
     combinators: bool = True,
     assign_nested: bool = True,
-    include_customize_schema: bool = False,
+    customize_schema: bool = False,
     astype: str = "lale",
     call_depth: int = 1,
 ) -> str:
@@ -697,14 +697,14 @@ def to_string(
         jsn = lale.json_operator.to_json(
             arg,
             call_depth=call_depth + 1,
-            add_custom_default=not include_customize_schema,
+            add_custom_default=not customize_schema,
         )
         return _operator_jsn_to_string(
             jsn,
             show_imports,
             combinators,
             assign_nested,
-            include_customize_schema,
+            customize_schema,
             astype,
         )
     else:

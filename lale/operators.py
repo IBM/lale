@@ -423,7 +423,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         show_imports: bool = True,
         combinators: bool = True,
         assign_nested: bool = True,
-        include_customize_schema: bool = False,
+        customize_schema: bool = False,  # pylint:disable=redefined-outer-name
         astype: Union[Literal["lale"], Literal["sklearn"]] = "lale",
         ipython_display: Literal[False] = False,
     ) -> str:
@@ -436,7 +436,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         show_imports: bool = True,
         combinators: bool = True,
         assign_nested: bool = True,
-        include_customize_schema: bool = False,
+        customize_schema: bool = False,  # pylint:disable=redefined-outer-name
         astype: Union[Literal["lale"], Literal["sklearn"]] = "lale",
         ipython_display: Union[bool, Literal["input"]] = False,
     ) -> Optional[str]:
@@ -448,7 +448,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         show_imports: bool = True,
         combinators: bool = True,
         assign_nested: bool = True,
-        include_customize_schema: bool = False,
+        customize_schema: bool = False,  # pylint:disable=redefined-outer-name
         astype: Union[Literal["lale"], Literal["sklearn"]] = "lale",
         ipython_display: Union[bool, Literal["input"]] = False,
     ) -> Optional[str]:
@@ -468,7 +468,7 @@ class Operator(metaclass=AbstractVisitorMeta):
 
             If True, then nested operators, such as the base estimator for an ensemble, get assigned to fresh intermediate variables if configured with non-trivial arguments of their own.
 
-        include_customize_schema : bool, default False
+        customize_schema : bool, default False
 
             If True, then individual operators whose schema differs from the lale.lib version of the operator will be printed with calls to `customize_schema` that reproduce this difference.
 
@@ -505,7 +505,7 @@ class Operator(metaclass=AbstractVisitorMeta):
             self,
             show_imports=show_imports,
             combinators=combinators,
-            include_customize_schema=include_customize_schema,
+            customize_schema=customize_schema,
             assign_nested=assign_nested,
             astype=astype,
             call_depth=2,
@@ -532,7 +532,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         self,
         other: "Operator",
         show_imports: bool = True,
-        include_customize_schema: bool = False,
+        customize_schema: bool = False,  # pylint:disable=redefined-outer-name
         ipython_display: Literal[False] = False,
     ) -> str:
         ...
@@ -542,7 +542,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         self,
         other: "Operator",
         show_imports: bool = True,
-        include_customize_schema: bool = False,
+        customize_schema: bool = False,  # pylint:disable=redefined-outer-name
         ipython_display: bool = False,
     ) -> Optional[str]:
         ...
@@ -551,7 +551,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         self,
         other: "Operator",
         show_imports: bool = True,
-        include_customize_schema: bool = False,
+        customize_schema: bool = False,  # pylint:disable=redefined-outer-name
         ipython_display: bool = False,
     ) -> Optional[str]:
         """Displays a diff between this operator and the given other operator.
@@ -564,7 +564,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         show_imports : bool, default True
             Whether to include import statements in the pretty-printed code.
 
-        include_customize_schema : bool, default False
+        customize_schema : bool, default False
             If True, then individual operators whose schema differs from the lale.lib version of the operator will be printed with calls to `customize_schema` that reproduce this difference.
 
         ipython_display : bool, default False
@@ -578,14 +578,14 @@ class Operator(metaclass=AbstractVisitorMeta):
         """
 
         self_str = self.pretty_print(
-            include_customize_schema=include_customize_schema,
+            customize_schema=customize_schema,
             show_imports=show_imports,
             ipython_display=False,
         )
         self_lines = self_str.splitlines()
 
         other_str = other.pretty_print(
-            include_customize_schema=include_customize_schema,
+            customize_schema=customize_schema,
             show_imports=show_imports,
             ipython_display=False,
         )
@@ -3859,7 +3859,7 @@ class BasePipeline(Operator, Generic[OpType_co]):
                         ]
                     )
                     new_edges.extend(
-                        [edge for edge in edges if tstep not in (edge[0], edge[1])]
+                        edge for edge in edges if tstep not in (edge[0], edge[1])
                     )
                     edges = new_edges
                 else:

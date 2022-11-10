@@ -871,13 +871,8 @@ class TestCategorical(unittest.TestCase):
 
 class TestHyperparamRanges(unittest.TestCase):
     def exactly_relevant_properties(self, keys1, operator):
-        def sorted_copy(ll):
-            l_copy = [*ll]
-            l_copy.sort()
-            return l_copy
-
         keys2 = operator.hyperparam_schema()["allOf"][0]["relevantToOptimizer"]
-        self.assertEqual(sorted_copy(keys1), sorted_copy(keys2))
+        self.assertCountEqual(keys1, keys2)
 
     def validate_get_param_ranges(self, operator):
         ranges, cat_idx = operator.get_param_ranges()
