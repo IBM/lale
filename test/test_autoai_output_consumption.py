@@ -58,7 +58,7 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
     pp_pipeline: Optional[lale.operators.TrainablePipeline] = None
 
     @classmethod
-    def setUp(cls) -> None:
+    def setUp(cls) -> None:  # pylint:disable=arguments-differ
         urllib.request.urlretrieve(cls.train_csv_url, cls.train_csv_path)
         TestAutoAIOutputConsumption.training_df = pd.read_csv(
             TestAutoAIOutputConsumption.train_csv_path
@@ -101,12 +101,12 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
         )
         assert (
             "lale.wrap_imported_operators()"
-            in TestAutoAIOutputConsumption.pipeline_content
+            in TestAutoAIOutputConsumption.pipeline_content  # pylint:disable=unsupported-membership-test
         )
 
     def test_04_execute_pipeline(self):
         try:
-            with open("pp_pipeline.py", "w") as pipeline_f:
+            with open("pp_pipeline.py", "w", encoding="utf-8") as pipeline_f:
                 assert TestAutoAIOutputConsumption.pipeline_content is not None
                 pipeline_f.write(TestAutoAIOutputConsumption.pipeline_content)
 
@@ -197,7 +197,7 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
             t_df = TestAutoAIOutputConsumption.training_df
             assert t_df is not None
             train_X = t_df.drop(["Risk"], axis=1).values
-            train_y = t_df["Risk"].values
+            train_y = t_df["Risk"].values  # pylint:disable=unsubscriptable-object
             hyperopt = Hyperopt(
                 estimator=new_model, cv=2, max_evals=3, scoring="roc_auc"
             )

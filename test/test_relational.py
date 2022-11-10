@@ -17,6 +17,8 @@ import unittest
 import jsonschema
 import numpy as np
 import pandas as pd
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
 
 import lale.operators
 from lale.lib.rasl.convert import Convert
@@ -26,22 +28,21 @@ try:
     from pyspark import SparkConf, SparkContext
     from pyspark.sql import Row, SparkSession, SQLContext
 
-    from lale.datasets.data_schemas import SparkDataFrameWithIndex
+    from lale.datasets.data_schemas import (  # pylint:disable=ungrouped-imports
+        SparkDataFrameWithIndex,
+    )
 
     spark_installed = True
 except ImportError:
     spark_installed = False
 
-from test import EnableSchemaValidation
-
-from sklearn.datasets import load_iris
-from sklearn.model_selection import train_test_split
+from test import EnableSchemaValidation  # pylint:disable=wrong-import-order
 
 from lale.datasets import pandas2spark
 from lale.datasets.data_schemas import add_table_name, get_index_name, get_table_name
 from lale.datasets.multitable import multitable_train_test_split
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
-from lale.expressions import (
+from lale.expressions import (  # pylint:disable=redefined-builtin
     asc,
     astype,
     collect_set,
@@ -118,7 +119,7 @@ class TestExpressions(unittest.TestCase):
 
     def test_expr_5(self):
         X = it.col
-        self.assertTrue(X == X)
+        self.assertTrue(X == X)  # pylint:disable=comparison-with-itself
 
     def test_expr_6(self):
         self.assertFalse(it.col != 5)
@@ -135,7 +136,7 @@ class TestExpressions(unittest.TestCase):
 
     def test_expr_9(self):
         X = it.col
-        self.assertTrue(X != X)
+        self.assertTrue(X != X)  # pylint:disable=comparison-with-itself
 
 
 # Testing filter operator
@@ -1616,7 +1617,7 @@ class TestMap(unittest.TestCase):
                 )
             ]
         )
-        map = Map(
+        map_op = Map(
             columns={
                 "[main](group_customer_id)[customers]|number_children|identity": it[
                     "number_children"
@@ -1628,7 +1629,7 @@ class TestMap(unittest.TestCase):
             },
             remainder="drop",
         )
-        pipeline_4 = join >> map
+        pipeline_4 = join >> map_op
         scan_1 = Scan(table=it["purchase"])
         join_0 = Join(
             pred=[(it["main"]["group_id"] == it["purchase"]["group_id"])],
@@ -2385,7 +2386,7 @@ class TestOrderBy(unittest.TestCase):
 
 class TestSplitXy(unittest.TestCase):
     @classmethod
-    def setUp(cls):
+    def setUp(cls):  # pylint:disable=arguments-differ
         data = load_iris()
         X, y = data.data, data.target
         X_train, X_test, y_train, y_test = train_test_split(
