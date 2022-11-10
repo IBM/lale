@@ -32,11 +32,11 @@ class TestCustomSchema(unittest.TestCase):
     def setUp(self):
         import sklearn.decomposition
 
-        import lale.lib.sklearn
+        from lale.lib.sklearn import PCA as lale_PCA
         from lale.operators import make_operator
 
         self.sk_pca = make_operator(sklearn.decomposition.PCA, schemas={})
-        self.ll_pca = lale.lib.sklearn.PCA
+        self.ll_pca = lale_PCA
         self.maxDiff = None
 
     def test_override_schemas(self):

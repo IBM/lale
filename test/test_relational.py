@@ -2098,8 +2098,8 @@ class TestMap(unittest.TestCase):
         self.assertNotIsInstance(op, lale.operators.TrainedOperator)
 
         pipeline = Scan(table=it.go_products) >> op
-        pd = self.tgt2datasets["pandas"]["go_sales"]
-        trained = pipeline.fit(pd)
+        pd_data = self.tgt2datasets["pandas"]["go_sales"]
+        trained = pipeline.fit(pd_data)
         trained_map = trained.steps_list()[1]
         self.assertIsInstance(trained_map, Map)  # type: ignore
         self.assertIsInstance(trained_map, lale.operators.TrainedOperator)
@@ -2115,11 +2115,11 @@ class TestMap(unittest.TestCase):
             self.assertIn("Product number", result.columns)
             self.assertNotIn("Product line", result.columns)
 
-    def assertSeriesEqual(self, first, second, msg=None):
-        self.assertIsInstance(first, pd.Series, msg)
-        self.assertIsInstance(second, pd.Series, msg)
-        self.assertEqual(first.shape, second.shape, msg)
-        self.assertEqual(list(first), list(second), msg)
+    def assertSeriesEqual(self, first_series, second_series, msg=None):
+        self.assertIsInstance(first_series, pd.Series, msg)
+        self.assertIsInstance(second_series, pd.Series, msg)
+        self.assertEqual(first_series.shape, second_series.shape, msg)
+        self.assertEqual(list(first_series), list(second_series), msg)
 
     def test_transform_compare_ops(self):
         trained = Map(

@@ -44,9 +44,9 @@ def create_function_test_encoder(encoder_name):
 
 
 encoders = ["lale.lib.tensorflow.USEPretrainedEncoder"]
-for encoder in encoders:
+for encoder_to_test in encoders:
     setattr(
         TestTextEncoders,
-        f"test_{encoder.rsplit('.', maxsplit=1)[-1]}",
-        create_function_test_encoder(encoder),
+        f"test_{encoder_to_test.rsplit('.', maxsplit=1)[-1]}",
+        create_function_test_encoder(encoder_to_test),
     )

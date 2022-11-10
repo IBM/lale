@@ -23,12 +23,15 @@ import unittest
 import warnings
 from typing import Any, Dict
 
+import numpy as np
 from sklearn.datasets import load_iris
+from sklearn.decomposition import PCA as SkPCA
 
+import lale.datasets
 import lale.operators as Ops
 import lale.type_checking
 from lale.helpers import nest_HPparams
-from lale.lib.lale import ConcatFeatures, NoOp
+from lale.lib.lale import ConcatFeatures, Hyperopt, NoOp
 from lale.lib.rasl import categorical
 from lale.lib.sklearn import (
     NMF,
@@ -67,59 +70,42 @@ class TestTags(unittest.TestCase):
 
 class TestUnparseExpr(unittest.TestCase):
     def test_unparse_const38(self):
-        import lale.expressions
-        from lale.expressions import it
+        from lale.expressions import fixedUnparse, it
 
         test_expr = it.hello["hi"]
         # This fails on 3.8 with some versions of the library
         # which is why we use the fixed version
         # import astunparse
         # astunparse.unparse(he._expr)
-        str(lale.expressions.fixedUnparse(test_expr._expr))
+        str(fixedUnparse(test_expr._expr))
 
 
 class TestOperatorWithoutSchema(unittest.TestCase):
     def test_trainable_pipe_left(self):
-        from sklearn.decomposition import PCA
-
         iris = load_iris()
-        pipeline = PCA() >> LogisticRegression(random_state=42)
+        pipeline = SkPCA() >> LogisticRegression(random_state=42)
         pipeline.fit(iris.data, iris.target)
 
     def test_trainable_pipe_right(self):
-        from sklearn.decomposition import PCA
-
         iris = load_iris()
-        pipeline = NoOp() >> PCA() >> LogisticRegression(random_state=42)
+        pipeline = NoOp() >> SkPCA() >> LogisticRegression(random_state=42)
         pipeline.fit(iris.data, iris.target)
 
     def dont_test_planned_pipe_left(self):
-        from sklearn.decomposition import PCA
-
-        from lale.lib.lale import Hyperopt, NoOp
-        from lale.lib.sklearn import LogisticRegression
-
         iris = load_iris()
-        pipeline = NoOp() >> PCA >> LogisticRegression
+        pipeline = NoOp() >> SkPCA >> LogisticRegression
         clf = Hyperopt(estimator=pipeline, max_evals=1)
         clf.fit(iris.data, iris.target)
 
     def dont_test_planned_pipe_right(self):
-        from sklearn.decomposition import PCA
-
-        from lale.lib.lale import Hyperopt
-        from lale.lib.sklearn import LogisticRegression
-
         iris = load_iris()
-        pipeline = PCA >> LogisticRegression
+        pipeline = SkPCA >> LogisticRegression
         clf = Hyperopt(estimator=pipeline, max_evals=1)
         clf.fit(iris.data, iris.target)
 
 
 class _TestLazyImpl(unittest.TestCase):
     def test_lazy_impl(self):
-        from lale.lib.lale import Hyperopt
-
         impl = Hyperopt._impl
         self.assertTrue(inspect.isclass(impl))
 
@@ -143,8 +129,6 @@ class TestOperatorErrors(unittest.TestCase):
             self.assertRegex(msg, "underlying operator")
 
     def test_trained_get_pipeline_success(self):
-        from lale.lib.lale import Hyperopt
-
         iris_data = load_iris()
         op = Hyperopt(estimator=LogisticRegression(), max_evals=1)
         with warnings.catch_warnings():
@@ -170,8 +154,6 @@ class TestOperatorErrors(unittest.TestCase):
             self.assertRegex(msg, "underlying operator")
 
     def test_trained_summary_success(self):
-        from lale.lib.lale import Hyperopt
-
         iris_data = load_iris()
         op = Hyperopt(
             estimator=LogisticRegression(), max_evals=1, show_progressbar=False
@@ -184,9 +166,9 @@ class TestOperatorErrors(unittest.TestCase):
 
 class TestLaleVersion(unittest.TestCase):
     def test_version_exists(self):
-        import lale
+        from lale import __version__ as lale_version
 
-        self.assertIsNot(lale.__version__, None)
+        self.assertIsNot(lale_version, None)
 
 
 class TestMethodParameters(unittest.TestCase):
@@ -241,8 +223,6 @@ class TestOperatorLogging(unittest.TestCase):
 
     @unittest.skip("Turned off the logging for now")
     def test_log_fit_predict(self):
-        import lale.datasets
-
         trainable = LogisticRegression()
         (X_train, y_train), (X_test, y_test) = lale.datasets.load_iris_df()
         trained = trainable.fit(X_train, y_train)
@@ -262,7 +242,6 @@ class TestOperatorLogging(unittest.TestCase):
 
 class TestBoth(unittest.TestCase):
     def test_init_fit_transform(self):
-        import lale.datasets
         from lale.lib.lale import Both
 
         nmf = NMF()
@@ -275,7 +254,6 @@ class TestBoth(unittest.TestCase):
 
 class TestTee(unittest.TestCase):
     def test_tee_None(self):
-        import lale.datasets
         from lale.lib.lale import Tee
 
         pca = PCA()
@@ -285,9 +263,6 @@ class TestTee(unittest.TestCase):
         _ = trained.transform(test_X)
 
     def test_tee_lambda(self):
-        import numpy as np
-
-        import lale.datasets
         from lale.lib.lale import Tee
 
         def check_data(X, y):
@@ -300,9 +275,7 @@ class TestTee(unittest.TestCase):
         _ = trained.transform(test_X)
 
     def test_tee_def(self):
-        import numpy as np
 
-        import lale.datasets
         from lale.lib.lale import Tee
 
         def check_data(X, y):
@@ -315,9 +288,6 @@ class TestTee(unittest.TestCase):
         _ = trained.transform(test_X)
 
     def test_tee_obj(self):
-        import numpy as np
-
-        import lale.datasets
         from lale.lib.lale import Tee
 
         class check_data:
@@ -1031,7 +1001,6 @@ class TestScoreIndividualOp(unittest.TestCase):
         self.assertEqual(score, accuracy)
 
     def test_score_trained_op_sample_wt(self):
-        import numpy as np
         from sklearn.metrics import accuracy_score
 
         trainable = LogisticRegression()

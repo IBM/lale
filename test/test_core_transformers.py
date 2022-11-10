@@ -116,22 +116,22 @@ feature_preprocessors = [
     "lale.lib.sklearn.VarianceThreshold",
     "lale.lib.sklearn.Isomap",
 ]
-for fproc in feature_preprocessors:
+for fproc_to_test in feature_preprocessors:
     setattr(
         TestFeaturePreprocessing,
-        f"test_{fproc.rsplit('.', maxsplit=1)[-1]}",
-        create_function_test_feature_preprocessor(fproc),
+        f"test_{fproc_to_test.rsplit('.', maxsplit=1)[-1]}",
+        create_function_test_feature_preprocessor(fproc_to_test),
     )
 
 
 class TestNMF(unittest.TestCase):
     def test_init_fit_predict(self):
-        import lale.datasets
+        from lale.datasets import digits_df
 
         nmf = NMF()
         lr = LogisticRegression()
         trainable = nmf >> lr
-        (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
+        (train_X, train_y), (test_X, test_y) = digits_df()
         trained = trainable.fit(train_X, train_y)
         _ = trained.predict(test_X)
 
@@ -145,12 +145,12 @@ class TestFunctionTransformer(unittest.TestCase):
     def test_init_fit_predict(self):
         import numpy as np
 
-        import lale.datasets
+        from lale.datasets import digits_df
 
         ft = FunctionTransformer(func=np.log1p)
         lr = LogisticRegression()
         trainable = ft >> lr
-        (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
+        (train_X, train_y), (test_X, test_y) = digits_df()
         trained = trainable.fit(train_X, train_y)
         _ = trained.predict(test_X)
 

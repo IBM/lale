@@ -47,7 +47,7 @@ class TestToGraphviz(unittest.TestCase):
 
 
 class TestPrettyPrint(unittest.TestCase):
-    # pylint:disable=reimported
+    # pylint:disable=reimported,redefined-outer-name
 
     def _roundtrip(self, expected, printed):
         self.maxDiff = None

@@ -20,7 +20,8 @@ import unittest
 import numpy as np
 import sklearn.datasets
 import sklearn.pipeline
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, r2_score
+from sklearn.model_selection import train_test_split
 
 import lale.datasets.openml
 import lale.helpers
@@ -55,8 +56,6 @@ from lale.operators import (
 
 class TestCreation(unittest.TestCase):
     def setUp(self):
-        from sklearn.model_selection import train_test_split
-
         data = sklearn.datasets.load_iris()
         X, y = data.data, data.target
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
@@ -70,11 +69,9 @@ class TestCreation(unittest.TestCase):
         accuracy_score(self.y_test, predictions)
 
     def test_pipeline_create_trainable(self):
-        import lale.lib.sklearn
+        from lale.lib.sklearn import Pipeline as SkPipeline
 
-        pipeline = lale.lib.sklearn.Pipeline(
-            steps=[("pca1", PCA()), ("lr1", LogisticRegression())]
-        )
+        pipeline = SkPipeline(steps=[("pca1", PCA()), ("lr1", LogisticRegression())])
         self.assertIsInstance(pipeline, TrainableIndividualOp)
         trained = pipeline.fit(self.X_train, self.y_train)
         pca_trained, lr_trained = [op for _, op in trained.hyperparams()["steps"]]
@@ -84,15 +81,13 @@ class TestCreation(unittest.TestCase):
         accuracy_score(self.y_test, predictions)
 
     def test_pipeline_create_trained(self):
-        import lale.lib.sklearn
+        from lale.lib.sklearn import Pipeline as SkPipeline
 
         orig_trainable = PCA() >> LogisticRegression()
         orig_trained = orig_trainable.fit(self.X_train, self.y_train)
         self.assertIsInstance(orig_trained, TrainedPipeline)
         pca_trained, lr_trained = orig_trained.steps_list()
-        pre_trained = lale.lib.sklearn.Pipeline(
-            steps=[("pca1", pca_trained), ("lr1", lr_trained)]
-        )
+        pre_trained = SkPipeline(steps=[("pca1", pca_trained), ("lr1", lr_trained)])
         self.assertIsInstance(pre_trained, TrainedIndividualOp)
         predictions = pre_trained.predict(self.X_test)
         accuracy_score(self.y_test, predictions)
@@ -201,8 +196,6 @@ class TestCreation(unittest.TestCase):
 
 class TestImportExport(unittest.TestCase):
     def setUp(self):
-        from sklearn.model_selection import train_test_split
-
         data = sklearn.datasets.load_iris()
         X, y = data.data, data.target
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
@@ -609,8 +602,6 @@ class TestImportExport(unittest.TestCase):
 
 class TestComposition(unittest.TestCase):
     def setUp(self):
-        from sklearn.model_selection import train_test_split
-
         data = sklearn.datasets.load_iris()
         X, y = data.data, data.target
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
@@ -772,26 +763,21 @@ class TestComposition(unittest.TestCase):
 
 class TestAutoPipeline(unittest.TestCase):
     def _fit_predict(self, prediction_type, all_X, all_y, verbose=True):
-        import sklearn.metrics
-        import sklearn.model_selection
-
         if verbose:
             file_name, line, fn_name, text = traceback.extract_stack()[-2]
             print(f"--- TestAutoPipeline.{fn_name}() ---")
         from lale.lib.lale import AutoPipeline
 
-        train_X, test_X, train_y, test_y = sklearn.model_selection.train_test_split(
-            all_X, all_y
-        )
+        train_X, test_X, train_y, test_y = train_test_split(all_X, all_y)
         trainable = AutoPipeline(
             prediction_type=prediction_type, max_evals=10, verbose=verbose
         )
         trained = trainable.fit(train_X, train_y)
         predicted = trained.predict(test_X)
         if prediction_type == "regression":
-            score = f"r2 score {sklearn.metrics.r2_score(test_y, predicted):.2f}"
+            score = f"r2 score {r2_score(test_y, predicted):.2f}"
         else:
-            score = f"accuracy {sklearn.metrics.accuracy_score(test_y, predicted):.1%}"
+            score = f"accuracy {accuracy_score(test_y, predicted):.1%}"
         if verbose:
             print(score)
             pipe = trained.get_pipeline()
@@ -819,13 +805,11 @@ class TestAutoPipeline(unittest.TestCase):
         self._fit_predict("regression", all_X, all_y)
 
     def test_openml_creditg(self):
-        import sklearn.model_selection
-
         # classification, categoricals+numbers incl. string, no missing values
         (orig_train_X, orig_train_y), _ = lale.datasets.openml.fetch(
             "credit-g", "classification", preprocess=False
         )
-        subsample_X, _, subsample_y, _ = sklearn.model_selection.train_test_split(
+        subsample_X, _, subsample_y, _ = train_test_split(
             orig_train_X, orig_train_y, train_size=0.05
         )
         self._fit_predict("classification", subsample_X, subsample_y)
@@ -849,13 +833,11 @@ class TestAutoPipeline(unittest.TestCase):
         self._fit_predict("regression", with_missing_X, all_y)
 
     def test_missing_creditg(self):
-        import sklearn.model_selection
-
         # classification, categoricals+numbers incl. string, synth. missing
         (orig_train_X, orig_train_y), _ = lale.datasets.openml.fetch(
             "credit-g", "classification", preprocess=False
         )
-        subsample_X, _, subsample_y, _ = sklearn.model_selection.train_test_split(
+        subsample_X, _, subsample_y, _ = train_test_split(
             orig_train_X, orig_train_y, train_size=0.05
         )
         with_missing_X = lale.helpers.add_missing_values(subsample_X)
@@ -887,8 +869,6 @@ class TestOperatorChoice(unittest.TestCase):
 
 class TestScore(unittest.TestCase):
     def setUp(self):
-        from sklearn.model_selection import train_test_split
-
         data = sklearn.datasets.load_iris()
         X, y = data.data, data.target
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
@@ -919,8 +899,6 @@ class TestScore(unittest.TestCase):
 
 class TestScoreSamples(unittest.TestCase):
     def setUp(self):
-        from sklearn.model_selection import train_test_split
-
         data = sklearn.datasets.load_iris()
         X, y = data.data, data.target
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
@@ -953,8 +931,6 @@ class TestScoreSamples(unittest.TestCase):
 
 class TestPredictLogProba(unittest.TestCase):
     def setUp(self):
-        from sklearn.model_selection import train_test_split
-
         data = sklearn.datasets.load_iris()
         X, y = data.data, data.target
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
@@ -993,8 +969,6 @@ class TestPredictLogProba(unittest.TestCase):
 
 class TestPartialFit(unittest.TestCase):
     def setUp(self):
-        from sklearn.model_selection import train_test_split
-
         data = sklearn.datasets.load_iris()
         X, y = data.data, data.target
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)

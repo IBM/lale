@@ -130,7 +130,7 @@ def create_function_test_classifier(clf_name):
         trained = pipeline.fit(self.X_train, self.y_train)
         _ = trained.predict(self.X_test)
 
-    test_classifier.__name__ = f"test_{clf.rsplit('.', maxsplit=1)[-1]}"
+    test_classifier.__name__ = f"test_{clf_to_test.rsplit('.', maxsplit=1)[-1]}"
     return test_classifier
 
 
@@ -158,11 +158,11 @@ classifiers = [
     "lale.lib.sklearn.IsolationForest",
     "lale.lib.sklearn.KMeans",
 ]
-for clf in classifiers:
+for clf_to_test in classifiers:
     setattr(
         TestClassification,
-        f"test_{clf.rsplit('.', maxsplit=1)[-1]}",
-        create_function_test_classifier(clf),
+        f"test_{clf_to_test.rsplit('.', maxsplit=1)[-1]}",
+        create_function_test_classifier(clf_to_test),
     )
 
 
