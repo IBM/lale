@@ -119,8 +119,7 @@ def always_validate_schema(value, schema: JSON_TYPE, subsample_array: bool = Tru
     try:
         validator = _lale_validator(sch)
         validator.validate(json_value)
-    # FIXME: narrow the Exception and remove the pylint disable
-    except Exception:  # pylint:disable=broad-except
+    except Exception:
         jsonschema.validate(json_value, sch, _lale_validator)
 
 

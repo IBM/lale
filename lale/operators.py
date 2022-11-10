@@ -3725,18 +3725,15 @@ class BasePipeline(Operator, Generic[OpType_co]):
                 name_index = found_names[name] + 1
                 found_names[name] = name_index
                 uname = make_indexed_name(name, name_index)
-                if uname in partitioned_sub_params:  # pylint:disable=consider-using-get
-                    params = partitioned_sub_params[uname]
+                params = partitioned_sub_params.get(uname, params)
             else:
                 found_names[name] = 0
                 uname = make_degen_indexed_name(name, 0)
                 if uname in partitioned_sub_params:
                     params = partitioned_sub_params[uname]
                     assert name not in partitioned_sub_params
-                elif (  # pylint:disable=consider-using-get
-                    name in partitioned_sub_params
-                ):
-                    params = partitioned_sub_params[name]
+                else:
+                    params = partitioned_sub_params.get(name, params)
             new_s = s._with_params(try_mutate, **params)
             if s != new_s:
                 # getting this to statically type check would be very complicated
