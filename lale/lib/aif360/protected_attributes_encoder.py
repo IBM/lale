@@ -265,7 +265,7 @@ class _ProtectedAttributesEncoderImpl:
     y_name: str
     protected_attributes: List[Dict[str, Any]]
 
-    def __init__(  # pylint:disable=dangerous-default-value
+    def __init__(
         self,
         *,
         favorable_labels=None,
