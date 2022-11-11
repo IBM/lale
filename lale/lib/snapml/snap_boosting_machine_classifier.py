@@ -54,7 +54,7 @@ class _SnapBoostingMachineClassifierImpl:
         fit_intercept=False,
         gamma=1.0,
         n_components=10,
-        gpu_ids=[0],
+        gpu_ids=None,
     ):
         assert (
             snapml_version is not None
@@ -85,7 +85,10 @@ class _SnapBoostingMachineClassifierImpl:
             "n_components": n_components,
         }
         if snapml_version > version.Version("1.7.8"):
-            self._hyperparams["gpu_ids"] = gpu_ids
+            if gpu_ids is None:
+                self._hyperparams["gpu_ids"] = [0]
+            else:
+                self._hyperparams["gpu_ids"] = gpu_ids
         else:
             self._hyperparams["gpu_id"] = gpu_id
 
@@ -475,16 +478,17 @@ SnapBoostingMachineClassifier = lale.operators.make_operator(
 )
 
 if snapml_version is not None and snapml_version > version.Version("1.7.8"):  # type: ignore # noqa
-    from lale.schemas import Array, Int
-
     SnapBoostingMachineClassifier = SnapBoostingMachineClassifier.customize_schema(
         gpu_id=None,
-        gpu_ids=Array(
-            desc="""Device IDs of the GPUs which will be used when GPU acceleration is enabled.""",
-            items=Int(),
-            default=[0],
-            forOptimizer=False,
-        ),
+        gpu_ids={
+            "description": "Device IDs of the GPUs which will be used when GPU acceleration is enabled.",
+            "anyOf": [
+                {"type": "array", "items": {"type": "integer"}},
+                {"enum": [None], "description": "Use [0]."},
+            ],
+            "default": None,
+            "forOptimizer": False,
+        },
         set_as_available=True,
     )
 

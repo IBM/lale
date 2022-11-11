@@ -47,9 +47,13 @@ _hyperparams_schema = {
                     ],
                     "default": None,
                 },
-                "protected_attributes": _categorical_fairness_properties[
-                    "protected_attributes"
-                ],
+                "protected_attributes": {
+                    "anyOf": [
+                        _categorical_fairness_properties["protected_attributes"],
+                        {"enum": [None]},
+                    ],
+                    "default": None,
+                },
                 "unfavorable_labels": _categorical_fairness_properties[
                     "unfavorable_labels"
                 ],
@@ -265,14 +269,17 @@ class _ProtectedAttributesEncoderImpl:
         self,
         *,
         favorable_labels=None,
-        protected_attributes=[],
+        protected_attributes=None,
         unfavorable_labels=None,
         remainder="drop",
         return_X_y=False,
         combine="keep_separate",
     ):
         self.favorable_labels = favorable_labels
-        self.protected_attributes = protected_attributes
+        if protected_attributes is None:
+            self.protected_attributes = []
+        else:
+            self.protected_attributes = protected_attributes
         self.unfavorable_labels = unfavorable_labels
         self.remainder = remainder
         self.return_X_y = return_X_y
