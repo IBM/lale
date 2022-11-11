@@ -24,11 +24,11 @@ def _println_pos(message):
     tb = traceback.extract_stack()[-2]
     match = re.search(r"<ipython-input-([0-9]+)-", tb[0])
     if match:
-        pos = "notebook cell [{}] line {}".format(match[1], tb[1])
+        pos = f"notebook cell [{match[1]}] line {tb[1]}"
     else:
-        pos = "{}:{}".format(tb[0], tb[1])
+        pos = f"{tb[0]}:{tb[1]}"
     strtime = time.strftime("%Y-%m-%d_%H-%M-%S")
-    to_log = "{}: {} {}".format(pos, strtime, message)
+    to_log = f"{pos}: {strtime} {message}"
 
     # if we are running in a notebook, then we also want to print to the console
     # (stored in sys.__stdout__) instead of just the (redirected) sys.stdout
@@ -58,7 +58,7 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
     pp_pipeline: Optional[lale.operators.TrainablePipeline] = None
 
     @classmethod
-    def setUp(cls) -> None:
+    def setUp(cls) -> None:  # pylint:disable=arguments-differ
         urllib.request.urlretrieve(cls.train_csv_url, cls.train_csv_path)
         TestAutoAIOutputConsumption.training_df = pd.read_csv(
             TestAutoAIOutputConsumption.train_csv_path
@@ -94,25 +94,23 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
         wrapped_pipeline = wrap_pipeline_segments(lale_pipeline)
         assert wrapped_pipeline is not None
         TestAutoAIOutputConsumption.pipeline_content = wrapped_pipeline.pretty_print()
-        assert type(TestAutoAIOutputConsumption.pipeline_content) is str
+        assert isinstance(TestAutoAIOutputConsumption.pipeline_content, str)
         assert len(TestAutoAIOutputConsumption.pipeline_content) > 0
         _println_pos(
             f'pretty-printed """{TestAutoAIOutputConsumption.pipeline_content}"""'
         )
         assert (
             "lale.wrap_imported_operators()"
-            in TestAutoAIOutputConsumption.pipeline_content
+            in TestAutoAIOutputConsumption.pipeline_content  # pylint:disable=unsupported-membership-test
         )
 
     def test_04_execute_pipeline(self):
         try:
-            with open("pp_pipeline.py", "w") as pipeline_f:
+            with open("pp_pipeline.py", "w", encoding="utf-8") as pipeline_f:
                 assert TestAutoAIOutputConsumption.pipeline_content is not None
                 pipeline_f.write(TestAutoAIOutputConsumption.pipeline_content)
 
             import importlib.util
-
-            import lale.operators
 
             spec = importlib.util.spec_from_file_location(
                 "pp_pipeline", "pp_pipeline.py"
@@ -165,7 +163,6 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
             ), f"Exception was thrown during pretty print model prediction: {e}"
 
     def test_07_convert_model_to_lale(self):
-        import lale.operators
 
         try:
             lale_pipeline = TestAutoAIOutputConsumption.model
@@ -197,7 +194,7 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
             t_df = TestAutoAIOutputConsumption.training_df
             assert t_df is not None
             train_X = t_df.drop(["Risk"], axis=1).values
-            train_y = t_df["Risk"].values
+            train_y = t_df["Risk"].values  # pylint:disable=unsubscriptable-object
             hyperopt = Hyperopt(
                 estimator=new_model, cv=2, max_evals=3, scoring="roc_auc"
             )

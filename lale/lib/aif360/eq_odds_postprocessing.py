@@ -45,7 +45,7 @@ class _EqOddsPostprocessingImpl(_BasePostEstimatorImpl):
             privileged_groups=privileged_groups,
             seed=seed,
         )
-        super(_EqOddsPostprocessingImpl, self).__init__(
+        super().__init__(
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
             unfavorable_labels=unfavorable_labels,

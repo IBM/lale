@@ -229,9 +229,7 @@ def _get_state(op: "lale.operators.Operator") -> str:
         return "trained"
     if isinstance(op, lale.operators.TrainableOperator):
         return "trainable"
-    if isinstance(op, lale.operators.PlannedOperator) or isinstance(
-        op, lale.operators.OperatorChoice
-    ):
+    if isinstance(op, (lale.operators.PlannedOperator, lale.operators.OperatorChoice)):
         return "planned"
     if isinstance(op, lale.operators.Operator):
         return "metamodel"
@@ -322,10 +320,8 @@ def _hps_to_json_rec(
         }
     elif isinstance(hps, tuple):
         return tuple(
-            [
-                _hps_to_json_rec(hp_val, cls2label, gensym, steps, add_custom_default)
-                for hp_val in hps
-            ]
+            _hps_to_json_rec(hp_val, cls2label, gensym, steps, add_custom_default)
+            for hp_val in hps
         )
     elif isinstance(hps, list):
         return [
@@ -354,8 +350,8 @@ def _get_customize_schema(after, before):
     def list_equal_modulo(l1, l2, mod):
         if len(l1) != len(l2):
             return False
-        for i in range(len(l1)):
-            if i != mod and l1[i] != l2[i]:
+        for i, (v1, v2) in enumerate(zip(l1, l2)):
+            if i != mod and v1 != v2:
                 return False
         return True
 
@@ -520,7 +516,7 @@ def _hps_from_json_rec(jsn: Any, steps: JSON_TYPE) -> Any:
         else:
             return {k: _hps_from_json_rec(v, steps) for k, v in jsn.items()}
     elif isinstance(jsn, tuple):
-        return tuple([_hps_from_json_rec(v, steps) for v in jsn])
+        return tuple(_hps_from_json_rec(v, steps) for v in jsn)
     elif isinstance(jsn, list):
         return [_hps_from_json_rec(v, steps) for v in jsn]
     else:

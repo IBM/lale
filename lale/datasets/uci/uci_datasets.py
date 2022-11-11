@@ -44,8 +44,7 @@ def download(dataset_id, zip_name, contents_files):
             # this request is to a string that begins with a hardcoded http url, so does not risk leaking local data
             urllib.request.urlretrieve(zip_url, tmp_zip_file.name)  # nosec
             with zipfile.ZipFile(tmp_zip_file.name) as myzip:
-                for i in range(len(contents_files)):
-                    full, base = full_file_names[i], contents_files[i]
+                for full, base in zip(full_file_names, contents_files):
                     if not os.path.exists(full):
                         myzip.extract(base, data_dir)
     assert all_downloaded

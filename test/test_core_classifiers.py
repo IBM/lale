@@ -86,7 +86,7 @@ def create_function_test_classifier(clf_name):
 
         if isinstance(clf, GradientBoostingClassifier):  # type: ignore
             # because exponential loss does not work with iris dataset as it is not binary classification
-            import lale.schemas as schemas
+            from lale import schemas
 
             clf = clf.customize_schema(
                 loss=schemas.Enum(default="deviance", values=["deviance"])
@@ -130,7 +130,7 @@ def create_function_test_classifier(clf_name):
         trained = pipeline.fit(self.X_train, self.y_train)
         _ = trained.predict(self.X_test)
 
-    test_classifier.__name__ = "test_{0}".format(clf.split(".")[-1])
+    test_classifier.__name__ = f"test_{clf_to_test.rsplit('.', maxsplit=1)[-1]}"
     return test_classifier
 
 
@@ -158,11 +158,11 @@ classifiers = [
     "lale.lib.sklearn.IsolationForest",
     "lale.lib.sklearn.KMeans",
 ]
-for clf in classifiers:
+for clf_to_test in classifiers:
     setattr(
         TestClassification,
-        "test_{0}".format(clf.split(".")[-1]),
-        create_function_test_classifier(clf),
+        f"test_{clf_to_test.rsplit('.', maxsplit=1)[-1]}",
+        create_function_test_classifier(clf_to_test),
     )
 
 
@@ -198,7 +198,6 @@ class TestVotingClassifier(unittest.TestCase):
         data = load_iris()
         X, y = data.data, data.target
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
-        import warnings
 
         warnings.filterwarnings("ignore")
 
@@ -210,8 +209,6 @@ class TestVotingClassifier(unittest.TestCase):
         trained.predict(self.X_test)
 
     def test_with_lale_pipeline(self):
-        from lale.lib.sklearn import VotingClassifier
-
         clf = VotingClassifier(
             estimators=[
                 ("knn", KNeighborsClassifier()),
@@ -223,7 +220,6 @@ class TestVotingClassifier(unittest.TestCase):
 
     def test_with_hyperopt(self):
         from lale.lib.lale import Hyperopt
-        from lale.lib.sklearn import VotingClassifier
 
         clf = VotingClassifier(
             estimators=[("knn", KNeighborsClassifier()), ("lr", LogisticRegression())]
@@ -234,7 +230,6 @@ class TestVotingClassifier(unittest.TestCase):
         from sklearn.metrics import accuracy_score, make_scorer
 
         from lale.lib.lale import GridSearchCV
-        from lale.lib.sklearn import VotingClassifier
 
         clf = VotingClassifier(
             estimators=[("knn", KNeighborsClassifier()), ("rc", RidgeClassifier())],
@@ -256,7 +251,6 @@ class TestVotingClassifier(unittest.TestCase):
 
         from lale.lib.lale import GridSearchCV
         from lale.lib.lale.observing import LoggingObserver
-        from lale.lib.sklearn import VotingClassifier
 
         clf = VotingClassifier(
             estimators=[("knn", KNeighborsClassifier()), ("rc", RidgeClassifier())],
@@ -281,8 +275,6 @@ class TestBaggingClassifier(unittest.TestCase):
         data = load_iris()
         X, y = data.data, data.target
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
-
-        import warnings
 
         warnings.filterwarnings("ignore")
 
@@ -596,7 +588,6 @@ class TestLogisticRegression(unittest.TestCase):
         _ = trained_lr.decision_function(iris.data)
 
     def test_with_sklearn_gridsearchcv(self):
-        from sklearn.datasets import load_iris
         from sklearn.metrics import accuracy_score, make_scorer
         from sklearn.model_selection import GridSearchCV
 
@@ -669,14 +660,13 @@ class TestLogisticRegression(unittest.TestCase):
         X_all, y_all = sklearn.utils.shuffle(iris.data, iris.target, random_state=42)
         X_train, y_train = X_all[10:], y_all[10:]
         X_test, y_test = X_all[:10], y_all[:10]
-        print("expected {}".format(y_test))
-        import warnings
+        print(f"expected {y_test}")
 
         warnings.filterwarnings("ignore", category=FutureWarning)
         trainable = MyLR(solver="lbfgs", C=0.1)
         trained = trainable.fit(X_train, y_train)
         predictions = trained.predict(X_test)
-        print("actual {}".format(predictions))
+        print(f"actual {predictions}")
 
 
 class TestIsolationForest(unittest.TestCase):
@@ -687,7 +677,6 @@ class TestIsolationForest(unittest.TestCase):
         data = load_boston()
         X, y = data.data, data.target
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
-        import warnings
 
         warnings.filterwarnings("ignore")
 
@@ -772,7 +761,6 @@ class TestKMeans(unittest.TestCase):
         data = load_boston()
         X, y = data.data, data.target
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
-        import warnings
 
         warnings.filterwarnings("ignore")
 

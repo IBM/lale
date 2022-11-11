@@ -222,9 +222,9 @@ def _f_oneway_lower(lifted: FOnewayData):
 class FClassif(ScoreMonoidFactory[FOnewayData]):
     """Compute the ANOVA F-value for the provided sample."""
 
-    def to_monoid(self, v: Tuple[Any, Any]) -> FOnewayData:
-        X, y = v
+    def to_monoid(self, batch: Tuple[Any, Any]) -> FOnewayData:
+        X, y = batch
         return _f_oneway_lift(X, y)
 
-    def from_monoid(self, lifted: FOnewayData):
-        return _f_oneway_lower(lifted)
+    def from_monoid(self, monoid: FOnewayData):
+        return _f_oneway_lower(monoid)

@@ -99,13 +99,13 @@ class _MinMaxScalerImpl(MonoidableOperator[_MinMaxScalerMonoid]):
     def feature_names_in_(self):
         return getattr(self._monoid, "feature_names_in_", None)
 
-    def from_monoid(self, v: _MinMaxScalerMonoid):
-        self._monoid = v
-        self.n_features_in_ = len(v.feature_names_in_)
-        self.data_range_ = v.data_max_ - v.data_min_  # type: ignore
+    def from_monoid(self, monoid: _MinMaxScalerMonoid):
+        self._monoid = monoid
+        self.n_features_in_ = len(monoid.feature_names_in_)
+        self.data_range_ = monoid.data_max_ - monoid.data_min_  # type: ignore
         range_min, range_max = self._hyperparams["feature_range"]
-        self.scale_ = (range_max - range_min) / _handle_zeros_in_scale(v.data_max_ - v.data_min_)  # type: ignore
-        self.min_ = range_min - v.data_min_ * self.scale_
+        self.scale_ = (range_max - range_min) / _handle_zeros_in_scale(monoid.data_max_ - monoid.data_min_)  # type: ignore
+        self.min_ = range_min - monoid.data_min_ * self.scale_
         self._transformer = None
 
     def _build_transformer(self):
@@ -139,8 +139,8 @@ class _MinMaxScalerImpl(MonoidableOperator[_MinMaxScalerMonoid]):
         )
         return scale_map >> clip_map
 
-    def to_monoid(self, v: Tuple[Any, Any]) -> _MinMaxScalerMonoid:
-        X, _ = v
+    def to_monoid(self, batch: Tuple[Any, Any]) -> _MinMaxScalerMonoid:
+        X, _ = batch
         X_cols = get_columns(X)
         agg = {f"{c}_min": agg_min(it[c]) for c in X_cols}
         agg.update({f"{c}_max": agg_max(it[c]) for c in X_cols})

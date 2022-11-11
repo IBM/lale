@@ -82,16 +82,16 @@ class _StaticMonoidFactory(MonoidFactory[Any, List[column_index], _StaticMonoid]
     def __init__(self, cl):
         self._cl = cl
 
-    def to_monoid(self, df):
+    def to_monoid(self, batch):
         cl = self._cl
         if cl is None:
-            cl = get_columns(df)
+            cl = get_columns(batch)
             self._cl = cl
 
         return _StaticMonoid(cl)
 
-    def from_monoid(self, v: _StaticMonoid):
-        return v._v
+    def from_monoid(self, monoid: _StaticMonoid):
+        return monoid._v
 
 
 class _DynamicMonoidFactory(
@@ -104,34 +104,34 @@ class _CallableMonoidFactory(_DynamicMonoidFactory):
     def __init__(self, c):
         self._c = c
 
-    def to_monoid(self, df):
+    def to_monoid(self, batch):
         c = self._c
         if not isinstance(c, list):
             assert callable(c)
-            c = c(df)
+            c = c(batch)
             self._c = c
 
         return _StaticMonoid(c)
 
-    def from_monoid(self, v: _StaticMonoid):
-        return v._v
+    def from_monoid(self, monoid: _StaticMonoid):
+        return monoid._v
 
 
 class _SchemaMonoidFactory(_DynamicMonoidFactory):
     def __init__(self, c):
         self._c = c
 
-    def to_monoid(self, df):
+    def to_monoid(self, batch):
         c = self._c
         if not isinstance(c, list):
             assert isinstance(c, dict)
-            c = _columns_schema_to_list(df, c)
+            c = _columns_schema_to_list(batch, c)
             self._c = c
 
         return _StaticMonoid(c)
 
-    def from_monoid(self, v: _StaticMonoid):
-        return v._v
+    def from_monoid(self, monoid: _StaticMonoid):
+        return monoid._v
 
 
 class _AllDataMonoidFactory(_CallableMonoidFactory):
@@ -210,8 +210,8 @@ class _ProjectImpl:
 
         return _ProjectMonoid(col, dcol)
 
-    def to_monoid(self, xy):
-        return self._to_monoid_internal(xy)
+    def to_monoid(self, batch):
+        return self._to_monoid_internal(batch)
 
     def _from_monoid_internal(self, pm: _ProjectMonoid):
         col = self._columns.from_monoid(pm._columns)
@@ -219,8 +219,8 @@ class _ProjectImpl:
 
         self._fit_columns = [c for c in col if c not in dcol]
 
-    def from_monoid(self, pm: _ProjectMonoid):
-        self._from_monoid_internal(pm)
+    def from_monoid(self, monoid: _ProjectMonoid):
+        self._from_monoid_internal(monoid)
 
     _monoid: Optional[_ProjectMonoid]
 

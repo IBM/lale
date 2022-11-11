@@ -29,7 +29,7 @@ import lale.datasets.openml
 import lale.lib.lale
 import lale.lib.rasl
 from lale.datasets.data_schemas import add_schema_adjusting_n_rows
-from lale.expressions import astype, it, sum
+from lale.expressions import astype, it, sum  # pylint:disable=redefined-builtin
 from lale.helpers import GenSym, _ensure_pandas
 from lale.lib.dataframe import get_columns
 from lale.lib.rasl import Aggregate, ConcatFeatures, Map
@@ -1185,9 +1185,9 @@ class _AccuracyAndDisparateImpact(MetricMonoidFactory[_AccuracyAndSymmDIData]):
             self.accuracy_scorer.to_monoid(batch), self.symm_di_scorer.to_monoid(batch)
         )
 
-    def from_monoid(self, v: _AccuracyAndSymmDIData) -> float:
-        accuracy = self.accuracy_scorer.from_monoid(v.accuracy_data)
-        symm_di = self.symm_di_scorer.from_monoid(v.symm_di_data)
+    def from_monoid(self, monoid: _AccuracyAndSymmDIData) -> float:
+        accuracy = self.accuracy_scorer.from_monoid(monoid.accuracy_data)
+        symm_di = self.symm_di_scorer.from_monoid(monoid.symm_di_data)
         return self._blend_metrics(accuracy, symm_di)
 
     def score_data(
@@ -1266,18 +1266,18 @@ class _AverageOddsDifference(
             unfavorable_labels,
         )
 
-    def from_monoid(self, v: _AODorEODData) -> float:
-        fpr_priv0 = v.tru0_pred1_priv0 / np.float64(
-            v.tru0_pred1_priv0 + v.tru0_pred0_priv0
+    def from_monoid(self, monoid: _AODorEODData) -> float:
+        fpr_priv0 = monoid.tru0_pred1_priv0 / np.float64(
+            monoid.tru0_pred1_priv0 + monoid.tru0_pred0_priv0
         )
-        fpr_priv1 = v.tru0_pred1_priv1 / np.float64(
-            v.tru0_pred1_priv1 + v.tru0_pred0_priv1
+        fpr_priv1 = monoid.tru0_pred1_priv1 / np.float64(
+            monoid.tru0_pred1_priv1 + monoid.tru0_pred0_priv1
         )
-        tpr_priv0 = v.tru1_pred1_priv0 / np.float64(
-            v.tru1_pred1_priv0 + v.tru1_pred0_priv0
+        tpr_priv0 = monoid.tru1_pred1_priv0 / np.float64(
+            monoid.tru1_pred1_priv0 + monoid.tru1_pred0_priv0
         )
-        tpr_priv1 = v.tru1_pred1_priv1 / np.float64(
-            v.tru1_pred1_priv1 + v.tru1_pred0_priv1
+        tpr_priv1 = monoid.tru1_pred1_priv1 / np.float64(
+            monoid.tru1_pred1_priv1 + monoid.tru1_pred0_priv1
         )
         return 0.5 * float(fpr_priv0 - fpr_priv1 + tpr_priv0 - tpr_priv1)
 
@@ -1368,9 +1368,9 @@ class _BalancedAccuracyAndDisparateImpact(MetricMonoidFactory[_BalAccAndSymmDIDa
             self.bal_acc_scorer.to_monoid(batch), self.symm_di_scorer.to_monoid(batch)
         )
 
-    def from_monoid(self, v: _BalAccAndSymmDIData) -> float:
-        bal_acc = self.bal_acc_scorer.from_monoid(v.bal_acc_data)
-        symm_di = self.symm_di_scorer.from_monoid(v.symm_di_data)
+    def from_monoid(self, monoid: _BalAccAndSymmDIData) -> float:
+        bal_acc = self.bal_acc_scorer.from_monoid(monoid.bal_acc_data)
+        symm_di = self.symm_di_scorer.from_monoid(monoid.symm_di_data)
         return self._blend_metrics(bal_acc, symm_di)
 
     def score_data(
@@ -1447,9 +1447,13 @@ class _DisparateImpact(_DIorSPDScorerFactory, MetricMonoidFactory[_DIorSPDData])
             unfavorable_labels,
         )
 
-    def from_monoid(self, v: _DIorSPDData) -> float:
-        numerator = v.priv0_fav1 / np.float64(v.priv0_fav0 + v.priv0_fav1)
-        denominator = v.priv1_fav1 / np.float64(v.priv1_fav0 + v.priv1_fav1)
+    def from_monoid(self, monoid: _DIorSPDData) -> float:
+        numerator = monoid.priv0_fav1 / np.float64(
+            monoid.priv0_fav0 + monoid.priv0_fav1
+        )
+        denominator = monoid.priv1_fav1 / np.float64(
+            monoid.priv1_fav0 + monoid.priv1_fav1
+        )
         return float(numerator / denominator)
 
 
@@ -1502,12 +1506,12 @@ class _EqualOpportunityDifference(
             unfavorable_labels,
         )
 
-    def from_monoid(self, v: _AODorEODData) -> float:
-        tpr_priv0 = v.tru1_pred1_priv0 / np.float64(
-            v.tru1_pred1_priv0 + v.tru1_pred0_priv0
+    def from_monoid(self, monoid: _AODorEODData) -> float:
+        tpr_priv0 = monoid.tru1_pred1_priv0 / np.float64(
+            monoid.tru1_pred1_priv0 + monoid.tru1_pred0_priv0
         )
-        tpr_priv1 = v.tru1_pred1_priv1 / np.float64(
-            v.tru1_pred1_priv1 + v.tru1_pred0_priv1
+        tpr_priv1 = monoid.tru1_pred1_priv1 / np.float64(
+            monoid.tru1_pred1_priv1 + monoid.tru1_pred0_priv1
         )
         return tpr_priv0 - tpr_priv1  # type: ignore
 
@@ -1615,9 +1619,9 @@ class _F1AndDisparateImpact(MetricMonoidFactory[_F1AndSymmDIData]):
             self.symm_di_scorer.to_monoid(batch),
         )
 
-    def from_monoid(self, v: _F1AndSymmDIData) -> float:
-        f1 = self.f1_scorer.from_monoid(v.f1_data)
-        symm_di = self.symm_di_scorer.from_monoid(v.symm_di_data)
+    def from_monoid(self, monoid: _F1AndSymmDIData) -> float:
+        f1 = self.f1_scorer.from_monoid(monoid.f1_data)
+        symm_di = self.symm_di_scorer.from_monoid(monoid.symm_di_data)
         return self._blend_metrics(f1, symm_di)
 
     def score_data(
@@ -1734,9 +1738,9 @@ class _R2AndDisparateImpact(MetricMonoidFactory[_R2AndSymmDIData]):
             self.r2_scorer.to_monoid(batch), self.symm_di_scorer.to_monoid(batch)
         )
 
-    def from_monoid(self, v: _R2AndSymmDIData) -> float:
-        r2 = self.r2_scorer.from_monoid(v.r2_data)
-        symm_di = self.symm_di_scorer.from_monoid(v.symm_di_data)
+    def from_monoid(self, monoid: _R2AndSymmDIData) -> float:
+        r2 = self.r2_scorer.from_monoid(monoid.r2_data)
+        symm_di = self.symm_di_scorer.from_monoid(monoid.symm_di_data)
         return self._blend_metrics(r2, symm_di)
 
     def score_data(
@@ -1815,9 +1819,11 @@ class _StatisticalParityDifference(
             unfavorable_labels,
         )
 
-    def from_monoid(self, v: _DIorSPDData) -> float:
-        minuend = v.priv0_fav1 / np.float64(v.priv0_fav0 + v.priv0_fav1)
-        subtrahend = v.priv1_fav1 / np.float64(v.priv1_fav0 + v.priv1_fav1)
+    def from_monoid(self, monoid: _DIorSPDData) -> float:
+        minuend = monoid.priv0_fav1 / np.float64(monoid.priv0_fav0 + monoid.priv0_fav1)
+        subtrahend = monoid.priv1_fav1 / np.float64(
+            monoid.priv1_fav0 + monoid.priv1_fav1
+        )
         return float(minuend - subtrahend)
 
 
@@ -1877,8 +1883,8 @@ class _SymmetricDisparateImpact(MetricMonoidFactory[_DIorSPDData]):
     def to_monoid(self, batch: _Batch_yyX) -> _DIorSPDData:
         return self.disparate_impact_scorer.to_monoid(batch)
 
-    def from_monoid(self, v: _DIorSPDData) -> float:
-        return self._make_symmetric(self.disparate_impact_scorer.from_monoid(v))
+    def from_monoid(self, monoid: _DIorSPDData) -> float:
+        return self._make_symmetric(self.disparate_impact_scorer.from_monoid(monoid))
 
     def score_data(
         self,

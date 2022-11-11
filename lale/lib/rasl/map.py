@@ -50,9 +50,9 @@ def _new_column_name(name, expr):
 
 def _infer_new_name(expr):
     if (
-        _is_ast_call(expr._expr)
-        and _is_ast_name(expr._expr.func)
-        and expr._expr.func.id
+        _is_ast_call(expr.expr)
+        and _is_ast_name(expr.expr.func)
+        and expr.expr.func.id
         in [
             "identity",
             "isnan",
@@ -67,9 +67,9 @@ def _infer_new_name(expr):
             "minute",
             "month",
         ]
-        and _is_ast_subs_or_attr(expr._expr.args[0])
+        and _is_ast_subs_or_attr(expr.expr.args[0])
     ):
-        return _it_column(expr._expr.args[0])
+        return _it_column(expr.expr.args[0])
     else:
         raise ValueError(
             """New name of the column to be renamed cannot be None or empty. You may want to use a dictionary
@@ -79,7 +79,7 @@ def _infer_new_name(expr):
 
 def _validate(X, expr):
     visitor = _Validate(X)
-    visitor.visit(expr._expr)
+    visitor.visit(expr.expr)
     return visitor.accessed
 
 
@@ -134,8 +134,7 @@ class _MapImpl:
             raise AttributeError(
                 "fit cannot be called on a Map that has a static expression or has already been fit"
             )
-        else:
-            return super().__getattribute__(item)
+        return super().__getattribute__(item)
 
     def transform(self, X):
         if _is_pandas_df(X):

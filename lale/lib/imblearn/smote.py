@@ -50,9 +50,7 @@ class _SMOTEImpl(_BaseResamplerImpl):
         }
 
         resampler_instance = OrigModel(**self._hyperparams)
-        super(_SMOTEImpl, self).__init__(
-            operator=operator, resampler=resampler_instance
-        )
+        super().__init__(operator=operator, resampler=resampler_instance)
 
 
 _hyperparams_schema = {

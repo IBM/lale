@@ -17,6 +17,8 @@ import unittest
 import jsonschema
 import numpy as np
 import pandas as pd
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
 
 import lale.operators
 from lale.lib.rasl.convert import Convert
@@ -26,22 +28,21 @@ try:
     from pyspark import SparkConf, SparkContext
     from pyspark.sql import Row, SparkSession, SQLContext
 
-    from lale.datasets.data_schemas import SparkDataFrameWithIndex
+    from lale.datasets.data_schemas import (  # pylint:disable=ungrouped-imports
+        SparkDataFrameWithIndex,
+    )
 
     spark_installed = True
 except ImportError:
     spark_installed = False
 
-from test import EnableSchemaValidation
-
-from sklearn.datasets import load_iris
-from sklearn.model_selection import train_test_split
+from test import EnableSchemaValidation  # pylint:disable=wrong-import-order
 
 from lale.datasets import pandas2spark
 from lale.datasets.data_schemas import add_table_name, get_index_name, get_table_name
 from lale.datasets.multitable import multitable_train_test_split
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
-from lale.expressions import (
+from lale.expressions import (  # pylint:disable=redefined-builtin
     asc,
     astype,
     collect_set,
@@ -69,6 +70,7 @@ from lale.expressions import (
     replace,
     string_indexer,
     sum,
+    variance,
 )
 from lale.helpers import _ensure_pandas, _is_pandas_df, _is_spark_df
 from lale.lib.dataframe import get_columns
@@ -118,7 +120,7 @@ class TestExpressions(unittest.TestCase):
 
     def test_expr_5(self):
         X = it.col
-        self.assertTrue(X == X)
+        self.assertTrue(X == X)  # pylint:disable=comparison-with-itself
 
     def test_expr_6(self):
         self.assertFalse(it.col != 5)
@@ -135,7 +137,7 @@ class TestExpressions(unittest.TestCase):
 
     def test_expr_9(self):
         X = it.col
-        self.assertTrue(X != X)
+        self.assertTrue(X != X)  # pylint:disable=comparison-with-itself
 
 
 # Testing filter operator
@@ -1575,8 +1577,6 @@ class TestMap(unittest.TestCase):
                 _ = Map(columns=[123, "hello"])
 
     def test_pandas_with_hyperopt(self):
-        from sklearn.datasets import load_iris
-
         X, y = load_iris(return_X_y=True)
         gender_map = {"m": "Male", "f": "Female"}
         state_map = {"NY": "New York", "CA": "California"}
@@ -1603,7 +1603,6 @@ class TestMap(unittest.TestCase):
                 _ = trained.transform(df)
 
     def test_pands_with_hyperopt2(self):
-        from lale.expressions import count, it, max, mean, min, sum, variance
 
         wrap_imported_operators()
         scan = Scan(table=it["main"])
@@ -1616,7 +1615,7 @@ class TestMap(unittest.TestCase):
                 )
             ]
         )
-        map = Map(
+        map_op = Map(
             columns={
                 "[main](group_customer_id)[customers]|number_children|identity": it[
                     "number_children"
@@ -1628,7 +1627,7 @@ class TestMap(unittest.TestCase):
             },
             remainder="drop",
         )
-        pipeline_4 = join >> map
+        pipeline_4 = join >> map_op
         scan_1 = Scan(table=it["purchase"])
         join_0 = Join(
             pred=[(it["main"]["group_id"] == it["purchase"]["group_id"])],
@@ -1756,7 +1755,6 @@ class TestMap(unittest.TestCase):
             )
         )
         pipeline = relational >> (KNeighborsClassifier | LogisticRegression)
-        from sklearn.datasets import load_iris
 
         X, y = load_iris(return_X_y=True)
 
@@ -2100,8 +2098,8 @@ class TestMap(unittest.TestCase):
         self.assertNotIsInstance(op, lale.operators.TrainedOperator)
 
         pipeline = Scan(table=it.go_products) >> op
-        pd = self.tgt2datasets["pandas"]["go_sales"]
-        trained = pipeline.fit(pd)
+        pd_data = self.tgt2datasets["pandas"]["go_sales"]
+        trained = pipeline.fit(pd_data)
         trained_map = trained.steps_list()[1]
         self.assertIsInstance(trained_map, Map)  # type: ignore
         self.assertIsInstance(trained_map, lale.operators.TrainedOperator)
@@ -2117,11 +2115,11 @@ class TestMap(unittest.TestCase):
             self.assertIn("Product number", result.columns)
             self.assertNotIn("Product line", result.columns)
 
-    def assertSeriesEqual(self, first, second, msg=None):
-        self.assertIsInstance(first, pd.Series, msg)
-        self.assertIsInstance(second, pd.Series, msg)
-        self.assertEqual(first.shape, second.shape, msg)
-        self.assertEqual(list(first), list(second), msg)
+    def assertSeriesEqual(self, first_series, second_series, msg=None):
+        self.assertIsInstance(first_series, pd.Series, msg)
+        self.assertIsInstance(second_series, pd.Series, msg)
+        self.assertEqual(first_series.shape, second_series.shape, msg)
+        self.assertEqual(list(first_series), list(second_series), msg)
 
     def test_transform_compare_ops(self):
         trained = Map(
@@ -2192,9 +2190,6 @@ class TestMap(unittest.TestCase):
 class TestRelationalOperator(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        from sklearn.datasets import load_iris
-        from sklearn.model_selection import train_test_split
-
         targets = ["pandas", "spark"]
         cls.tgt2datasets = {tgt: {} for tgt in targets}
 
@@ -2385,7 +2380,7 @@ class TestOrderBy(unittest.TestCase):
 
 class TestSplitXy(unittest.TestCase):
     @classmethod
-    def setUp(cls):
+    def setUp(cls):  # pylint:disable=arguments-differ
         data = load_iris()
         X, y = data.data, data.target
         X_train, X_test, y_train, y_test = train_test_split(

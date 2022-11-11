@@ -79,8 +79,9 @@ class _OptimizeSuffix:
     def add_suffix(
         self, suffix: lale.operators.TrainedOperator
     ) -> lale.operators.TrainedOperator:
-        trained: lale.operators.TrainedOperator
         """Given a trained suffix, adds it to the prefix to give a trained pipeline"""
+        trained: lale.operators.TrainedOperator
+
         if self._prefix is None:
             trained = suffix
         else:
@@ -90,10 +91,10 @@ class _OptimizeSuffix:
 
     def predict(self, X_eval, **predict_params):
         if self._prefix is None:
-            input = X_eval
+            X_input = X_eval
         else:
-            input = self._prefix.transform(X_eval)
-        return self._optimizer.predict(input, **predict_params)
+            X_input = self._prefix.transform(X_eval)
+        return self._optimizer.predict(X_input, **predict_params)
 
     def summary(self, **kwargs):
         return self._optimizer.summary(**kwargs)

@@ -21,6 +21,7 @@ from packaging import version
 import lale.docstrings
 import lale.helpers
 import lale.operators
+import lale.schemas
 
 from ._common_schemas import schema_silent
 
@@ -483,7 +484,6 @@ XGBRegressor = lale.operators.make_operator(_XGBRegressorImpl, _combined_schemas
 
 if xgboost_version is not None and xgboost_version >= version.Version("0.90"):
     # page 58 of https://readthedocs.org/projects/xgboost/downloads/pdf/release_0.90/
-    import lale.schemas
 
     XGBRegressor = XGBRegressor.customize_schema(
         objective=lale.schemas.JSON(

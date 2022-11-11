@@ -305,7 +305,6 @@ If you wish to standardize, please use StandardScaler before calling fit on an e
 All last six solvers support both dense and sparse data. However, only
 'sag', 'sparse_cg', and 'lbfgs' support sparse input when `fit_intercept`
 is True.""",
-            "default": "auto",
             "forOptimizer": True,
         },
         set_as_available=True,

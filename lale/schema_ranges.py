@@ -17,7 +17,7 @@ from typing import Any, Optional, Union
 from .schema_utils import JsonSchema
 
 
-class SchemaRange(object):
+class SchemaRange:
     def __init__(
         self,
         minimum=None,

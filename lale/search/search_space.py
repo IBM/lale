@@ -90,7 +90,7 @@ class SearchSpace(metaclass=AbstractVisitorMeta):
 
 class SearchSpaceEmpty(SearchSpace):
     def __init__(self):
-        super(SearchSpaceEmpty, self).__init__()
+        super().__init__()
 
     def _focused_str(self, path: Optional[List[SearchSpace]] = None) -> str:
         return "***EMPTY***"
@@ -98,7 +98,7 @@ class SearchSpaceEmpty(SearchSpace):
 
 class SearchSpacePrimitive(SearchSpace):
     def __init__(self, default: Optional[Any] = None):
-        super(SearchSpacePrimitive, self).__init__(default=default)
+        super().__init__(default=default)
 
 
 class SearchSpaceEnum(SearchSpacePrimitive):
@@ -111,7 +111,7 @@ class SearchSpaceEnum(SearchSpacePrimitive):
         pgo: PGO_input_type = None,
         default: Optional[Any] = None,
     ):
-        super(SearchSpaceEnum, self).__init__(default=default)
+        super().__init__(default=default)
         self.vals = sorted(vals, key=str)
 
         if pgo is None or isinstance(pgo, FrequencyDistribution):
@@ -125,7 +125,7 @@ class SearchSpaceEnum(SearchSpacePrimitive):
 
 class SearchSpaceConstant(SearchSpaceEnum):
     def __init__(self, v, pgo: PGO_input_type = None):
-        super(SearchSpaceConstant, self).__init__([v], pgo=pgo, default=v)
+        super().__init__([v], pgo=pgo, default=v)
 
     def _focused_str(self, path: Optional[List[SearchSpace]] = None) -> str:
         return str(self.vals[0])
@@ -133,7 +133,7 @@ class SearchSpaceConstant(SearchSpaceEnum):
 
 class SearchSpaceBool(SearchSpaceEnum):
     def __init__(self, pgo: PGO_input_type = None, default: Optional[Any] = None):
-        super(SearchSpaceBool, self).__init__([True, False], pgo=pgo, default=default)
+        super().__init__([True, False], pgo=pgo, default=default)
 
 
 class SearchSpaceNumber(SearchSpacePrimitive):
@@ -156,7 +156,7 @@ class SearchSpaceNumber(SearchSpacePrimitive):
         pgo: PGO_input_type = None,
         default: Optional[Any] = None,
     ) -> None:
-        super(SearchSpaceNumber, self).__init__(default=default)
+        super().__init__(default=default)
         self.minimum = minimum
         self.exclusiveMinimum = exclusiveMinimum
         self.maximum = maximum
@@ -181,27 +181,27 @@ class SearchSpaceNumber(SearchSpacePrimitive):
 
     def getInclusiveMax(self) -> Optional[float]:
         """Return the maximum as an inclusive maximum (exclusive maxima are adjusted accordingly)"""
-        max = self.maximum
-        if max is None:
+        schema_max = self.maximum
+        if schema_max is None:
             return None
         if self.exclusiveMaximum:
             if self.discrete:
-                max = max - 1
+                schema_max = schema_max - 1
             else:
-                max = numpy.nextafter(max, float("-inf"))
-        return max
+                schema_max = numpy.nextafter(schema_max, float("-inf"))
+        return schema_max
 
     def getInclusiveMin(self) -> Optional[float]:
         """Return the maximum as an inclusive minimum (exclusive minima are adjusted accordingly)"""
-        min = self.minimum
-        if min is None:
+        schema_min = self.minimum
+        if schema_min is None:
             return None
         if self.exclusiveMinimum:
             if self.discrete:
-                min = min + 1
+                schema_min = schema_min + 1
             else:
-                min = numpy.nextafter(min, float("+inf"))
-        return min
+                schema_min = numpy.nextafter(schema_min, float("+inf"))
+        return schema_min
 
     def _focused_str(self, path: Optional[List[SearchSpace]] = None) -> str:
         ret: str = ""
@@ -253,7 +253,7 @@ class SearchSpaceArray(SearchSpace):
         additional: Optional[SearchSpace] = None,
         is_tuple=False,
     ) -> None:
-        super(SearchSpaceArray, self).__init__()
+        super().__init__()
         self.minimum = minimum
         self.maximum = maximum
         self.prefix = prefix
@@ -284,7 +284,7 @@ class SearchSpaceArray(SearchSpace):
             ret += "]"
         return ret
 
-    def items(self, max: Optional[int] = None) -> Iterable[SearchSpace]:
+    def items(self, max_elts: Optional[int] = None) -> Iterable[SearchSpace]:
         prefix_len: int
         if self.prefix is not None:
             prefix_len = len(self.prefix)
@@ -292,8 +292,8 @@ class SearchSpaceArray(SearchSpace):
             prefix_len = 0
 
         num_elts = self.maximum
-        if max is not None:
-            num_elts = min(num_elts, max)
+        if max_elts is not None:
+            num_elts = min(num_elts, max_elts)
 
         for i in range(num_elts):
             if self.prefix is not None and i < prefix_len:
@@ -305,7 +305,7 @@ class SearchSpaceArray(SearchSpace):
 
 class SearchSpaceDict(SearchSpace):
     def __init__(self, d: Dict[str, SearchSpace]) -> None:
-        super(SearchSpaceDict, self).__init__()
+        super().__init__()
         self.space_dict = d
 
     def _focused_str(self, path: Optional[List[SearchSpace]] = None) -> str:
@@ -320,7 +320,7 @@ class SearchSpaceDict(SearchSpace):
 
 class SearchSpaceObject(SearchSpace):
     def __init__(self, longName: str, keys: List[str], choices: Iterable[Any]) -> None:
-        super(SearchSpaceObject, self).__init__()
+        super().__init__()
         self.longName = longName
         self.keys = keys
         self.choices = choices
@@ -351,7 +351,7 @@ class SearchSpaceSum(SearchSpace):
     sub_spaces: List[SearchSpace]
 
     def __init__(self, sub_spaces: List[SearchSpace], default: Optional[Any] = None):
-        super(SearchSpaceSum, self).__init__(default=default)
+        super().__init__(default=default)
         self.sub_spaces = sub_spaces
 
     def _focused_str(self, path: Optional[List[SearchSpace]] = None) -> str:
@@ -367,7 +367,7 @@ class SearchSpaceOperator(SearchSpace):
     sub_space: SearchSpace
 
     def __init__(self, sub_space: SearchSpace, default: Optional[Any] = None):
-        super(SearchSpaceOperator, self).__init__(default=default)
+        super().__init__(default=default)
         self.sub_space = sub_space
 
     def _focused_str(self, path: Optional[List[SearchSpace]] = None) -> str:
@@ -383,7 +383,7 @@ class SearchSpaceProduct(SearchSpace):
     def __init__(
         self, sub_spaces: List[Tuple[str, SearchSpace]], default: Optional[Any] = None
     ):
-        super(SearchSpaceProduct, self).__init__(default=default)
+        super().__init__(default=default)
         self.sub_spaces = sub_spaces
 
     def get_indexed_spaces(self) -> Iterable[Tuple[str, int, SearchSpace]]:
@@ -426,7 +426,7 @@ _print_search_space_env_options: Optional[Set[str]] = None
 
 
 def _get_print_search_space_options() -> Set[str]:
-    global _print_search_space_env_options
+    global _print_search_space_env_options  # pylint:disable=global-statement
     options: Set[str]
     if _print_search_space_env_options is None:
         debug = os.environ.get("LALE_PRINT_SEARCH_SPACE", None)

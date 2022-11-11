@@ -102,7 +102,7 @@ def get_lale_wrapper_modules() -> Set[str]:
     return _lale_wrapper_modules
 
 
-for m in [
+for builtin_lale_modules in [
     "lale.lib.sklearn",
     "lale.lib.autoai_libs",
     "lale.lib.xgboost",
@@ -110,4 +110,4 @@ for m in [
     "lale.lib.snapml",
     "autoai_ts_libs.lale",
 ]:
-    register_lale_wrapper_modules(m)
+    register_lale_wrapper_modules(builtin_lale_modules)

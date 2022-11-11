@@ -40,6 +40,20 @@ repos:
     hooks:
       - id: bandit
         args: [-c, bandit.yaml]
+  - repo: local
+    hooks:
+      - id: pylint
+        name: pylint
+        entry: pylint
+        language: python
+        types: [python]
+        additional_dependencies: ['pylint==2.15.5']
+        args:
+          [
+            "-rn", # Only display messages
+            "-sn", # Don't display the score
+            "--rcfile=pylintrc"
+          ]
   # Type check the Python code with MyPy
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: 'v0.982'

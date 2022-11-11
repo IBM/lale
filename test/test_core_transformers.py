@@ -85,7 +85,6 @@ def create_function_test_feature_preprocessor(fproc_name):
 
         # test_in_a_pipeline
         # This test assumes that the output of feature processing is compatible with LogisticRegression
-        from lale.lib.sklearn import LogisticRegression
 
         pipeline = fproc >> LogisticRegression()
         trained = pipeline.fit(self.X_train, self.y_train)
@@ -98,7 +97,7 @@ def create_function_test_feature_preprocessor(fproc_name):
         trained = hyperopt.fit(self.X_train, self.y_train)
         _ = trained.predict(self.X_test)
 
-    test_feature_preprocessor.__name__ = "test_{0}".format(fproc_name.split(".")[-1])
+    test_feature_preprocessor.__name__ = f"test_{fproc_name.split('.')[-1]}"
     return test_feature_preprocessor
 
 
@@ -117,22 +116,22 @@ feature_preprocessors = [
     "lale.lib.sklearn.VarianceThreshold",
     "lale.lib.sklearn.Isomap",
 ]
-for fproc in feature_preprocessors:
+for fproc_to_test in feature_preprocessors:
     setattr(
         TestFeaturePreprocessing,
-        "test_{0}".format(fproc.split(".")[-1]),
-        create_function_test_feature_preprocessor(fproc),
+        f"test_{fproc_to_test.rsplit('.', maxsplit=1)[-1]}",
+        create_function_test_feature_preprocessor(fproc_to_test),
     )
 
 
 class TestNMF(unittest.TestCase):
     def test_init_fit_predict(self):
-        import lale.datasets
+        from lale.datasets import digits_df
 
         nmf = NMF()
         lr = LogisticRegression()
         trainable = nmf >> lr
-        (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
+        (train_X, train_y), (test_X, test_y) = digits_df()
         trained = trainable.fit(train_X, train_y)
         _ = trained.predict(test_X)
 
@@ -146,12 +145,12 @@ class TestFunctionTransformer(unittest.TestCase):
     def test_init_fit_predict(self):
         import numpy as np
 
-        import lale.datasets
+        from lale.datasets import digits_df
 
         ft = FunctionTransformer(func=np.log1p)
         lr = LogisticRegression()
         trainable = ft >> lr
-        (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
+        (train_X, train_y), (test_X, test_y) = digits_df()
         trained = trainable.fit(train_X, train_y)
         _ = trained.predict(test_X)
 
@@ -210,8 +209,6 @@ class TestRFE(unittest.TestCase):
         import sklearn.datasets
         import sklearn.svm
 
-        from lale.lib.sklearn import RFE, LogisticRegression
-
         svm = sklearn.svm.SVR(kernel="linear")
         rfe = RFE(estimator=svm, n_features_to_select=2)
         lr = LogisticRegression()
@@ -227,8 +224,6 @@ class TestRFE(unittest.TestCase):
 
     def test_attrib(self):
         import sklearn.datasets
-
-        from lale.lib.sklearn import RFE, LogisticRegression
 
         svm = lale.lib.sklearn.SVR(kernel="linear")
         rfe = RFE(estimator=svm, n_features_to_select=2)
@@ -257,7 +252,6 @@ class TestOrdinalEncoder(unittest.TestCase):
         from lale.lib.sklearn import OrdinalEncoder
 
         fproc = OrdinalEncoder(handle_unknown="ignore")
-        from lale.lib.sklearn import LogisticRegression
 
         pipeline = fproc >> LogisticRegression()
 
@@ -320,11 +314,11 @@ class TestConcatFeatures(unittest.TestCase):
         trained_cf = trainable_cf.fit(X=[A, B])
         transformed: Any = trained_cf.transform([A, B])
         expected = [[11, 12, 13, 14, 15], [21, 22, 23, 24, 25], [31, 32, 33, 34, 35]]
-        for i_sample in range(len(transformed)):
-            for i_feature in range(len(transformed[i_sample])):
-                self.assertEqual(
-                    transformed[i_sample][i_feature], expected[i_sample][i_feature]
-                )
+        for transformed_sample, expected_sample in zip(transformed, expected):
+            for transformed_feature, expected_feature in zip(
+                transformed_sample, expected_sample
+            ):
+                self.assertEqual(transformed_feature, expected_feature)
 
     def test_init_fit_predict_pandas(self):
         trainable_cf = ConcatFeatures()
@@ -439,8 +433,7 @@ class TestConcatFeatures(unittest.TestCase):
         import sklearn.datasets
         import sklearn.utils
 
-        from lale.helpers import cross_val_score
-        from lale.lib.sklearn import PCA
+        from lale.helpers import cross_val_score as lale_cross_val_score
 
         pca = PCA(n_components=3, random_state=42, svd_solver="arpack")
         nys = Nystroem(n_components=10, random_state=42)
@@ -450,13 +443,13 @@ class TestConcatFeatures(unittest.TestCase):
         digits = sklearn.datasets.load_digits()
         X, y = sklearn.utils.shuffle(digits.data, digits.target, random_state=42)
 
-        cv_results = cross_val_score(trainable, X, y)
-        cv_results = ["{0:.1%}".format(score) for score in cv_results]
+        cv_results = lale_cross_val_score(trainable, X, y)
+        cv_results = [f"{score:.1%}" for score in cv_results]
 
         from sklearn.decomposition import PCA as SklearnPCA
         from sklearn.kernel_approximation import Nystroem as SklearnNystroem
         from sklearn.linear_model import LogisticRegression as SklearnLR
-        from sklearn.model_selection import cross_val_score
+        from sklearn.model_selection import cross_val_score as sklearn_cross_val_score
         from sklearn.pipeline import FeatureUnion, make_pipeline
 
         union = FeatureUnion(
@@ -471,8 +464,8 @@ class TestConcatFeatures(unittest.TestCase):
         lr = SklearnLR(random_state=42, C=0.1, solver="saga")
         pipeline = make_pipeline(union, lr)
 
-        scikit_cv_results = cross_val_score(pipeline, X, y, cv=5)
-        scikit_cv_results = ["{0:.1%}".format(score) for score in scikit_cv_results]
+        scikit_cv_results = sklearn_cross_val_score(pipeline, X, y, cv=5)
+        scikit_cv_results = [f"{score:.1%}" for score in scikit_cv_results]
         self.assertEqual(cv_results, scikit_cv_results)
         warnings.resetwarnings()
 

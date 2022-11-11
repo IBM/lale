@@ -152,7 +152,7 @@ class TestOrdinalEncoder(unittest.TestCase):
             X = Convert(astype=target).transform(X)
             rasl_transformed = rasl_enc.fit_transform(X)
             _check_trained_ordinal_encoder(self, sk_enc, rasl_enc, target)
-            if target.startswith("spark"):
+            if target == "spark":
                 continue  # XXX issue with NaN
             _check_data(self, sk_transformed, rasl_transformed, target)
 

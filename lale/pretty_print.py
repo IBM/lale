@@ -108,11 +108,11 @@ def hyperparams_to_string(
         elif isinstance(value, np.dtype):
             if gen is not None:
                 gen.imports.append("import numpy as np")
-            return f"np.{value.__repr__()}"
+            return f"np.{repr(value)}"
         elif isinstance(value, np.ndarray):
             if gen is not None:
                 gen.imports.append("import numpy as np")
-            array_expr = f"np.{value.__repr__()}"
+            array_expr = f"np.{repr(value)}"
             # For an array string representation, numpy includes dtype for some data types
             # we need to insert "np." for the dtype so that executing the pretty printed code
             # does not give any error for the dtype. The following code manipulates the
@@ -129,7 +129,7 @@ def hyperparams_to_string(
             return f"np.{value.__name__}"  # type: ignore
         elif isinstance(value, lale.expressions.Expr):
             v: lale.expressions.Expr = value
-            e = v._expr
+            e = v.expr
             if gen is not None:
                 gen.imports.append("from lale.expressions import it")
                 for node in ast.walk(e):
@@ -327,7 +327,7 @@ def _introduce_structure(pipeline: JSON_TYPE, gen: _CodeGenState) -> JSON_TYPE:
         graph: JSON_TYPE,
     ) -> Optional[Tuple[Dict[str, JSON_TYPE], Dict[str, JSON_TYPE]]]:
         step_uids = list(graph["steps"].keys())
-        for i0 in range(len(step_uids)):
+        for i0 in range(len(step_uids)):  # pylint:disable=consider-using-enumerate
             for i1 in range(i0 + 1, len(step_uids)):
                 s0, s1 = step_uids[i0], step_uids[i1]
                 preds0, preds1 = graph["preds"][s0], graph["preds"][s1]
@@ -465,17 +465,15 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
                 gen.assigns.append(f"{step_uid} = {expr}")
         make_pipeline = "make_pipeline_graph"
         gen.imports.append(f"from lale.operators import {make_pipeline}")
-        result = "{}(steps=[{}], edges=[{}])".format(
-            make_pipeline,
-            ", ".join([step2name[step] for step in steps]),
-            ", ".join(
-                [
-                    f"({step2name[src]},{step2name[tgt]})"
-                    for src in steps
-                    for tgt in succs[src]
-                ]
-            ),
+        steps_string = ", ".join([step2name[step] for step in steps])
+        edges_string = ", ".join(
+            [
+                f"({step2name[src]},{step2name[tgt]})"
+                for src in steps
+                for tgt in succs[src]
+            ]
         )
+        result = f"{make_pipeline}(steps=[{steps_string}], edges=[{edges_string}])"
         return result
     elif _op_kind(jsn) in ["Seq", "Par", "OperatorChoice", "Union"]:
         if gen.combinators:
@@ -496,7 +494,7 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
             combinator = _OP_KIND_TO_COMBINATOR[_op_kind(jsn)]
             if len(printed_steps.values()) == 1 and combinator == ">>":
                 gen.imports.append("from lale.operators import make_pipeline")
-                op_expr = "make_pipeline({})".format(", ".join(printed_steps.values()))
+                op_expr = f"make_pipeline({', '.join(printed_steps.values())})"
                 return op_expr
             return f" {combinator} ".join(printed_steps.values())
         else:
@@ -509,7 +507,7 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
                 gen.imports.append(f"from sklearn.pipeline import {function}")
             else:
                 gen.imports.append(f"from lale.operators import {function}")
-            op_expr = "{}({})".format(function, ", ".join(printed_steps.values()))
+            op_expr = f"{function}({', '.join(printed_steps.values())})"
             gen.assigns.append(f"{uid} = {op_expr}")
             return uid
     elif _op_kind(jsn) == "IndividualOp":
@@ -582,7 +580,7 @@ def _combine_lonely_literals(printed_code):
     regex = re.compile(
         r' +("[^"]*"|\d+\.?\d*|\[\]|float\("nan"\)|np\.dtype\("[^"]+"\)),'
     )
-    for i in range(len(lines)):
+    for i in range(len(lines)):  # pylint:disable=consider-using-enumerate
         if lines[i] is not None:
             match_i = regex.fullmatch(lines[i])
             if match_i is not None:
@@ -702,7 +700,12 @@ def to_string(
             add_custom_default=not customize_schema,
         )
         return _operator_jsn_to_string(
-            jsn, show_imports, combinators, assign_nested, customize_schema, astype
+            jsn,
+            show_imports,
+            combinators,
+            assign_nested,
+            customize_schema,
+            astype,
         )
     else:
         raise ValueError(f"Unexpected argument type {type(arg)} for {arg}")

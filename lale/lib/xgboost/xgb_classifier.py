@@ -22,6 +22,7 @@ from packaging import version
 import lale.docstrings
 import lale.helpers
 import lale.operators
+import lale.schemas
 
 from ._common_schemas import schema_silent
 
@@ -532,7 +533,6 @@ XGBClassifier = lale.operators.make_operator(_XGBClassifierImpl, _combined_schem
 
 if xgboost_version is not None and xgboost_version >= version.Version("0.90"):
     # page 58 of https://readthedocs.org/projects/xgboost/downloads/pdf/release_0.90/
-    import lale.schemas
 
     XGBClassifier = XGBClassifier.customize_schema(
         objective=lale.schemas.JSON(

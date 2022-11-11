@@ -34,7 +34,7 @@ class _boolean2floatImpl:
 
     def transform(self, X):
         raw = self._wrapped_model.transform(X)
-        if isinstance(raw, np.ndarray) or isinstance(raw, pd.DataFrame):
+        if isinstance(raw, (np.ndarray, pd.DataFrame)):
             s_X = lale.datasets.data_schemas.to_schema(X)
             s_result = self.transform_schema(s_X)
             result = lale.datasets.data_schemas.add_schema(raw, s_result, recalc=True)

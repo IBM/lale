@@ -1,0 +1,124 @@
+[MAIN]
+
+# import-error (E0401)
+#   For this to work, we either need to add our dependencies to the pre-commit
+#   task that runs this, or change to using a system (instead of python) local repo.
+#   This adds some complexity (e.g. user must install pylint and the required dependencies
+#   in their current python environment first).
+#   For now, we just disable this error.
+#   TODO: At some point, we may enable it, allowing pylintrc to perform more precise analysis
+
+# exec-used (W0122)
+#   We already check for this with bandit, so no need to double up on comments marking exceptions
+# unused-import (W0611)
+#   We already check for this with flake8, so no need to double up on comments marking exceptions
+
+
+# unnecessary-pass (W0107)
+# unnecessary-ellipsis (W2301)
+#   Technically, a docstring suffices, but this is a style issue that is not so clear
+
+# logging-not-lazy (W1201)
+# logging-format-interpolation (W1202)
+# logging-fstring-interpolation (W1203)
+#   The performance difference is negligible and format strings are more readable
+
+# _fixme (W0511)
+#   It can be useful to leave these notes in the code
+
+# unused-variable (W0612), unused-argument (W0613)
+
+# useless-parent-delegation (W0246): Useless parent or super() delegation in method
+#   These are not always useless, since we check if methods such as predict are
+#   explicitly defined in a class
+
+# broad-except (W0703): Catching too general exception
+#   Unclear, but we may want to mark the ones that we need and turn this on
+
+# attribute-defined-outside-init (W0201)
+#   TODO: We should fix these and enable this
+
+# protected-access (W0212): Access to a protected member
+#   TODO: We should fix these and enable this
+
+# abstract-method (W0223):
+#   This gives a number of false positives, but it might be worth addressing
+
+# line-too-long (C0301)
+#   Triggers on long descriptions in schemas.
+#   We use flake8 to enforce a more tolerant version
+# useless-import-alias (C0414): Import alias does not rename original package
+#   We use these aliases deliberately in __init__ files, in order
+#   to mark them as re-exported, so that pyright treats them as
+#   public and not private
+
+# import-outside-toplevel (C0415)
+#  We do this a lot, and often with reason (e.g. circular dependencies)
+
+# invalid-name (C0103): doesn't conform to snake_case naming style
+#   TODO: This probably should be enabled, with relaxations/exceptions for
+#   names like 'X' and 'y' and similar derived names
+
+# missing-module-docstring (C0114)
+# missing-class-docstring (C0115)
+# missing-function-docstring (C0116)
+#   We may want to enable some of these,
+#   but note that our wrapper impls generally don't (currently)
+#   bother with them
+
+# too-many-lines (C0302)
+#   yes, some of our files are a bit long
+
+# cyclic-import (R0401)
+#   We have a bunch of these
+
+# duplicate-code (R0801): duplicate code warning
+# no-else-return (R1705):
+#   Not sure if we want to enforce this
+
+# too-many-ancestors (R0901)
+# too-many-instance-attributes (R0902)
+# too-few-public-methods (R0903)
+# too-many-public-methods (R0904)
+# too-many-return-statements (R0911)
+# too-many-branches (R0912)
+# too-many-arguments (R0913)
+# too-many-locals (R0914)
+# too-many-statements (R0915)
+# too-many-boolean-expressions (R0916)
+# too-many-nested-blocks (R1702)
+#   some of our code is complex
+
+disable=
+   # Errors
+   import-error,
+   # Warnings
+   exec-used,unused-import,  # already checked by other tools
+   unnecessary-pass,unnecessary-ellipsis,
+   logging-not-lazy,logging-format-interpolation,logging-fstring-interpolation,
+   fixme,
+   unused-variable,unused-argument,
+   useless-parent-delegation,
+   broad-except,
+   protected-access,
+   abstract-method,
+   attribute-defined-outside-init,
+   # Conventions
+   line-too-long,useless-import-alias,
+   import-outside-toplevel,
+   invalid-name,
+   missing-module-docstring,missing-class-docstring,missing-function-docstring,
+   too-many-lines,
+   # Refactors
+   cyclic-import,
+   duplicate-code,
+   no-else-return,
+   too-many-ancestors,too-many-instance-attributes,
+   too-few-public-methods,too-many-public-methods,
+   too-many-return-statements,too-many-branches,too-many-arguments,
+   too-many-locals,too-many-statements,
+   too-many-boolean-expressions,too-many-nested-blocks
+
+[FORMAT]
+
+good-names=X,y

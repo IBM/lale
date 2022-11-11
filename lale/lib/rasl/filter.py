@@ -45,7 +45,7 @@ class _FilterImpl:
     # @classmethod
     # def validate_hyperparams(cls, pred=None, X=None, **hyperparams):
     #     for pred_element in pred:
-    #         if not isinstance(pred_element._expr, ast.Compare):
+    #         if not isinstance(pred_element.expr, ast.Compare):
     #             raise ValueError(
     #                 (
     #                     "Filter predicate '{}' not a comparison. All filter predicates should be comparisons."
@@ -75,9 +75,7 @@ class _FilterImpl:
                 )
             if lhs not in col_list:
                 raise ValueError(
-                    "Cannot perform filter predicate operation as {} not a column of input dataframe X.".format(
-                        lhs
-                    )
+                    f"Cannot perform filter predicate operation as {lhs} not a column of input dataframe X."
                 )
             return lhs, op, None
 
@@ -91,9 +89,7 @@ class _FilterImpl:
             )
         if lhs not in col_list:
             raise ValueError(
-                "Cannot perform filter operation as {} not a column of input dataframe X.".format(
-                    lhs
-                )
+                f"Cannot perform filter operation as {lhs} not a column of input dataframe X."
             )
         op = expr_to_parse.ops[0]
         if _is_ast_subscript(expr_to_parse.comparators[0]):
@@ -108,16 +104,14 @@ class _FilterImpl:
             )
         if not _is_ast_constant(expr_to_parse.comparators[0]) and rhs not in col_list:
             raise ValueError(
-                "Cannot perform filter operation as {} not a column of input dataframe X.".format(
-                    rhs
-                )
+                f"Cannot perform filter operation as {rhs} not a column of input dataframe X."
             )
         return lhs, op, rhs
 
     def transform(self, X):
         filtered_df = X
 
-        def filter(X):
+        def filter_fun(X):
             if isinstance(op, ast.Name):
                 # currently only handles single argument predicates
                 functions_module = importlib.import_module("lale.lib.rasl.functions")
@@ -176,9 +170,7 @@ class _FilterImpl:
                     )
                 else:
                     raise ValueError(
-                        "{} operator type found. Only ==, !=, >=, <=, >, < operators are supported".format(
-                            op
-                        )
+                        f"{op} operator type found. Only ==, !=, >=, <=, >, < operators are supported"
                     )
             # Filtering pandas dataframes
             if _is_pandas_df(X):
@@ -232,9 +224,7 @@ class _FilterImpl:
                     )
                 else:
                     raise ValueError(
-                        "{} operator type found. Only ==, !=, >=, <=, >, < operators are supported".format(
-                            op
-                        )
+                        f"{op} operator type found. Only ==, !=, >=, <=, >, < operators are supported"
                     )
             else:
                 raise ValueError(
@@ -242,9 +232,9 @@ class _FilterImpl:
                 )
 
         for pred_element in self.pred if self.pred is not None else []:
-            expr_to_parse = pred_element._expr
+            expr_to_parse = pred_element.expr
             lhs, op, rhs = self._get_filter_info(expr_to_parse, X)
-            filtered_df = filter(filtered_df)
+            filtered_df = filter_fun(filtered_df)
             filtered_df = forward_metadata(X, filtered_df)
         return filtered_df
 

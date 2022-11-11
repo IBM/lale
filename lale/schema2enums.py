@@ -21,7 +21,7 @@ from .schema_utils import JsonSchema, SchemaEnum
 logger = logging.getLogger(__name__)
 
 
-class DiscoveredEnums(object):
+class DiscoveredEnums:
     def __init__(
         self,
         enums: Optional[SchemaEnum] = None,
@@ -109,14 +109,6 @@ def schemaToDiscoveredEnums(schema: JsonSchema) -> Optional[DiscoveredEnums]:
 
         return combineDiscoveredEnums(op, des)
 
-    def meetDiscoveredEnums(
-        des: Tuple[Optional[DiscoveredEnums], ...]
-    ) -> Optional[DiscoveredEnums]:
-        def op(args: Iterable[SchemaEnum]) -> Optional[SchemaEnum]:
-            return set.intersection(*args)
-
-        return combineDiscoveredEnums(op, des)
-
     if schema is True or schema is False:
         return None
     if "enum" in schema:
@@ -201,11 +193,11 @@ def addDictAsFields(obj: Any, d: Dict[str, Any], force=False) -> None:
     for k, v in d.items():
         if k == "":
             logger.warning(
-                f"There was a top level enumeration specified, so it is not being added to {obj._name}"
+                f"There was a top level enumeration specified, so it is not being added to {getattr(obj, '_name', '???')}"
             )
         elif hasattr(obj, k) and not force:
             logger.error(
-                f"The object {obj._name} already has the field {k}.  This conflicts with our attempt at adding that key as an enumeration field"
+                f"The object {getattr(obj, '_name', '???')} already has the field {k}.  This conflicts with our attempt at adding that key as an enumeration field"
             )
         else:
             setattr(obj, k, v)

@@ -44,8 +44,6 @@ class TestResamplers(unittest.TestCase):
 
 def create_function_test_resampler(res_name):
     def test_resampler(self):
-        from lale.lib.sklearn import PCA, LogisticRegression
-
         X_train, y_train = self.X_train, self.y_train
         X_test = self.X_test
         import importlib
@@ -120,7 +118,7 @@ def create_function_test_resampler(res_name):
         # test_to_json
         pipeline1.to_json()
 
-    test_resampler.__name__ = "test_{0}".format(res_name.split(".")[-1])
+    test_resampler.__name__ = f"test_{res_name.split('.')[-1]}"
     return test_resampler
 
 
@@ -141,7 +139,7 @@ resamplers = [
 for res in resamplers:
     setattr(
         TestResamplers,
-        "test_{0}".format(res.split(".")[-1]),
+        f"test_{res.rsplit('.', maxsplit=1)[-1]}",
         create_function_test_resampler(res),
     )
 

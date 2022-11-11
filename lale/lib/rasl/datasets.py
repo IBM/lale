@@ -45,7 +45,7 @@ _PandasOrSparkBatch: TypeAlias = _PandasOrSparkBatchAux  # type: ignore
 try:
     import arff
 
-    from lale.datasets.openml import openml_datasets
+    from lale.datasets.openml import openml_datasets  # pylint:disable=ungrouped-imports
 
     liac_arff_installed = True
 except ModuleNotFoundError:
@@ -66,7 +66,7 @@ def arff_data_loader(
         X, y = split_x_y.transform_X_y(df, None)
         return X, y
 
-    with open(file_name) as f:
+    with open(file_name) as f:  # pylint:disable=unspecified-encoding
         arff_dict = arff.load(f, return_type=arff.DENSE_GEN)
         column_names = [name.lower() for name, _ in arff_dict["attributes"]]
         row_list = []

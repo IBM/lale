@@ -28,7 +28,7 @@ import lale.operators
 
 
 class _SnapBoostingMachineClassifierImpl:
-    def __init__(
+    def __init__(  # pylint:disable=dangerous-default-value
         self,
         num_round=100,
         learning_rate=0.1,

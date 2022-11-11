@@ -40,7 +40,7 @@ from lale.settings import set_disable_hyperparams_schema_validation
 # -- Project information -----------------------------------------------------
 
 project = "LALE"
-copyright = "2019, IBM AI Research"
+project_copyright = "2019-2022, IBM AI Research"
 author = "IBM AI Research"
 
 # The short X.Y version
@@ -50,7 +50,7 @@ release = ""
 
 
 sys.path.append(os.path.join(os.path.dirname(__name__), "../lale"))
-import sphinx_rtd_theme  # isort:skip # noqa:E402
+import sphinx_rtd_theme  # isort:skip # noqa:E402  # pylint:disable=wrong-import-position,wrong-import-order
 
 # For packages with mock imports, if we have wrappers without our impl classes,
 # schema validation fails as the mocking adds methods such as `transform`, `predict` etc.

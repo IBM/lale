@@ -74,6 +74,10 @@ def fixedUnparse(tree):
 class Expr:
     _expr: AstExpr
 
+    @property
+    def expr(self):
+        return self._expr
+
     def __init__(self, expr: AstExpr, istrue=None):
         # _istrue variable is used to check the boolean nature of
         # '==' and '!=' operator's results.
@@ -374,7 +378,7 @@ def _make_binop(
     op, left: Any, other: Union[Expr, str, int, float, bool, None]
 ) -> Union["Expr", Literal[False]]:
     if isinstance(other, Expr):
-        e = ast.BinOp(left=left, op=op, right=other._expr)
+        e = ast.BinOp(left=left, op=op, right=other.expr)
         return Expr(e)
     elif other is not None:
         e = ast.BinOp(left=left, op=op, right=ast.Constant(value=other))
@@ -387,7 +391,7 @@ def _make_ast_expr(arg: Union[None, Expr, int, float, str, AstExpr]) -> AstExpr:
     if arg is None:
         return ast.Constant(value=None)
     elif isinstance(arg, Expr):
-        return arg._expr
+        return arg.expr
     elif isinstance(arg, (int, float)):
         return ast.Num(n=arg)
     elif isinstance(arg, str):
@@ -450,7 +454,7 @@ def item(group: Expr, value: Union[int, str]) -> Expr:
     return _make_call_expr("item", group, value)
 
 
-def max(group: Expr) -> Expr:
+def max(group: Expr) -> Expr:  # pylint:disable=redefined-builtin
     return _make_call_expr("max", group)
 
 
@@ -462,7 +466,7 @@ def mean(group: Expr) -> Expr:
     return _make_call_expr("mean", group)
 
 
-def min(group: Expr) -> Expr:
+def min(group: Expr) -> Expr:  # pylint:disable=redefined-builtin
     return _make_call_expr("min", group)
 
 
@@ -533,7 +537,7 @@ def astype(dtype, subject: Expr) -> Expr:
     return _make_call_expr("astype", dtype, subject)
 
 
-def hash(hash_method: str, subject: Expr) -> Expr:
+def hash(hash_method: str, subject: Expr) -> Expr:  # pylint:disable=redefined-builtin
     return _make_call_expr("hash", hash_method, subject)
 
 
@@ -541,7 +545,7 @@ def hash_mod(hash_method: str, subject: Expr, n: Expr) -> Expr:
     return _make_call_expr("hash_mod", hash_method, subject, n)
 
 
-def sum(group: Expr) -> Expr:
+def sum(group: Expr) -> Expr:  # pylint:disable=redefined-builtin
     return _make_call_expr("sum", group)
 
 
@@ -643,6 +647,10 @@ def _it_column(expr):
                 return v.value
             elif isinstance(v, ast.Str):
                 return v.s
+            else:
+                raise ValueError(
+                    f"Illegal {fixedUnparse(expr)}. Only the access to `it` is supported"
+                )
         else:
             raise ValueError(
                 f"Illegal {fixedUnparse(expr)}. Only the access to `it` is supported"

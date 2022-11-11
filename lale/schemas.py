@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Dict, List, TypeVar, Union
+from typing import Any, Dict, List, Optional, TypeVar, Union
 
 
 class Undefined:
@@ -65,12 +65,14 @@ class Bool(Schema):
 class Enum(Schema):
     def __init__(
         self,
-        values: List[Any] = [],
+        values: Optional[List[Any]] = None,
         desc: Option[str] = undefined,
         default: Option[Any] = undefined,
         forOptimizer: bool = True,
     ):
         super().__init__(desc, default, forOptimizer)
+        if values is None:
+            values = []
         self.set("enum", values)
 
 
@@ -158,23 +160,27 @@ class JSON(Schema):
 class AnyOf(Schema):
     def __init__(
         self,
-        types: List[Schema] = [],
+        types: Optional[List[Schema]] = None,
         desc: Option[str] = undefined,
         default: Option[Any] = undefined,
         forOptimizer: bool = True,
     ):
         super().__init__(desc, default, forOptimizer)
+        if types is None:
+            types = []
         self.set("anyOf", [t.schema for t in types])
 
 
 class AllOf(Schema):
     def __init__(
         self,
-        types: List[Schema] = [],
+        types: Optional[List[Schema]] = None,
         desc: Option[str] = undefined,
         default: Option[Any] = undefined,
     ):
         super().__init__(desc, default)
+        if types is None:
+            types = []
         self.set("allOf", [t.schema for t in types])
 
 
