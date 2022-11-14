@@ -26,7 +26,11 @@
 # _fixme (W0511)
 #   It can be useful to leave these notes in the code
 
-# unused-variable (W0612), unused-argument (W0613)
+# unused-argument (W0613)
+#   The arguments to a function (and their name) are part of the API
+#   of a function.  Whether it uses the argument is an implementation detail
+#   that should not affect the argument names, and adding lots of annotations
+#   is undesirable
 
 # useless-parent-delegation (W0246): Useless parent or super() delegation in method
 #   These are not always useless, since we check if methods such as predict are
@@ -47,6 +51,7 @@
 # line-too-long (C0301)
 #   Triggers on long descriptions in schemas.
 #   We use flake8 to enforce a more tolerant version
+
 # useless-import-alias (C0414): Import alias does not rename original package
 #   We use these aliases deliberately in __init__ files, in order
 #   to mark them as re-exported, so that pyright treats them as
@@ -97,7 +102,7 @@ disable=
    unnecessary-pass,unnecessary-ellipsis,
    logging-not-lazy,logging-format-interpolation,logging-fstring-interpolation,
    fixme,
-   unused-variable,unused-argument,
+   unused-argument,
    useless-parent-delegation,
    broad-except,
    protected-access,

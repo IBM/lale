@@ -32,7 +32,7 @@ class TestCategoryEncoders(unittest.TestCase):
         )
 
     def test_hashing_encoder(self):
-        (train_X, train_y), (test_X, test_y) = self.creditg
+        (train_X, train_y), (test_X, _test_y) = self.creditg
         cat_prep = Project(columns={"type": "string"}) >> HashingEncoder()
         num_prep = Project(columns={"type": "number"})
         trainable = (
@@ -42,7 +42,7 @@ class TestCategoryEncoders(unittest.TestCase):
         _ = trained.predict(test_X)
 
     def test_target_encoder(self):
-        (train_X, train_y), (test_X, test_y) = self.creditg
+        (train_X, train_y), (test_X, _test_y) = self.creditg
         cat_prep = Project(columns={"type": "string"}) >> TargetEncoder()
         num_prep = Project(columns={"type": "number"})
         trainable = (

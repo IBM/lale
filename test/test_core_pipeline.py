@@ -763,7 +763,7 @@ class TestComposition(unittest.TestCase):
 class TestAutoPipeline(unittest.TestCase):
     def _fit_predict(self, prediction_type, all_X, all_y, verbose=True):
         if verbose:
-            file_name, line, fn_name, text = traceback.extract_stack()[-2]
+            _file_name, _line, fn_name, _text = traceback.extract_stack()[-2]
             print(f"--- TestAutoPipeline.{fn_name}() ---")
         from lale.lib.lale import AutoPipeline
 

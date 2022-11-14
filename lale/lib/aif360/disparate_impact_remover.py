@@ -58,7 +58,7 @@ class _DisparateImpactRemoverImpl:
 
     def _prep_and_encode(self, X, y=None):
         prepared_X = self.redact_and_prep.transform(X, y)
-        encoded_X, encoded_y = self.prot_attr_enc.transform_X_y(X, y)
+        encoded_X, _encoded_y = self.prot_attr_enc.transform_X_y(X, y)
         assert isinstance(encoded_X, pd.DataFrame), type(encoded_X)
         assert encoded_X.shape[1] == 1, encoded_X.columns
         if isinstance(prepared_X, pd.DataFrame):

@@ -2143,7 +2143,7 @@ class IndividualOp(Operator):
         it returns up to `size` uniformly distributed values.
 
         Warning: ignores side constraints, unions, and distributions."""
-        autoai_ranges, autoai_cat_idx = self.get_param_ranges()
+        autoai_ranges, _autoai_cat_idx = self.get_param_ranges()
 
         def one_dist(key: str) -> List[Any]:
             one_range = autoai_ranges[key]
@@ -4841,9 +4841,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
         inputs: Any
         output = None
 
-        for batch_idx, batch_data in enumerate(
-            X
-        ):  # batching_transformer will output only one obj
+        for batch_data in X:  # batching_transformer will output only one obj
             if isinstance(batch_data, Tuple):
                 batch_X, batch_y = batch_data
             else:
@@ -5062,7 +5060,7 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType_co]):
         """
         choices = self.steps_list()
         choice_index: int
-        choice_params: Dict[str, Any]
+        chosen_params: Dict[str, Any]
         if len(choices) == 1:
             choice_index = 0
             chosen_params = impl_params

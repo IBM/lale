@@ -55,7 +55,7 @@ class _OrdinalEncoderImpl:
         self._wrapped_model.fit(X, y)
         if self.handle_unknown == "ignore":
             n_features = len(self._wrapped_model.categories_)
-            for i in range(n_features):
+            for _i in range(n_features):
                 self.unknown_categories_mapping.append({})
         return self
 

@@ -131,7 +131,7 @@ class TestNMF(unittest.TestCase):
         nmf = NMF()
         lr = LogisticRegression()
         trainable = nmf >> lr
-        (train_X, train_y), (test_X, test_y) = digits_df()
+        (train_X, train_y), (test_X, _test_y) = digits_df()
         trained = trainable.fit(train_X, train_y)
         _ = trained.predict(test_X)
 
@@ -150,7 +150,7 @@ class TestFunctionTransformer(unittest.TestCase):
         ft = FunctionTransformer(func=np.log1p)
         lr = LogisticRegression()
         trainable = ft >> lr
-        (train_X, train_y), (test_X, test_y) = digits_df()
+        (train_X, train_y), (test_X, _test_y) = digits_df()
         trained = trainable.fit(train_X, train_y)
         _ = trained.predict(test_X)
 
@@ -481,7 +481,7 @@ class TestConcatFeatures(unittest.TestCase):
         lr = LogisticRegression(random_state=42, C=0.1)
         trainable = (pca & nys) >> concat >> lr
 
-        (X_train, y_train), (X_test, y_test) = load_iris_df()
+        (X_train, y_train), (X_test, _y_test) = load_iris_df()
         trained = trainable.fit(X_train, y_train)
         _ = trained.predict(X_test)
 

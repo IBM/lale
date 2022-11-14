@@ -224,7 +224,7 @@ class TestOperatorLogging(unittest.TestCase):
     @unittest.skip("Turned off the logging for now")
     def test_log_fit_predict(self):
         trainable = LogisticRegression()
-        (X_train, y_train), (X_test, y_test) = lale.datasets.load_iris_df()
+        (X_train, y_train), (X_test, _y_test) = lale.datasets.load_iris_df()
         trained = trainable.fit(X_train, y_train)
         _ = trained.predict(X_test)
         self.handler.flush()
@@ -247,7 +247,7 @@ class TestBoth(unittest.TestCase):
         nmf = NMF()
         pca = PCA()
         trainable = Both(op1=nmf, op2=pca)
-        (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
+        (train_X, train_y), (test_X, _test_y) = lale.datasets.digits_df()
         trained = trainable.fit(train_X, train_y)
         _ = trained.transform(test_X)
 
@@ -258,7 +258,7 @@ class TestTee(unittest.TestCase):
 
         pca = PCA()
         trainable = Tee() >> pca
-        (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
+        (train_X, train_y), (test_X, _test_y) = lale.datasets.digits_df()
         trained = trainable.fit(train_X, train_y)
         _ = trained.transform(test_X)
 
@@ -270,7 +270,7 @@ class TestTee(unittest.TestCase):
 
         pca = PCA()
         trainable = Tee(listener=check_data) >> pca
-        (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
+        (train_X, train_y), (test_X, _test_y) = lale.datasets.digits_df()
         trained = trainable.fit(train_X, train_y)
         _ = trained.transform(test_X)
 
@@ -283,7 +283,7 @@ class TestTee(unittest.TestCase):
 
         pca = PCA()
         trainable = Tee(listener=check_data) >> pca
-        (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
+        (train_X, train_y), (test_X, _test_y) = lale.datasets.digits_df()
         trained = trainable.fit(train_X, train_y)
         _ = trained.transform(test_X)
 
@@ -299,7 +299,7 @@ class TestTee(unittest.TestCase):
 
         pca = PCA()
         trainable = Tee(listener=check_data(self)) >> pca
-        (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
+        (train_X, train_y), (test_X, _test_y) = lale.datasets.digits_df()
         trained = trainable.fit(train_X, train_y)
         _ = trained.transform(test_X)
 
@@ -898,7 +898,7 @@ class TestHyperparamRanges(unittest.TestCase):
             self.validate_get_param_dist(skop)
 
     def test_random_forest_classifier(self):
-        ranges, dists = RandomForestClassifier.get_param_ranges()
+        ranges, _dists = RandomForestClassifier.get_param_ranges()
         expected_ranges = {
             "n_estimators": (10, 100, 100),
             "criterion": ["entropy", "gini"],
@@ -913,7 +913,7 @@ class TestHyperparamRanges(unittest.TestCase):
     def test_lgbclassifier(self):
         from lale.lib.lightgbm import LGBMClassifier
 
-        ranges, dists = LGBMClassifier.get_param_ranges()
+        ranges, _dists = LGBMClassifier.get_param_ranges()
         expected_ranges = {
             "boosting_type": ["dart", "gbdt"],
             "num_leaves": [4, 8, 32, 64, 128, 16, 2],
@@ -959,7 +959,7 @@ class TestHyperparamRanges(unittest.TestCase):
             )
         )
 
-        ranges, dists = SVR.get_param_ranges()
+        ranges, _dists = SVR.get_param_ranges()
         expected_ranges = {
             "kernel": ["poly", "rbf", "sigmoid", "linear"],
             "degree": (2, 5, 3),

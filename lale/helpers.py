@@ -67,7 +67,7 @@ def make_nested_hyperopt_space(sub_space):
 
 def assignee_name(level=1) -> Optional[str]:
     tb = traceback.extract_stack()
-    file_name, line_number, function_name, text = tb[-(level + 2)]
+    file_name, _line_number, _function_name, text = tb[-(level + 2)]
     try:
         tree = ast.parse(text, file_name)
     except SyntaxError:
@@ -86,7 +86,7 @@ def assignee_name(level=1) -> Optional[str]:
 
 def arg_name(pos=0, level=1) -> Optional[str]:
     tb = traceback.extract_stack()
-    file_name, line_number, function_name, text = tb[-(level + 2)]
+    file_name, _line_number, _function_name, text = tb[-(level + 2)]
     try:
         tree = ast.parse(text, file_name)
     except SyntaxError:
