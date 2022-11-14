@@ -506,7 +506,7 @@ class TestHyperopt(unittest.TestCase):
     def test_preprocessing_union(self):
         from lale.datasets import openml
 
-        (train_X, train_y), (test_X, test_y) = openml.fetch(
+        (train_X, train_y), (_test_X, _test_y) = openml.fetch(
             "credit-g", "classification", preprocess=False
         )
 
@@ -522,9 +522,9 @@ class TestHyperopt(unittest.TestCase):
     def test_text_and_structured(self):
         from lale.datasets.uci.uci_datasets import fetch_drugscom
 
-        train_X_all, train_y_all, test_X, test_y = fetch_drugscom()
+        train_X_all, train_y_all, _test_X, _test_y = fetch_drugscom()
         # subset to speed up debugging
-        train_X, train_X_ignore, train_y, train_y_ignore = train_test_split(
+        train_X, _train_X, train_y, _train_y = train_test_split(
             train_X_all, train_y_all, train_size=0.01, random_state=42
         )
 
@@ -930,7 +930,7 @@ class TestHigherOrderOperators(unittest.TestCase):
         from sklearn.datasets import load_boston
 
         X, y = load_boston(return_X_y=True)
-        X_train, X_test, y_train, y_test = train_test_split(X, y)
+        X_train, _X_test, y_train, _y_test = train_test_split(X, y)
         from lale.lib.sklearn import AdaBoostRegressor, DecisionTreeRegressor
 
         reg = AdaBoostRegressor(base_estimator=DecisionTreeRegressor())
@@ -946,7 +946,7 @@ class TestHigherOrderOperators(unittest.TestCase):
         from sklearn.datasets import load_boston
 
         X, y = load_boston(return_X_y=True)
-        X_train, X_test, y_train, y_test = train_test_split(X, y)
+        X_train, _X_test, y_train, _y_test = train_test_split(X, y)
         from lale.lib.sklearn import AdaBoostRegressor, DecisionTreeRegressor
 
         reg = AdaBoostRegressor(base_estimator=NoOp >> DecisionTreeRegressor())

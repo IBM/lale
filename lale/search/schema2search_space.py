@@ -330,8 +330,6 @@ class SearchSpaceOperatorVisitor(Visitor):
                         f"specified laleType should be a number or integer, not: {laleType}.",
                     )
 
-                pgo: Freqs
-
                 return SearchSpaceNumber(
                     minimum=minimum,
                     exclusiveMinimum=exclusive_minimum,
@@ -625,5 +623,5 @@ class SearchSpaceOperatorVisitor(Visitor):
     def schemaToSearchSpace(
         self, longName: str, name: str, schema: JsonSchema
     ) -> Optional[SearchSpace]:
-        (s, h) = self.schemaToSimplifiedAndSearchSpace(longName, name, schema)
+        (_s, h) = self.schemaToSimplifiedAndSearchSpace(longName, name, schema)
         return h

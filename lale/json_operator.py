@@ -469,7 +469,7 @@ def _op_to_json_rec(
         uid = gensym("pipeline")
         child2uid: Dict[lale.operators.Operator, str] = {}
         child2jsn: Dict[lale.operators.Operator, JSON_TYPE] = {}
-        for idx, child in enumerate(op.steps_list()):
+        for child in op.steps_list():
             child_uid, child_jsn = _op_to_json_rec(
                 child, cls2label, gensym, add_custom_default
             )
@@ -501,7 +501,7 @@ def to_json(
 
     cls2label = _get_cls2label(call_depth + 1)
     gensym = _init_gensym(op, cls2label)
-    uid, jsn = _op_to_json_rec(op, cls2label, gensym, add_custom_default)
+    _uid, jsn = _op_to_json_rec(op, cls2label, gensym, add_custom_default)
     if not disable_hyperparams_schema_validation:
         jsonschema.validate(jsn, SCHEMA, jsonschema.Draft4Validator)
     return jsn

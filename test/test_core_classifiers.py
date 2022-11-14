@@ -608,7 +608,7 @@ class TestLogisticRegression(unittest.TestCase):
         from sklearn.model_selection import RandomizedSearchCV
 
         lr = LogisticRegression()
-        ranges, cat_idx = lr.get_param_ranges()
+        ranges, _cat_idx = lr.get_param_ranges()
         # specify parameters and distributions to sample from
         # the loguniform distribution needs to be taken care of properly
         param_dist = {"solver": ranges["solver"], "C": uniform(0.03125, np.log(32768))}

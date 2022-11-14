@@ -386,7 +386,7 @@ class TestFilter(unittest.TestCase):
             self.assertTrue(all(filtered_df["col3"] == "NY"), tgt)
 
     def test_filter_no_col_error(self):
-        for tgt, transformed_df in self.tgt2datasets.items():
+        for _tgt, transformed_df in self.tgt2datasets.items():
             with self.assertRaises(ValueError):
                 trainable = Filter(pred=[it["TrainId"] < it.col_na])
                 _ = trainable.transform(transformed_df)
@@ -993,7 +993,7 @@ class TestJoin(unittest.TestCase):
     # A table to be joined not present in input X
     # This test case execution should throw a ValueError which is handled in the test case itself
     def test_join_composite_error3(self):
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             df5, df3 = datasets["df5"], datasets["df3"]
             with self.assertRaises(ValueError):
                 trainable = Join(
@@ -1037,7 +1037,7 @@ class TestJoin(unittest.TestCase):
 
     # TestCase 2: Go_Sales dataset throws error because of duplicate non-key columns
     def test_join_go_sales2(self):
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             go_sales = datasets["go_sales"]
             trainable = Join(
                 pred=[
@@ -1185,7 +1185,7 @@ class TestMap(unittest.TestCase):
             },
             remainder="passthrough",
         )
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             df = datasets["df"]
             trained = trainable.fit(df)
             transformed_df = trained.transform(df)
@@ -1196,7 +1196,7 @@ class TestMap(unittest.TestCase):
             self.assertEqual(len(transformed_df.columns), 3)
 
     def test_transform_identity_map_error(self):
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             df = datasets["df"]
             with self.assertRaises(ValueError):
                 trainable = Map(columns={"   ": it.gender})
@@ -1222,7 +1222,7 @@ class TestMap(unittest.TestCase):
             columns=[replace(it.gender, gender_map), replace(it.state, state_map)],
             remainder="passthrough",
         )
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             df = datasets["df"]
             trained = trainable.fit(df)
             transformed_df = trained.transform(df)
@@ -1238,7 +1238,7 @@ class TestMap(unittest.TestCase):
         trainable = Map(
             columns=[replace(it.gender, gender_map), replace(it.state, state_map)]
         )
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             df = datasets["df"]
             trained = trainable.fit(df)
             transformed_df = trained.transform(df)
@@ -1256,7 +1256,7 @@ class TestMap(unittest.TestCase):
                 "new_state": replace(it.state, state_map),
             }
         )
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             df = datasets["df"]
             trained = trainable.fit(df)
             transformed_df = trained.transform(df)
@@ -1267,7 +1267,7 @@ class TestMap(unittest.TestCase):
 
     def test_transform_dom_list(self):
         trainable = Map(columns=[day_of_month(it.date_column)])
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             df = datasets["df_date"]
             trained = trainable.fit(df)
             transformed_df = trained.transform(df)
@@ -1383,7 +1383,7 @@ class TestMap(unittest.TestCase):
 
     def test_transform_doy_list(self):
         trainable = Map(columns=[day_of_year(it.date_column)])
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             df = datasets["df_date"]
             trained = trainable.fit(df)
             transformed_df = trained.transform(df)
@@ -1429,7 +1429,7 @@ class TestMap(unittest.TestCase):
 
     def test_transform_hour_list(self):
         trainable = Map(columns=[hour(it.date_column)])
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             df = datasets["df_date_time"]
             trained = trainable.fit(df)
             transformed_df = trained.transform(df)
@@ -1477,7 +1477,7 @@ class TestMap(unittest.TestCase):
 
     def test_transform_minute_list(self):
         trainable = Map(columns=[minute(it.date_column)])
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             df = datasets["df_date_time"]
             trained = trainable.fit(df)
             transformed_df = trained.transform(df)
@@ -1525,7 +1525,7 @@ class TestMap(unittest.TestCase):
 
     def test_transform_month_list(self):
         trainable = Map(columns=[month(it.date_column)])
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             df = datasets["df_date_time"]
             trained = trainable.fit(df)
             transformed_df = trained.transform(df)
@@ -1596,7 +1596,7 @@ class TestMap(unittest.TestCase):
 
     def test_string_indexer_map(self):
         trainable = Map(columns={"c": string_indexer(it.date_column)})
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             df = datasets["df_date_time"]
             trained = trainable.fit(df)
             with self.assertRaises(ValueError):
@@ -1763,7 +1763,7 @@ class TestMap(unittest.TestCase):
 
     def test_transform_ratio_map(self):
         trainable = Map(columns={"ratio_h_w": it.height / it.weight})
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             df = datasets["df_num"]
             trained = trainable.fit(df)
             transformed_df = trained.transform(df)
@@ -1773,7 +1773,7 @@ class TestMap(unittest.TestCase):
 
     def test_transform_ratio_map_subscript(self):
         trainable = Map(columns={"ratio_h_w": it["height"] / it.weight})
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             df = datasets["df_num"]
             trained = trainable.fit(df)
             transformed_df = trained.transform(df)
@@ -1783,7 +1783,7 @@ class TestMap(unittest.TestCase):
 
     def test_transform_ratio_map_list(self):
         trainable = Map(columns=[it.height / it.weight])
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             df = datasets["df_num"]
             trained = trainable.fit(df)
             with self.assertRaises(ValueError):
@@ -1791,7 +1791,7 @@ class TestMap(unittest.TestCase):
 
     def test_transform_subtract_map(self):
         trainable = Map(columns={"subtract_h_w": it.height - it.weight})
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             df = datasets["df_num"]
             trained = trainable.fit(df)
             transformed_df = trained.transform(df)
@@ -1801,7 +1801,7 @@ class TestMap(unittest.TestCase):
 
     def test_transform_subtract_map_subscript(self):
         trainable = Map(columns={"subtract_h_w": it["height"] - it.weight})
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             df = datasets["df_num"]
             trained = trainable.fit(df)
             transformed_df = trained.transform(df)
@@ -1811,7 +1811,7 @@ class TestMap(unittest.TestCase):
 
     def test_transform_subtract_map_list(self):
         trainable = Map(columns=[it.height - it.weight])
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             df = datasets["df_num"]
             trained = trainable.fit(df)
             with self.assertRaises(ValueError):
@@ -1879,7 +1879,7 @@ class TestMap(unittest.TestCase):
 
     def test_transform_arithmetic_expression(self):
         trainable = Map(columns={"expr": (it["height"] + it.weight * 10) / 2})
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             df = datasets["df_num"]
             trained = trainable.fit(df)
             transformed_df = trained.transform(df)
@@ -1989,7 +1989,7 @@ class TestMap(unittest.TestCase):
             return {("new_" + c): it[c] for c in X.columns}
 
         pipeline = Scan(table=it.go_products) >> Map(columns=expr)
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             datasets = datasets["go_sales"]
             result = pipeline.fit(datasets).transform(datasets)
             result = _ensure_pandas(result)
@@ -2000,7 +2000,7 @@ class TestMap(unittest.TestCase):
         pipeline = Scan(table=it.go_products) >> Map(
             columns=lambda X: {("new_" + c): it[c] for c in X.columns}
         )
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             datasets = datasets["go_sales"]
             result = pipeline.fit(datasets).transform(datasets)
             result = _ensure_pandas(result)
@@ -2044,7 +2044,7 @@ class TestMap(unittest.TestCase):
             return ret
 
         pipeline = Scan(table=it.go_products) >> Map(columns=expr)
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             datasets = datasets["go_sales"]
             result = pipeline.fit(datasets).transform(datasets)
             result = _ensure_pandas(result)
@@ -2069,7 +2069,7 @@ class TestMap(unittest.TestCase):
             return ret
 
         pipeline = Scan(table=it.go_products) >> Map(columns=expr)
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             datasets = datasets["go_sales"]
             result = pipeline.fit(datasets).transform(datasets)
             result = _ensure_pandas(result)
@@ -2081,7 +2081,7 @@ class TestMap(unittest.TestCase):
         pipeline = Scan(table=it.go_products) >> Map(
             columns=lambda X: {c: it[c] for c in categorical()(_ensure_pandas(X))}
         )
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             datasets = datasets["go_sales"]
             result = pipeline.fit(datasets).transform(datasets)
             result = _ensure_pandas(result)
@@ -2108,7 +2108,7 @@ class TestMap(unittest.TestCase):
         from lale.lib.lale import Project
 
         pipeline = Scan(table=it.go_products) >> Project(columns={"type": "number"})
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             datasets = datasets["go_sales"]
             result = pipeline.fit(datasets).transform(datasets)
             result = _ensure_pandas(result)
@@ -2215,7 +2215,7 @@ class TestRelationalOperator(unittest.TestCase):
             )
             >> Aggregate(columns=[count(it.Delay)], group_by=it.MessageId)
         )
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             X_train, X_test, y_train = (
                 datasets["X_train"],
                 datasets["X_test"],
@@ -2235,7 +2235,7 @@ class TestRelationalOperator(unittest.TestCase):
             )
             >> Aggregate(columns=[count(it.Delay)], group_by=it.MessageId)
         )
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             X_train, y_train = datasets["X_train"], datasets["y_train"]
             with self.assertRaises(ValueError):
                 _ = relational.fit([X_train], y_train)
@@ -2251,7 +2251,7 @@ class TestRelationalOperator(unittest.TestCase):
             )
             >> Aggregate(columns=[count(it.Delay)], group_by=it.MessageId)
         )
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             X_train, X_test, y_train = (
                 datasets["X_train"],
                 datasets["X_test"],
@@ -2332,7 +2332,7 @@ class TestOrderBy(unittest.TestCase):
 
     def test_order_attr1_desc(self):
         trainable = OrderBy(by=desc(it.status))
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             df = datasets["df"]
             trained = trainable.fit(df)
             transformed_df = trained.transform(df)
@@ -2341,7 +2341,7 @@ class TestOrderBy(unittest.TestCase):
 
     def test_order_str1_desc(self):
         trainable = OrderBy(by=desc("gender"))
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             df = datasets["df"]
             trained = trainable.fit(df)
             transformed_df = trained.transform(df)
@@ -2350,7 +2350,7 @@ class TestOrderBy(unittest.TestCase):
 
     def test_order_multiple(self):
         trainable = OrderBy(by=[it.gender, desc(it.status)])
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             df = datasets["df"]
             trained = trainable.fit(df)
             transformed_df = trained.transform(df)
@@ -2370,7 +2370,7 @@ class TestOrderBy(unittest.TestCase):
 
     def test_str1(self):
         trainable = OrderBy(by="gender")
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             df = datasets["df"]
             trained = trainable.fit(df)
             transformed_df = trained.transform(df)
@@ -2383,7 +2383,7 @@ class TestSplitXy(unittest.TestCase):
     def setUp(cls):  # pylint:disable=arguments-differ
         data = load_iris()
         X, y = data.data, data.target
-        X_train, X_test, y_train, y_test = train_test_split(
+        X_train, _X_test, y_train, _y_test = train_test_split(
             pd.DataFrame(X), pd.DataFrame(y)
         )
         combined_df = pd.concat([X_train, y_train], axis=1)
@@ -2444,7 +2444,7 @@ class TestTrainTestSplit(unittest.TestCase):
         self.assertEqual(len(test_y), 54)
 
     def test_split_pandas_1(self):
-        train, test, train_y, test_y = multitable_train_test_split(
+        _train, test, _train_y, test_y = multitable_train_test_split(
             self.go_sales,
             main_table_name="go_products",
             label_column_name="Product number",

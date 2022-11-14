@@ -181,7 +181,7 @@ class Eigenvalues:
         return "eigenvalues"
 
     def apply(self, data):
-        w, v = np.linalg.eig(data)
+        w, _v = np.linalg.eig(data)
         w = np.absolute(w)
         w.sort()
         return w

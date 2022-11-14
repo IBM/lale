@@ -38,18 +38,18 @@ class TestDatasetSchemas(unittest.TestCase):
             cls._irisArr = {"X": irisArr.data, "y": irisArr.target}
             from lale.datasets import sklearn_to_pandas
 
-            (train_X, train_y), (test_X, test_y) = sklearn_to_pandas.load_iris_df()
+            (train_X, train_y), (_test_X, _test_y) = sklearn_to_pandas.load_iris_df()
             cls._irisDf = {"X": train_X, "y": train_y}
-            (train_X, train_y), (test_X, test_y) = sklearn_to_pandas.digits_df()
+            (train_X, train_y), (_test_X, _test_y) = sklearn_to_pandas.digits_df()
             cls._digits = {"X": train_X, "y": train_y}
             (
                 (train_X, train_y),
-                (test_X, test_y),
+                (_test_X, _test_y),
             ) = sklearn_to_pandas.california_housing_df()
             cls._housing = {"X": train_X, "y": train_y}
             from lale.datasets import openml
 
-            (train_X, train_y), (test_X, test_y) = openml.fetch(
+            (train_X, train_y), (_test_X, _test_y) = openml.fetch(
                 "credit-g", "classification", preprocess=False
             )
             cls._creditG = {"X": train_X, "y": train_y}
@@ -59,7 +59,7 @@ class TestDatasetSchemas(unittest.TestCase):
             cls._movies = {"X": train_X, "y": train_y}
             from lale.datasets.uci.uci_datasets import fetch_drugscom
 
-            train_X, train_y, test_X, test_y = fetch_drugscom()
+            train_X, train_y, _test_X, _test_y = fetch_drugscom()
             cls._drugRev = {"X": train_X, "y": train_y}
 
     @classmethod

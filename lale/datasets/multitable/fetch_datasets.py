@@ -161,7 +161,7 @@ def fetch_imdb_dataset(datatype="pandas"):
             f"IMDB dataset not found at {download_data_dir}. Please download it using lalegpl repository."
         )
 
-    for root, dirs, files in os.walk(download_data_dir):
+    for _root, _dirs, files in os.walk(download_data_dir):
         for file in files:
             filename, extension = os.path.splitext(file)
             if extension == ".csv":
@@ -255,7 +255,7 @@ def fetch_creditg_multitable_dataset(datatype="pandas"):
     for row in df_col.iteritems():
         row_id = row[0]
         credit_count = int(row[1])
-        for i in range(credit_count):
+        for _i in range(credit_count):
             records.append(
                 {
                     "id": row_id,

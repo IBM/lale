@@ -121,7 +121,7 @@ class _HashingEncoderImpl(MonoidableOperator[_HashingEncoderMonoid]):
         return hasher >> encode
 
     def to_monoid(self, batch: Tuple[Any, Any]):
-        X, y = batch
+        X, _y = batch
         cols = self._hyperparams["cols"]
         if cols is None:
             cols = get_obj_cols(X)

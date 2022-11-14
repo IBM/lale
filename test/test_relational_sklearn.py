@@ -318,7 +318,7 @@ class TestPipeline(unittest.TestCase):
         add_df("y_test", y_test)
 
     def test_pipeline(self):
-        for tgt, datasets in self.tgt2datasets.items():
+        for _tgt, datasets in self.tgt2datasets.items():
             X_train, X_test = (datasets["X_train"], datasets["X_test"])
             y_train = self.tgt2datasets["pandas"]["y_train"]
             pipeline = (
@@ -517,7 +517,7 @@ class TestOrdinalEncoder(unittest.TestCase):
                     )
 
     def test_predict(self):
-        (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2creditg["pandas"]
+        (train_X_pd, train_y_pd), (test_X_pd, _test_y_pd) = self.tgt2creditg["pandas"]
         cat_columns = categorical()(train_X_pd)
         prefix = Map(columns={c: it[c] for c in cat_columns})
         to_pd = Convert(astype="pandas")
@@ -528,7 +528,7 @@ class TestOrdinalEncoder(unittest.TestCase):
         sk_predicted = sk_trained.predict(test_X_pd)
         rasl_trainable = prefix >> RaslOrdinalEncoder(**encoder_args) >> to_pd >> lr
         for tgt, dataset in self.tgt2creditg.items():
-            (train_X, train_y), (test_X, test_y) = dataset
+            (train_X, train_y), (test_X, _test_y) = dataset
             rasl_trained = rasl_trainable.fit(train_X, train_y)
             rasl_predicted = rasl_trained.predict(test_X)
             self.assertEqual(sk_predicted.shape, rasl_predicted.shape, tgt)
@@ -573,7 +573,7 @@ class TestOneHotEncoder(unittest.TestCase):
         sk_trainable = prefix >> SkOneHotEncoder()
         sk_trained = sk_trainable.fit(train_X_pd)
         for tgt, dataset in self.tgt2creditg.items():
-            (train_X, train_y), (test_X, test_y) = dataset
+            (train_X, _train_y), (_test_X, _test_y) = dataset
             rasl_trained = rasl_trainable.fit(train_X)
             self._check_last_trained(sk_trained, rasl_trained, tgt)
 
@@ -602,7 +602,7 @@ class TestOneHotEncoder(unittest.TestCase):
                 )
 
     def test_transform(self):
-        (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2creditg["pandas"]
+        (train_X_pd, _train_y_pd), (test_X_pd, _test_y_pd) = self.tgt2creditg["pandas"]
         cat_columns = categorical()(train_X_pd)
         prefix = Map(columns={c: it[c] for c in cat_columns})
         rasl_trainable = prefix >> RaslOneHotEncoder(sparse=False)
@@ -610,7 +610,7 @@ class TestOneHotEncoder(unittest.TestCase):
         sk_trained = sk_trainable.fit(train_X_pd)
         sk_transformed = sk_trained.transform(test_X_pd)
         for tgt, dataset in self.tgt2creditg.items():
-            (train_X, train_y), (test_X, test_y) = dataset
+            (train_X, _train_y), (test_X, _test_y) = dataset
             rasl_trained = rasl_trainable.fit(train_X)
             self._check_last_trained(sk_trained, rasl_trained, tgt)
             rasl_transformed = rasl_trained.transform(test_X)
@@ -627,7 +627,7 @@ class TestOneHotEncoder(unittest.TestCase):
                     )
 
     def test_predict(self):
-        (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2creditg["pandas"]
+        (train_X_pd, train_y_pd), (test_X_pd, _test_y_pd) = self.tgt2creditg["pandas"]
         cat_columns = categorical()(train_X_pd)
         prefix = Map(columns={c: it[c] for c in cat_columns})
         to_pd = Convert(astype="pandas")
@@ -637,7 +637,7 @@ class TestOneHotEncoder(unittest.TestCase):
         sk_predicted = sk_trained.predict(test_X_pd)
         rasl_trainable = prefix >> RaslOneHotEncoder(sparse=False) >> to_pd >> lr
         for tgt, dataset in self.tgt2creditg.items():
-            (train_X, train_y), (test_X, test_y) = dataset
+            (train_X, train_y), (test_X, _test_y) = dataset
             rasl_trained = rasl_trainable.fit(train_X, train_y)
             rasl_predicted = rasl_trained.predict(test_X)
             self.assertEqual(sk_predicted.shape, rasl_predicted.shape, tgt)
@@ -678,12 +678,12 @@ class TestHashingEncoder(unittest.TestCase):
         sk_trainable = prefix >> SkHashingEncoder()
         sk_trained = sk_trainable.fit(train_X_pd)
         for tgt, dataset in self.tgt2creditg.items():
-            (train_X, train_y), (test_X, test_y) = dataset
+            (train_X, _train_y), (_test_X, _test_y) = dataset
             rasl_trained = rasl_trainable.fit(train_X)
             self._check_last_trained(sk_trained, rasl_trained, tgt)
 
     def test_transform(self):
-        (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2creditg["pandas"]
+        (train_X_pd, _train_y_pd), (test_X_pd, _test_y_pd) = self.tgt2creditg["pandas"]
         cat_columns = categorical()(train_X_pd)
         prefix = Map(columns={c: it[c] for c in cat_columns})
         rasl_trainable = prefix >> RaslHashingEncoder()
@@ -691,7 +691,7 @@ class TestHashingEncoder(unittest.TestCase):
         sk_trained = sk_trainable.fit(train_X_pd)
         sk_transformed = sk_trained.transform(test_X_pd)
         for tgt, dataset in self.tgt2creditg.items():
-            (train_X, train_y), (test_X, test_y) = dataset
+            (train_X, _train_y), (test_X, _test_y) = dataset
             rasl_trained = rasl_trainable.fit(train_X)
             self._check_last_trained(sk_trained, rasl_trained, tgt)
             rasl_transformed = rasl_trained.transform(test_X)
@@ -708,7 +708,7 @@ class TestHashingEncoder(unittest.TestCase):
                     )
 
     def test_predict(self):
-        (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2creditg["pandas"]
+        (train_X_pd, train_y_pd), (test_X_pd, _test_y_pd) = self.tgt2creditg["pandas"]
         cat_columns = categorical()(train_X_pd)
         prefix = Map(columns={c: it[c] for c in cat_columns})
         to_pd = Convert(astype="pandas")
@@ -718,7 +718,7 @@ class TestHashingEncoder(unittest.TestCase):
         sk_predicted = sk_trained.predict(test_X_pd)
         rasl_trainable = prefix >> RaslHashingEncoder() >> to_pd >> lr
         for tgt, dataset in self.tgt2creditg.items():
-            (train_X, train_y), (test_X, test_y) = dataset
+            (train_X, train_y), (test_X, _test_y) = dataset
             rasl_trained = rasl_trainable.fit(train_X, train_y)
             rasl_predicted = rasl_trained.predict(test_X)
             self.assertEqual(sk_predicted.shape, rasl_predicted.shape, tgt)
@@ -871,7 +871,7 @@ class TestSimpleImputer(unittest.TestCase):
 
     def test_predict(self):
         self._fill_missing_value("age", 36.0, np.nan)
-        (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2adult["pandas"]
+        (train_X_pd, train_y_pd), (test_X_pd, _test_y_pd) = self.tgt2adult["pandas"]
         num_columns = ["age", "fnlwgt", "education-num"]
         prefix = Map(columns={c: it[c] for c in num_columns})
         to_pd = Convert(astype="pandas")
@@ -882,7 +882,7 @@ class TestSimpleImputer(unittest.TestCase):
         sk_predicted = sk_trained.predict(test_X_pd)
         rasl_trainable = prefix >> RaslSimpleImputer(**imputer_args) >> to_pd >> lr
         for tgt, dataset in self.tgt2adult.items():
-            (train_X, train_y), (test_X, test_y) = dataset
+            (train_X, train_y), (test_X, _test_y) = dataset
             rasl_trained = rasl_trainable.fit(train_X, train_y)
             rasl_predicted = rasl_trained.predict(test_X)
             self.assertEqual(sk_predicted.shape, rasl_predicted.shape, tgt)
@@ -1209,7 +1209,7 @@ class TestStandardScaler(unittest.TestCase):
                     )
 
     def test_predict(self):
-        (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2creditg["pandas"]
+        (train_X_pd, train_y_pd), (test_X_pd, _test_y_pd) = self.tgt2creditg["pandas"]
         to_pd = Convert(astype="pandas")
         lr = LogisticRegression()
         sk_trainable = SkStandardScaler() >> lr
@@ -1217,7 +1217,7 @@ class TestStandardScaler(unittest.TestCase):
         sk_predicted = sk_trained.predict(test_X_pd)
         rasl_trainable = RaslStandardScaler() >> to_pd >> lr
         for tgt, dataset in self.tgt2creditg.items():
-            (train_X, train_y), (test_X, test_y) = dataset
+            (train_X, train_y), (test_X, _test_y) = dataset
             rasl_trained = rasl_trainable.fit(train_X, train_y)
             rasl_predicted = rasl_trained.predict(test_X)
             self.assertEqual(sk_predicted.shape, rasl_predicted.shape, tgt)
@@ -1238,7 +1238,7 @@ class _BatchTestingKFold:
         result = [([], []) for _ in range(self.n_splits)]
         cv = KFold(self.n_splits)
         batches = mockup_data_loader(X, y, self.n_batches, "pandas")
-        for idx, (bX, by) in enumerate(batches):
+        for bX, by in batches:
             for fold, (_, test) in enumerate(cv.split(bX, by)):
                 remapped = bX.index[test]
                 for f in range(self.n_splits):
@@ -2080,7 +2080,7 @@ class TestBatchedBaggingClassifier(unittest.TestCase):
         )
 
     def test_classifier(self):
-        (X_train, y_train), (X_test, y_test) = self.creditg
+        (X_train, y_train), (X_test, _y_test) = self.creditg
         import warnings
 
         clf = BatchedBaggingClassifier()
