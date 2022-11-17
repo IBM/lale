@@ -21,16 +21,20 @@ import lale.operators
 # This is currently needed just to hide get_params so that lale does not call clone
 # when doing a defensive copy
 class _TextTransformerImpl:
-    def __init__(  # pylint:disable=dangerous-default-value
+    def __init__(
         self,
         text_processing_options,
-        column_headers_list=[],
+        column_headers_list=None,
         drop_columns=False,
         min_num_words=3,
-        columns_to_be_deleted=[],
+        columns_to_be_deleted=None,
         text_columns=None,
         activate_flag=True,
     ):
+        if column_headers_list is None:
+            column_headers_list = []
+        if columns_to_be_deleted is None:
+            columns_to_be_deleted = []
         self._hyperparams = {
             "text_processing_options": text_processing_options,
             "column_headers_list": column_headers_list,
