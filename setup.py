@@ -115,6 +115,26 @@ extras_require = {
     ],
 }
 
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Software Development",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
 setup(
     name="lale",
     version=VERSION,
@@ -126,7 +146,8 @@ setup(
     python_requires=">=3.6",
     package_data={"lale": ["py.typed"]},
     packages=find_packages(),
-    license="",
+    license="Apache License 2.0",
+    classifiers=classifiers,
     install_requires=install_requires,
     extras_require=extras_require,
 )
