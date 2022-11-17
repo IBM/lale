@@ -95,9 +95,7 @@ class _TopKVotingClassifierImpl:
             predictions = trained.predict(X_eval, **predict_params)
         except ValueError as e:
             logger.warning(
-                "ValueError in predicting using Hyperopt:{}, the error is:{}".format(
-                    trained, e
-                )
+                f"ValueError in predicting using Hyperopt:{trained}, the error is:{e}"
             )
             predictions = None
         return predictions

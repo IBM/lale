@@ -17,6 +17,7 @@ import typing
 
 import sklearn
 import sklearn.linear_model
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -190,7 +191,6 @@ preprocess the data with a scaler from sklearn.preprocessing.""",
                 "tol": {
                     "description": "Tolerance for stopping criteria.",
                     "type": "number",
-                    "distribution": "loguniform",
                     "minimum": 0.0,
                     "exclusiveMinimum": True,
                     "default": 0.0001,
@@ -435,7 +435,7 @@ class _LogisticRegressionImpl:
         except AttributeError as e:  # incompatibility old sklearn vs. new scipy
             import scipy
 
-            message = f'Caught AttributeError("{str(e)}") during LogisticRegression.fit(..) call, scipy version {scipy.__version__}, sklearn version {sklearn.__version__}, solver {self._wrapped_model.solver}, max_iter {self._wrapped_model.max_iter}. Retrying with solver "saga".'
+            message = f'Caught AttributeError("{str(e)}") during LogisticRegression.fit(..) call, scipy version {scipy.__version__}, sklearn version {lale.operators.sklearn_version}, solver {self._wrapped_model.solver}, max_iter {self._wrapped_model.max_iter}. Retrying with solver "saga".'
             logger.warning(message)
             old_solver = self._wrapped_model.solver
             self._wrapped_model.solver = "saga"
@@ -464,7 +464,7 @@ LogisticRegression = lale.operators.make_operator(
 )
 
 
-if sklearn.__version__ >= "0.21":
+if lale.operators.sklearn_version >= version.Version("0.21"):
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.LogisticRegression.html
     # new: https://scikit-learn.org/0.21/modules/generated/sklearn.linear_model.LogisticRegression.html
     LogisticRegression = typing.cast(
@@ -479,7 +479,7 @@ if sklearn.__version__ >= "0.21":
         ),
     )
 
-if sklearn.__version__ >= "0.22":
+if lale.operators.sklearn_version >= version.Version("0.22"):
     # old: https://scikit-learn.org/0.21/modules/generated/sklearn.linear_model.LogisticRegression.html
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.linear_model.LogisticRegression.html
     LogisticRegression = typing.cast(

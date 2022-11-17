@@ -62,12 +62,12 @@ class _BatchedBaggingClassifierImpl(
             predictions = predictions.squeeze()  # converts a dataframe to series.
             return predictions
 
-    def from_monoid(self, v: _BatchedBaggingClassifierMonoid):
-        self._monoid = v
-        self.classifiers_list = v.classifiers
+    def from_monoid(self, monoid: _BatchedBaggingClassifierMonoid):
+        self._monoid = monoid
+        self.classifiers_list = monoid.classifiers
 
-    def to_monoid(self, v: Tuple[Any, Any]) -> _BatchedBaggingClassifierMonoid:
-        X, y = v
+    def to_monoid(self, batch: Tuple[Any, Any]) -> _BatchedBaggingClassifierMonoid:
+        X, y = batch
         trainable = self._hyperparams["base_estimator"]
         if isinstance(trainable, sklearn.base.BaseEstimator):
             trainable = sklearn.base.clone(trainable)

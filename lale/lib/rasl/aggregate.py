@@ -38,7 +38,10 @@ except ImportError:
 
 
 class _AggregateImpl:
-    def __init__(self, columns, group_by=[], exclude_value=None):
+    def __init__(self, columns, group_by=None, exclude_value=None):
+        if group_by is None:
+            group_by = []
+
         self.columns = columns
         self.group_by = group_by
         self.exclude_value = exclude_value
@@ -60,12 +63,12 @@ class _AggregateImpl:
 
         agg_info = []
         for new_col_name, expr in self.columns.items():
-            if isinstance(expr._expr, ast.Call):
-                agg_func_name = expr._expr.func.id  # type: ignore
-                old_col_name = lale.expressions._it_column(expr._expr.args[0])
+            if isinstance(expr.expr, ast.Call):
+                agg_func_name = expr.expr.func.id  # type: ignore
+                old_col_name = lale.expressions._it_column(expr.expr.args[0])
             else:
                 agg_func_name = "first"
-                old_col_name = lale.expressions._it_column(expr._expr)
+                old_col_name = lale.expressions._it_column(expr.expr)
             agg_info.append((new_col_name, old_col_name, agg_func_name))
         if isinstance(X, (pd.DataFrame, pd.core.groupby.generic.DataFrameGroupBy)):
             aggregated_df = self._transform_pandas(X, agg_info)
@@ -79,7 +82,7 @@ class _AggregateImpl:
     def _transform_pandas(self, X, agg_info):
         is_grouped = isinstance(X, pd.core.groupby.generic.DataFrameGroupBy)
         if is_grouped:
-            _, first_group = next(X.__iter__())  # TODO: what if zero groups?
+            _, first_group = next(iter(X))  # TODO: what if zero groups?
             value_columns = first_group.columns
         else:
             value_columns = X.columns
@@ -89,7 +92,7 @@ class _AggregateImpl:
                 agg_func_name = "unique"
             elif agg_func_name == "mode":
                 agg_func_name = (
-                    lambda x: x.value_counts()
+                    lambda x: x.value_counts()  # pylint:disable=unnecessary-lambda-assignment
                     .sort_index(ascending=False)
                     .sort_values(ascending=False)
                     .index[0]

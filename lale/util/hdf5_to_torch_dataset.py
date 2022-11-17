@@ -14,22 +14,22 @@
 
 try:
     from torch.utils.data import Dataset
-except ModuleNotFoundError:
+except ModuleNotFoundError as import_exc:
     raise ModuleNotFoundError(
         """Your Python environment does not have torch installed. You can install it with
                                 pip install torch
                                 or with
                                     pip install 'lale[full]'"""
-    )
+    ) from import_exc
 try:
     import h5py
-except ModuleNotFoundError:
+except ModuleNotFoundError as import_exc:
     raise ModuleNotFoundError(
         """Your Python environment does not have h5py installed. You can install it with
                                 pip install h5py
                                 or with
                                     pip install 'lale[full]'"""
-    )
+    ) from import_exc
 
 
 class HDF5TorchDataset(Dataset):

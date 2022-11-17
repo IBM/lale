@@ -84,7 +84,6 @@ _hyperparams_schema = {
                     "type": "number",
                     "minimumForOptimizer": 1e-08,
                     "maximumForOptimizer": 0.01,
-                    "distribution": "loguniform",
                     "default": 1e-06,
                     "description": "Tolerance for 'arpack' method Not used if eigen_solver=='dense'.",
                 },

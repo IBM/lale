@@ -14,6 +14,7 @@
 
 import sklearn
 import sklearn.preprocessing
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -146,7 +147,7 @@ FunctionTransformer = lale.operators.make_operator(
     sklearn.preprocessing.FunctionTransformer, _combined_schemas
 )
 
-if sklearn.__version__ >= "0.22":
+if lale.operators.sklearn_version >= version.Version("0.22"):
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.FunctionTransformer.html
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.preprocessing.FunctionTransformer.html
     from lale.schemas import Bool
@@ -160,7 +161,7 @@ if sklearn.__version__ >= "0.22":
         set_as_available=True,
     )
 
-if sklearn.__version__ >= "1.1":
+if lale.operators.sklearn_version >= version.Version("1.1"):
     # old: https://scikit-learn.org/0.23/modules/generated/sklearn.preprocessing.FunctionTransformer.html
     # new: https://scikit-learn.org/1.1/modules/generated/sklearn.preprocessing.FunctionTransformer.html
     FunctionTransformer = FunctionTransformer.customize_schema(

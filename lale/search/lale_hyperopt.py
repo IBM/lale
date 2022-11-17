@@ -77,7 +77,7 @@ class SearchSpaceHPExprVisitor(Visitor):
         return accept(space, visitor, name)
 
     def __init__(self, name: str):
-        super(SearchSpaceHPExprVisitor, self).__init__()
+        super().__init__()
         self.names = {}
 
     def get_unique_name(self, name: str) -> str:
@@ -126,9 +126,9 @@ class SearchSpaceHPExprVisitor(Visitor):
             raise SearchSpaceError(
                 path, f"maximum not specified for a number with distribution {dist}"
             )
-        max = space.getInclusiveMax()
+        space_max = space.getInclusiveMax()
         # if the maximum is not None, the inclusive maximum should not be none
-        assert max is not None
+        assert space_max is not None
 
         # These distributions need only a maximum
         if dist == "integer":
@@ -137,36 +137,36 @@ class SearchSpaceHPExprVisitor(Visitor):
                     path,
                     "integer distribution specified for a non discrete numeric type",
                 )
-            return hp.randint(label, max)
+            return hp.randint(label, space_max)
 
         if space.minimum is None:
             raise SearchSpaceError(
                 path, f"minimum not specified for a number with distribution {dist}"
             )
-        min = space.getInclusiveMin()
+        space_min = space.getInclusiveMin()
         # if the minimum is not None, the inclusive minimum should not be none
-        assert min is not None
+        assert space_min is not None
 
         if dist == "uniform":
             if space.discrete:
-                return scope.int(hp.quniform(label, min, max, 1))
+                return scope.int(hp.quniform(label, space_min, space_max, 1))
             else:
-                return hp.uniform(label, min, max)
+                return hp.uniform(label, space_min, space_max)
         elif dist == "loguniform":
             # for log distributions, hyperopt requires that we provide the log of the min/max
-            if min <= 0:
+            if space_min <= 0:
                 raise SearchSpaceError(
                     path,
                     f"minimum of 0 specified with a {dist} distribution.  This is not allowed; please set it (possibly using minimumForOptimizer) to be positive",
                 )
-            if min > 0:
-                min = math.log(min)
-            if max > 0:
-                max = math.log(max)
+            if space_min > 0:
+                space_min = math.log(space_min)
+            if space_max > 0:
+                space_max = math.log(space_max)
             if space.discrete:
-                return scope.int(hp.qloguniform(label, min, max, 1))
+                return scope.int(hp.qloguniform(label, space_min, space_max, 1))
             else:
-                return hp.loguniform(label, min, max)
+                return hp.loguniform(label, space_min, space_max)
 
         else:
             raise SearchSpaceError(path, f"Unknown distribution type: {dist}")
@@ -242,14 +242,17 @@ class SearchSpaceHPExprVisitor(Visitor):
         ]
         return search_spaces
 
-    def visitSearchSpaceSum(self, sum: SearchSpaceSum, path: str, counter=None):
-        if len(sum.sub_spaces) == 1:
-            return accept(sum.sub_spaces[0], self, "")
+    def visitSearchSpaceSum(self, space_sum: SearchSpaceSum, path: str, counter=None):
+        if len(space_sum.sub_spaces) == 1:
+            return accept(space_sum.sub_spaces[0], self, "")
         else:
             unique_name: str = self.get_unique_name("choice")
             search_spaces = hp.choice(
                 unique_name,
-                [{str(i): accept(m, self, "")} for i, m in enumerate(sum.sub_spaces)],
+                [
+                    {str(i): accept(m, self, "")}
+                    for i, m in enumerate(space_sum.sub_spaces)
+                ],
             )
             return search_spaces
 
@@ -308,7 +311,7 @@ class SearchSpaceHPStrVisitor(Visitor):
         return self.get_unique_name(_mk_label(label, counter, useCounter=useCounter))
 
     def __init__(self, name: str):
-        super(SearchSpaceHPStrVisitor, self).__init__()
+        super().__init__()
         self.pgo_dict = {}
         self.names = {}
         self.pgo_header = None
@@ -355,9 +358,9 @@ class SearchSpaceHPStrVisitor(Visitor):
                 path, f"maximum not specified for a number with distribution {dist}"
             )
 
-        max = space.getInclusiveMax()
+        space_max = space.getInclusiveMax()
         # if the maximum is not None, the inclusive maximum should not be none
-        assert max is not None
+        assert space_max is not None
 
         # These distributions need only a maximum
         if dist == "integer":
@@ -367,37 +370,37 @@ class SearchSpaceHPStrVisitor(Visitor):
                     "integer distribution specified for a non discrete numeric type....",
                 )
 
-            return f"hp.randint('{label}', {max})"
+            return f"hp.randint('{label}', {space_max})"
 
         if space.minimum is None:
             raise SearchSpaceError(
                 path, f"minimum not specified for a number with distribution {dist}"
             )
-        min = space.getInclusiveMin()
+        space_min = space.getInclusiveMin()
         # if the minimum is not None, the inclusive minimum should not be none
-        assert min is not None
+        assert space_min is not None
 
         if dist == "uniform":
             if space.discrete:
-                return f"hp.quniform('{label}', {min}, {max}, 1)"
+                return f"hp.quniform('{label}', {space_min}, {space_max}, 1)"
             else:
-                return f"hp.uniform('{label}', {min}, {max})"
+                return f"hp.uniform('{label}', {space_min}, {space_max})"
         elif dist == "loguniform":
             # for log distributions, hyperopt requires that we provide the log of the min/max
-            if min <= 0:
+            if space_min <= 0:
                 raise SearchSpaceError(
                     path,
                     f"minimum of 0 specified with a {dist} distribution.  This is not allowed; please set it (possibly using minimumForOptimizer) to be positive",
                 )
-            if min > 0:
-                min = math.log(min)
-            if max > 0:
-                max = math.log(max)
+            if space_min > 0:
+                space_min = math.log(space_min)
+            if space_max > 0:
+                space_max = math.log(space_max)
 
             if space.discrete:
-                return f"hp.qloguniform('{label}', {min}, {max}, 1)"
+                return f"hp.qloguniform('{label}', {space_min}, {space_max}, 1)"
             else:
-                return f"hp.loguniform('{label}', {min}, {max})"
+                return f"hp.loguniform('{label}', {space_min}, {space_max})"
         else:
             raise SearchSpaceError(path, f"Unknown distribution type: {dist}")
 

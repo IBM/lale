@@ -12,18 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import aif360.algorithms.inprocessing
-
-try:
-    import tensorflow as tf
-
-    tensorflow_installed = True
-except ImportError:
-    tensorflow_installed = False
-
 import contextlib
 import io
 import uuid
+
+import aif360.algorithms.inprocessing
 
 import lale.docstrings
 import lale.operators
@@ -38,9 +31,16 @@ from .util import (
     _categorical_supervised_input_fit_schema,
 )
 
+try:
+    import tensorflow as tf
+
+    tensorflow_installed = True
+except ImportError:
+    tensorflow_installed = False
+
 
 class _AdversarialDebiasingImpl(_BaseInEstimatorImpl):
-    def __init__(
+    def __init__(  # pylint:disable=super-init-not-called
         self,
         *,
         favorable_labels,
@@ -62,7 +62,11 @@ class _AdversarialDebiasingImpl(_BaseInEstimatorImpl):
     pip install tensorflow
 or with
     pip install 'lale[full]'"""
-        assert "1.13.1" <= tf.__version__
+        from packaging import version
+
+        tf_version = version.parse(getattr(tf, "__version__"))
+        assert version.Version("1.13.1") <= tf_version
+
         self.scope_name = scope_name
         self.protected_attributes = protected_attributes
         self.seed = seed

@@ -2,10 +2,11 @@ import typing
 
 import sklearn
 from numpy import inf, nan
+from packaging import version
 from sklearn.cluster import KMeans as Op
 
 from lale.docstrings import set_docstrings
-from lale.operators import PlannedIndividualOp, make_operator
+from lale.operators import PlannedIndividualOp, make_operator, sklearn_version
 
 
 class _KMeansImpl:
@@ -91,7 +92,6 @@ _hyperparams_schema = {
                     "type": "number",
                     "minimumForOptimizer": 1e-08,
                     "maximumForOptimizer": 0.01,
-                    "distribution": "loguniform",
                     "default": 0.0001,
                     "description": "Relative tolerance with regards to inertia to declare convergence",
                 },
@@ -232,7 +232,7 @@ _combined_schemas = {
 
 KMeans = make_operator(_KMeansImpl, _combined_schemas)
 
-if sklearn.__version__ >= "1.0":
+if sklearn_version >= version.Version("1.0"):
     # old: https://scikit-learn.org/0.24/modules/generated/sklearn.cluster.KMeans.html
     # new: https://scikit-learn.org/1.0/modules/generated/sklearn.cluster.KMeans.html
     KMeans = typing.cast(

@@ -156,7 +156,7 @@ class _HyperoptImpl:
             self.evals_with_defaults = 0
 
         def merge_trials(trials1, trials2):
-            max_tid = max([trial["tid"] for trial in trials1.trials])
+            max_tid = max(trial["tid"] for trial in trials1.trials)
 
             for trial in trials2:
                 tid = trial["tid"] + max_tid + 1
@@ -193,7 +193,7 @@ class _HyperoptImpl:
             if self.max_eval_time:
                 # Run hyperopt in a subprocess that can be interupted
                 manager = multiprocessing.Manager()
-                proc_dict: Dict[str, Any] = manager.dict()
+                proc_dict: Dict[str, Any] = manager.dict()  # type: ignore
                 p = multiprocessing.Process(
                     target=_proc_train_test,
                     args=(
@@ -250,12 +250,12 @@ class _HyperoptImpl:
                 logger.warning(
                     "Maximum alloted optimization time exceeded. Optimization exited prematurely"
                 )
-            except AllTrialsFailed:
+            except AllTrialsFailed as exc:
                 self._best_estimator = None
                 if hyperopt.STATUS_OK not in self._trials.statuses():
                     raise ValueError(
                         "Error from hyperopt, none of the trials succeeded."
-                    )
+                    ) from exc
 
         try:
             hyperopt.fmin(
@@ -271,11 +271,13 @@ class _HyperoptImpl:
             logger.warning(
                 "Maximum alloted optimization time exceeded. Optimization exited prematurely"
             )
-        except AllTrialsFailed:
+        except AllTrialsFailed as exc:
             self._best_estimator = None
             if hyperopt.STATUS_OK not in self._trials.statuses():
                 self._summarize_statuses()
-                raise ValueError("Error from hyperopt, none of the trials succeeded.")
+                raise ValueError(
+                    "Error from hyperopt, none of the trials succeeded."
+                ) from exc
         self._trials = merge_trials(self._trials, self._default_trials)
         if self.show_progressbar:
             self._summarize_statuses()
@@ -288,26 +290,19 @@ class _HyperoptImpl:
                     best_trial = self._default_trials.best_trial
             best_params = best_trial["result"]["params"]
             logger.info(
-                "best score: {:.1%}\nbest hyperparams found using {} hyperopt trials: {}".format(
-                    self.best_score - self._trials.average_best_error(),
-                    self.max_evals,
-                    best_params,
-                )
+                f"best score: {self.best_score - self._trials.average_best_error():.1%}\nbest hyperparams found using {self.max_evals} hyperopt trials: {best_params}"
             )
             trained = get_final_trained_estimator(best_params, X_train, y_train)
             self._best_estimator = trained
         except BaseException as e:
             logger.warning(
-                "Unable to extract the best parameters from optimization, the error: {}".format(
-                    e
-                )
+                f"Unable to extract the best parameters from optimization, the error: {e}"
             )
             self._best_estimator = None
 
         return self
 
     def predict(self, X_eval, **predict_params):
-        import warnings
 
         warnings.filterwarnings("ignore")
         if self._best_estimator is None:
@@ -320,9 +315,7 @@ class _HyperoptImpl:
             predictions = trained.predict(X_eval, **predict_params)
         except ValueError as e:
             logger.warning(
-                "ValueError in predicting using Hyperopt:{}, the error is:{}".format(
-                    trained, e
-                )
+                f"ValueError in predicting using Hyperopt:{trained}, the error is:{e}"
             )
             predictions = None
 
@@ -405,9 +398,7 @@ def _hyperopt_train_test(
                 args_to_scorer=hyperopt_impl.args_to_scorer,
                 **fit_params,
             )
-            logger.debug(
-                "Successful trial of hyperopt with hyperparameters:{}".format(params)
-            )
+            logger.debug(f"Successful trial of hyperopt with hyperparameters:{params}")
         except BaseException as e:
             # If there is any error in cross validation, use the score based on a random train-test split as the evaluation criterion
             if hyperopt_impl.handle_cv_failure and trainable is not None:
@@ -437,14 +428,10 @@ def _hyperopt_train_test(
                 logger.debug(e)
                 if trainable is None:
                     logger.debug(
-                        "Error {} with uncreatable pipeline with parameters:{}".format(
-                            e, lale.pretty_print.hyperparams_to_string(params)
-                        )
+                        f"Error {e} with uncreatable pipeline with parameters:{lale.pretty_print.hyperparams_to_string(params)}"
                     )
                 else:
-                    logger.debug(
-                        "Error {} with pipeline:{}".format(e, trainable.to_json())
-                    )
+                    logger.debug(f"Error {e} with pipeline:{trainable.to_json()}")
                 raise e
     else:
         assert X_valid is not None, "X_valid needs to be passed when cv is None."

@@ -37,7 +37,7 @@ class _OrderByImpl:
         order_asc: bool = True
         col: str
         if isinstance(expr_to_parse, Expr):
-            expr_to_parse = expr_to_parse._expr
+            expr_to_parse = expr_to_parse.expr
             if isinstance(expr_to_parse, ast.Call):
                 op = expr_to_parse.func
                 if isinstance(op, ast.Name):

@@ -482,15 +482,20 @@ _combined_schemas = {
 
 LGBMRegressor = lale.operators.make_operator(_LGBMRegressorImpl, _combined_schemas)
 
-if lightgbm_installed and lightgbm.__version__ >= "3.3.0":  #
-    # https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMRegressor.html
-    LGBMRegressor = LGBMRegressor.customize_schema(
-        silent={
-            "description": "Whether to print messages while running boosting.",
-            "anyOf": [{"enum": ["warn"]}, {"type": "boolean"}],
-            "default": "warn",
-        },
-        set_as_available=True,
-    )
+if lightgbm_installed:
+    from packaging import version
+
+    lightgbm_version = version.parse(getattr(lightgbm, "__version__"))
+
+    if lightgbm_version >= version.Version("3.3.0"):
+        # https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMRegressor.html
+        LGBMRegressor = LGBMRegressor.customize_schema(
+            silent={
+                "description": "Whether to print messages while running boosting.",
+                "anyOf": [{"enum": ["warn"]}, {"type": "boolean"}],
+                "default": "warn",
+            },
+            set_as_available=True,
+        )
 
 lale.docstrings.set_docstrings(LGBMRegressor)

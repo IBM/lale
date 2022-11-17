@@ -47,6 +47,8 @@ class TestToGraphviz(unittest.TestCase):
 
 
 class TestPrettyPrint(unittest.TestCase):
+    # pylint:disable=reimported,redefined-outer-name
+
     def _roundtrip(self, expected, printed):
         self.maxDiff = None
         # sklearn_version_family changes based on the Python as well as sklearn version,

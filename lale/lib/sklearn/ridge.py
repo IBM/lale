@@ -14,6 +14,7 @@
 
 import sklearn
 import sklearn.linear_model
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -92,7 +93,6 @@ _hyperparams_schema = {
                     "type": "number",
                     "minimumForOptimizer": 1e-08,
                     "maximumForOptimizer": 0.01,
-                    "distribution": "loguniform",
                     "default": 0.001,
                     "description": "Precision of the solution.",
                 },
@@ -240,7 +240,7 @@ _combined_schemas = {
 
 Ridge = lale.operators.make_operator(sklearn.linear_model.Ridge, _combined_schemas)
 
-if sklearn.__version__ >= "1.0":
+if lale.operators.sklearn_version >= version.Version("1.0"):
     # old: https://scikit-learn.org/0.24/modules/generated/sklearn.linear_model.Ridge.html
     # new: https://scikit-learn.org/1.0/modules/generated/sklearn.linear_model.Ridge.html
 
@@ -305,7 +305,6 @@ If you wish to standardize, please use StandardScaler before calling fit on an e
 All last six solvers support both dense and sparse data. However, only
 'sag', 'sparse_cg', and 'lbfgs' support sparse input when `fit_intercept`
 is True.""",
-            "default": "auto",
             "forOptimizer": True,
         },
         set_as_available=True,

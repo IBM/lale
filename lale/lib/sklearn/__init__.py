@@ -159,8 +159,15 @@ Clustering:
 .. _`StackingRegressor`: lale.lib.sklearn.stacking_regressor.html
 """
 
-from sklearn import __version__ as sklearn_version
+from packaging import version
 
+from lale import register_lale_wrapper_modules
+from lale.operators import sklearn_version
+
+# Note: all imports should be done as
+# from .xxx import XXX as XXX
+# this ensures that pyright considers them to be publicly available
+# and not private imports (this affects lale users that use pyright)
 from .ada_boost_classifier import AdaBoostClassifier as AdaBoostClassifier
 from .ada_boost_regressor import AdaBoostRegressor as AdaBoostRegressor
 from .bagging_classifier import BaggingClassifier as BaggingClassifier
@@ -221,25 +228,16 @@ from .select_k_best import SelectKBest as SelectKBest
 from .sgd_classifier import SGDClassifier as SGDClassifier
 from .sgd_regressor import SGDRegressor as SGDRegressor
 from .simple_imputer import SimpleImputer as SimpleImputer
-
-# Note: all imports should be done as
-# from .xxx import XXX as XXX
-# this ensures that pyright considers them to be publicly available
-# and not private imports (this affects lale users that use pyright)
-
-
-if sklearn_version >= "0.21":
-    from .stacking_classifier import StackingClassifier as StackingClassifier
-    from .stacking_regressor import StackingRegressor as StackingRegressor
-    from .voting_regressor import VotingRegressor as VotingRegressor
-
-from lale import register_lale_wrapper_modules
-
 from .standard_scaler import StandardScaler as StandardScaler
 from .svc import SVC as SVC
 from .svr import SVR as SVR
 from .tfidf_vectorizer import TfidfVectorizer as TfidfVectorizer
 from .variance_threshold import VarianceThreshold as VarianceThreshold
 from .voting_classifier import VotingClassifier as VotingClassifier
+
+if sklearn_version >= version.Version("0.21"):
+    from .stacking_classifier import StackingClassifier as StackingClassifier
+    from .stacking_regressor import StackingRegressor as StackingRegressor
+    from .voting_regressor import VotingRegressor as VotingRegressor
 
 register_lale_wrapper_modules(__name__)

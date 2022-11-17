@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
 from lale.search.lale_hyperopt import search_space_to_hp_expr, search_space_to_hp_str
 from lale.search.PGO import PGO
@@ -24,7 +24,10 @@ if TYPE_CHECKING:
 
 
 def hyperopt_search_space(
-    op: "PlannedOperator", schema=None, pgo: Optional[PGO] = None, data_schema={}
+    op: "PlannedOperator",
+    schema=None,
+    pgo: Optional[PGO] = None,
+    data_schema: Optional[Dict[str, Any]] = None,
 ):
 
     search_space = op_to_search_space(op, pgo=pgo, data_schema=data_schema)

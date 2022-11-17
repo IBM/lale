@@ -54,7 +54,6 @@ _hyperparams_schema = {
                     "type": "number",
                     "minimumForOptimizer": 1e-08,
                     "maximumForOptimizer": 0.01,
-                    "distribution": "loguniform",
                     "default": 0.0001,
                     "description": "Threshold used for rank estimation.",
                 },

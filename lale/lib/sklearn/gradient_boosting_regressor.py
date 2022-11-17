@@ -14,6 +14,7 @@
 
 import sklearn
 import sklearn.ensemble
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -239,7 +240,6 @@ _hyperparams_schema = {
                     "type": "number",
                     "minimumForOptimizer": 1e-08,
                     "maximumForOptimizer": 0.01,
-                    "distribution": "loguniform",
                     "default": 0.0001,
                     "description": "Tolerance for the early stopping. When the loss is not improving",
                 },
@@ -326,7 +326,7 @@ GradientBoostingRegressor = lale.operators.make_operator(
     sklearn.ensemble.GradientBoostingRegressor, _combined_schemas
 )
 
-if sklearn.__version__ >= "0.22":
+if lale.operators.sklearn_version >= version.Version("0.22"):
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html
     # new: https://scikit-learn.org/0.22/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html
     from lale.schemas import AnyOf, Bool, Enum, Float
@@ -347,7 +347,7 @@ if sklearn.__version__ >= "0.22":
         set_as_available=True,
     )
 
-if sklearn.__version__ >= "0.24":
+if lale.operators.sklearn_version >= version.Version("0.24"):
     # old: https://scikit-learn.org/0.22/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html
     # new: https://scikit-learn.org/0.24/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html
     GradientBoostingRegressor = GradientBoostingRegressor.customize_schema(
@@ -367,7 +367,7 @@ if sklearn.__version__ >= "0.24":
         set_as_available=True,
     )
 
-if sklearn.__version__ >= "1.0":
+if lale.operators.sklearn_version >= version.Version("1.0"):
     # old: https://scikit-learn.org/0.24/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html
     # new: https://scikit-learn.org/1.0/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html
     GradientBoostingRegressor = GradientBoostingRegressor.customize_schema(

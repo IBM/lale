@@ -64,7 +64,7 @@ def get_search_space_grids(
     op: "PlannedOperator",
     num_grids: Optional[float] = None,
     pgo: Optional[PGO] = None,
-    data_schema: Dict[str, Any] = {},
+    data_schema: Optional[Dict[str, Any]] = None,
 ) -> List[SearchSpaceGrid]:
     """Top level function: given a lale operator, returns a list of hp grids.
 
@@ -114,7 +114,9 @@ def search_space_to_grids(hp: SearchSpace) -> List[SearchSpaceGrid]:
 
 
 def op_to_search_space_grids(
-    op: PlannedOperator, pgo: Optional[PGO] = None, data_schema: Dict[str, Any] = {}
+    op: PlannedOperator,
+    pgo: Optional[PGO] = None,
+    data_schema: Optional[Dict[str, Any]] = None,
 ) -> List[SearchSpaceGrid]:
     search_space = op_to_search_space(op, pgo=pgo, data_schema=data_schema)
     grids = search_space_to_grids(search_space)
@@ -142,9 +144,6 @@ class SearchSpaceToGridVisitor(Visitor):
         else:
             return space
 
-    def __init__(self):
-        super(SearchSpaceToGridVisitor, self).__init__()
-
     def visitSearchSpacePrimitive(
         self, space: SearchSpacePrimitive
     ) -> SearchSpacePrimitive:
@@ -160,7 +159,7 @@ class SearchSpaceToGridVisitor(Visitor):
     def _searchSpaceList(
         self, space: SearchSpaceArray, *, size: int
     ) -> List[SearchSpaceGrid]:
-        sub_spaces = space.items(max=size)
+        sub_spaces = space.items(max_elts=size)
 
         param_grids: List[List[SearchSpaceGrid]] = [
             nest_all_HPparams(
@@ -223,9 +222,9 @@ class SearchSpaceToGridVisitor(Visitor):
             nested_space_choices: Iterable[
                 Iterable[SearchSpaceGrid]
             ] = itertools.product(*kvs_complex)
-            nested_space_choices_lists: List[List[SearchSpaceGrid]] = list(
-                map((lambda x: list(x)), nested_space_choices)
-            )
+            nested_space_choices_lists: List[List[SearchSpaceGrid]] = [
+                list(x) for x in nested_space_choices
+            ]
             nested_space_choices_filtered: List[List[SearchSpaceGrid]] = [
                 ll for ll in nested_space_choices_lists if ll
             ]

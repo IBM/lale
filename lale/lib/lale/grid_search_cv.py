@@ -157,8 +157,8 @@ class _GridSearchCVImpl:
                             func_timeout(
                                 self._hyperparams["max_opt_time"], self.grid.fit, (X, y)
                             )
-                        except FunctionTimedOut:
-                            raise BaseException("GridSearchCV timed out.")
+                        except FunctionTimedOut as exc:
+                            raise BaseException("GridSearchCV timed out.") from exc
                     else:
                         raise ValueError(
                             f"""max_opt_time is set to {self._hyperparams["max_opt_time"]} but the Python package

@@ -60,6 +60,6 @@ class CustomOrigOperator:
 
     @classmethod
     def _get_lale_operator(cls):
-        from .mock_custom_operators import CustomOrigOperator
+        from .mock_custom_operators import CustomOrigOperator as wrapped_custom_operator
 
-        return CustomOrigOperator
+        return wrapped_custom_operator

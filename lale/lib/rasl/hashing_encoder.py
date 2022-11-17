@@ -98,8 +98,8 @@ class _HashingEncoderImpl(MonoidableOperator[_HashingEncoderMonoid]):
     def feature_names(self):
         return getattr(self._monoid, "feature_names", None)
 
-    def from_monoid(self, lifted):
-        self._monoid = lifted
+    def from_monoid(self, monoid: _HashingEncoderMonoid):
+        self._monoid = monoid
         self._transformer = None
 
     def _build_transformer(self, X):
@@ -116,12 +116,12 @@ class _HashingEncoderImpl(MonoidableOperator[_HashingEncoderMonoid]):
             )
             for i in range(N)
         }
-        hash = Map(columns=columns_hash, remainder="passthrough")
+        hasher = Map(columns=columns_hash, remainder="passthrough")
         encode = Map(columns=columns_cat, remainder="passthrough")
-        return hash >> encode
+        return hasher >> encode
 
-    def to_monoid(self, v: Tuple[Any, Any]):
-        X, y = v
+    def to_monoid(self, batch: Tuple[Any, Any]):
+        X, _y = batch
         cols = self._hyperparams["cols"]
         if cols is None:
             cols = get_obj_cols(X)
@@ -151,8 +151,7 @@ class _HashingEncoderImpl(MonoidableOperator[_HashingEncoderMonoid]):
             raise ValueError(
                 "Must fit data first. Affected feature names are not known before."
             )
-        else:
-            return self.feature_names
+        return self.feature_names
 
 
 _combined_schemas = {

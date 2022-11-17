@@ -39,14 +39,14 @@ def create_function_test_encoder(encoder_name):
         trained = encoder.fit(self.X_train, self.y_train)
         _ = trained.transform(self.X_train)
 
-    test_encoder.__name__ = "test_{0}".format(encoder_name.split(".")[-1])
+    test_encoder.__name__ = f"test_{encoder_name.split('.')[-1]}"
     return test_encoder
 
 
 encoders = ["lale.lib.tensorflow.USEPretrainedEncoder"]
-for encoder in encoders:
+for encoder_to_test in encoders:
     setattr(
         TestTextEncoders,
-        "test_{0}".format(encoder.split(".")[-1]),
-        create_function_test_encoder(encoder),
+        f"test_{encoder_to_test.rsplit('.', maxsplit=1)[-1]}",
+        create_function_test_encoder(encoder_to_test),
     )

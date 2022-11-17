@@ -56,7 +56,9 @@ class NDArrayWithSchema(ndarray):
         json_schema=None,
         table_name=None,
     ):
-        result = super(NDArrayWithSchema, cls).__new__(
+        result = super(  # pylint:disable=too-many-function-args
+            NDArrayWithSchema, cls
+        ).__new__(
             cls, shape, dtype, buffer, offset, strides, order  # type: ignore
         )
         result.json_schema = json_schema
@@ -123,9 +125,7 @@ if spark_installed:
             table_name = get_table_name(df)
             if table_name is not None:
                 df_with_index = df_with_index.alias(table_name)
-            super(self.__class__, self).__init__(
-                df_with_index._jdf, df_with_index.sql_ctx
-            )
+            super().__init__(df_with_index._jdf, df_with_index.sql_ctx)
             self.index_name = index_name
             self.index_names = index_names
             for f in df.schema.fieldNames():
@@ -144,7 +144,7 @@ if spark_installed:
             return cols
 
         def toPandas(self, *args, **kwargs):
-            df = super(self.__class__, self).toPandas(*args, **kwargs)
+            df = super().toPandas(*args, **kwargs)
             return df.set_index(self.index_names)
 
 else:
@@ -334,13 +334,13 @@ def forward_metadata(old, new):
 def strip_schema(obj):
     if isinstance(obj, NDArrayWithSchema):
         result = np.array(obj)
-        assert type(result) == ndarray
+        assert type(result) == ndarray  # pylint:disable=unidiomatic-typecheck
     elif isinstance(obj, SeriesWithSchema):
         result = Series(obj)
-        assert type(result) == Series
+        assert type(result) == Series  # pylint:disable=unidiomatic-typecheck
     elif isinstance(obj, DataFrameWithSchema):
         result = DataFrame(obj)
-        assert type(result) == DataFrame
+        assert type(result) == DataFrame  # pylint:disable=unidiomatic-typecheck
     else:
         result = obj
     return result

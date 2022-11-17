@@ -81,7 +81,6 @@ def create_function_test_regressor(clf_name):
         _ = trained.predict(self.X_test)
 
         # test_with_hyperopt
-        from lale.lib.sklearn.ridge import Ridge
 
         if isinstance(regr, Ridge):  # type: ignore
             from lale.lib.lale import Hyperopt
@@ -90,7 +89,7 @@ def create_function_test_regressor(clf_name):
             trained = hyperopt.fit(self.X_train, self.y_train)
             _ = trained.predict(self.X_test)
 
-    test_regressor.__name__ = "test_{0}".format(clf_name.split(".")[-1])
+    test_regressor.__name__ = f"test_{clf_name.split('.')[-1]}"
     return test_regressor
 
 
@@ -116,7 +115,7 @@ regressors = [
 for clf in regressors:
     setattr(
         TestRegression,
-        "test_{0}".format(clf.split(".")[-1]),
+        f"test_{clf.rsplit('.', maxsplit=1)[-1]}",
         create_function_test_regressor(clf),
     )
 

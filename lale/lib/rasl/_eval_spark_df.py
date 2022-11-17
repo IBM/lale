@@ -46,7 +46,7 @@ except ImportError:
 
 
 def eval_expr_spark_df(expr: Expr):
-    return _eval_ast_expr_spark_df(expr._expr)
+    return _eval_ast_expr_spark_df(expr.expr)
 
 
 def _eval_ast_expr_spark_df(expr: AstExpr):
@@ -132,8 +132,8 @@ class _SparkEvaluator(ast.NodeVisitor):
         function_name = _ast_func_id(node.func)
         try:
             map_func_to_be_called = globals()[function_name]
-        except KeyError:
-            raise ValueError(f"""Unimplemented function {function_name}""")
+        except KeyError as exc:
+            raise ValueError(f"""Unimplemented function {function_name}""") from exc
         self.result = map_func_to_be_called(node)
 
 
@@ -151,14 +151,14 @@ def ite(call: ast.Call):
     return spark_when(cond, v1).otherwise(v2)  # type: ignore
 
 
-def hash(call: ast.Call):
+def hash(call: ast.Call):  # pylint:disable=redefined-builtin
     hashing_method = ast.literal_eval(call.args[0])
     column = _eval_ast_expr_spark_df(call.args[1])  # type: ignore
     if hashing_method == "md5":
-        hash = spark_md5(column)  # type: ignore
+        hash_fun = spark_md5(column)  # type: ignore
     else:
         raise ValueError(f"Unimplementade hash function in Spark: {hashing_method}")
-    return hash
+    return hash_fun
 
 
 def hash_mod(call: ast.Call):

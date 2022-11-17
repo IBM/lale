@@ -50,7 +50,9 @@ import lale.operators
 JSON_TYPE = Dict[str, Any]
 
 
-def _validate_lale_type(validator, laleType, instance, schema):
+def _validate_lale_type(
+    validator, laleType, instance, schema
+):  # pylint:disable=unused-argument
     # https://github.com/Julian/jsonschema/blob/master/jsonschema/_validators.py
     if laleType == "Any":
         return
@@ -61,8 +63,7 @@ def _validate_lale_type(validator, laleType, instance, schema):
             )
     elif laleType == "operator":
         if not (
-            isinstance(instance, lale.operators.Operator)
-            or isinstance(instance, sklearn.base.BaseEstimator)
+            isinstance(instance, (lale.operators.Operator, sklearn.base.BaseEstimator))
             or (
                 inspect.isclass(instance)
                 and issubclass(instance, sklearn.base.BaseEstimator)
@@ -163,7 +164,7 @@ def validate_is_schema(value: Dict[str, Any]):
     from lale.settings import disable_hyperparams_schema_validation
 
     if disable_hyperparams_schema_validation:
-        return True
+        return
 
     if "$schema" in value:
         assert value["$schema"] == _JSON_META_SCHEMA_URL
@@ -185,13 +186,13 @@ def _json_replace(subject, old, new):
         return new
     if isinstance(subject, list):
         result = [_json_replace(s, old, new) for s in subject]
-        for i in range(len(subject)):
-            if subject[i] != result[i]:
+        for s, r in zip(subject, result):
+            if s != r:
                 return result
     elif isinstance(subject, tuple):
-        result = tuple([_json_replace(s, old, new) for s in subject])
-        for i in range(len(subject)):
-            if subject[i] != result[i]:
+        result = tuple(_json_replace(s, old, new) for s in subject)
+        for s, r in zip(subject, result):
+            if s != r:
                 return result
     elif isinstance(subject, dict):
         if isinstance(old, dict):
@@ -245,10 +246,10 @@ class SubschemaError(Exception):
 
     def __str__(self):
         summary = f"Expected {self.sub_name} to be a subschema of {self.sup_name}."
-        import lale.pretty_print
+        from lale.pretty_print import json_to_string
 
-        sub = lale.pretty_print.json_to_string(self.sub)
-        sup = lale.pretty_print.json_to_string(self.sup)
+        sub = json_to_string(self.sub)
+        sup = json_to_string(self.sup)
         details = f"\n{self.sub_name} = {sub}\n{self.sup_name} = {sup}"
         return summary + details
 
@@ -282,7 +283,7 @@ def validate_schema(lhs: Any, super_schema: JSON_TYPE):
     from lale.settings import disable_data_schema_validation
 
     if disable_data_schema_validation:
-        return True  # If schema validation is disabled, always return as valid
+        return  # If schema validation is disabled, always return as valid
     sub_schema: Optional[JSON_TYPE]
 
     try:
@@ -346,7 +347,9 @@ def get_hyperparam_names(op: "lale.operators.IndividualOp") -> List[str]:
         return list(params.keys())
     else:
         c: Any = op.impl_class
-        return inspect.getargspec(c.__init__).args
+        sig = inspect.signature(c.__init__)
+        params = sig.parameters
+        return list(params.keys())
 
 
 def validate_method(op: "lale.operators.IndividualOp", schema_name: str):

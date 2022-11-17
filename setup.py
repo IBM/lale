@@ -50,12 +50,13 @@ else:
         "scikit-learn>=1.0.0,<=1.1.1",
         "scipy<1.9",
         "pandas",
+        "packaging",
         "decorator",
         "astunparse",
         "typing-extensions",
     ]
 
-import lale  # noqa: E402
+import lale  # noqa: E402  # pylint:disable=wrong-import-position
 
 if "TRAVIS" in os.environ:
     now = datetime.now().strftime("%y%m%d%H%M")

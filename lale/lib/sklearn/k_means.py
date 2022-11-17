@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sklearn
+from packaging import version
 from sklearn.cluster import KMeans as SKLModel
 
 from lale.docstrings import set_docstrings
-from lale.operators import make_operator
+from lale.operators import make_operator, sklearn_version
 
 _hyperparams_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
@@ -110,7 +110,6 @@ The final results will be the best output of n_init consecutive runs in terms of
                     "type": "number",
                     "minimumForOptimizer": 1e-08,
                     "maximumForOptimizer": 0.01,
-                    "distribution": "loguniform",
                     "default": 0.0001,
                     "description": "Relative tolerance with regards to Frobenius norm of the difference in the cluster centers of two consecutive iterations to declare convergence.",
                 },
@@ -244,7 +243,7 @@ _combined_schemas = {
 }
 KMeans = make_operator(SKLModel, _combined_schemas)
 
-if sklearn.__version__ >= "1.0":
+if sklearn_version >= version.Version("1.0"):
     # old: https://scikit-learn.org/0.24/modules/generated/sklearn.cluster.KMeans.html
     # new: https://scikit-learn.org/1.0/modules/generated/sklearn.cluster.KMeans.html
     KMeans = KMeans.customize_schema(
@@ -253,7 +252,7 @@ if sklearn.__version__ >= "1.0":
         set_as_available=True,
     )
 
-if sklearn.__version__ >= "1.1":
+if sklearn_version >= version.Version("1.1"):
     # old: https://scikit-learn.org/1.0/modules/generated/sklearn.cluster.KMeans.html
     # new: https://scikit-learn.org/1.1/modules/generated/sklearn.cluster.KMeans.html
     KMeans = KMeans.customize_schema(

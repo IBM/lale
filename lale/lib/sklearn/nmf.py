@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sklearn
+from packaging import version
 from sklearn.decomposition import NMF as SKLModel
 
 import lale.docstrings
@@ -90,7 +90,6 @@ _hyperparams_schema = {
                     "minimum": 0.0,
                     "minimumForOptimizer": 1e-08,
                     "maximumForOptimizer": 0.01,
-                    "distribution": "loguniform",
                     "default": 0.0001,
                     "description": "Tolerance of the stopping condition.",
                 },
@@ -216,7 +215,7 @@ _combined_schemas = {
 NMF: lale.operators.PlannedIndividualOp
 NMF = lale.operators.make_operator(SKLModel, _combined_schemas)
 
-if sklearn.__version__ >= "0.24":
+if lale.operators.sklearn_version >= version.Version("0.24"):
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.decomposition.NMF.html
     # new: https://scikit-learn.org/0.24/modules/generated/sklearn.decomposition.NMF.html
     from lale.schemas import AnyOf, Enum, Null
@@ -234,7 +233,7 @@ if sklearn.__version__ >= "0.24":
         set_as_available=True,
     )
 
-if sklearn.__version__ >= "1.0":
+if lale.operators.sklearn_version >= version.Version("1.0"):
     # old: https://scikit-learn.org/0.24/modules/generated/sklearn.decomposition.NMF.html
     # new: https://scikit-learn.org/1.0/modules/generated/sklearn.decomposition.NMF.html
     from lale.schemas import AnyOf, Enum, Float, Null

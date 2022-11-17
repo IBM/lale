@@ -291,7 +291,7 @@ def atomize_schema_enumerations(
                 }
                 complex_evs.append(ds)
 
-            elif isinstance(e, list) or isinstance(e, tuple):
+            elif isinstance(e, (list, tuple)):
                 is_tuple = isinstance(e, tuple)
                 items_len = len(e)
                 items: List[JsonSchema] = []

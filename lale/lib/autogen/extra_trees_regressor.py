@@ -1,9 +1,10 @@
 import sklearn
 from numpy import inf, nan
+from packaging import version
 from sklearn.ensemble import ExtraTreesRegressor as Op
 
 from lale.docstrings import set_docstrings
-from lale.operators import make_operator
+from lale.operators import make_operator, sklearn_version
 
 
 class _ExtraTreesRegressorImpl:
@@ -277,7 +278,7 @@ _combined_schemas = {
 }
 ExtraTreesRegressor = make_operator(_ExtraTreesRegressorImpl, _combined_schemas)
 
-if sklearn.__version__ >= "0.22":
+if sklearn_version >= version.Version("0.22"):
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.ExtraTreesRegressor.html
     # new: https://scikit-learn.org/0.22/modules/generated/sklearn.ensemble.ExtraTreesRegressor.html
     from lale.schemas import AnyOf, Float, Int, Null
@@ -315,7 +316,7 @@ if sklearn.__version__ >= "0.22":
         set_as_available=True,
     )
 
-if sklearn.__version__ >= "0.24":
+if sklearn_version >= version.Version("0.24"):
     # old: https://scikit-learn.org/0.22/modules/generated/sklearn.tree.ExtraTreesRegressor.html
     # new: https://scikit-learn.org/0.24/modules/generated/sklearn.tree.ExtraTreesRegressor.html
     ExtraTreesRegressor = ExtraTreesRegressor.customize_schema(
@@ -330,7 +331,7 @@ if sklearn.__version__ >= "0.24":
         set_as_available=True,
     )
 
-if sklearn.__version__ >= "1.0":
+if sklearn_version >= version.Version("1.0"):
     # old: https://scikit-learn.org/0.24/modules/generated/sklearn.tree.ExtraTreesRegressor.html
     # new: https://scikit-learn.org/1.0/modules/generated/sklearn.tree.ExtraTreesRegressor.html
     ExtraTreesRegressor = ExtraTreesRegressor.customize_schema(

@@ -16,11 +16,9 @@ import ast
 import copy
 import importlib
 import logging
-import os
-import re
-import sys
 import time
 import traceback
+from importlib import util
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -52,7 +50,6 @@ try:
 except ImportError:
     torch_installed = False
 
-from importlib import util
 
 spark_loader = util.find_spec("pyspark")
 spark_installed = spark_loader is not None
@@ -70,7 +67,7 @@ def make_nested_hyperopt_space(sub_space):
 
 def assignee_name(level=1) -> Optional[str]:
     tb = traceback.extract_stack()
-    file_name, line_number, function_name, text = tb[-(level + 2)]
+    file_name, _line_number, _function_name, text = tb[-(level + 2)]
     try:
         tree = ast.parse(text, file_name)
     except SyntaxError:
@@ -89,7 +86,7 @@ def assignee_name(level=1) -> Optional[str]:
 
 def arg_name(pos=0, level=1) -> Optional[str]:
     tb = traceback.extract_stack()
-    file_name, line_number, function_name, text = tb[-(level + 2)]
+    file_name, _line_number, _function_name, text = tb[-(level + 2)]
     try:
         tree = ast.parse(text, file_name)
     except SyntaxError:
@@ -109,18 +106,18 @@ def arg_name(pos=0, level=1) -> Optional[str]:
 
 
 def data_to_json(data, subsample_array: bool = True) -> Union[list, dict, int, float]:
-    if type(data) is tuple:
+    if isinstance(data, tuple):
         # convert to list
         return [data_to_json(elem, subsample_array) for elem in data]
-    if type(data) is list:
+    if isinstance(data, list):
         return [data_to_json(elem, subsample_array) for elem in data]
-    elif type(data) is dict:
+    elif isinstance(data, dict):
         return {key: data_to_json(data[key], subsample_array) for key in data}
     elif isinstance(data, np.ndarray):
         return ndarray_to_json(data, subsample_array)
-    elif type(data) is scipy.sparse.csr_matrix:
+    elif isinstance(data, scipy.sparse.csr_matrix):
         return ndarray_to_json(data.toarray(), subsample_array)
-    elif isinstance(data, pd.DataFrame) or isinstance(data, pd.Series):
+    elif isinstance(data, (pd.DataFrame, pd.Series)):
         np_array = data.values
         return ndarray_to_json(np_array, subsample_array)
     elif torch_installed and isinstance(data, torch.Tensor):
@@ -168,12 +165,7 @@ def ndarray_to_json(arr: np.ndarray, subsample_array: bool = True) -> Union[list
 
     def subarray_to_json(indices: Tuple[int, ...]) -> Any:
         if len(indices) == len(arr.shape):
-            if (
-                isinstance(arr[indices], bool)
-                or isinstance(arr[indices], int)
-                or isinstance(arr[indices], float)
-                or isinstance(arr[indices], str)
-            ):
+            if isinstance(arr[indices], (bool, int, float, str)):
                 return arr[indices]
             elif np.issubdtype(arr.dtype, np.bool_):
                 return bool(arr[indices])
@@ -405,20 +397,6 @@ def to_graphviz(
     return dot
 
 
-def println_pos(message, out_file=sys.stdout):
-    tb = traceback.extract_stack()[-2]
-    match = re.search(r"<ipython-input-([0-9]+)-", tb[0])
-    if match:
-        pos = "notebook cell [{}] line {}".format(match[1], tb[1])
-    else:
-        pos = "{}:{}".format(tb[0], tb[1])
-    strtime = time.strftime("%Y-%m-%d_%H-%M-%S")
-    to_log = "{}: {} {}".format(pos, strtime, message)
-    print(to_log, file=out_file)
-    if match:
-        os.system("echo {}".format(to_log))
-
-
 def instantiate_from_hyperopt_search_space(obj_hyperparams, new_hyperparams):
     if isinstance(new_hyperparams, dict) and LALE_NESTED_SPACE_KEY in new_hyperparams:
         sub_params = new_hyperparams[LALE_NESTED_SPACE_KEY]
@@ -547,7 +525,7 @@ def create_instance_from_hyperopt_search_space(
         except KeyError as e:
             raise ValueError(
                 "An edge was found with an endpoint that is not a step (" + str(e) + ")"
-            )
+            ) from e
 
         return TrainablePipeline(op_instances, trainable_edges, ordered=True)  # type: ignore
     elif isinstance(lale_object, OperatorChoice):
@@ -597,7 +575,6 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
         return lale_wrapper_found, class_
 
     import lale.operators
-    import lale.type_checking
 
     sklearn_obj = sklearn_pipeline
 
@@ -633,7 +610,10 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
             )
             for nested_pipeline_step in nested_pipeline_steps.items()
         ]
-        if type(sklearn_pipeline) == sklearn.pipeline.Pipeline:
+        if (
+            type(sklearn_pipeline)  # pylint:disable=unidiomatic-typecheck
+            == sklearn.pipeline.Pipeline
+        ):
             nested_pipeline_lale_objects = [
                 nested_pipeline_lale_named_step[1]
                 for nested_pipeline_lale_named_step in nested_pipeline_lale_named_steps
@@ -771,7 +751,7 @@ def append_batch(data, batch_data):
     elif torch_installed and isinstance(data, torch.Tensor):
         if isinstance(batch_data, torch.Tensor):
             return torch.cat((data, batch_data))
-    elif isinstance(data, pd.Series) or isinstance(data, pd.DataFrame):
+    elif isinstance(data, (pd.Series, pd.DataFrame)):
         return pd.concat([data, batch_data], axis=0)
     try:
         import h5py
@@ -816,7 +796,6 @@ def create_data_loader(X, y=None, batch_size=1, num_workers=0, shuffle=True):
     TypeError
         Raises a TypeError if the input format is not supported.
     """
-    import torch
     from torch.utils.data import DataLoader, Dataset, TensorDataset
 
     from lale.util.batch_data_dictionary_dataset import BatchDataDict
@@ -875,7 +854,7 @@ def create_data_loader(X, y=None, batch_size=1, num_workers=0, shuffle=True):
         dataset = TensorDataset(X)
     else:
         raise TypeError(
-            "Can not create a data loader for a dataset with type {}".format(type(X))
+            f"Can not create a data loader for a dataset with type {type(X)}"
         )
     return DataLoader(
         dataset,
@@ -1059,7 +1038,7 @@ def make_array_index_name(index, is_tuple: bool = False):
 
 def is_numeric_structure(structure_type: str):
 
-    if structure_type == "list" or structure_type == "tuple":
+    if structure_type in ["list", "tuple"]:
         return True
     elif structure_type == "dict":
         return False
@@ -1136,7 +1115,7 @@ def _is_ast_constant(expr):
 
 
 def _is_ast_subs_or_attr(expr):
-    return isinstance(expr, ast.Subscript) or isinstance(expr, ast.Attribute)
+    return isinstance(expr, (ast.Subscript, ast.Attribute))
 
 
 def _is_ast_call(expr):

@@ -14,6 +14,7 @@
 
 import sklearn
 import sklearn.neural_network
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -180,7 +181,6 @@ _hyperparams_schema = {
                     '"adaptive", convergence is considered to be reached and '
                     "training stops.",
                     "type": "number",
-                    "distribution": "loguniform",
                     "minimumForOptimizer": 1e-08,
                     "maximumForOptimizer": 0.01,
                     "default": 0.0001,
@@ -321,7 +321,7 @@ MLPClassifier = lale.operators.make_operator(
     sklearn.neural_network.MLPClassifier, _combined_schemas
 )
 
-if sklearn.__version__ >= "0.22":
+if lale.operators.sklearn_version >= version.Version("0.22"):
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.neural_network.MLPClassifier.html
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.neural_network.MLPClassifier.html
     from lale.schemas import Int

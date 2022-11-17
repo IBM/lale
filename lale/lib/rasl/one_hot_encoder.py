@@ -88,9 +88,9 @@ class _OneHotEncoderImpl(MonoidableOperator[_OneHotEncoderMonoid]):
     def feature_names_in_(self):
         return getattr(self._monoid, "feature_names_in_", None)
 
-    def from_monoid(self, lifted: _OneHotEncoderMonoid):
-        self._monoid = lifted
-        self.n_features_in_ = len(lifted.feature_names_in_)
+    def from_monoid(self, monoid: _OneHotEncoderMonoid):
+        self._monoid = monoid
+        self.n_features_in_ = len(monoid.feature_names_in_)
         self._transformer = None
 
     def _build_transformer(self):
@@ -109,8 +109,8 @@ class _OneHotEncoderImpl(MonoidableOperator[_OneHotEncoderMonoid]):
         )
         return result
 
-    def to_monoid(self, v: Tuple[Any, Any]):
-        X, _ = v
+    def to_monoid(self, batch: Tuple[Any, Any]):
+        X, _ = batch
         n_samples_seen_ = count(X)
         feature_names_in_ = get_columns(X)
         agg_op = Aggregate(columns={c: collect_set(it[c]) for c in feature_names_in_})

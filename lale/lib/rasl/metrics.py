@@ -18,7 +18,7 @@ from typing import Dict, Iterable, Optional, Tuple, TypeVar, Union, cast
 
 import numpy as np
 import pandas as pd
-from typing_extensions import Protocol
+from typing_extensions import Protocol, TypeAlias
 
 from lale.expressions import astype, count, it
 from lale.expressions import sum as lale_sum
@@ -34,33 +34,38 @@ MetricMonoid = Monoid
 
 _M = TypeVar("_M", bound=MetricMonoid)
 
+_PandasBatch: TypeAlias = Tuple[pd.DataFrame, pd.Series]
+
 if spark_installed:
     from pyspark.sql.dataframe import DataFrame as SparkDataFrame
 
-    _Batch_Xy = Union[
-        Tuple[pd.DataFrame, pd.Series],
-        Tuple[SparkDataFrame, SparkDataFrame],
-    ]
+    _SparkBatch: TypeAlias = Tuple[SparkDataFrame, SparkDataFrame]
 
-    _Batch_yyX = Tuple[
+    _Batch_XyAux = Union[_PandasBatch, _SparkBatch]
+
+    _Batch_yyXAux = Tuple[
         Union[pd.Series, np.ndarray, SparkDataFrame],
         Union[pd.Series, np.ndarray, SparkDataFrame],
         Union[pd.DataFrame, SparkDataFrame],
     ]
 
 else:
-    _Batch_Xy = Tuple[pd.DataFrame, pd.Series]  # type: ignore
+    _Batch_XyAux = _PandasBatch  # type: ignore
 
-    _Batch_yyX = Tuple[  # type: ignore
+    _Batch_yyXAux = Tuple[  # type: ignore
         Union[pd.Series, np.ndarray], Union[pd.Series, np.ndarray], pd.DataFrame
     ]
+
+# pyright does not currently accept a TypeAlias with conditional definitions
+_Batch_Xy: TypeAlias = _Batch_XyAux  # type: ignore
+_Batch_yyX: TypeAlias = _Batch_yyXAux  # type: ignore
 
 
 class MetricMonoidFactory(MonoidFactory[_Batch_yyX, float, _M], Protocol):
     """Abstract base class for factories that create metrics with an associative monoid interface."""
 
     @abstractmethod
-    def to_monoid(self, v: _Batch_yyX) -> _M:
+    def to_monoid(self, batch: _Batch_yyX) -> _M:
         pass
 
     @abstractmethod
@@ -93,6 +98,8 @@ class MetricMonoidFactory(MonoidFactory[_Batch_yyX, float, _M], Protocol):
 
 
 class _MetricMonoidMixin(MetricMonoidFactory[_M], Protocol):
+    # pylint:disable=abstract-method
+    # This is an abstract class as well
     def score_data(
         self, y_true: pd.Series, y_pred: pd.Series, X: Optional[pd.DataFrame] = None
     ) -> float:
@@ -144,8 +151,8 @@ class _Accuracy(_MetricMonoidMixin[_AccuracyData]):
         agg_df = self._pipeline.transform(input_df)
         return _AccuracyData(match=agg_df.at[0, "match"], total=agg_df.at[0, "total"])
 
-    def from_monoid(self, v: _AccuracyData) -> float:
-        return float(v.match / np.float64(v.total))
+    def from_monoid(self, monoid: _AccuracyData) -> float:
+        return float(monoid.match / np.float64(monoid.total))
 
 
 def accuracy_score(y_true: pd.Series, y_pred: pd.Series) -> float:
@@ -196,9 +203,10 @@ class _BalancedAccuracy(_MetricMonoidMixin[_BalancedAccuracyData]):
             false_neg={k: agg_df.at[k, "false_neg"] for k in agg_df.index},
         )
 
-    def from_monoid(self, v: _BalancedAccuracyData) -> float:
+    def from_monoid(self, monoid: _BalancedAccuracyData) -> float:
         recalls = {
-            k: v.true_pos[k] / (v.true_pos[k] + v.false_neg[k]) for k in v.true_pos
+            k: monoid.true_pos[k] / (monoid.true_pos[k] + monoid.false_neg[k])
+            for k in monoid.true_pos
         }
         result = sum(recalls.values()) / len(recalls)
         return float(result)
@@ -257,9 +265,9 @@ class _F1(_MetricMonoidMixin[_F1Data]):
             false_neg=agg_df.at[0, "false_neg"],
         )
 
-    def from_monoid(self, v: _F1Data) -> float:
-        two_tp = v.true_pos + v.true_pos
-        result = two_tp / (two_tp + v.false_pos + v.false_neg)
+    def from_monoid(self, monoid: _F1Data) -> float:
+        two_tp = monoid.true_pos + monoid.true_pos
+        result = two_tp / (two_tp + monoid.false_pos + monoid.false_neg)
         return float(result)
 
 
@@ -274,17 +282,17 @@ def f1_score(
 
 
 class _R2Data(MetricMonoid):
-    def __init__(self, n: int, sum: float, sum_sq: float, res_sum_sq: float):
+    def __init__(self, n: int, tot_sum: float, tot_sum_sq: float, res_sum_sq: float):
         self.n = n
-        self.sum = sum
-        self.sum_sq = sum_sq
+        self.sum = tot_sum
+        self.sum_sq = tot_sum_sq
         self.res_sum_sq = res_sum_sq
 
     def combine(self, other: "_R2Data") -> "_R2Data":
         return _R2Data(
             n=self.n + other.n,
-            sum=self.sum + other.sum,
-            sum_sq=self.sum_sq + other.sum_sq,
+            tot_sum=self.sum + other.sum,
+            tot_sum_sq=self.sum_sq + other.sum_sq,
             res_sum_sq=self.res_sum_sq + other.res_sum_sq,
         )
 
@@ -314,14 +322,14 @@ class _R2(_MetricMonoidMixin[_R2Data]):
         agg_df = self._pipeline.transform(input_df)
         return _R2Data(
             n=agg_df.at[0, "n"],
-            sum=agg_df.at[0, "sum"],
-            sum_sq=agg_df.at[0, "sum_sq"],
+            tot_sum=agg_df.at[0, "sum"],
+            tot_sum_sq=agg_df.at[0, "sum_sq"],
             res_sum_sq=agg_df.at[0, "res_sum_sq"],
         )
 
-    def from_monoid(self, v: _R2Data) -> float:
-        ss_tot = v.sum_sq - (v.sum * v.sum / np.float64(v.n))
-        return 1 - float(v.res_sum_sq / ss_tot)
+    def from_monoid(self, monoid: _R2Data) -> float:
+        ss_tot = monoid.sum_sq - (monoid.sum * monoid.sum / np.float64(monoid.n))
+        return 1 - float(monoid.res_sum_sq / ss_tot)
 
 
 def r2_score(y_true: pd.Series, y_pred: pd.Series) -> float:

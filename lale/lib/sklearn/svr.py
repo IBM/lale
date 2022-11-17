@@ -14,6 +14,7 @@
 
 import sklearn
 import sklearn.svm
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -86,7 +87,6 @@ _hyperparams_schema = {
                 },
                 "tol": {
                     "type": "number",
-                    "distribution": "loguniform",
                     "minimum": 0.0,
                     "exclusiveMinimum": True,
                     "maximumForOptimizer": 0.01,
@@ -209,7 +209,7 @@ _combined_schemas = {
 SVR: lale.operators.PlannedIndividualOp
 SVR = lale.operators.make_operator(sklearn.svm.SVR, _combined_schemas)
 
-if sklearn.__version__ >= "0.22":
+if lale.operators.sklearn_version >= version.Version("0.22"):
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.svm.SVR.html
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.svm.SVR.html
     from lale.schemas import AnyOf, Enum, Float

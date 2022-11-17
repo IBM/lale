@@ -37,16 +37,15 @@ class NonTerminal(Operator):
                 raise ValueError(
                     f"NonTerminal._with_params called with unknown parameters: {unknowns}"
                 )
-            else:
-                assert "name" in impl_params
-                return NonTerminal(impl_params["name"])
+            assert "name" in impl_params
+            return NonTerminal(impl_params["name"])
         else:
             return self
 
     def __init__(self, name):
         self._name = name
 
-    def _has_same_impl(self):
+    def _has_same_impl(self, other: Operator):
         pass
 
     def is_supervised(self):
@@ -92,7 +91,9 @@ class Grammar(Operator):
         # from this point of view, Grammar is just a higher order operator
         raise NotImplementedError("setting Grammar parameters is not yet supported")
 
-    def __init__(self, variables: Dict[str, Operator] = {}):
+    def __init__(self, variables: Optional[Dict[str, Operator]] = None):
+        if variables is None:
+            variables = {}
         self._variables = variables
 
     def __getattr__(self, name):
@@ -108,7 +109,7 @@ class Grammar(Operator):
         else:
             self._variables[name] = value
 
-    def _has_same_impl(self):
+    def _has_same_impl(self, other: Operator):
         pass
 
     def is_supervised(self):
@@ -208,7 +209,8 @@ class Grammar(Operator):
             else:
                 return None
         if isinstance(op, OperatorChoice):
-            return self._sample(random.choice(op.steps_list()), n)
+            # This choice does not need to be cryptographically secure or hard to predict
+            return self._sample(random.choice(op.steps_list()), n)  # nosec
         if isinstance(op, NonTerminal):
             return self._sample(getattr(self, op.name()), n - 1) if n > 0 else None
         if isinstance(op, IndividualOp):

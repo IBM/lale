@@ -1,9 +1,10 @@
 import sklearn
 from numpy import inf, nan
+from packaging import version
 from sklearn.tree import DecisionTreeClassifier as Op
 
 from lale.docstrings import set_docstrings
-from lale.operators import make_operator
+from lale.operators import make_operator, sklearn_version
 
 
 class _DecisionTreeClassifierImpl:
@@ -311,7 +312,7 @@ _combined_schemas = {
 }
 DecisionTreeClassifier = make_operator(_DecisionTreeClassifierImpl, _combined_schemas)
 
-if sklearn.__version__ >= "0.22":
+if sklearn_version >= version.Version("0.22"):
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.tree.DecisionTreeClassifier.html
     # new: https://scikit-learn.org/0.22/modules/generated/sklearn.tree.DecisionTreeClassifier.html
     from lale.schemas import AnyOf, Bool, Enum, Float
@@ -332,14 +333,14 @@ if sklearn.__version__ >= "0.22":
         set_as_available=True,
     )
 
-if sklearn.__version__ >= "0.24":
+if sklearn_version >= version.Version("0.24"):
     # old: https://scikit-learn.org/0.22/modules/generated/sklearn.tree.DecisionTreeClassifier.html
     # new: https://scikit-learn.org/0.24/modules/generated/sklearn.tree.DecisionTreeClassifier.html
     DecisionTreeClassifier = DecisionTreeClassifier.customize_schema(
         presort=None, set_as_available=True
     )
 
-if sklearn.__version__ >= "1.0":
+if sklearn_version >= version.Version("1.0"):
     # old: https://scikit-learn.org/0.24/modules/generated/sklearn.tree.DecisionTreeClassifier.html
     # new: https://scikit-learn.org/1.0/modules/generated/sklearn.tree.DecisionTreeClassifier.html
     DecisionTreeClassifier = DecisionTreeClassifier.customize_schema(

@@ -63,7 +63,7 @@ def remove_defaults_dict(d: Dict[XDK, Union[DefaultValue, XDV]]) -> Dict[XDK, XD
 
 # utilites to load a pgo from json-ish
 def load_pgo_file(filepath) -> PGO:
-    with open(filepath) as json_file:
+    with open(filepath) as json_file:  # pylint:disable=unspecified-encoding
         json_data = json.load(json_file)
         return load_pgo_data(json_data)
 
@@ -178,12 +178,14 @@ class FrequencyDistribution(Generic[T]):
 
     def sample(self) -> T:
         ll = len(self)
-        i = random.randrange(ll)
+        # This choice does not need to be cryptographically secure or hard to predict
+        i = random.randrange(ll)  # nosec
         return self[i]
 
     def samples(self, count: int) -> Sequence[T]:
         ll = len(self)
-        i: Sequence[int] = [random.randrange(ll) for _ in range(count)]
+        # This choice does not need to be cryptographically secure or hard to predict
+        i: Sequence[int] = [random.randrange(ll) for _ in range(count)]  # nosec
         return self[i]
 
 

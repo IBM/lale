@@ -29,7 +29,9 @@ logger.setLevel(logging.INFO)
 try:
     from pyspark.sql import SparkSession
 
-    from lale.datasets.data_schemas import SparkDataFrameWithIndex
+    from lale.datasets.data_schemas import (  # pylint:disable=ungrouped-imports
+        SparkDataFrameWithIndex,
+    )
 
     spark_installed = True
 except ImportError:
@@ -40,14 +42,13 @@ def get_data_from_csv(datatype, data_file_name):
     datatype = datatype.casefold()
     if datatype == "pandas":
         return pd.read_csv(data_file_name)
-    elif datatype.startswith("spark"):
+    elif datatype == "spark":
         if spark_installed:
             spark = SparkSession.builder.appName("GoSales Dataset").getOrCreate()
             df = spark.read.options(inferSchema="True", delimiter=",").csv(
                 data_file_name, header=True
             )
-            if datatype == "spark":
-                return SparkDataFrameWithIndex(df)
+            return SparkDataFrameWithIndex(df)
         else:
             raise ValueError("Spark is not installed on this machine.")
     else:
@@ -107,9 +108,10 @@ def fetch_go_sales_dataset(datatype="pandas"):
         if not os.path.exists(data_file_name):
             if not os.path.exists(download_data_dir):
                 os.makedirs(download_data_dir)
-            urllib.request.urlretrieve(base_url + file, data_file_name)
-            logger.info(" Created: {}".format(data_file_name))
-        table_name = file.split(".")[0]
+            # this request is to a hardcoded https url, so does not risk leaking local data
+            urllib.request.urlretrieve(base_url + file, data_file_name)  # nosec
+            logger.info(f" Created: {data_file_name}")
+        table_name = file.split(".", maxsplit=1)[0]
         data_frame = get_data_from_csv(datatype, data_file_name)
         go_sales_list.append(add_table_name(data_frame, table_name))
     logger.info(" Fetched the Go_Sales dataset. Process completed.")
@@ -156,27 +158,23 @@ def fetch_imdb_dataset(datatype="pandas"):
     imdb_list = []
     if not os.path.exists(download_data_dir):
         raise ValueError(
-            "IMDB dataset not found at {}. Please download it using lalegpl repository.".format(
-                download_data_dir
-            )
+            f"IMDB dataset not found at {download_data_dir}. Please download it using lalegpl repository."
         )
+
+    for _root, _dirs, files in os.walk(download_data_dir):
+        for file in files:
+            filename, extension = os.path.splitext(file)
+            if extension == ".csv":
+                data_file_name = os.path.join(download_data_dir, file)
+                table_name = filename
+                data_frame = get_data_from_csv(datatype, data_file_name)
+                imdb_list.append(add_table_name(data_frame, table_name))
+    if len(imdb_list) == 7:
+        logger.info(" Fetched the IMDB dataset. Process completed.")
     else:
-        for root, dirs, files in os.walk(download_data_dir):
-            for file in files:
-                filename, extension = os.path.splitext(file)
-                if extension == ".csv":
-                    data_file_name = os.path.join(download_data_dir, file)
-                    table_name = filename
-                    data_frame = get_data_from_csv(datatype, data_file_name)
-                    imdb_list.append(add_table_name(data_frame, table_name))
-        if len(imdb_list) == 7:
-            logger.info(" Fetched the IMDB dataset. Process completed.")
-        else:
-            raise ValueError(
-                "Incomplete IMDB dataset found at {}. Please download complete dataset using lalegpl repository.".format(
-                    download_data_dir
-                )
-            )
+        raise ValueError(
+            f"Incomplete IMDB dataset found at {download_data_dir}. Please download complete dataset using lalegpl repository."
+        )
     return imdb_list
 
 
@@ -255,12 +253,12 @@ def fetch_creditg_multitable_dataset(datatype="pandas"):
     df_col = X["existing_credits"]
     records = []
     for row in df_col.iteritems():
-        id = row[0]
+        row_id = row[0]
         credit_count = int(row[1])
-        for i in range(credit_count):
+        for _i in range(credit_count):
             records.append(
                 {
-                    "id": id,
+                    "id": row_id,
                     "credit_number": np.random.randint(1, 1000000),
                     "type": "credit",
                     "status": "on",

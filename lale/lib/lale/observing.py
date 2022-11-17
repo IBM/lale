@@ -178,7 +178,7 @@ class LoggingObserver:
     def __getattr__(self, prop: str):
         if prop.startswith("_"):
             raise AttributeError
-        elif prop.startswith(start_prefix):
+        if prop.startswith(start_prefix):
             suffix = prop[len(start_prefix) :]
 
             def startfun(*args, **kwargs):
@@ -226,3 +226,4 @@ class LoggingObserver:
             return failfun
         else:
             logger.debug(f"trying to observe {prop}, which is not a start or stop")
+            return None

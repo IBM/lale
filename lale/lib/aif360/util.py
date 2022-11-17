@@ -29,7 +29,7 @@ import lale.datasets.openml
 import lale.lib.lale
 import lale.lib.rasl
 from lale.datasets.data_schemas import add_schema_adjusting_n_rows
-from lale.expressions import astype, it, sum
+from lale.expressions import astype, it, sum  # pylint:disable=redefined-builtin
 from lale.helpers import GenSym, _ensure_pandas
 from lale.lib.dataframe import get_columns
 from lale.lib.rasl import Aggregate, ConcatFeatures, Map
@@ -90,6 +90,43 @@ def count_fairness_groups(
     protected_attributes: List[JSON_TYPE],
     unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
 ) -> pd.DataFrame:
+    """
+    Count size of each intersection of groups induced by the fairness info.
+
+    Parameters
+    ----------
+    X : array
+
+      Features including protected attributes as numpy ndarray or pandas dataframe.
+
+    y : array
+
+      Labels as numpy ndarray or pandas series.
+
+    favorable_labels : array
+
+      Label values which are considered favorable (i.e. "positive").
+
+    protected_attributes : array
+
+      Features for which fairness is desired.
+
+    unfavorable_labels : array or None, default None
+
+      Label values which are considered unfavorable (i.e. "negative").
+
+    Returns
+    -------
+    result : pd.DataFrame
+
+        DataFrame with a multi-level index on the rows, where the first level
+        indicates the binarized outcome, and the remaining levels indicate the
+        binarized group membership according to the protected attributes.
+        Column "count" specifies the number of instances for each group.
+        Column "ratio" gives the ratio of the given outcome relative to the
+        total number of instances with any outcome but the same encoded
+        protected attributes.
+    """
     from lale.lib.aif360 import ProtectedAttributesEncoder
 
     prot_attr_enc = ProtectedAttributesEncoder(
@@ -104,7 +141,17 @@ def count_fairness_groups(
     encoded_y = pd.Series(encoded_y, index=encoded_y.index, name=gensym("y_true"))
     counts = pd.Series(data=1, index=encoded_y.index, name=gensym("count"))
     enc = pd.concat([encoded_y, encoded_X, counts], axis=1)
-    result = enc.groupby([encoded_y.name] + prot_attr_names).count()
+    grouped = enc.groupby([encoded_y.name] + prot_attr_names).count()
+    count_column = grouped["count"]
+    ratio_column = pd.Series(0.0, count_column.index, name="ratio")
+    for group, count in count_column.items():
+        comp_group = tuple(
+            1 - group[k] if k == 0 else group[k] for k in range(len(group))
+        )
+        comp_count = count_column[comp_group]
+        ratio = count / (count + comp_count)
+        ratio_column[group] = ratio
+    result = pd.DataFrame({"count": count_column, "ratio": ratio_column})
     return result
 
 
@@ -1138,9 +1185,9 @@ class _AccuracyAndDisparateImpact(MetricMonoidFactory[_AccuracyAndSymmDIData]):
             self.accuracy_scorer.to_monoid(batch), self.symm_di_scorer.to_monoid(batch)
         )
 
-    def from_monoid(self, v: _AccuracyAndSymmDIData) -> float:
-        accuracy = self.accuracy_scorer.from_monoid(v.accuracy_data)
-        symm_di = self.symm_di_scorer.from_monoid(v.symm_di_data)
+    def from_monoid(self, monoid: _AccuracyAndSymmDIData) -> float:
+        accuracy = self.accuracy_scorer.from_monoid(monoid.accuracy_data)
+        symm_di = self.symm_di_scorer.from_monoid(monoid.symm_di_data)
         return self._blend_metrics(accuracy, symm_di)
 
     def score_data(
@@ -1219,18 +1266,18 @@ class _AverageOddsDifference(
             unfavorable_labels,
         )
 
-    def from_monoid(self, v: _AODorEODData) -> float:
-        fpr_priv0 = v.tru0_pred1_priv0 / np.float64(
-            v.tru0_pred1_priv0 + v.tru0_pred0_priv0
+    def from_monoid(self, monoid: _AODorEODData) -> float:
+        fpr_priv0 = monoid.tru0_pred1_priv0 / np.float64(
+            monoid.tru0_pred1_priv0 + monoid.tru0_pred0_priv0
         )
-        fpr_priv1 = v.tru0_pred1_priv1 / np.float64(
-            v.tru0_pred1_priv1 + v.tru0_pred0_priv1
+        fpr_priv1 = monoid.tru0_pred1_priv1 / np.float64(
+            monoid.tru0_pred1_priv1 + monoid.tru0_pred0_priv1
         )
-        tpr_priv0 = v.tru1_pred1_priv0 / np.float64(
-            v.tru1_pred1_priv0 + v.tru1_pred0_priv0
+        tpr_priv0 = monoid.tru1_pred1_priv0 / np.float64(
+            monoid.tru1_pred1_priv0 + monoid.tru1_pred0_priv0
         )
-        tpr_priv1 = v.tru1_pred1_priv1 / np.float64(
-            v.tru1_pred1_priv1 + v.tru1_pred0_priv1
+        tpr_priv1 = monoid.tru1_pred1_priv1 / np.float64(
+            monoid.tru1_pred1_priv1 + monoid.tru1_pred0_priv1
         )
         return 0.5 * float(fpr_priv0 - fpr_priv1 + tpr_priv0 - tpr_priv1)
 
@@ -1321,9 +1368,9 @@ class _BalancedAccuracyAndDisparateImpact(MetricMonoidFactory[_BalAccAndSymmDIDa
             self.bal_acc_scorer.to_monoid(batch), self.symm_di_scorer.to_monoid(batch)
         )
 
-    def from_monoid(self, v: _BalAccAndSymmDIData) -> float:
-        bal_acc = self.bal_acc_scorer.from_monoid(v.bal_acc_data)
-        symm_di = self.symm_di_scorer.from_monoid(v.symm_di_data)
+    def from_monoid(self, monoid: _BalAccAndSymmDIData) -> float:
+        bal_acc = self.bal_acc_scorer.from_monoid(monoid.bal_acc_data)
+        symm_di = self.symm_di_scorer.from_monoid(monoid.symm_di_data)
         return self._blend_metrics(bal_acc, symm_di)
 
     def score_data(
@@ -1400,9 +1447,13 @@ class _DisparateImpact(_DIorSPDScorerFactory, MetricMonoidFactory[_DIorSPDData])
             unfavorable_labels,
         )
 
-    def from_monoid(self, v: _DIorSPDData) -> float:
-        numerator = v.priv0_fav1 / np.float64(v.priv0_fav0 + v.priv0_fav1)
-        denominator = v.priv1_fav1 / np.float64(v.priv1_fav0 + v.priv1_fav1)
+    def from_monoid(self, monoid: _DIorSPDData) -> float:
+        numerator = monoid.priv0_fav1 / np.float64(
+            monoid.priv0_fav0 + monoid.priv0_fav1
+        )
+        denominator = monoid.priv1_fav1 / np.float64(
+            monoid.priv1_fav0 + monoid.priv1_fav1
+        )
         return float(numerator / denominator)
 
 
@@ -1455,12 +1506,12 @@ class _EqualOpportunityDifference(
             unfavorable_labels,
         )
 
-    def from_monoid(self, v: _AODorEODData) -> float:
-        tpr_priv0 = v.tru1_pred1_priv0 / np.float64(
-            v.tru1_pred1_priv0 + v.tru1_pred0_priv0
+    def from_monoid(self, monoid: _AODorEODData) -> float:
+        tpr_priv0 = monoid.tru1_pred1_priv0 / np.float64(
+            monoid.tru1_pred1_priv0 + monoid.tru1_pred0_priv0
         )
-        tpr_priv1 = v.tru1_pred1_priv1 / np.float64(
-            v.tru1_pred1_priv1 + v.tru1_pred0_priv1
+        tpr_priv1 = monoid.tru1_pred1_priv1 / np.float64(
+            monoid.tru1_pred1_priv1 + monoid.tru1_pred0_priv1
         )
         return tpr_priv0 - tpr_priv1  # type: ignore
 
@@ -1568,9 +1619,9 @@ class _F1AndDisparateImpact(MetricMonoidFactory[_F1AndSymmDIData]):
             self.symm_di_scorer.to_monoid(batch),
         )
 
-    def from_monoid(self, v: _F1AndSymmDIData) -> float:
-        f1 = self.f1_scorer.from_monoid(v.f1_data)
-        symm_di = self.symm_di_scorer.from_monoid(v.symm_di_data)
+    def from_monoid(self, monoid: _F1AndSymmDIData) -> float:
+        f1 = self.f1_scorer.from_monoid(monoid.f1_data)
+        symm_di = self.symm_di_scorer.from_monoid(monoid.symm_di_data)
         return self._blend_metrics(f1, symm_di)
 
     def score_data(
@@ -1687,9 +1738,9 @@ class _R2AndDisparateImpact(MetricMonoidFactory[_R2AndSymmDIData]):
             self.r2_scorer.to_monoid(batch), self.symm_di_scorer.to_monoid(batch)
         )
 
-    def from_monoid(self, v: _R2AndSymmDIData) -> float:
-        r2 = self.r2_scorer.from_monoid(v.r2_data)
-        symm_di = self.symm_di_scorer.from_monoid(v.symm_di_data)
+    def from_monoid(self, monoid: _R2AndSymmDIData) -> float:
+        r2 = self.r2_scorer.from_monoid(monoid.r2_data)
+        symm_di = self.symm_di_scorer.from_monoid(monoid.symm_di_data)
         return self._blend_metrics(r2, symm_di)
 
     def score_data(
@@ -1768,9 +1819,11 @@ class _StatisticalParityDifference(
             unfavorable_labels,
         )
 
-    def from_monoid(self, v: _DIorSPDData) -> float:
-        minuend = v.priv0_fav1 / np.float64(v.priv0_fav0 + v.priv0_fav1)
-        subtrahend = v.priv1_fav1 / np.float64(v.priv1_fav0 + v.priv1_fav1)
+    def from_monoid(self, monoid: _DIorSPDData) -> float:
+        minuend = monoid.priv0_fav1 / np.float64(monoid.priv0_fav0 + monoid.priv0_fav1)
+        subtrahend = monoid.priv1_fav1 / np.float64(
+            monoid.priv1_fav0 + monoid.priv1_fav1
+        )
         return float(minuend - subtrahend)
 
 
@@ -1830,8 +1883,8 @@ class _SymmetricDisparateImpact(MetricMonoidFactory[_DIorSPDData]):
     def to_monoid(self, batch: _Batch_yyX) -> _DIorSPDData:
         return self.disparate_impact_scorer.to_monoid(batch)
 
-    def from_monoid(self, v: _DIorSPDData) -> float:
-        return self._make_symmetric(self.disparate_impact_scorer.from_monoid(v))
+    def from_monoid(self, monoid: _DIorSPDData) -> float:
+        return self._make_symmetric(self.disparate_impact_scorer.from_monoid(monoid))
 
     def score_data(
         self,
@@ -2056,20 +2109,24 @@ class FairStratifiedKFold:
     """
     Stratified k-folds cross-validator by labels and protected attributes.
 
-    Behaves similar to the `StratifiedKFold`_ class from scikit-learn.
+    Behaves similar to the `StratifiedKFold`_ and `RepeatedStratifiedKFold`_
+    cross-validation iterators from scikit-learn.
     This cross-validation object can be passed to the `cv` argument of
     the `auto_configure`_ method.
 
     .. _`StratifiedKFold`: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.StratifiedKFold.html
+    .. _`RepeatedStratifiedKFold`: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.RepeatedStratifiedKFold.html
     .. _`auto_configure`: https://lale.readthedocs.io/en/latest/modules/lale.operators.html#lale.operators.PlannedOperator.auto_configure
     """
 
     def __init__(
         self,
+        *,
         favorable_labels: _FAV_LABELS_TYPE,
         protected_attributes: List[JSON_TYPE],
         unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
         n_splits: int = 5,
+        n_repeats: int = 1,
         shuffle: bool = False,
         random_state=None,
     ):
@@ -2092,9 +2149,15 @@ class FairStratifiedKFold:
 
           Number of folds. Must be at least 2.
 
+        n_repeats : integer, optional, default 1
+
+          Number of times the cross-validator needs to be repeated.
+          When >1, this behaves like RepeatedStratifiedKFold.
+
         shuffle : boolean, optional, default False
 
           Whether to shuffle each class's samples before splitting into batches.
+          Ignored when n_repeats>1.
 
         random_state : union type, not for optimizer, default None
 
@@ -2120,9 +2183,14 @@ class FairStratifiedKFold:
             "protected_attributes": protected_attributes,
             "unfavorable_labels": unfavorable_labels,
         }
-        self._stratified_k_fold = sklearn.model_selection.StratifiedKFold(
-            n_splits=n_splits, shuffle=shuffle, random_state=random_state
-        )
+        if n_repeats == 1:
+            self._stratified_k_fold = sklearn.model_selection.StratifiedKFold(
+                n_splits=n_splits, shuffle=shuffle, random_state=random_state
+            )
+        else:
+            self._stratified_k_fold = sklearn.model_selection.RepeatedStratifiedKFold(
+                n_splits=n_splits, n_repeats=n_repeats, random_state=random_state
+            )
 
     def get_n_splits(self, X=None, y=None, groups=None) -> int:
         """

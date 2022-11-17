@@ -65,7 +65,7 @@ def _gen_table_name(avoid, cpt=0):
 
 class _ConcatFeaturesImpl:
     def transform(self, X):
-        if all([_is_pandas(d) for d in X]):
+        if all(_is_pandas(d) for d in X):
             name2series = {}
             for dataset in X:
                 if _is_pandas_df(dataset):
@@ -83,7 +83,7 @@ class _ConcatFeaturesImpl:
                 logger.info(f"ConcatFeatures duplicate column names {duplicates}")
                 deduplicated = [ls[-1] for _, ls in name2series.items()]
                 result = pd.concat(deduplicated, axis=1)
-        elif all([_is_spark_df(d) for d in X]):
+        elif all(_is_spark_df(d) for d in X):
 
             def join(d1, d2):
                 n1 = get_table_name(d1)
@@ -109,7 +109,7 @@ class _ConcatFeaturesImpl:
                 return transformer.transform([d1, d2])
 
             result = reduce(join, X)
-        elif all([_is_pandas(d) or _is_spark_df(d) for d in X]):
+        elif all(_is_pandas(d) or _is_spark_df(d) for d in X):
             X = [d.toPandas() if _is_spark_df(d) else d for d in X]
             result = self.transform(X)
         else:

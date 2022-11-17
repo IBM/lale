@@ -25,7 +25,7 @@ from lale.helpers import _ast_func_id
 
 
 def eval_expr_pandas_df(X, expr: Expr) -> pd.Series:
-    return _eval_ast_expr_pandas_df(X, expr._expr)
+    return _eval_ast_expr_pandas_df(X, expr.expr)
 
 
 def _eval_ast_expr_pandas_df(X, expr: AstExpr) -> pd.Series:
@@ -110,8 +110,8 @@ class _PandasEvaluator(ast.NodeVisitor):
         function_name = _ast_func_id(node.func)
         try:
             map_func_to_be_called = globals()[function_name]
-        except KeyError:
-            raise ValueError(f"""Unimplemented function {function_name}""")
+        except KeyError as exc:
+            raise ValueError(f"""Unimplemented function {function_name}""") from exc
         self.result = map_func_to_be_called(self.df, node)
 
 
@@ -136,16 +136,16 @@ def ite(df: Any, call: ast.Call):
     return result
 
 
-def hash(df: Any, call: ast.Call):
+def hash(df: Any, call: ast.Call):  # pylint:disable=redefined-builtin
     hashing_method = ast.literal_eval(call.args[0])
     column = _eval_ast_expr_pandas_df(df, call.args[1])  # type: ignore
 
-    def hash(v):
+    def hash_fun(v):
         hasher = hashlib.new(hashing_method)
         hasher.update(bytes(str(v), "utf-8"))
         return hasher.hexdigest()
 
-    return column.map(hash)
+    return column.map(hash_fun)
 
 
 def hash_mod(df: Any, call: ast.Call):

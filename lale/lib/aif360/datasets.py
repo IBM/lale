@@ -319,7 +319,8 @@ def _try_download_compas(violent_recidivism=False):
     filepath = _get_compas_filepath(filename)
     csv_exists = os.path.exists(filepath)
     if not csv_exists:
-        urllib.request.urlretrieve(
+        # this request is to a string that begins with a hardcoded https url, so does not risk leaking local data
+        urllib.request.urlretrieve(  # nosec
             f"https://raw.githubusercontent.com/propublica/compas-analysis/master/{filename}",
             filepath,
         )
@@ -347,13 +348,13 @@ def _get_dataframe_from_compas_csv(violent_recidivism=False):
         df = pd.read_csv(filepath, index_col="id", na_values=[])
     except IOError as err:
         # In practice should not get here because of the _try_download_compas call above, but adding failure logic just in case
-        logger.error("IOError: {}".format(err))
+        logger.error(f"IOError: {err}")
         logger.error("To use this class, please download the following file:")
         logger.error(
             "\n\thttps://raw.githubusercontent.com/propublica/compas-analysis/master/compas-scores-two-years.csv"
         )
         logger.error("\nand place it, as-is, in the folder:")
-        logger.error("\n\t{}\n".format(os.path.abspath(os.path.dirname(filepath))))
+        logger.error(f"\n\t{os.path.abspath(os.path.dirname(filepath))}\n")
         import sys
 
         sys.exit(1)
@@ -470,14 +471,14 @@ def _perform_custom_preprocessing(df):
         else:
             return 0.0
 
-    dfcutQ["priors_count"] = dfcutQ["priors_count"].apply(lambda x: quantizePrior(x))
-    dfcutQ["length_of_stay"] = dfcutQ["length_of_stay"].apply(lambda x: quantizeLOS(x))
-    dfcutQ["score_text"] = dfcutQ["score_text"].apply(lambda x: quantizeScore(x))
-    dfcutQ["age_cat"] = dfcutQ["age_cat"].apply(lambda x: adjustAge(x))
+    dfcutQ["priors_count"] = dfcutQ["priors_count"].apply(quantizePrior)
+    dfcutQ["length_of_stay"] = dfcutQ["length_of_stay"].apply(quantizeLOS)
+    dfcutQ["score_text"] = dfcutQ["score_text"].apply(quantizeScore)
+    dfcutQ["age_cat"] = dfcutQ["age_cat"].apply(adjustAge)
 
     # Recode sex and race
     dfcutQ["sex"] = dfcutQ["sex"].replace({"Female": 1.0, "Male": 0.0})
-    dfcutQ["race"] = dfcutQ["race"].apply(lambda x: group_race(x))
+    dfcutQ["race"] = dfcutQ["race"].apply(group_race)
 
     features = [
         "two_year_recid",
@@ -1189,7 +1190,7 @@ def _should_drop_column(x, fiscal_year):
 def _fetch_meps_raw_df(panel, fiscal_year):
     filename = ""
     if fiscal_year == FiscalYear.FY2015:
-        assert panel == Panel.PANEL19 or panel == Panel.PANEL20
+        assert panel in [Panel.PANEL19, Panel.PANEL20]
         filename = "h181.csv"
     elif fiscal_year == FiscalYear.FY2016:
         assert panel == Panel.PANEL21
@@ -1208,22 +1209,20 @@ def _fetch_meps_raw_df(panel, fiscal_year):
     try:
         df = pd.read_csv(filepath, sep=",", na_values=[])
     except IOError as err:
-        logger.error("IOError: {}".format(err))
+        logger.error(f"IOError: {err}")
         logger.error("To use this class, please follow the instructions found here:")
         logger.error(
-            "\n\t{}\n".format(
-                "https://github.com/Trusted-AI/AIF360/tree/master/aif360/data/raw/meps"
-            )
+            f"\n\t{'https://github.com/Trusted-AI/AIF360/tree/master/aif360/data/raw/meps'}\n"
         )
         logger.error(
             f"\n to download and convert the data and place the final {filename} file, as-is, in the folder:"
         )
-        logger.error("\n\t{}\n".format(os.path.abspath(os.path.dirname(filepath))))
+        logger.error(f"\n\t{os.path.abspath(os.path.dirname(filepath))}\n")
         import sys
 
         sys.exit(1)
 
-    df["RACEV2X"] = df.apply(lambda row: _race(row), axis=1)
+    df["RACEV2X"] = df.apply(_race, axis=1)
     df = df.rename(columns={"RACEV2X": "RACE"})
     df = df[df["PANEL"] == panel.value]
 

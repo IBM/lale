@@ -30,8 +30,9 @@ def load_movie_review():
     data_file_path = os.path.join(download_data_dir, "rt-polaritydata.tar.gz")
     if not os.path.exists(download_data_dir):
         os.makedirs(download_data_dir)
-        print("created directory {}".format(download_data_dir))
-        urllib.request.urlretrieve(download_base_url, data_file_path)
+        print(f"created directory {download_data_dir}")
+        # this request is to a hardcoded https url, so does not risk leaking local data
+        urllib.request.urlretrieve(download_base_url, data_file_path)  # nosec
 
     X = []
     y = []

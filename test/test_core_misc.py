@@ -14,6 +14,8 @@
 
 # Test cases for miscellaneous functionality of Lale that is also part of the
 # core behavior but does not fall into other test_core* modules.
+
+# pylint:disable=reimported
 import inspect
 import io
 import logging
@@ -21,12 +23,15 @@ import unittest
 import warnings
 from typing import Any, Dict
 
+import numpy as np
 from sklearn.datasets import load_iris
+from sklearn.decomposition import PCA as SkPCA
 
+import lale.datasets
 import lale.operators as Ops
 import lale.type_checking
 from lale.helpers import nest_HPparams
-from lale.lib.lale import ConcatFeatures, NoOp
+from lale.lib.lale import ConcatFeatures, Hyperopt, NoOp
 from lale.lib.rasl import categorical
 from lale.lib.sklearn import (
     NMF,
@@ -65,64 +70,42 @@ class TestTags(unittest.TestCase):
 
 class TestUnparseExpr(unittest.TestCase):
     def test_unparse_const38(self):
-        import lale.expressions
-        from lale.expressions import it
+        from lale.expressions import fixedUnparse, it
 
         test_expr = it.hello["hi"]
         # This fails on 3.8 with some versions of the library
         # which is why we use the fixed version
         # import astunparse
         # astunparse.unparse(he._expr)
-        str(lale.expressions.fixedUnparse(test_expr._expr))
+        str(fixedUnparse(test_expr._expr))
 
 
 class TestOperatorWithoutSchema(unittest.TestCase):
     def test_trainable_pipe_left(self):
-        from sklearn.decomposition import PCA
-
-        from lale.lib.sklearn import LogisticRegression
-
         iris = load_iris()
-        pipeline = PCA() >> LogisticRegression(random_state=42)
+        pipeline = SkPCA() >> LogisticRegression(random_state=42)
         pipeline.fit(iris.data, iris.target)
 
     def test_trainable_pipe_right(self):
-        from sklearn.decomposition import PCA
-
-        from lale.lib.lale import NoOp
-        from lale.lib.sklearn import LogisticRegression
-
         iris = load_iris()
-        pipeline = NoOp() >> PCA() >> LogisticRegression(random_state=42)
+        pipeline = NoOp() >> SkPCA() >> LogisticRegression(random_state=42)
         pipeline.fit(iris.data, iris.target)
 
     def dont_test_planned_pipe_left(self):
-        from sklearn.decomposition import PCA
-
-        from lale.lib.lale import Hyperopt, NoOp
-        from lale.lib.sklearn import LogisticRegression
-
         iris = load_iris()
-        pipeline = NoOp() >> PCA >> LogisticRegression
+        pipeline = NoOp() >> SkPCA >> LogisticRegression
         clf = Hyperopt(estimator=pipeline, max_evals=1)
         clf.fit(iris.data, iris.target)
 
     def dont_test_planned_pipe_right(self):
-        from sklearn.decomposition import PCA
-
-        from lale.lib.lale import Hyperopt
-        from lale.lib.sklearn import LogisticRegression
-
         iris = load_iris()
-        pipeline = PCA >> LogisticRegression
+        pipeline = SkPCA >> LogisticRegression
         clf = Hyperopt(estimator=pipeline, max_evals=1)
         clf.fit(iris.data, iris.target)
 
 
 class _TestLazyImpl(unittest.TestCase):
     def test_lazy_impl(self):
-        from lale.lib.lale import Hyperopt
-
         impl = Hyperopt._impl
         self.assertTrue(inspect.isclass(impl))
 
@@ -146,8 +129,6 @@ class TestOperatorErrors(unittest.TestCase):
             self.assertRegex(msg, "underlying operator")
 
     def test_trained_get_pipeline_success(self):
-        from lale.lib.lale import Hyperopt
-
         iris_data = load_iris()
         op = Hyperopt(estimator=LogisticRegression(), max_evals=1)
         with warnings.catch_warnings():
@@ -173,8 +154,6 @@ class TestOperatorErrors(unittest.TestCase):
             self.assertRegex(msg, "underlying operator")
 
     def test_trained_summary_success(self):
-        from lale.lib.lale import Hyperopt
-
         iris_data = load_iris()
         op = Hyperopt(
             estimator=LogisticRegression(), max_evals=1, show_progressbar=False
@@ -187,9 +166,9 @@ class TestOperatorErrors(unittest.TestCase):
 
 class TestLaleVersion(unittest.TestCase):
     def test_version_exists(self):
-        import lale
+        from lale import __version__ as lale_version
 
-        self.assertIsNot(lale.__version__, None)
+        self.assertIsNot(lale_version, None)
 
 
 class TestMethodParameters(unittest.TestCase):
@@ -244,10 +223,8 @@ class TestOperatorLogging(unittest.TestCase):
 
     @unittest.skip("Turned off the logging for now")
     def test_log_fit_predict(self):
-        import lale.datasets
-
         trainable = LogisticRegression()
-        (X_train, y_train), (X_test, y_test) = lale.datasets.load_iris_df()
+        (X_train, y_train), (X_test, _y_test) = lale.datasets.load_iris_df()
         trained = trainable.fit(X_train, y_train)
         _ = trained.predict(X_test)
         self.handler.flush()
@@ -265,47 +242,27 @@ class TestOperatorLogging(unittest.TestCase):
 
 class TestBoth(unittest.TestCase):
     def test_init_fit_transform(self):
-        import lale.datasets
         from lale.lib.lale import Both
 
         nmf = NMF()
         pca = PCA()
         trainable = Both(op1=nmf, op2=pca)
-        (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
+        (train_X, train_y), (test_X, _test_y) = lale.datasets.digits_df()
         trained = trainable.fit(train_X, train_y)
         _ = trained.transform(test_X)
 
 
 class TestTee(unittest.TestCase):
     def test_tee_None(self):
-        import lale.datasets
         from lale.lib.lale import Tee
 
         pca = PCA()
         trainable = Tee() >> pca
-        (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
+        (train_X, train_y), (test_X, _test_y) = lale.datasets.digits_df()
         trained = trainable.fit(train_X, train_y)
         _ = trained.transform(test_X)
 
     def test_tee_lambda(self):
-        import numpy as np
-
-        import lale.datasets
-        from lale.lib.lale import Tee
-
-        def check_data(X, y):
-            self.assertEqual(X.dtypes["x1"], np.float64)
-
-        pca = PCA()
-        trainable = Tee(listener=lambda df, y: check_data(df, y)) >> pca
-        (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
-        trained = trainable.fit(train_X, train_y)
-        _ = trained.transform(test_X)
-
-    def test_tee_def(self):
-        import numpy as np
-
-        import lale.datasets
         from lale.lib.lale import Tee
 
         def check_data(X, y):
@@ -313,14 +270,24 @@ class TestTee(unittest.TestCase):
 
         pca = PCA()
         trainable = Tee(listener=check_data) >> pca
-        (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
+        (train_X, train_y), (test_X, _test_y) = lale.datasets.digits_df()
+        trained = trainable.fit(train_X, train_y)
+        _ = trained.transform(test_X)
+
+    def test_tee_def(self):
+
+        from lale.lib.lale import Tee
+
+        def check_data(X, y):
+            self.assertEqual(X.dtypes["x1"], np.float64)
+
+        pca = PCA()
+        trainable = Tee(listener=check_data) >> pca
+        (train_X, train_y), (test_X, _test_y) = lale.datasets.digits_df()
         trained = trainable.fit(train_X, train_y)
         _ = trained.transform(test_X)
 
     def test_tee_obj(self):
-        import numpy as np
-
-        import lale.datasets
         from lale.lib.lale import Tee
 
         class check_data:
@@ -332,7 +299,7 @@ class TestTee(unittest.TestCase):
 
         pca = PCA()
         trainable = Tee(listener=check_data(self)) >> pca
-        (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
+        (train_X, train_y), (test_X, _test_y) = lale.datasets.digits_df()
         trained = trainable.fit(train_X, train_y)
         _ = trained.transform(test_X)
 
@@ -374,8 +341,8 @@ class TestClone(unittest.TestCase):
             result2 = cross_val_score(
                 trainable2, X, y, scoring=make_scorer(accuracy_score), cv=2
             )
-        for i in range(len(result)):
-            self.assertEqual(result[i], result2[i])
+        for res1, res2 in zip(result, result2):
+            self.assertEqual(res1, res2)
 
     def test_clone_operator_choice(self):
         from sklearn.base import clone
@@ -406,8 +373,8 @@ class TestClone(unittest.TestCase):
             result2 = cross_val_score(
                 trainable2, X, y, scoring=make_scorer(accuracy_score), cv=2
             )
-        for i in range(len(result)):
-            self.assertEqual(result[i], result2[i])
+        for res1, res2 in zip(result, result2):
+            self.assertEqual(res1, res2)
         # Testing clone with nested linear pipelines
         trainable = PCA() >> trainable
         trainable2 = clone(trainable)
@@ -419,8 +386,8 @@ class TestClone(unittest.TestCase):
             result2 = cross_val_score(
                 trainable2, X, y, scoring=make_scorer(accuracy_score), cv=2
             )
-        for i in range(len(result)):
-            self.assertEqual(result[i], result2[i])
+        for res1, res2 in zip(result, result2):
+            self.assertEqual(res1, res2)
 
     def test_clone_of_trained(self):
         from sklearn.base import clone
@@ -871,13 +838,8 @@ class TestCategorical(unittest.TestCase):
 
 class TestHyperparamRanges(unittest.TestCase):
     def exactly_relevant_properties(self, keys1, operator):
-        def sorted(ll):
-            l_copy = [*ll]
-            l_copy.sort()
-            return l_copy
-
         keys2 = operator.hyperparam_schema()["allOf"][0]["relevantToOptimizer"]
-        self.assertEqual(sorted(keys1), sorted(keys2))
+        self.assertCountEqual(keys1, keys2)
 
     def validate_get_param_ranges(self, operator):
         ranges, cat_idx = operator.get_param_ranges()
@@ -887,7 +849,7 @@ class TestHyperparamRanges(unittest.TestCase):
             if isinstance(r, tuple):
                 minimum, maximum, default = r
                 if minimum is not None and maximum is not None and default is not None:
-                    assert minimum <= default and default <= maximum
+                    assert minimum <= default <= maximum
             else:
                 minimum, maximum, default = cat_idx[hp]
                 assert minimum == 0 and len(r) - 1 == maximum
@@ -936,7 +898,7 @@ class TestHyperparamRanges(unittest.TestCase):
             self.validate_get_param_dist(skop)
 
     def test_random_forest_classifier(self):
-        ranges, dists = RandomForestClassifier.get_param_ranges()
+        ranges, _dists = RandomForestClassifier.get_param_ranges()
         expected_ranges = {
             "n_estimators": (10, 100, 100),
             "criterion": ["entropy", "gini"],
@@ -951,7 +913,7 @@ class TestHyperparamRanges(unittest.TestCase):
     def test_lgbclassifier(self):
         from lale.lib.lightgbm import LGBMClassifier
 
-        ranges, dists = LGBMClassifier.get_param_ranges()
+        ranges, _dists = LGBMClassifier.get_param_ranges()
         expected_ranges = {
             "boosting_type": ["dart", "gbdt"],
             "num_leaves": [4, 8, 32, 64, 128, 16, 2],
@@ -969,8 +931,6 @@ class TestHyperparamRanges(unittest.TestCase):
         self.assertEqual(ranges, expected_ranges)
 
     def test_logisticregression(self):
-        from lale.lib.sklearn import LogisticRegression
-
         ranges, dists = LogisticRegression.get_param_ranges()
         expected_ranges = {
             "solver": ["newton-cg", "liblinear", "sag", "saga", "lbfgs"],
@@ -999,7 +959,7 @@ class TestHyperparamRanges(unittest.TestCase):
             )
         )
 
-        ranges, dists = SVR.get_param_ranges()
+        ranges, _dists = SVR.get_param_ranges()
         expected_ranges = {
             "kernel": ["poly", "rbf", "sigmoid", "linear"],
             "degree": (2, 5, 3),
@@ -1015,7 +975,6 @@ class TestHyperparamRanges(unittest.TestCase):
 
 class TestScoreIndividualOp(unittest.TestCase):
     def setUp(self):
-        from sklearn.datasets import load_iris
         from sklearn.model_selection import train_test_split
 
         data = load_iris()
@@ -1023,22 +982,16 @@ class TestScoreIndividualOp(unittest.TestCase):
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
 
     def test_score_planned_op(self):
-        from lale.lib.sklearn import LogisticRegression
-
         with self.assertRaises(AttributeError):
             LogisticRegression.score(self.X_test, self.y_test)
 
     def test_score_trainable_op(self):
-        from lale.lib.sklearn import LogisticRegression
-
         trainable = LogisticRegression()
         _ = trainable.fit(self.X_train, self.y_train)
         trainable.score(self.X_test, self.y_test)
 
     def test_score_trained_op(self):
         from sklearn.metrics import accuracy_score
-
-        from lale.lib.sklearn import LogisticRegression
 
         trainable = LogisticRegression()
         trained_lr = trainable.fit(self.X_train, self.y_train)
@@ -1048,10 +1001,7 @@ class TestScoreIndividualOp(unittest.TestCase):
         self.assertEqual(score, accuracy)
 
     def test_score_trained_op_sample_wt(self):
-        import numpy as np
         from sklearn.metrics import accuracy_score
-
-        from lale.lib.sklearn import LogisticRegression
 
         trainable = LogisticRegression()
         trained_lr = trainable.fit(self.X_train, self.y_train)
@@ -1065,8 +1015,6 @@ class TestScoreIndividualOp(unittest.TestCase):
 
 class TestEmptyY(unittest.TestCase):
     def setUp(self):
-        from sklearn.datasets import load_iris
-
         data = load_iris()
         self.X, self.y = data.data, data.target
 
@@ -1077,8 +1025,6 @@ class TestEmptyY(unittest.TestCase):
 
 class TestFitPlannedOp(unittest.TestCase):
     def setUp(self):
-        from sklearn.datasets import load_iris
-
         data = load_iris()
         self.X, self.y = data.data, data.target
 
@@ -1088,7 +1034,7 @@ class TestFitPlannedOp(unittest.TestCase):
             planned.fit(self.X, self.y)
         except AttributeError as e:
             self.assertEqual(
-                e.__str__(),
+                str(e),
                 """Please use `LogisticRegression()` instead of `LogisticRegression` to make it trainable.
 Alternatively, you could use `auto_configure(X, y, Hyperopt, max_evals=5)` on the operator to use Hyperopt for
 `max_evals` iterations for hyperparameter tuning. `Hyperopt` can be imported as `from lale.lib.lale import Hyperopt`.""",
@@ -1100,7 +1046,7 @@ Alternatively, you could use `auto_configure(X, y, Hyperopt, max_evals=5)` on th
             planned.fit(self.X, self.y)
         except AttributeError as e:
             self.assertEqual(
-                e.__str__(),
+                str(e),
                 """The pipeline is not trainable, which means you can not call fit on it.
 
 Suggested fixes:
@@ -1118,7 +1064,7 @@ to use Hyperopt for `max_evals` iterations for hyperparameter tuning. `Hyperopt`
         except AttributeError as e:
             self.maxDiff = None
             self.assertEqual(
-                e.__str__(),
+                str(e),
                 """The pipeline is not trainable, which means you can not call fit on it.
 
 Suggested fixes:
@@ -1136,7 +1082,7 @@ to use Hyperopt for `max_evals` iterations for hyperparameter tuning. `Hyperopt`
             planned.fit(self.X, self.y)
         except AttributeError as e:
             self.assertEqual(
-                e.__str__(),
+                str(e),
                 """The pipeline is not trainable, which means you can not call fit on it.
 
 Suggested fixes:
@@ -1212,7 +1158,7 @@ _OperatorForwardingTest = Ops.make_operator(
 
 class TestOperatorFowarding(unittest.TestCase):
     def test_fowards_method_list(self):
-        self.assertEquals(
+        self.assertEqual(
             _OperatorForwardingTest.get_forwards(),
             _operator_forwarding_test_combined_schema["forwards"],
         )
@@ -1324,5 +1270,5 @@ class TestSteps(unittest.TestCase):
         op: Ops.PlannedPipeline = pca >> LogisticRegression
 
         self.assertEqual(len(op.steps), 2)
-        self.assertEquals(op.steps[0][0], "PCA")
-        self.assertEquals(op.steps[0][1], pca)
+        self.assertEqual(op.steps[0][0], "PCA")
+        self.assertEqual(op.steps[0][1], pca)

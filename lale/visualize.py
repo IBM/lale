@@ -73,7 +73,7 @@ def _get_cluster2reps(jsn) -> Tuple[Dict[str, str], Dict[str, str]]:
             d_max = depth
             for step_uid, step_jsn in jsn["steps"].items():
                 d_root = max(
-                    [node2depth[p] for p in node2preds[step_uid]], default=depth
+                    (node2depth[p] for p in node2preds[step_uid]), default=depth
                 )
                 d_leaf = populate(step_uid, step_jsn, d_root, more_clusters)
                 d_max = max(d_max, d_leaf)

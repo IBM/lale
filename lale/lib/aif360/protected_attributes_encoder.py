@@ -47,9 +47,13 @@ _hyperparams_schema = {
                     ],
                     "default": None,
                 },
-                "protected_attributes": _categorical_fairness_properties[
-                    "protected_attributes"
-                ],
+                "protected_attributes": {
+                    "anyOf": [
+                        _categorical_fairness_properties["protected_attributes"],
+                        {"enum": [None]},
+                    ],
+                    "default": None,
+                },
                 "unfavorable_labels": _categorical_fairness_properties[
                     "unfavorable_labels"
                 ],
@@ -265,14 +269,17 @@ class _ProtectedAttributesEncoderImpl:
         self,
         *,
         favorable_labels=None,
-        protected_attributes=[],
+        protected_attributes=None,
         unfavorable_labels=None,
         remainder="drop",
         return_X_y=False,
         combine="keep_separate",
     ):
         self.favorable_labels = favorable_labels
-        self.protected_attributes = protected_attributes
+        if protected_attributes is None:
+            self.protected_attributes = []
+        else:
+            self.protected_attributes = protected_attributes
         self.unfavorable_labels = unfavorable_labels
         self.remainder = remainder
         self.return_X_y = return_X_y
@@ -291,6 +298,10 @@ class _ProtectedAttributesEncoderImpl:
             X_pd = X
         assert isinstance(X_pd, pd.DataFrame), type(X_pd)
         protected = {}
+
+        def flag_grouper(pos_groups, other_groups):
+            return lambda v: _group_flag(v, pos_groups, other_groups)
+
         for prot_attr in self.protected_attributes:
             feature = prot_attr["feature"]
             pos_groups = prot_attr["reference_group"]
@@ -299,13 +310,13 @@ class _ProtectedAttributesEncoderImpl:
                 column = X_pd[feature]
             else:
                 column = X_pd.iloc[:, feature]
-            series = column.apply(lambda v: _group_flag(v, pos_groups, other_groups))
+            series = column.apply(flag_grouper(pos_groups, other_groups))
             protected[feature] = series
         if self.combine in ["and", "or"]:
             prot_attr_names = [
                 _ensure_str(pa["feature"]) for pa in self.protected_attributes
             ]
-            comb_df = pd.concat([protected[f] for f in protected], axis=1)
+            comb_df = pd.concat(list(protected.values()), axis=1)
             if self.combine == "and":
                 comb_series = comb_df.min(axis=1)
             elif self.combine == "or":
@@ -317,7 +328,7 @@ class _ProtectedAttributesEncoderImpl:
             comb_series.name = comb_name
             protected = {comb_name: comb_series}
         if self.remainder == "drop":
-            result_X = pd.concat([protected[f] for f in protected], axis=1)
+            result_X = pd.concat(list(protected.values()), axis=1)
         else:
             result_X = _dataframe_replace(X_pd, protected)
         s_X = lale.datasets.data_schemas.to_schema(X_pd)
@@ -363,7 +374,7 @@ class _ProtectedAttributesEncoderImpl:
         s_X = lale.datasets.data_schemas.to_schema(s_X)
         if self.remainder == "drop" and self.combine == "keep_separate":
             out_names = [pa["feature"] for pa in self.protected_attributes]
-            if all([isinstance(n, str) for n in out_names]):
+            if all(isinstance(n, str) for n in out_names):
                 result = {
                     **s_X,
                     "items": {

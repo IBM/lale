@@ -57,7 +57,7 @@ class _RejectOptionClassificationImpl(_BasePostEstimatorImpl):
             metric_ub=metric_ub,
             metric_lb=metric_lb,
         )
-        super(_RejectOptionClassificationImpl, self).__init__(
+        super().__init__(
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
             unfavorable_labels=unfavorable_labels,

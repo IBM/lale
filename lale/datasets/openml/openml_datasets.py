@@ -29,13 +29,13 @@ sklearn_version = version.parse(getattr(sklearn, "__version__"))
 
 try:
     import arff
-except ModuleNotFoundError:
+except ModuleNotFoundError as import_exc:
     raise ModuleNotFoundError(
         """Package 'arff' not found. You can install it with
     pip install 'liac-arff>=2.4.0'
 or with
     pip install 'lale[full]'"""
-    )
+    ) from import_exc
 
 download_data_dir = os.path.join(os.path.dirname(__file__), "download_data")
 experiments_dict: Dict[str, Dict[str, Union[str, int]]] = {}
@@ -570,7 +570,9 @@ def download_if_missing(dataset_name, verbose=False):
         if not os.path.exists(download_data_dir):
             os.makedirs(download_data_dir)
         url = cast(str, experiments_dict[dataset_name]["download_arff_url"])
-        urllib.request.urlretrieve(url, file_name)
+
+        # This should be safe, since all of these strings are all explicitly listed, not user injectable
+        urllib.request.urlretrieve(url, file_name)  # nosec
     assert os.path.exists(file_name)
     return file_name
 
@@ -588,17 +590,15 @@ def fetch(
     try:
         if experiments_dict[dataset_name]["task_type"] != task_type.lower():
             raise ValueError(
-                "The task type {} does not match with the given datasets task type {}".format(
-                    task_type, experiments_dict[dataset_name]["task_type"]
-                )
+                f"The task type {task_type} does not match with the given datasets task type {experiments_dict[dataset_name]['task_type']}"
             )
-    except KeyError:
+    except KeyError as exc:
         raise KeyError(
-            "Dataset name {} not found in the supported datasets".format(dataset_name)
-        )
+            f"Dataset name {dataset_name} not found in the supported datasets"
+        ) from exc
 
     data_file_name = download_if_missing(dataset_name, verbose)
-    with open(data_file_name) as f:
+    with open(data_file_name) as f:  # pylint:disable=unspecified-encoding
         dataDictionary = arff.load(f)
         f.close()
 
