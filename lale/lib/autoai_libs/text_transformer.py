@@ -87,7 +87,7 @@ The column headers of the generated features will be appended to this and return
                     "anyOf": [
                         {"type": "array", "items": {"type": "string"}},
                         {"type": "array", "items": {"type": "integer"}},
-                        {"enum": [None]}
+                        {"enum": [None]},
                     ],
                     "default": None,
                 },
@@ -106,7 +106,7 @@ The column headers of the generated features will be appended to this and return
                     "anyOf": [
                         {"type": "array", "items": {"type": "string"}},
                         {"type": "array", "items": {"type": "integer"}},
-                        {"enum": [None]}
+                        {"enum": [None]},
                     ],
                     "default": None,
                 },
