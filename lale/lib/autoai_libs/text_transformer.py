@@ -87,8 +87,9 @@ The column headers of the generated features will be appended to this and return
                     "anyOf": [
                         {"type": "array", "items": {"type": "string"}},
                         {"type": "array", "items": {"type": "integer"}},
+                        {"enum": [None]}
                     ],
-                    "default": [],
+                    "default": None,
                 },
                 "drop_columns": {
                     "description": "If the original text columns need to be dropped.",
@@ -105,8 +106,9 @@ The column headers of the generated features will be appended to this and return
                     "anyOf": [
                         {"type": "array", "items": {"type": "string"}},
                         {"type": "array", "items": {"type": "integer"}},
+                        {"enum": [None]}
                     ],
-                    "default": [],
+                    "default": None,
                 },
                 "text_columns": {
                     "description": "If text columns are sent, then text detection is not done again.",

@@ -90,8 +90,9 @@ appended to this.""",
                     "anyOf": [
                         {"type": "array", "items": {"type": "string"}},
                         {"type": "array", "items": {"type": "integer"}},
+                        {"enum": None}
                     ],
-                    "default": [],
+                    "default": None,
                 },
                 "svd_num_iter": {
                     "description": "Number of iterations for which svd was run.",
@@ -124,8 +125,11 @@ appended to this.""",
                 },
                 "text_processing_options": {
                     "description": "The parameter values to initialize this transformer are passed through this dictionary.",
-                    "type": "object",
-                    "default": {},
+                    "anyOf": [
+                        {"type": "object"},
+                        {"enum": [None]},
+                    ],
+                    "default": None,
                 },
             },
         }
