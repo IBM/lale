@@ -90,7 +90,7 @@ appended to this.""",
                     "anyOf": [
                         {"type": "array", "items": {"type": "string"}},
                         {"type": "array", "items": {"type": "integer"}},
-                        {"enum": None},
+                        {"enum": [None]},
                     ],
                     "default": None,
                 },
