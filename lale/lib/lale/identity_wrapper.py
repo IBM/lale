@@ -44,7 +44,8 @@ class _IdentityWrapperImpl:
         return self.getOp().predict_proba(self, X)
 
     def fit(self, X, y=None, **fit_params):
-        return self.getOp().fit(X, y=y, **fit_params)
+        self.getOp().fit(X, y=y, **fit_params)
+        return self
 
     # def get_feature_names(self, input_features=None):
     #     if input_features is not None:

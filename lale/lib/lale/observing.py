@@ -98,7 +98,8 @@ class _ObservingImpl:
 
     @observe
     def fit(self, X, y=None, **fit_params):
-        return self.getOp().fit(X, y=y, **fit_params)
+        self.getOp().fit(X, y=y, **fit_params)
+        return self
 
 
 _hyperparams_schema = {
