@@ -21,17 +21,21 @@ import lale.operators
 # This is currently needed just to hide get_params so that lale does not call clone
 # when doing a defensive copy
 class _Word2VecTransformerImpl:
-    def __init__(  # pylint:disable=dangerous-default-value
+    def __init__(
         self,
         output_dim=30,
-        column_headers_list=[],
+        column_headers_list=None,
         svd_num_iter=5,
         drop_columns=False,
         activate_flag=True,
         min_count=5,
         text_columns=None,
-        text_processing_options={},
+        text_processing_options=None,
     ):
+        if column_headers_list is None:
+            column_headers_list = []
+        if text_processing_options is None:
+            text_processing_options = {}
         self._hyperparams = {
             "output_dim": output_dim,
             "column_headers_list": column_headers_list,
@@ -86,8 +90,9 @@ appended to this.""",
                     "anyOf": [
                         {"type": "array", "items": {"type": "string"}},
                         {"type": "array", "items": {"type": "integer"}},
+                        {"enum": [None]},
                     ],
-                    "default": [],
+                    "default": None,
                 },
                 "svd_num_iter": {
                     "description": "Number of iterations for which svd was run.",
@@ -120,8 +125,11 @@ appended to this.""",
                 },
                 "text_processing_options": {
                     "description": "The parameter values to initialize this transformer are passed through this dictionary.",
-                    "type": "object",
-                    "default": {},
+                    "anyOf": [
+                        {"type": "object"},
+                        {"enum": [None]},
+                    ],
+                    "default": None,
                 },
             },
         }
