@@ -947,6 +947,134 @@ class TestHyperparamRanges(unittest.TestCase):
         self.assertEqual(ranges, expected_ranges)
         self.assertEqual(dists, expected_dists)
 
+    def test_for_optimizer_false_any_two(self):
+        from lale.schemas import AnyOf, Enum
+
+        custom = NoOp.customize_schema(
+            prop=AnyOf(
+                types=[Enum(values=[3]), Enum(values=[4])],
+            ),
+            relevantToOptimizer=["prop"],
+        )
+        ranges, dists = custom.get_param_ranges()
+
+        expected_ranges = {
+            "prop": [4, 3],
+        }
+        expected_dists = {"prop": (0, 1, 1)}
+
+        self.maxDiff = None
+        self.assertEqual(ranges, expected_ranges)
+        self.assertEqual(dists, expected_dists)
+
+    def test_for_optimizer_false_any_first_one(self):
+        from lale.schemas import AnyOf, Enum
+
+        custom = NoOp.customize_schema(
+            prop=AnyOf(
+                types=[Enum(values=[3]), Enum(values=[4], forOptimizer=False)],
+            ),
+            relevantToOptimizer=["prop"],
+        )
+        ranges, dists = custom.get_param_ranges()
+
+        expected_ranges = {
+            "prop": [3],
+        }
+        expected_dists = {"prop": (0, 0, 0)}
+
+        self.maxDiff = None
+        self.assertEqual(ranges, expected_ranges)
+        self.assertEqual(dists, expected_dists)
+
+    def test_for_optimizer_false_any_second_one(self):
+        from lale.schemas import AnyOf, Enum
+
+        custom = NoOp.customize_schema(
+            prop=AnyOf(
+                types=[Enum(values=[3], forOptimizer=False), Enum(values=[4])],
+            ),
+            relevantToOptimizer=["prop"],
+        )
+        ranges, dists = custom.get_param_ranges()
+
+        expected_ranges = {
+            "prop": [4],
+        }
+        expected_dists = {"prop": (0, 0, 0)}
+
+        self.maxDiff = None
+        self.assertEqual(ranges, expected_ranges)
+        self.assertEqual(dists, expected_dists)
+
+    def test_for_optimizer_false_any_zero(self):
+        from lale.schemas import AnyOf, Enum
+
+        custom = NoOp.customize_schema(
+            prop=AnyOf(
+                types=[
+                    Enum(values=[3], forOptimizer=False),
+                    Enum(values=[4], forOptimizer=False),
+                ],
+            ),
+            relevantToOptimizer=["prop"],
+        )
+        ranges, dists = custom.get_param_ranges()
+
+        expected_ranges = {}
+        expected_dists = {}
+
+        self.maxDiff = None
+        self.assertEqual(ranges, expected_ranges)
+        self.assertEqual(dists, expected_dists)
+
+    def test_for_optimizer_false_any(self):
+        from lale.schemas import AnyOf, Enum
+
+        custom = NoOp.customize_schema(
+            prop=AnyOf(types=[Enum(values=[3]), Enum(values=[4])], forOptimizer=False),
+            relevantToOptimizer=["prop"],
+        )
+        ranges, dists = custom.get_param_ranges()
+
+        expected_ranges = {}
+        expected_dists = {}
+
+        self.maxDiff = None
+        self.assertEqual(ranges, expected_ranges)
+        self.assertEqual(dists, expected_dists)
+
+    def test_for_optimizer_true(self):
+        from lale.schemas import Enum
+
+        custom = NoOp.customize_schema(
+            prop=Enum(values=[4], forOptimizer=True), relevantToOptimizer=["prop"]
+        )
+        ranges, dists = custom.get_param_ranges()
+
+        expected_ranges = {
+            "prop": [4],
+        }
+        expected_dists = {"prop": (0, 0, 0)}
+        self.maxDiff = None
+        self.assertEqual(ranges, expected_ranges)
+        self.assertEqual(dists, expected_dists)
+
+    def test_for_optimizer_false(self):
+        from lale.schemas import Enum
+
+        custom = NoOp.customize_schema(
+            prop=Enum(values=[3], forOptimizer=False), relevantToOptimizer=["prop"]
+        )
+        ranges, dists = custom.get_param_ranges()
+
+        expected_ranges = {}
+        expected_dists = {}
+
+        self.maxDiff = None
+        self.assertEqual(ranges, expected_ranges)
+        self.assertEqual(dists, expected_dists)
+
     def test_bool_enum(self):
         from lale.lib.sklearn import SVR
         from lale.schemas import AnyOf, Bool, Null
