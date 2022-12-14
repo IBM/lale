@@ -442,6 +442,9 @@ jobs:
       run: sudo apt-get install graphviz swig
     - name: Install numpy
       run: pip install -U numpy
+    - name: Install autoai-libs from pypi
+      if: ${{ matrix.category == 'demo_' }}
+      run: pip install "autoai-libs>=1.12.6"
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: pip list packages
