@@ -64,7 +64,8 @@ class _OptimizeLastImpl:
         return getattr(self._suffix_optimizer.shallow_impl, item)
 
     def fit(self, X_train, y_train=None, **kwargs):
-        return self._suffix_optimizer.fit(X_train, y_train, **kwargs)
+        self._suffix_optimizer = self._suffix_optimizer.fit(X_train, y_train, **kwargs)
+        return self
 
     def predict(self, X_eval, **predict_params):
         return self._suffix_optimizer.predict(X_eval, **predict_params)

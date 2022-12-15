@@ -112,10 +112,10 @@ or with
         )
         if self.verbose == 0:
             with contextlib.redirect_stdout(io.StringIO()):
-                result = super().fit(X, y)
+                super().fit(X, y)
         else:
-            result = super().fit(X, y)
-        return result
+            super().fit(X, y)
+        return self
 
 
 _input_fit_schema = _categorical_supervised_input_fit_schema

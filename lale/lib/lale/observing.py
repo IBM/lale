@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -98,7 +98,8 @@ class _ObservingImpl:
 
     @observe
     def fit(self, X, y=None, **fit_params):
-        return self.getOp().fit(X, y=y, **fit_params)
+        self._hyperparams["op"] = self.getOp().fit(X, y=y, **fit_params)
+        return self
 
 
 _hyperparams_schema = {
