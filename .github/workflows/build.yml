@@ -29,7 +29,7 @@ jobs:
           ${{ runner.os }}-pip-new3
           ${{ runner.os }}-new3
     - name: Install numpy
-      run: pip install -U numpy
+      run: pip install -U 'numpy<1.24'
     - name: Install autoai-libs from pypi
       run: pip install "autoai-libs>=1.12.6"
     - name: Install dependencies
@@ -124,7 +124,7 @@ jobs:
           ${{ runner.os }}-pip-new3
           ${{ runner.os }}-new3
     - name: Install numpy
-      run: pip install -U numpy
+      run: pip install -U 'numpy<1.24'
     - name: Install autoai-libs from pypi
       run: pip install "autoai-libs>=1.12.6"
     - name: Install dependencies
@@ -143,7 +143,7 @@ jobs:
       run: pip install 'scikit-learn>=1.0'
     - name: Install deps for test_snapml
       if: ${{ matrix.test-case == 'test/test_snapml.py' }}
-      run: pip install 'numpy>=1.20.1'
+      run: pip install 'numpy>=1.20.1,<1.24'
     - name: Install deps for test_core_pipeline with scipy 1.5.4
       if: ${{ matrix.test-case == 'test/test_core_pipeline.py' }}
       run: pip install 'scipy==1.5.4'
@@ -236,7 +236,7 @@ jobs:
           ${{ runner.os }}-pip-new3
           ${{ runner.os }}-new3
     - name: Install numpy
-      run: pip install -U numpy
+      run: pip install -U 'numpy<1.24'
     - name: Install autoai-libs from pypi
       run: pip install "autoai-libs>=1.12.6"
     - name: Install dependencies
@@ -255,7 +255,7 @@ jobs:
       run: pip install 'scikit-learn>=1.0'
     - name: Install deps for test_snapml
       if: ${{ matrix.test-case == 'test/test_snapml.py' }}
-      run: pip install 'numpy>=1.20.1'
+      run: pip install 'numpy>=1.20.1,<1.24'
     - name: Imbalanced learn version for Python 3.8
       if: ${{ matrix.test-case == 'test/test_interoperability.py' &&  matrix.python-version == 3.8}}
       run: pip install 'imbalanced-learn==0.9.0' 'scikit-learn==1.0.2'
@@ -300,7 +300,7 @@ jobs:
           ${{ runner.os }}-pip-new3
           ${{ runner.os }}-new3
     - name: Install numpy
-      run: pip install -U numpy
+      run: pip install -U 'numpy<1.24'
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Install pytest
@@ -362,7 +362,7 @@ jobs:
     - name: Install packages
       run: sudo apt-get install graphviz swig
     - name: Install numpy
-      run: pip install -U numpy
+      run: pip install -U 'numpy<1.24'
     - name: Install autoai-libs from pypi
       if: ${{ matrix.category == 'demo_' }}
       run: pip install "autoai-libs>=1.12.6"
@@ -441,7 +441,7 @@ jobs:
     - name: Install packages
       run: sudo apt-get install graphviz swig
     - name: Install numpy
-      run: pip install -U numpy
+      run: pip install -U 'numpy<1.24'
     - name: Install autoai-libs from pypi
       if: ${{ matrix.category == 'demo_' }}
       run: pip install "autoai-libs>=1.12.6"
@@ -481,7 +481,7 @@ jobs:
     - name: Install system packages
       run: sudo apt-get install graphviz swig
     - name: Install numpy
-      run: pip install -U numpy
+      run: pip install -U 'numpy<1.24'
     - name: Install pytest
       run: pip install pytest
     - name: Install dependencies
