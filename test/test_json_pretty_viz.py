@@ -1150,7 +1150,7 @@ pipeline = disparate_impact_remover >> KNeighborsClassifier()"""
 import lale
 
 lale.wrap_imported_operators()
-pipeline = SnapLogisticRegression(normalize=True)"""
+pipeline = SnapLogisticRegression(fit_intercept=True, normalize=True)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
 

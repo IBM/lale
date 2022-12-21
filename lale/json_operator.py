@@ -433,7 +433,7 @@ def _op_to_json_rec(
                     if not hp_schema.get(k, {}).get("transient", False)
                 }
                 for k, s in hp_schema.items():
-                    if s.get("transient") == "alwaysPrint":
+                    if s.get("transient", False) == "alwaysPrint":
                         if k not in hyperparams and "default" in s:
                             hyperparams[k] = s["default"]
                 steps: Dict[str, JSON_TYPE] = {}
