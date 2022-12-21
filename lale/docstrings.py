@@ -101,8 +101,11 @@ def _schema_docstring(name, schema, required=True, relevant=True):
         tags.append("optional")
     if not relevant or schema.get("forOptimizer", True) is False:
         tags.append("not for optimizer")
-    if schema.get("transient", False):
-        tags.append("transient")
+    if schema.has("transient"):
+        if schema["transient"] == "alwaysPrint":
+            tags.append("always print")
+        elif schema["transient"] is True:
+            tags.append("transient")
     if "default" in schema:
         tags.append("default " + _value_docstring(schema["default"]))
 
