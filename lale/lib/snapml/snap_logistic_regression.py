@@ -215,6 +215,7 @@ _hyperparams_schema = {
                 "fit_intercept": {
                     "type": "boolean",
                     "default": True,
+                    "transient": "alwaysPrint",  # since default differs from signature
                     "description": "Add bias term -- note, may affect speed of convergence, especially for sparse datasets.",
                 },
                 "intercept_scaling": {
@@ -227,6 +228,7 @@ _hyperparams_schema = {
                 "normalize": {
                     "type": "boolean",
                     "default": True,
+                    "transient": "alwaysPrint",  # since default differs from signature
                     "description": "Normalize rows of dataset (recommended for fast convergence).",
                 },
                 "kernel": {

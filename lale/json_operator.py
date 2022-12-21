@@ -432,6 +432,10 @@ def _op_to_json_rec(
                     for k, v in hyperparams.items()
                     if not hp_schema.get(k, {}).get("transient", False)
                 }
+                for k, s in hp_schema.items():
+                    if s.get("transient", False) == "alwaysPrint":
+                        if k not in hyperparams and "default" in s:
+                            hyperparams[k] = s["default"]
                 steps: Dict[str, JSON_TYPE] = {}
                 jsn["hyperparams"] = _hps_to_json_rec(
                     hyperparams, cls2label, gensym, steps, add_custom_default
