@@ -40,7 +40,7 @@ if on_rtd:
     install_requires = []
 else:
     install_requires = [
-        "numpy",
+        "numpy<1.24",
         "black>=22.1.0",
         "click==8.0.4",
         "graphviz",
