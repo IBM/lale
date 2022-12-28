@@ -31,10 +31,11 @@ class Monoid(ABC):
     @abstractmethod
     def combine(self: _SelfType, other: _SelfType) -> _SelfType:
         """
-         Combines this monoid instance with another, producing a result.
-         This operation must be observationally associative, satisfying
+        Combines this monoid instance with another, producing a result.
+        This operation must be observationally associative, satisfying
          ``x.from_monoid(a.combine(b.combine(c))) == x.from_monoid(a.combine(b).combine(c)))``
-        where `x` is the instance of :class:MonoidFactory that created these instances.
+        where `x` is the instance of :class:MonoidFactory that created
+        these instances.
         """
         pass
 

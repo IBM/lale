@@ -1,4 +1,4 @@
-# Copyright 2019, 2020, 2021 IBM Corporation
+# Copyright 2019-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -47,12 +47,14 @@ def wrap_imported_operators(exclude_classes=None, wrapper_modules=None):
     """Wrap the currently imported operators from the symbol table
     to their lale wrappers.
 
-        Parameters
-        ----------
-        exclude_classes : [str], optional
-            List of class names to exclude from wrapping,
-            alias names if they are used while importing.
-            by default None
+    Parameters
+    ----------
+    exclude_classes : string, optional, default None
+        List of class names to exclude from wrapping,
+        alias names if they are used while importing.
+
+    wrapper_modules : set of string, optional, default None
+        Set of Lale modules to use for wrapping operators.
     """
     current_frame = inspect.currentframe()
     assert (
