@@ -66,7 +66,7 @@ _hyperparams_schema = {
             },
         },
         {
-            "description": "eps=%f and n_samples=%d lead to a target dimension of %d which is larger than the original space with n_features=%d'      % (self.eps, n_samples, self.n_components_, n_features) ",
+            "description": "eps=%f and n_samples=%d lead to a target dimension of %d which is larger than the original space with n_features=%d'      % (self.eps, n_samples, `self.n_components_`, n_features) ",
             "anyOf": [
                 {
                     "type": "object",

@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -121,7 +121,7 @@ _hyperparams_schema = {
             },
         },
         {
-            "description": "solver {svd, lsqr, cholesky, saga} does not support fitting the intercept on sparse data. Please set the solver to 'auto' or 'sparse_cg', 'sag', or set `fit_intercept=False. ",
+            "description": "solver {svd, lsqr, cholesky, saga} does not support fitting the intercept on sparse data. Please set the solver to 'auto' or 'sparse_cg', 'sag', or set `fit_intercept=False`.",
             "anyOf": [
                 {"type": "object", "laleNot": "X/isSparse"},
                 {"type": "object", "properties": {"fit_intercept": {"enum": [False]}}},
@@ -280,28 +280,36 @@ If you wish to standardize, please use StandardScaler before calling fit on an e
             ],
             "default": "auto",
             "description": """Solver to use in the computational routines:
+
 - 'auto' chooses the solver automatically based on the type of data.
+
 - 'svd' uses a Singular Value Decomposition of X to compute the Ridge
-    coefficients. More stable for singular matrices than 'cholesky'.
-- 'cholesky' uses the standard scipy.linalg.solve function to
-    obtain a closed-form solution.
+  coefficients. More stable for singular matrices than 'cholesky'.
+
+- 'cholesky' uses the standard scipy.linalg.solve function to obtain a
+  closed-form solution.
+
 - 'sparse_cg' uses the conjugate gradient solver as found in
-    scipy.sparse.linalg.cg. As an iterative algorithm, this solver is
-    more appropriate than 'cholesky' for large-scale data
-    (possibility to set `tol` and `max_iter`).
+  scipy.sparse.linalg.cg. As an iterative algorithm, this solver is
+  more appropriate than 'cholesky' for large-scale data (possibility
+  to set `tol` and `max_iter`).
+
 - 'lsqr' uses the dedicated regularized least-squares routine
-    scipy.sparse.linalg.lsqr. It is the fastest and uses an iterative
-    procedure.
+  scipy.sparse.linalg.lsqr. It is the fastest and uses an iterative
+  procedure.
+
 - 'sag' uses a Stochastic Average Gradient descent, and 'saga' uses
-    its improved, unbiased version named SAGA. Both methods also use an
-    iterative procedure, and are often faster than other solvers when
-    both n_samples and n_features are large. Note that 'sag' and
-    'saga' fast convergence is only guaranteed on features with
-    approximately the same scale. You can preprocess the data with a
-    scaler from sklearn.preprocessing.
+  its improved, unbiased version named SAGA. Both methods also use an
+  iterative procedure, and are often faster than other solvers when
+  both n_samples and n_features are large. Note that 'sag' and 'saga'
+  fast convergence is only guaranteed on features with approximately
+  the same scale. You can preprocess the data with a scaler from
+  sklearn.preprocessing.
+
 - 'lbfgs' uses L-BFGS-B algorithm implemented in
-    `scipy.optimize.minimize`. It can be used only when `positive`
-    is True.
+  `scipy.optimize.minimize`. It can be used only when `positive` is
+  True.
+
 All last six solvers support both dense and sparse data. However, only
 'sag', 'sparse_cg', and 'lbfgs' support sparse input when `fit_intercept`
 is True.""",

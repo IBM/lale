@@ -1,4 +1,4 @@
-# Copyright 2020 IBM Corporation
+# Copyright 2020-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -158,7 +158,7 @@ _combined_schemas = {
 CatImputer = lale.operators.make_operator(_CatImputerImpl, _combined_schemas)
 
 autoai_libs_version_str = getattr(autoai_libs, "__version__", None)
-if autoai_libs_version_str is not None:
+if isinstance(autoai_libs_version_str, str):  # beware sphinx _MockModule
     import typing
 
     from packaging import version
