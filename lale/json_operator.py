@@ -430,7 +430,7 @@ def _op_to_json_rec(
                 hyperparams = {
                     k: v
                     for k, v in hyperparams.items()
-                    if hp_schema.get(k, {}).get("transient", False) is not False
+                    if hp_schema.get(k, {}).get("transient", False) is not True
                 }
                 for k, s in hp_schema.items():
                     if s.get("transient", False) == "alwaysPrint":
