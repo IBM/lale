@@ -1,4 +1,4 @@
-# Copyright 2019-2023 IBM Corporation
+# Copyright 2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import imblearn.over_sampling
+import numpy as np
 
 import lale.docstrings
 import lale.operators
@@ -23,9 +24,9 @@ from ._common_schemas import (
     _hparam_operator,
     _hparam_random_state,
     _hparam_sampling_strategy_anyof_neoc,
-    _input_fit_schema,
-    _input_predict_schema,
-    _input_transform_schema,
+    _input_fit_schema_cats,
+    _input_predict_schema_cats,
+    _input_transform_schema_cats,
     _output_decision_function_schema,
     _output_predict_proba_schema,
     _output_predict_schema,
@@ -34,41 +35,67 @@ from ._common_schemas import (
 from .base_resampler import _BaseResamplerImpl
 
 
-class _BorderlineSMOTEImpl(_BaseResamplerImpl):
+class _SMOTENCImpl(_BaseResamplerImpl):
     def __init__(
         self,
+        *,
         operator=None,
+        categorical_features=None,
         sampling_strategy="auto",
         random_state=None,
         k_neighbors=5,
         n_jobs=1,
-        m_neighbors=10,
-        kind="borderline-1",
     ):
         if operator is None:
             raise ValueError("Operator is a required argument.")
-
         self._hyperparams = {
             "sampling_strategy": sampling_strategy,
+            "categorical_features": categorical_features,
             "random_state": random_state,
             "k_neighbors": k_neighbors,
             "n_jobs": n_jobs,
-            "m_neighbors": m_neighbors,
-            "kind": kind,
         }
+        super().__init__(operator=operator, resampler=None)
 
-        resampler_instance = imblearn.over_sampling.BorderlineSMOTE(**self._hyperparams)
-        super().__init__(operator=operator, resampler=resampler_instance)
+    def fit(self, X, y=None):
+        if self.resampler is None:
+            if self._hyperparams["categorical_features"] is None:
+                self._hyperparams["categorical_features"] = [
+                    not np.issubdtype(typ, np.number) for typ in X.dtypes
+                ]
+            self.resampler = imblearn.over_sampling.SMOTENC(**self._hyperparams)
+        return super().fit(X, y)
 
 
 _hyperparams_schema = {
     "allOf": [
         {
             "type": "object",
+            "required": ["operator"],
             "relevantToOptimizer": ["operator"],
             "additionalProperties": False,
             "properties": {
                 "operator": _hparam_operator,
+                "categorical_features": {
+                    "description": "Specifies which features are categorical.",
+                    "anyOf": [
+                        {
+                            "description": "Treat all features with non-numeric dtype as categorical.",
+                            "enum": [None],
+                        },
+                        {
+                            "description": "Indices specifying the categorical features.",
+                            "type": "array",
+                            "items": {"type": "integer"},
+                        },
+                        {
+                            "description": "Mask array of shape `(n_features,)` where True indicates the categorical features.",
+                            "type": "array",
+                            "items": {"type": "boolean"},
+                        },
+                    ],
+                    "default": None,
+                },
                 "sampling_strategy": _hparam_sampling_strategy_anyof_neoc,
                 "random_state": _hparam_random_state,
                 "k_neighbors": {
@@ -77,16 +104,6 @@ _hyperparams_schema = {
                     "default": 5,
                 },
                 "n_jobs": _hparam_n_jobs,
-                "m_neighbors": {
-                    **_hparam_n_neighbors,
-                    "description": "Number of nearest neighbours to use to determine if a minority sample is in danger.",
-                    "default": 10,
-                },
-                "kind": {
-                    "description": "The type of SMOTE algorithm to use.",
-                    "enum": ["borderline-1", "borderline-2"],
-                    "default": "borderline-1",
-                },
             },
         }
     ]
@@ -94,9 +111,9 @@ _hyperparams_schema = {
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": """Over-sampling using Borderline SMOTE, which is a variant of the original SMOTE algorithm.
-Borderline samples will be detected and used to generate new synthetic samples.""",
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.imblearn.borderline_smote.html",
+    "description": """Synthetic Minority Over-sampling Technique for Nominal and Continuous (SMOTENC).
+Can handle some nominal features, but not designed to work with only nominal features.""",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.imblearn.smotenc.html",
     "import_from": "imblearn.over_sampling",
     "type": "object",
     "tags": {
@@ -110,19 +127,19 @@ Borderline samples will be detected and used to generate new synthetic samples."
     },
     "properties": {
         "hyperparams": _hyperparams_schema,
-        "input_fit": _input_fit_schema,
-        "input_transform": _input_transform_schema,
+        "input_fit": _input_fit_schema_cats,
+        "input_transform": _input_transform_schema_cats,
         "output_transform": _output_transform_schema,
-        "input_predict": _input_predict_schema,
+        "input_predict": _input_predict_schema_cats,
         "output_predict": _output_predict_schema,
-        "input_predict_proba": _input_predict_schema,
+        "input_predict_proba": _input_predict_schema_cats,
         "output_predict_proba": _output_predict_proba_schema,
-        "input_decision_function": _input_predict_schema,
+        "input_decision_function": _input_predict_schema_cats,
         "output_decision_function": _output_decision_function_schema,
     },
 }
 
 
-BorderlineSMOTE = lale.operators.make_operator(_BorderlineSMOTEImpl, _combined_schemas)
+SMOTENC = lale.operators.make_operator(_SMOTENCImpl, _combined_schemas)
 
-lale.docstrings.set_docstrings(BorderlineSMOTE)
+lale.docstrings.set_docstrings(SMOTENC)

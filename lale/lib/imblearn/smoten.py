@@ -1,4 +1,4 @@
-# Copyright 2019-2023 IBM Corporation
+# Copyright 2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,9 +23,9 @@ from ._common_schemas import (
     _hparam_operator,
     _hparam_random_state,
     _hparam_sampling_strategy_anyof_neoc,
-    _input_fit_schema,
-    _input_predict_schema,
-    _input_transform_schema,
+    _input_fit_schema_cats,
+    _input_predict_schema_cats,
+    _input_transform_schema_cats,
     _output_decision_function_schema,
     _output_predict_proba_schema,
     _output_predict_schema,
@@ -34,30 +34,25 @@ from ._common_schemas import (
 from .base_resampler import _BaseResamplerImpl
 
 
-class _BorderlineSMOTEImpl(_BaseResamplerImpl):
+class _SMOTENImpl(_BaseResamplerImpl):
     def __init__(
         self,
+        *,
         operator=None,
         sampling_strategy="auto",
         random_state=None,
         k_neighbors=5,
         n_jobs=1,
-        m_neighbors=10,
-        kind="borderline-1",
     ):
         if operator is None:
             raise ValueError("Operator is a required argument.")
-
         self._hyperparams = {
             "sampling_strategy": sampling_strategy,
             "random_state": random_state,
             "k_neighbors": k_neighbors,
             "n_jobs": n_jobs,
-            "m_neighbors": m_neighbors,
-            "kind": kind,
         }
-
-        resampler_instance = imblearn.over_sampling.BorderlineSMOTE(**self._hyperparams)
+        resampler_instance = imblearn.over_sampling.SMOTEN(**self._hyperparams)
         super().__init__(operator=operator, resampler=resampler_instance)
 
 
@@ -65,6 +60,7 @@ _hyperparams_schema = {
     "allOf": [
         {
             "type": "object",
+            "required": ["operator"],
             "relevantToOptimizer": ["operator"],
             "additionalProperties": False,
             "properties": {
@@ -77,16 +73,6 @@ _hyperparams_schema = {
                     "default": 5,
                 },
                 "n_jobs": _hparam_n_jobs,
-                "m_neighbors": {
-                    **_hparam_n_neighbors,
-                    "description": "Number of nearest neighbours to use to determine if a minority sample is in danger.",
-                    "default": 10,
-                },
-                "kind": {
-                    "description": "The type of SMOTE algorithm to use.",
-                    "enum": ["borderline-1", "borderline-2"],
-                    "default": "borderline-1",
-                },
             },
         }
     ]
@@ -94,9 +80,9 @@ _hyperparams_schema = {
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": """Over-sampling using Borderline SMOTE, which is a variant of the original SMOTE algorithm.
-Borderline samples will be detected and used to generate new synthetic samples.""",
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.imblearn.borderline_smote.html",
+    "description": """Synthetic Minority Over-sampling Technique for Nominal (SMOTEN).
+Expects that the data to resample are only made of categorical features.""",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.imblearn.smoten.html",
     "import_from": "imblearn.over_sampling",
     "type": "object",
     "tags": {
@@ -110,19 +96,19 @@ Borderline samples will be detected and used to generate new synthetic samples."
     },
     "properties": {
         "hyperparams": _hyperparams_schema,
-        "input_fit": _input_fit_schema,
-        "input_transform": _input_transform_schema,
+        "input_fit": _input_fit_schema_cats,
+        "input_transform": _input_transform_schema_cats,
         "output_transform": _output_transform_schema,
-        "input_predict": _input_predict_schema,
+        "input_predict": _input_predict_schema_cats,
         "output_predict": _output_predict_schema,
-        "input_predict_proba": _input_predict_schema,
+        "input_predict_proba": _input_predict_schema_cats,
         "output_predict_proba": _output_predict_proba_schema,
-        "input_decision_function": _input_predict_schema,
+        "input_decision_function": _input_predict_schema_cats,
         "output_decision_function": _output_decision_function_schema,
     },
 }
 
 
-BorderlineSMOTE = lale.operators.make_operator(_BorderlineSMOTEImpl, _combined_schemas)
+SMOTEN = lale.operators.make_operator(_SMOTENImpl, _combined_schemas)
 
-lale.docstrings.set_docstrings(BorderlineSMOTE)
+lale.docstrings.set_docstrings(SMOTEN)
