@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019-2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,6 +28,8 @@ Operators:
 * `BorderlineSMOTE`_
 * `RandomOverSampler`_
 * `SMOTE`_
+* `SMOTEN`_
+* `SMOTENC`_
 * `SVMSMOTE`_
 * `SMOTEENN`_
 
@@ -40,6 +42,8 @@ Operators:
 .. _`BorderlineSMOTE`: lale.lib.imblearn.borderline_smote.html
 .. _`RandomOverSampler`: lale.lib.imblearn.random_over_sampler.html
 .. _`SMOTE`: lale.lib.imblearn.smote.html
+.. _`SMOTEN`: lale.lib.imblearn.smoten.html
+.. _`SMOTENC`: lale.lib.imblearn.smotenc.html
 .. _`SVMSMOTE`: lale.lib.imblearn.svm_smote.html
 .. _`SMOTEENN`: lale.lib.imblearn.smoteenn.html
 
@@ -68,4 +72,6 @@ from .repeated_edited_nearest_neighbours import (
 )
 from .smote import SMOTE as SMOTE
 from .smoteenn import SMOTEENN as SMOTEENN
+from .smoten import SMOTEN as SMOTEN
+from .smotenc import SMOTENC as SMOTENC
 from .svm_smote import SVMSMOTE as SVMSMOTE

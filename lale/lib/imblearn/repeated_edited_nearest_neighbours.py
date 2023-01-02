@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019-2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,15 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from imblearn.under_sampling import RepeatedEditedNearestNeighbours as OrigModel
+import imblearn.under_sampling
 
 import lale.docstrings
 import lale.operators
-from lale.lib.imblearn.base_resampler import (
-    _BaseResamplerImpl,
-    _input_decision_function_schema,
+
+from ._common_schemas import (
+    _hparam_kind_sel,
+    _hparam_n_jobs,
+    _hparam_n_neighbors,
+    _hparam_operator,
+    _hparam_sampling_strategy_anyof_elc,
     _input_fit_schema,
-    _input_predict_proba_schema,
     _input_predict_schema,
     _input_transform_schema,
     _output_decision_function_schema,
@@ -28,6 +31,7 @@ from lale.lib.imblearn.base_resampler import (
     _output_predict_schema,
     _output_transform_schema,
 )
+from .base_resampler import _BaseResamplerImpl
 
 
 class _RepeatedEditedNearestNeighboursImpl(_BaseResamplerImpl):
@@ -35,7 +39,9 @@ class _RepeatedEditedNearestNeighboursImpl(_BaseResamplerImpl):
         if operator is None:
             raise ValueError("Operator is a required argument.")
         self._hyperparams = hyperparams
-        resampler_instance = OrigModel(**self._hyperparams)
+        resampler_instance = imblearn.under_sampling.RepeatedEditedNearestNeighbours(
+            **self._hyperparams
+        )
         super().__init__(operator=operator, resampler=resampler_instance)
 
 
@@ -46,57 +52,10 @@ _hyperparams_schema = {
             "relevantToOptimizer": ["operator"],
             "additionalProperties": False,
             "properties": {
-                "operator": {
-                    "description": """Trainable Lale pipeline that is trained using the data obtained from the current imbalance corrector.
-Predict, transform, predict_proba or decision_function would just be forwarded to the trained pipeline.
-If operator is a Planned pipeline, the current imbalance corrector can't be trained without using an optimizer to
-choose a trainable operator first. Please refer to lale/examples for more examples.""",
-                    "anyOf": [{"laleType": "operator"}],
-                },
-                "sampling_strategy": {
-                    "description": """sampling_strategy : str, list or callable, default='auto'.
-Sampling information to resample the data set.
-""",
-                    "anyOf": [
-                        {
-                            "description": """When ``str``, specify the class targeted by the resampling.
-The number of samples in the different classes will be equalized.
-Possible choices are:
-``'minority'``: resample only the minority class;
-``'not minority'``: resample all classes but the minority class;
-``'not majority'``: resample all classes but the majority class;
-``'all'``: resample all classes;
-``'auto'``: equivalent to ``'not majority'``.""",
-                            "enum": [
-                                "majority",
-                                "not minority",
-                                "not majority",
-                                "all",
-                                "auto",
-                            ],
-                        },
-                        {
-                            "description": """- When ``list``, the list contains the classes targeted by the resampling.""",
-                            "anyOf": [
-                                {"type": "array", "items": {"type": "number"}},
-                                {"type": "array", "items": {"type": "string"}},
-                            ],
-                        },
-                        {
-                            "description": """When callable, function taking ``y`` and returns a ``dict``.
-The keys correspond to the targeted classes. The values correspond to the
-desired number of samples for each class.""",
-                            "laleType": "callable",
-                        },
-                    ],
-                    "default": "auto",
-                },
+                "operator": _hparam_operator,
+                "sampling_strategy": _hparam_sampling_strategy_anyof_elc,
                 "n_neighbors": {
-                    "description": """If ``int``, size of the neighbourhood to consider to compute the nearest neighbors.
-If object, an estimator that inherits from
-:class:`sklearn.neighbors.base.KNeighborsMixin` that will be used to
-find the nearest-neighbors. Default of None corresponds to KNeighborsClassifier(n_neighbors=1)""",
-                    "anyOf": [{"laleType": "Any"}, {"type": "integer"}],
+                    **_hparam_n_neighbors,
                     "default": 3,
                 },
                 "max_iter": {
@@ -104,18 +63,8 @@ find the nearest-neighbors. Default of None corresponds to KNeighborsClassifier(
                     "type": "integer",
                     "default": 100,
                 },
-                "kind_sel": {
-                    "description": """Strategy to use in order to exclude samples.
-If ``all``, all neighbours will have to agree with the samples of interest to not be excluded.
-If ``mode``, the majority vote of the neighbours will be used in order to exclude a sample.""",
-                    "enum": ["all", "mode"],
-                    "default": "all",
-                },
-                "n_jobs": {
-                    "description": "The number of threads to open if possible.",
-                    "type": "integer",
-                    "default": 1,
-                },
+                "kind_sel": _hparam_kind_sel,
+                "n_jobs": _hparam_n_jobs,
             },
         }
     ]
@@ -143,9 +92,9 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
         "input_predict": _input_predict_schema,
         "output_predict": _output_predict_schema,
-        "input_predict_proba": _input_predict_proba_schema,
+        "input_predict_proba": _input_predict_schema,
         "output_predict_proba": _output_predict_proba_schema,
-        "input_decision_function": _input_decision_function_schema,
+        "input_decision_function": _input_predict_schema,
         "output_decision_function": _output_decision_function_schema,
     },
 }
