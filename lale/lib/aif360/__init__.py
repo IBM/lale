@@ -46,6 +46,7 @@ See the following notebooks for more detailed examples:
 Pre-Estimator Mitigation Operators:
 ===================================
 * `DisparateImpactRemover`_
+* `FairSMOTE`_
 * `LFR`_
 * `Reweighing`_
 
@@ -144,6 +145,7 @@ zero or one to simplify the task for the mitigator.
 .. _`CalibratedEqOddsPostprocessing`: lale.lib.aif360.calibrated_eq_odds_postprocessing.html#lale.lib.aif360.calibrated_eq_odds_postprocessing.CalibratedEqOddsPostprocessing
 .. _`DisparateImpactRemover`: lale.lib.aif360.disparate_impact_remover.html#lale.lib.aif360.disparate_impact_remover.DisparateImpactRemover
 .. _`EqOddsPostprocessing`: lale.lib.aif360.eq_odds_postprocessing.html#lale.lib.aif360.eq_odds_postprocessing.EqOddsPostprocessing
+.. _`FairSMOTE`: lale.lib.aif360.fair_smote.html#lale.lib.aif360.fair_smote.FairSMOTE
 .. _`FairStratifiedKFold`: lale.lib.aif360.util.html#lale.lib.aif360.util.FairStratifiedKFold
 .. _`LFR`: lale.lib.aif360.lfr.html#lale.lib.aif360.lfr.LFR
 .. _`GerryFairClassifier`: lale.lib.aif360.gerry_fair_classifier.html#lale.lib.aif360.gerry_fair_classifier.GerryFairClassifier
@@ -208,6 +210,7 @@ from .datasets import fetch_tae_df as fetch_tae_df
 from .datasets import fetch_titanic_df as fetch_titanic_df
 from .disparate_impact_remover import DisparateImpactRemover as DisparateImpactRemover
 from .eq_odds_postprocessing import EqOddsPostprocessing as EqOddsPostprocessing
+from .fair_smote import FairSMOTE as FairSMOTE
 from .gerry_fair_classifier import GerryFairClassifier as GerryFairClassifier
 from .lfr import LFR as LFR
 from .meta_fair_classifier import MetaFairClassifier as MetaFairClassifier
