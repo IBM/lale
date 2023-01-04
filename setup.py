@@ -85,6 +85,7 @@ extras_require = {
     "dev": ["pre-commit"],
     "test": [
         "joblib",
+        "ipython<8.8.0",
         "jupyter",
         "sphinx>=5.0.0",
         "sphinx_rtd_theme>=0.5.2",
@@ -104,6 +105,7 @@ extras_require = {
         "BlackBoxAuditing",
     ],
     "tutorial": [
+        "ipython<8.8.0",
         "jupyter",
         "xgboost<=1.5.1",
         "imbalanced-learn",
