@@ -43,6 +43,36 @@ jobs:
     - name: pre-commit checks
       uses: pre-commit/action@v3.0.0
 
+  docs:
+    name: Documentation build
+    runs-on: ubuntu-latest
+    needs: [static]
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.8
+    - name: Cache pip
+      uses: actions/cache@v3
+      with:
+        # This path is specific to Ubuntu
+        path: ${{ env.pythonLocation }}
+        # Look to see if there is a cache hit for the setup file
+        key: ${{ runner.os }}-pip-new3-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-new3
+          ${{ runner.os }}-new3
+    - name: Install sphinx
+      run: pip install "sphinx>=5.0.0" "sphinx_rtd_theme>=0.5.2" "sphinxcontrib.apidoc"
+    - name: Install doc dependencies
+      run: pip install -r docs/requirements.txt
+    - name: pip list packages
+      run: pip list
+    - name: Run sphinx
+      run: sphinx-build "." "_build" --keep-going
+      working-directory: ./docs
+
   # test_matrix_pr and test_matrix_master have a lot of redundancy
   # If GitHub actions adds support for conditional matrix expressions
   # these should be combined, but current workarounds seem overly complex
@@ -494,15 +524,6 @@ jobs:
         pipdeptree -fl
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
-
-  docs:
-    name: Documentation build
-    runs-on: ubuntu-latest
-    needs: [static]
-    steps:
-    - uses: actions/checkout@v3
-    - name: Sphinx Build
-      uses: ammaraskar/sphinx-action@0.4
 
   deploy:
     name: Deploy to TestPyPI
