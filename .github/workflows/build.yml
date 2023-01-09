@@ -67,6 +67,8 @@ jobs:
       run: pip install "sphinx>=5.0.0" "sphinx_rtd_theme>=0.5.2" "sphinxcontrib.apidoc"
     - name: Install doc dependencies
       run: pip install -r docs/requirements.txt
+    - name: Install lale
+      run: pip install --no-dependencies -e .
     - name: pip list packages
       run: pip list
     - name: Run sphinx
