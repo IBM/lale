@@ -27,3 +27,4 @@ sphinx_rtd_theme>=0.5.2
 docutils<0.17
 m2r2
 sphinxcontrib.apidoc
+sphinxcontrib-svg2pdfconverter
