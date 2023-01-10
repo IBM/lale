@@ -11,6 +11,7 @@ pandas
 decorator
 h5py
 astunparse
+typing-extensions
 # subset of setup.py -> extras_require -> full
 xgboost<=1.3.3
 lightgbm
