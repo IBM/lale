@@ -72,7 +72,11 @@ jobs:
     - name: pip list packages
       run: pip list
     - name: Install latex (used for math notation in sphinx)
-      run: sudo apt-get update -y && sudo apt-get install -y latexmk texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended
+      run: >
+        sudo apt-get update -y &&
+        sudo apt-get install -y
+        latexmk texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended
+        dvipng
     - name: Run sphinx
       run: sphinx-build "." "_build" -W --keep-going
       working-directory: ./docs
