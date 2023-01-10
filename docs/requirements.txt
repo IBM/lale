@@ -20,6 +20,7 @@ numba==0.49.0
 aif360>=0.4.0
 imbalanced-learn
 cvxpy>=1.0,<=1.1.7
+smac<=0.10.0
 # subset of setup.py -> extras_require -> test
 sphinx>=5.0.0
 sphinx_rtd_theme>=0.5.2
