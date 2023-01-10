@@ -126,7 +126,7 @@ _hyperparams_schema = {
             "properties": {
                 **_categorical_fairness_properties,
                 "estimator": {
-                    "description": "Nested classifier, fit method must support sample_weight.",
+                    "description": "Nested classifier.",
                     "laleType": "operator",
                 },
                 "redact": {
