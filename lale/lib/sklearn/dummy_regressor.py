@@ -1,4 +1,4 @@
-# Copyright 2019-2022 IBM Corporation
+# Copyright 2019-2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -136,6 +136,7 @@ _combined_schemas = {
 
 .. _`Dummy regressor`: https://scikit-learn.org/stable/modules/generated/sklearn.dummy.DummyRegressor.html
 """,
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.dummy_regressor.html",
     "import_from": "sklearn.dummy",
     "type": "object",
     "tags": {"pre": [], "op": ["estimator", "regressor"], "post": []},
