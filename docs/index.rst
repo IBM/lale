@@ -83,3 +83,13 @@ Indices and tables
 
 * :ref:`genindex`
 * :ref:`search`
+
+.. toctree::
+   :hidden:
+   :glob:
+
+   README*
+   faq
+   installation
+   modules/modules
+   papers

@@ -79,7 +79,7 @@ _hparam_sampling_strategy_number = {
     "type": "number",
     "forOptimizer": False,
     "description": """Desired ratio of the number of samples in the
- minority class over the number of samples in the majority class after
+minority class over the number of samples in the majority class after
 resampling. Therefore, the ratio is expressed as :math:`\\alpha_{os} =
 N_{rm} / N_{M}` where :math:`N_{rm}` is the number of samples in the
 minority class after resampling and :math:`N_{M}` is the number of

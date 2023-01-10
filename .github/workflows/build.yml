@@ -43,6 +43,44 @@ jobs:
     - name: pre-commit checks
       uses: pre-commit/action@v3.0.0
 
+  docs:
+    name: Documentation build
+    runs-on: ubuntu-latest
+    needs: [static]
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.8
+    - name: Cache pip
+      uses: actions/cache@v3
+      with:
+        # This path is specific to Ubuntu
+        path: ${{ env.pythonLocation }}
+        # Look to see if there is a cache hit for the setup file
+        key: ${{ runner.os }}-pip-new3-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-new3
+          ${{ runner.os }}-new3
+    - name: Install sphinx
+      run: pip install "sphinx>=5.0.0" "sphinx_rtd_theme>=0.5.2" "sphinxcontrib.apidoc"
+    - name: Install doc dependencies
+      run: pip install -r docs/requirements.txt
+    - name: Install lale
+      run: pip install --no-dependencies -e .
+    - name: pip list packages
+      run: pip list
+    - name: Install latex (used for math notation in sphinx)
+      run: >
+        sudo apt-get update -y &&
+        sudo apt-get install -y
+        latexmk texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended
+        dvipng
+    - name: Run sphinx
+      run: sphinx-build "." "_build" -W --keep-going
+      working-directory: ./docs
+
   # test_matrix_pr and test_matrix_master have a lot of redundancy
   # If GitHub actions adds support for conditional matrix expressions
   # these should be combined, but current workarounds seem overly complex
@@ -500,7 +538,7 @@ jobs:
     runs-on: ubuntu-latest
     # This should run only on the master branch of the main repo
     if: github.repository == 'IBM/lale' && github.ref == 'refs/heads/master' && success()
-    needs: [static, test_matrix_master, test_newer, test_fairness, test_notebooks_master]
+    needs: [static, test_matrix_master, test_newer, test_fairness, test_notebooks_master, docs]
     strategy:
       matrix:
         python-version: [3.7]
