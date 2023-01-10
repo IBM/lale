@@ -21,7 +21,7 @@ try:
 except ImportError:
 
     class _SkHashingEncoder:  # type: ignore
-        def __init__(self, *args, **kargs):
+        def __init__(self, *args, **hyperparams):
             raise ValueError("The package 'category_encoders' is not installed.")
 
         def fit(self, X, y=None):
@@ -129,8 +129,7 @@ _combined_schemas = {
 
 class _HashingEncoderImpl:
     def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = _SkHashingEncoder(**self._hyperparams)
+        self._wrapped_model = _SkHashingEncoder(**hyperparams)
 
     def fit(self, X, y=None):
         self._wrapped_model.fit(X, y)

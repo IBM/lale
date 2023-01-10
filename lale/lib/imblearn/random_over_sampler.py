@@ -33,18 +33,11 @@ from .base_resampler import _BaseResamplerImpl
 
 
 class _RandomOverSamplerImpl(_BaseResamplerImpl):
-    def __init__(self, operator=None, sampling_strategy="auto", random_state=None):
+    def __init__(self, operator=None, **hyperparams):
         if operator is None:
             raise ValueError("Operator is a required argument.")
 
-        self._hyperparams = {
-            "sampling_strategy": sampling_strategy,
-            "random_state": random_state,
-        }
-
-        resampler_instance = imblearn.over_sampling.RandomOverSampler(
-            **self._hyperparams
-        )
+        resampler_instance = imblearn.over_sampling.RandomOverSampler(**hyperparams)
         super().__init__(operator=operator, resampler=resampler_instance)
 
 

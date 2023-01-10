@@ -26,48 +26,20 @@ import lale.operators
 
 
 class _SnapRandomForestRegressorImpl:
-    def __init__(
-        self,
-        n_estimators=10,
-        criterion="mse",
-        max_depth=None,
-        min_samples_leaf=1,
-        max_features="auto",
-        bootstrap=True,
-        n_jobs=None,
-        random_state=None,
-        verbose=False,
-        use_histograms=False,
-        hist_nbins=256,
-        use_gpu=False,
-        gpu_ids=None,
-        compress_trees=False,
-    ):
+    def __init__(self, **hyperparams):
         assert (
             snapml_version is not None
         ), """Your Python environment does not have snapml installed. Install using: pip install snapml"""
-        self._hyperparams = {
-            "n_estimators": n_estimators,
-            "criterion": criterion,
-            "max_depth": max_depth,
-            "min_samples_leaf": min_samples_leaf,
-            "max_features": max_features,
-            "bootstrap": bootstrap,
-            "n_jobs": n_jobs,
-            "random_state": random_state,
-            "verbose": verbose,
-            "use_histograms": use_histograms,
-            "hist_nbins": hist_nbins,
-            "use_gpu": use_gpu,
-            "gpu_ids": gpu_ids,
-        }
-        if snapml_version > version.Version("1.7.8"):
-            self._hyperparams["compress_trees"] = compress_trees
 
-        modified_hps = {**self._hyperparams}
-        if modified_hps["gpu_ids"] is None:
-            modified_hps["gpu_ids"] = [0]  # TODO: support list as default
-        self._wrapped_model = snapml.SnapRandomForestRegressor(**modified_hps)
+        if (
+            snapml_version <= version.Version("1.7.8")
+            and "compress_trees" in hyperparams
+        ):
+            del hyperparams["compress_trees"]
+        if hyperparams.get("gpu_ids", None) is None:
+            hyperparams["gpu_ids"] = [0]
+
+        self._wrapped_model = snapml.SnapRandomForestRegressor(**hyperparams)
 
     def fit(self, X, y, **fit_params):
         X = lale.datasets.data_schemas.strip_schema(X)

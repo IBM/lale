@@ -139,8 +139,7 @@ _combined_schemas = {
 
 class _OneHotEncoderImpl:
     def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.preprocessing.OneHotEncoder(**self._hyperparams)
+        self._wrapped_model = sklearn.preprocessing.OneHotEncoder(**hyperparams)
 
     def fit(self, X, y=None):
         self._wrapped_model.fit(X, y)

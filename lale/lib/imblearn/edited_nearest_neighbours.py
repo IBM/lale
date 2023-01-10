@@ -38,9 +38,9 @@ class _EditedNearestNeighboursImpl(_BaseResamplerImpl):
     def __init__(self, operator=None, **hyperparams):
         if operator is None:
             raise ValueError("Operator is a required argument.")
-        self._hyperparams = hyperparams
+
         resampler_instance = imblearn.under_sampling.EditedNearestNeighbours(
-            **self._hyperparams
+            **hyperparams
         )
         super().__init__(operator=operator, resampler=resampler_instance)
 

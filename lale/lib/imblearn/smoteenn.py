@@ -33,25 +33,11 @@ from .base_resampler import _BaseResamplerImpl
 
 
 class _SMOTEENNImpl(_BaseResamplerImpl):
-    def __init__(
-        self,
-        operator=None,
-        sampling_strategy="auto",
-        random_state=None,
-        smote=None,
-        enn=None,
-    ):
+    def __init__(self, operator=None, **hyperparams):
         if operator is None:
             raise ValueError("Operator is a required argument.")
 
-        self._hyperparams = {
-            "sampling_strategy": sampling_strategy,
-            "random_state": random_state,
-            "smote": smote,
-            "enn": enn,
-        }
-
-        resampler_instance = imblearn.combine.SMOTEENN(**self._hyperparams)
+        resampler_instance = imblearn.combine.SMOTEENN(**hyperparams)
         super().__init__(operator=operator, resampler=resampler_instance)
 
 
