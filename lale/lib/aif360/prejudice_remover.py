@@ -1,4 +1,4 @@
-# Copyright 2020, 2021 IBM Corporation
+# Copyright 2020-2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -37,9 +37,9 @@ class _PrejudiceRemoverImpl(_BaseInEstimatorImpl):
         unfavorable_labels=None,
         redact=True,
         preparation=None,
-        eta=1.0,
+        **hyperparams,
     ):
-        mitigator = aif360.algorithms.inprocessing.PrejudiceRemover(eta=eta)
+        mitigator = aif360.algorithms.inprocessing.PrejudiceRemover(**hyperparams)
         super().__init__(
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
