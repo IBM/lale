@@ -35,28 +35,12 @@ from .base_resampler import _BaseResamplerImpl
 
 
 class _CondensedNearestNeighbourImpl(_BaseResamplerImpl):
-    def __init__(
-        self,
-        operator=None,
-        sampling_strategy="auto",
-        random_state=None,
-        n_neighbors=None,
-        n_seeds_S=1,
-        n_jobs=1,
-    ):
+    def __init__(self, operator=None, **hyperparams):
         if operator is None:
             raise ValueError("Operator is a required argument.")
 
-        self._hyperparams = {
-            "sampling_strategy": sampling_strategy,
-            "random_state": random_state,
-            "n_neighbors": n_neighbors,
-            "n_seeds_S": n_seeds_S,
-            "n_jobs": n_jobs,
-        }
-
         resampler_instance = imblearn.under_sampling.CondensedNearestNeighbour(
-            **self._hyperparams
+            **hyperparams
         )
         super().__init__(operator=operator, resampler=resampler_instance)
 

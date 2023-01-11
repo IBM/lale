@@ -20,12 +20,10 @@ import lale.operators
 
 
 class _SelectKBestImpl:
-    def __init__(self, score_func=None, k=10):
-        if score_func:
-            self._hyperparams = {"score_func": score_func, "k": k}
-        else:
-            self._hyperparams = {"k": k}
-        self._wrapped_model = sklearn.feature_selection.SelectKBest(**self._hyperparams)
+    def __init__(self, **hyperparams):
+        if hyperparams["score_func"] is None:
+            del hyperparams["score_func"]
+        self._wrapped_model = sklearn.feature_selection.SelectKBest(**hyperparams)
 
     def fit(self, X, y=None):
         self._wrapped_model.fit(X, y)

@@ -424,10 +424,7 @@ _combined_schemas = {
 
 class _LogisticRegressionImpl:
     def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.linear_model.LogisticRegression(
-            **self._hyperparams
-        )
+        self._wrapped_model = sklearn.linear_model.LogisticRegression(**hyperparams)
 
     def fit(self, X, y, **fit_params):
         try:

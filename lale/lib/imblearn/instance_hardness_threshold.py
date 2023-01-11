@@ -34,28 +34,12 @@ from .base_resampler import _BaseResamplerImpl
 
 
 class _InstanceHardnessThresholdImpl(_BaseResamplerImpl):
-    def __init__(
-        self,
-        operator=None,
-        estimator=None,
-        sampling_strategy="auto",
-        random_state=None,
-        cv=5,
-        n_jobs=1,
-    ):
+    def __init__(self, operator=None, **hyperparams):
         if operator is None:
             raise ValueError("Operator is a required argument.")
 
-        self._hyperparams = {
-            "estimator": estimator,
-            "sampling_strategy": sampling_strategy,
-            "random_state": random_state,
-            "cv": cv,
-            "n_jobs": n_jobs,
-        }
-
         resampler_instance = imblearn.under_sampling.InstanceHardnessThreshold(
-            **self._hyperparams
+            **hyperparams
         )
         super().__init__(operator=operator, resampler=resampler_instance)
 

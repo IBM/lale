@@ -24,24 +24,8 @@ import lale.operators
 
 
 class _SimpleImputerImpl:
-    def __init__(
-        self,
-        missing_values=None,
-        strategy="mean",
-        fill_value=None,
-        verbose=0,
-        copy=True,
-        add_indicator=False,
-    ):
-        self._hyperparams = {
-            "missing_values": missing_values,
-            "strategy": strategy,
-            "fill_value": fill_value,
-            "verbose": verbose,
-            "copy": copy,
-            "add_indicator": add_indicator,
-        }
-        self._wrapped_model = sklearn.impute.SimpleImputer(**self._hyperparams)
+    def __init__(self, **hyperparams):
+        self._wrapped_model = sklearn.impute.SimpleImputer(**hyperparams)
 
     def fit(self, X, y=None):
         self._wrapped_model.fit(X, y)

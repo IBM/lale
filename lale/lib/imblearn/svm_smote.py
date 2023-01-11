@@ -35,31 +35,11 @@ from .base_resampler import _BaseResamplerImpl
 
 
 class _SVMSMOTEImpl(_BaseResamplerImpl):
-    def __init__(
-        self,
-        operator=None,
-        sampling_strategy="auto",
-        random_state=None,
-        k_neighbors=5,
-        n_jobs=1,
-        m_neighbors=10,
-        svm_estimator=None,
-        out_step=0.5,
-    ):
+    def __init__(self, operator=None, **hyperparams):
         if operator is None:
             raise ValueError("Operator is a required argument.")
 
-        self._hyperparams = {
-            "sampling_strategy": sampling_strategy,
-            "random_state": random_state,
-            "k_neighbors": k_neighbors,
-            "n_jobs": n_jobs,
-            "m_neighbors": m_neighbors,
-            "svm_estimator": svm_estimator,
-            "out_step": out_step,
-        }
-
-        resampler_instance = imblearn.over_sampling.SVMSMOTE(**self._hyperparams)
+        resampler_instance = imblearn.over_sampling.SVMSMOTE(**hyperparams)
         super().__init__(operator=operator, resampler=resampler_instance)
 
 

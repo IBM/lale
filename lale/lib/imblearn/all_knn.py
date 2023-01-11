@@ -38,8 +38,8 @@ class _AllKNNImpl(_BaseResamplerImpl):
     def __init__(self, operator=None, **hyperparams):
         if operator is None:
             raise ValueError("Operator is a required argument.")
-        self._hyperparams = hyperparams
-        resampler_instance = imblearn.under_sampling.AllKNN(**self._hyperparams)
+
+        resampler_instance = imblearn.under_sampling.AllKNN(**hyperparams)
         super().__init__(operator=operator, resampler=resampler_instance)
 
 

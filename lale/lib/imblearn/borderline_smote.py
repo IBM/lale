@@ -35,29 +35,11 @@ from .base_resampler import _BaseResamplerImpl
 
 
 class _BorderlineSMOTEImpl(_BaseResamplerImpl):
-    def __init__(
-        self,
-        operator=None,
-        sampling_strategy="auto",
-        random_state=None,
-        k_neighbors=5,
-        n_jobs=1,
-        m_neighbors=10,
-        kind="borderline-1",
-    ):
+    def __init__(self, operator=None, **hyperparams):
         if operator is None:
             raise ValueError("Operator is a required argument.")
 
-        self._hyperparams = {
-            "sampling_strategy": sampling_strategy,
-            "random_state": random_state,
-            "k_neighbors": k_neighbors,
-            "n_jobs": n_jobs,
-            "m_neighbors": m_neighbors,
-            "kind": kind,
-        }
-
-        resampler_instance = imblearn.over_sampling.BorderlineSMOTE(**self._hyperparams)
+        resampler_instance = imblearn.over_sampling.BorderlineSMOTE(**hyperparams)
         super().__init__(operator=operator, resampler=resampler_instance)
 
 
