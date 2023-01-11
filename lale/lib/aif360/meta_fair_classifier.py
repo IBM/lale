@@ -1,4 +1,4 @@
-# Copyright 2020, 2021 IBM Corporation
+# Copyright 2020-2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,14 +34,12 @@ class _MetaFairClassifierImpl(_BaseInEstimatorImpl):
         unfavorable_labels,
         redact=True,
         preparation=None,
-        tau=0.8,
-        type="fdr",  # pylint:disable=redefined-builtin
+        **hyperparams,
     ):
         prot_attr_names = [pa["feature"] for pa in protected_attributes]
         mitigator = aif360.algorithms.inprocessing.MetaFairClassifier(
-            tau=tau,
             sensitive_attr=prot_attr_names[0],
-            type=type,
+            **hyperparams,
         )
         super().__init__(
             favorable_labels=favorable_labels,

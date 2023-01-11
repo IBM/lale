@@ -1,4 +1,4 @@
-# Copyright 2020, 2021 IBM Corporation
+# Copyright 2020-2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ import io
 import uuid
 
 import aif360.algorithms.inprocessing
+import packaging.version
 
 import lale.docstrings
 import lale.operators
@@ -49,44 +50,29 @@ class _AdversarialDebiasingImpl(_BaseInEstimatorImpl):
         redact=True,
         preparation=None,
         scope_name="adversarial_debiasing",
-        sess=None,
-        seed=None,
-        adversary_loss_weight=0.1,
-        num_epochs=50,
-        batch_size=128,
-        classifier_num_hidden_units=200,
-        debias=True,
         verbose=0,
+        **hyperparams,
     ):
         assert tensorflow_installed, """Your Python environment does not have tensorflow installed. You can install it with
     pip install tensorflow
 or with
     pip install 'lale[full]'"""
-        from packaging import version
-
-        tf_version = version.parse(getattr(tf, "__version__"))
-        assert version.Version("1.13.1") <= tf_version
-
+        tf_version = packaging.version.parse(getattr(tf, "__version__"))
+        assert packaging.version.Version("1.13.1") <= tf_version
         self.scope_name = scope_name
         self.protected_attributes = protected_attributes
-        self.seed = seed
-        self.sess = sess
-        self.adversary_loss_weight = adversary_loss_weight
-        self.num_epochs = num_epochs
-        self.batch_size = batch_size
-        self.classifier_num_hidden_units = classifier_num_hidden_units
-        self.debias = debias
         self.favorable_labels = favorable_labels
         self.unfavorable_labels = unfavorable_labels
         self.redact = redact
         self.preparation = preparation
         self.verbose = verbose
+        self.hyperparams = hyperparams
 
     def fit(self, X, y=None):
         tf.compat.v1.disable_eager_execution()
         tf.compat.v1.reset_default_graph()
-        if self.sess is None:
-            self.sess = tf.compat.v1.Session()
+        if self.hyperparams.get("sess", None) is None:
+            self.hyperparams["sess"] = tf.compat.v1.Session()
         prot_attr_names = [pa["feature"] for pa in self.protected_attributes]
         unprivileged_groups = [{name: 0 for name in prot_attr_names}]
         privileged_groups = [{name: 1 for name in prot_attr_names}]
@@ -94,13 +80,7 @@ or with
             unprivileged_groups=unprivileged_groups,
             privileged_groups=privileged_groups,
             scope_name=self.scope_name + str(uuid.uuid4()),
-            sess=self.sess,
-            seed=self.seed,
-            adversary_loss_weight=self.adversary_loss_weight,
-            num_epochs=self.num_epochs,
-            batch_size=self.batch_size,
-            classifier_num_hidden_units=self.classifier_num_hidden_units,
-            debias=self.debias,
+            **self.hyperparams,
         )
         super().__init__(
             favorable_labels=self.favorable_labels,
