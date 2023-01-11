@@ -1,3 +1,4 @@
+
 .. LALE documentation master file, created by
    sphinx-quickstart on Sat Mar 23 07:09:13 2019.
    You can adapt this file completely to your liking, but it should at least
@@ -88,8 +89,7 @@ Indices and tables
    :hidden:
    :glob:
 
-   README*
    faq
    installation
-   modules/modules
    papers
+   modules/modules
