@@ -35,6 +35,7 @@ import os
 import sys
 from typing import Dict, List
 
+import lale
 from lale.settings import set_disable_hyperparams_schema_validation
 
 # -- Project information -----------------------------------------------------
@@ -44,9 +45,9 @@ project_copyright = "2019-2022, IBM AI Research"
 author = "IBM AI Research"
 
 # The short X.Y version
-version = ""
+version = lale.__version__
 # The full version, including alpha/beta/rc tags
-release = ""
+release = f"{lale.__version__}-dev"
 
 
 sys.path.append(os.path.join(os.path.dirname(__name__), "../lale"))
@@ -121,7 +122,7 @@ language = "en"
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = ["_build", "Thumbs.db", ".DS_Store", "README-*.md"]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None
