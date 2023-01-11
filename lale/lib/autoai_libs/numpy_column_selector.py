@@ -20,10 +20,9 @@ import lale.operators
 
 
 class _NumpyColumnSelectorImpl:
-    def __init__(self, columns=None):
-        self._hyperparams = {"columns": columns}
+    def __init__(self, **hyperparams):
         self._wrapped_model = autoai_libs.transformers.exportable.NumpyColumnSelector(
-            **self._hyperparams
+            **hyperparams
         )
 
     def fit(self, X, y=None):

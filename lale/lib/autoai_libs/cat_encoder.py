@@ -20,27 +20,10 @@ import lale.operators
 
 
 class _CatEncoderImpl:
-    def __init__(
-        self,
-        encoding,
-        categories,
-        dtype,
-        handle_unknown,
-        sklearn_version_family=None,
-        activate_flag=True,
-        encode_unknown_with="auto",
-    ):
-        self._hyperparams = {
-            "encoding": encoding,
-            "categories": categories,
-            "dtype": dtype,
-            "handle_unknown": handle_unknown,
-            "sklearn_version_family": sklearn_version_family,
-            "activate_flag": activate_flag,
-        }
+    def __init__(self, encode_unknown_with="auto", **hyperparams):
         self.encode_unknown_with = encode_unknown_with
         self._wrapped_model = autoai_libs.transformers.exportable.CatEncoder(
-            **self._hyperparams
+            **hyperparams
         )
 
     def fit(self, X, y=None):

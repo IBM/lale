@@ -13,22 +13,15 @@
 # limitations under the License.
 
 import autoai_libs.transformers.exportable
-import numpy as np
 
 import lale.docstrings
 import lale.operators
 
 
 class _NumpyReplaceMissingValuesImpl:
-    def __init__(self, missing_values, filling_values=np.nan):
-        self._hyperparams = {
-            "missing_values": missing_values,
-            "filling_values": filling_values,
-        }
+    def __init__(self, **hyperparams):
         self._wrapped_model = (
-            autoai_libs.transformers.exportable.NumpyReplaceMissingValues(
-                **self._hyperparams
-            )
+            autoai_libs.transformers.exportable.NumpyReplaceMissingValues(**hyperparams)
         )
 
     def fit(self, X, y=None):

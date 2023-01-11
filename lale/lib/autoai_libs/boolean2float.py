@@ -22,10 +22,11 @@ import lale.operators
 
 
 class _boolean2floatImpl:
-    def __init__(self, activate_flag=True):
-        self._hyperparams = {"activate_flag": activate_flag}
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
+
         self._wrapped_model = autoai_libs.transformers.exportable.boolean2float(
-            **self._hyperparams
+            **hyperparams
         )
 
     def fit(self, X, y=None):

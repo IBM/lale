@@ -19,23 +19,9 @@ import lale.operators
 
 
 class _NumpyReplaceUnknownValuesImpl:
-    def __init__(
-        self,
-        known_values_list=None,
-        filling_values=None,
-        missing_values_reference_list=None,
-        filling_values_list=None,
-    ):
-        self._hyperparams = {
-            "known_values_list": known_values_list,
-            "filling_values": filling_values,
-            "missing_values_reference_list": missing_values_reference_list,
-            "filling_values_list": filling_values_list,
-        }
+    def __init__(self, **hyperparams):
         self._wrapped_model = (
-            autoai_libs.transformers.exportable.NumpyReplaceUnknownValues(
-                **self._hyperparams
-            )
+            autoai_libs.transformers.exportable.NumpyReplaceUnknownValues(**hyperparams)
         )
 
     def fit(self, X, y=None):

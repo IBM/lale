@@ -19,21 +19,9 @@ import lale.operators
 
 
 class _OptStandardScalerImpl:
-    def __init__(
-        self,
-        use_scaler_flag=True,
-        num_scaler_copy=True,
-        num_scaler_with_mean=True,
-        num_scaler_with_std=True,
-    ):
-        self._hyperparams = {
-            "use_scaler_flag": use_scaler_flag,
-            "num_scaler_copy": num_scaler_copy,
-            "num_scaler_with_mean": num_scaler_with_mean,
-            "num_scaler_with_std": num_scaler_with_std,
-        }
+    def __init__(self, **hyperparams):
         self._wrapped_model = autoai_libs.transformers.exportable.OptStandardScaler(
-            **self._hyperparams
+            **hyperparams
         )
 
     def fit(self, X, y=None):

@@ -20,9 +20,9 @@ import lale.operators
 
 
 class _CatImputerImpl:
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **hyperparams):
         self._wrapped_model = autoai_libs.transformers.exportable.CatImputer(
-            *args, **kwargs
+            *args, **hyperparams
         )
 
     def fit(self, X, y=None, **fit_params):

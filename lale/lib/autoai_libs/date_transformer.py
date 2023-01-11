@@ -22,24 +22,8 @@ import lale.operators
 
 
 class _DateTransformerImpl:
-    def __init__(
-        self,
-        options=None,
-        delete_source_columns=True,
-        column_headers_list=None,
-        missing_values_reference_list=None,
-        activate_flag=True,
-        float32_processing_flag=True,
-    ):
-        self._hyperparams = {
-            "options": options,
-            "delete_source_columns": delete_source_columns,
-            "column_headers_list": column_headers_list,
-            "missing_values_reference_list": missing_values_reference_list,
-            "activate_flag": activate_flag,
-            "float32_processing_flag": float32_processing_flag,
-        }
-        self._wrapped_model = model_to_be_wrapped(**self._hyperparams)
+    def __init__(self, **hyperparams):
+        self._wrapped_model = model_to_be_wrapped(**hyperparams)
 
     def fit(self, X, y=None):
         if isinstance(X, pd.DataFrame):
