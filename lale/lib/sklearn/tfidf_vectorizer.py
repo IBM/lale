@@ -24,9 +24,8 @@ class _TfidfVectorizerImpl:
     def __init__(self, **hyperparams):
         if "dtype" in hyperparams and hyperparams["dtype"] == "float64":
             hyperparams = {**hyperparams, "dtype": np.float64}
-        self._hyperparams = hyperparams
         self._wrapped_model = sklearn.feature_extraction.text.TfidfVectorizer(
-            **self._hyperparams
+            **hyperparams
         )
 
     def fit(self, X, y=None):

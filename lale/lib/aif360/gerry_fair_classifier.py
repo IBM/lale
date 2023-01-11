@@ -1,4 +1,4 @@
-# Copyright 2020, 2021 IBM Corporation
+# Copyright 2020-2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -38,16 +38,9 @@ class _GerryFairClassifierImpl(_BaseInEstimatorImpl):
         unfavorable_labels=None,
         redact=True,
         preparation=None,
-        C=10,
-        printflag=False,
-        heatmapflag=False,
-        heatmap_iter=10,
-        heatmap_path=".",
-        max_iters=10,
-        gamma=0.01,
-        fairness_def="FP",
-        predictor=None,
+        **hyperparams,
     ):
+        predictor = hyperparams.get("predictor", None)
         if predictor is None:
             predictor = sklearn.linear_model.LinearRegression()
         if isinstance(predictor, lale.operators.Operator):
@@ -57,17 +50,8 @@ class _GerryFairClassifierImpl(_BaseInEstimatorImpl):
                 raise ValueError(
                     "If predictor is a Lale operator, it needs to be an individual operator."
                 )
-        mitigator = aif360.algorithms.inprocessing.GerryFairClassifier(
-            C=C,
-            printflag=printflag,
-            heatmapflag=heatmapflag,
-            heatmap_iter=heatmap_iter,
-            heatmap_path=heatmap_path,
-            max_iters=max_iters,
-            gamma=gamma,
-            fairness_def=fairness_def,
-            predictor=predictor,
-        )
+        hyperparams["predictor"] = predictor
+        mitigator = aif360.algorithms.inprocessing.GerryFairClassifier(**hyperparams)
         super().__init__(
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,

@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,21 +23,23 @@ class _BothImpl:
     # but with a smaller search space
     def __init__(self, op1, op2, order: str = "forward"):
         self._hyperparams = {"order": order, "op1": op1, "op2": op2}
+        self._pipeline = None
 
     def getPipeline(self):
+        if self._pipeline is not None:
+            return self._pipeline
         params = self._hyperparams
         op1 = params.get("op1", None)
         if op1 is None:
-            op1 = NoOp()
-
+            op1 = NoOp
         op2 = params.get("op2", None)
         if op2 is None:
-            op2 = NoOp()
-
+            op2 = NoOp
         if params["order"] == "backward":
-            return op2 >> op1
+            self._pipeline = op2 >> op1
         else:
-            return op1 >> op2
+            self._pipeline = op1 >> op2
+        return self._pipeline
 
     def transform(self, X, y=None):
         return self.getPipeline().transform(X, y=y)
@@ -52,7 +54,8 @@ class _BothImpl:
         return self.getPipeline().predict_proba(X)
 
     def fit(self, X, y=None, **fit_params):
-        return self.getPipeline().fit(X, y=y, **fit_params)
+        self._pipeline = self.getPipeline().fit(X, y=y, **fit_params)
+        return self
 
     # def get_feature_names(self, input_features=None):
     #     if input_features is not None:

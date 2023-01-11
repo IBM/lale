@@ -1,4 +1,4 @@
-# Copyright 2020 IBM Corporation
+# Copyright 2020-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@ import lale.operators
 
 
 class _NumImputerImpl:
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **hyperparams):
         self._wrapped_model = autoai_libs.transformers.exportable.NumImputer(
-            *args, **kwargs
+            *args, **hyperparams
         )
 
     def fit(self, X, y=None, **fit_params):
@@ -132,7 +132,7 @@ _combined_schemas = {
 NumImputer = lale.operators.make_operator(_NumImputerImpl, _combined_schemas)
 
 autoai_libs_version_str = getattr(autoai_libs, "__version__", None)
-if autoai_libs_version_str is not None:
+if isinstance(autoai_libs_version_str, str):  # beware sphinx _MockModule
     import typing
 
     from packaging import version

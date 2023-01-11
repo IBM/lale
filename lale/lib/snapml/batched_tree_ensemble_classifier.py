@@ -32,27 +32,15 @@ def _ensure_numpy(data):
 
 
 class _BatchedTreeEnsembleClassifierImpl:
-    def __init__(
-        self,
-        base_ensemble=None,
-        max_sub_ensembles=10,
-        inner_lr_scaling=0.5,
-        outer_lr_scaling=0.5,
-    ):
+    def __init__(self, **hyperparams):
         assert (
             snapml_installed
         ), """Your Python environment does not have snapml installed. Install using: pip install snapml"""
-        if base_ensemble is None:
+        if hyperparams.get("base_ensemble", None) is None:
             from snapml import SnapBoostingMachineClassifier
 
-            base_ensemble = SnapBoostingMachineClassifier()
-        self._hyperparams = {
-            "base_ensemble": base_ensemble,
-            "max_sub_ensembles": max_sub_ensembles,
-            "inner_lr_scaling": inner_lr_scaling,
-            "outer_lr_scaling": outer_lr_scaling,
-        }
-        self._wrapped_model = snapml.BatchedTreeEnsembleClassifier(**self._hyperparams)
+            hyperparams["base_ensemble"] = SnapBoostingMachineClassifier()
+        self._wrapped_model = snapml.BatchedTreeEnsembleClassifier(**hyperparams)
 
     def fit(self, X, y, **fit_params):
         X = _ensure_numpy(X)

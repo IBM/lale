@@ -1141,6 +1141,30 @@ disparate_impact_remover = DisparateImpactRemover(
 pipeline = disparate_impact_remover >> KNeighborsClassifier()"""
         self._roundtrip(expected, pipeline.pretty_print())
 
+    def test_snap_logistic_regression_1(self):
+        # force printing arguments via "transient": "alwaysPrint", case True
+        from lale.lib.snapml import SnapLogisticRegression
+
+        pipeline = SnapLogisticRegression(normalize=True)
+        expected = """from snapml import SnapLogisticRegression
+import lale
+
+lale.wrap_imported_operators()
+pipeline = SnapLogisticRegression(fit_intercept=True, normalize=True)"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
+    def test_snap_logistic_regression_2(self):
+        # force printing arguments via "transient": "alwaysPrint", case False
+        from lale.lib.snapml import SnapLogisticRegression
+
+        pipeline = SnapLogisticRegression(normalize=False)
+        expected = """from snapml import SnapLogisticRegression
+import lale
+
+lale.wrap_imported_operators()
+pipeline = SnapLogisticRegression(normalize=False, fit_intercept=True)"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
 
 class TestToAndFromJSON(unittest.TestCase):
     def test_trainable_individual_op(self):

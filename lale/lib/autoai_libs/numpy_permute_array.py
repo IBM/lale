@@ -19,10 +19,9 @@ import lale.operators
 
 
 class _NumpyPermuteArrayImpl:
-    def __init__(self, permutation_indices=None, axis=None):
-        self._hyperparams = {"permutation_indices": permutation_indices, "axis": axis}
+    def __init__(self, **hyperparams):
         self._wrapped_model = autoai_libs.transformers.exportable.NumpyPermuteArray(
-            **self._hyperparams
+            **hyperparams
         )
 
     def fit(self, X, y=None):

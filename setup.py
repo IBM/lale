@@ -40,7 +40,7 @@ if on_rtd:
     install_requires = []
 else:
     install_requires = [
-        "numpy",
+        "numpy<1.24",
         "black>=22.1.0",
         "click==8.0.4",
         "graphviz",
@@ -85,12 +85,14 @@ extras_require = {
     "dev": ["pre-commit"],
     "test": [
         "joblib",
+        "ipython<8.8.0",
         "jupyter",
         "sphinx>=5.0.0",
         "sphinx_rtd_theme>=0.5.2",
         "docutils<0.17",
         "m2r2",
         "sphinxcontrib.apidoc",
+        "sphinxcontrib-svg2pdfconverter",
         "pytest",
         "pyspark",
         "func_timeout",
@@ -100,10 +102,12 @@ extras_require = {
     "fairness": [
         "liac-arff>=2.4.0",
         "aif360<0.6.0",
+        "imbalanced-learn",
         "protobuf<=3.20.1",
         "BlackBoxAuditing",
     ],
     "tutorial": [
+        "ipython<8.8.0",
         "jupyter",
         "xgboost<=1.5.1",
         "imbalanced-learn",

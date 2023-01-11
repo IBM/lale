@@ -24,39 +24,12 @@ import lale.operators
 
 
 class _SnapDecisionTreeClassifierImpl:
-    def __init__(
-        self,
-        criterion="gini",
-        splitter="best",
-        max_depth=None,
-        min_samples_leaf=1,
-        max_features=None,
-        random_state=None,
-        n_jobs=1,
-        use_histograms=True,
-        hist_nbins=256,
-        use_gpu=False,
-        gpu_id=0,
-        verbose=False,
-    ):
+    def __init__(self, **hyperparams):
         assert (
             snapml_installed
         ), """Your Python environment does not have snapml installed. Install using: pip install snapml"""
-        self._hyperparams = {
-            "criterion": criterion,
-            "splitter": splitter,
-            "max_depth": max_depth,
-            "min_samples_leaf": min_samples_leaf,
-            "max_features": max_features,
-            "random_state": random_state,
-            "n_jobs": n_jobs,
-            "use_histograms": use_histograms,
-            "hist_nbins": hist_nbins,
-            "use_gpu": use_gpu,
-            "gpu_id": gpu_id,
-            "verbose": verbose,
-        }
-        self._wrapped_model = snapml.SnapDecisionTreeClassifier(**self._hyperparams)
+
+        self._wrapped_model = snapml.SnapDecisionTreeClassifier(**hyperparams)
 
     def fit(self, X, y, **fit_params):
         X = lale.datasets.data_schemas.strip_schema(X)

@@ -29,13 +29,9 @@ jobs:
           ${{ runner.os }}-pip-new3
           ${{ runner.os }}-new3
     - name: Install numpy
-      run: pip install -U numpy
-    - name: Install autoai-libs from regular pypi for Python 3.7 and 3.8
-      if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
-      run: pip install autoai-libs>=1.12.6
-    - name: Install autoai-libs from test pypi for Python 3.9 and 3.10
-      if: ${{ matrix.python-version == 3.9 || matrix.python-version == '3.10'}}
-      run: pip install autoai-libs>=1.13.6
+      run: pip install -U 'numpy<1.24'
+    - name: Install autoai-libs from pypi
+      run: pip install "autoai-libs>=1.12.6"
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager .[full,test]
     - name: pip list packages
@@ -46,6 +42,42 @@ jobs:
         pipdeptree -fl
     - name: pre-commit checks
       uses: pre-commit/action@v3.0.0
+
+  docs:
+    name: Documentation build
+    runs-on: ubuntu-latest
+    needs: [static]
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.8
+    - name: Cache pip
+      uses: actions/cache@v3
+      with:
+        # This path is specific to Ubuntu
+        path: ${{ env.pythonLocation }}
+        # Look to see if there is a cache hit for the setup file
+        key: ${{ runner.os }}-pip-new3-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-new3
+          ${{ runner.os }}-new3
+    - name: Install doc dependencies
+      run: pip install -r docs/requirements.txt
+    - name: Install lale
+      run: pip install --no-dependencies -e .
+    - name: pip list packages
+      run: pip list
+    - name: Install latex (used for math notation in sphinx)
+      run: >
+        sudo apt-get update -y &&
+        sudo apt-get install -y
+        latexmk texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended
+        dvipng librsvg2-bin
+    - name: Run sphinx
+      run: sphinx-build "." "_build" -W --keep-going
+      working-directory: ./docs
 
   # test_matrix_pr and test_matrix_master have a lot of redundancy
   # If GitHub actions adds support for conditional matrix expressions
@@ -110,9 +142,9 @@ jobs:
           setup-target: '.[test]'
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install system packages
@@ -128,13 +160,9 @@ jobs:
           ${{ runner.os }}-pip-new3
           ${{ runner.os }}-new3
     - name: Install numpy
-      run: pip install -U numpy
-    - name: Install autoai-libs from regular pypi for Python 3.7 and 3.8
-      if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
-      run: pip install autoai-libs>=1.12.6
-    - name: Install autoai-libs from test pypi for Python 3.9 and 3.10
-      if: ${{ matrix.python-version == 3.9 || matrix.python-version == '3.10'}}
-      run: pip install autoai-libs>=1.13.6
+      run: pip install -U 'numpy<1.24'
+    - name: Install autoai-libs from pypi
+      run: pip install "autoai-libs>=1.12.6"
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Install deps for test_autoai_output_consumption
@@ -151,7 +179,7 @@ jobs:
       run: pip install 'scikit-learn>=1.0'
     - name: Install deps for test_snapml
       if: ${{ matrix.test-case == 'test/test_snapml.py' }}
-      run: pip install 'numpy>=1.20.1'
+      run: pip install 'numpy>=1.20.1,<1.24'
     - name: Install deps for test_core_pipeline with scipy 1.5.4
       if: ${{ matrix.test-case == 'test/test_core_pipeline.py' }}
       run: pip install 'scipy==1.5.4'
@@ -226,9 +254,9 @@ jobs:
           setup-target: '.[full,test]'
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install system packages
@@ -244,13 +272,9 @@ jobs:
           ${{ runner.os }}-pip-new3
           ${{ runner.os }}-new3
     - name: Install numpy
-      run: pip install -U numpy
-    - name: Install autoai-libs from regular pypi for Python 3.7 and 3.8
-      if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
-      run: pip install autoai-libs>=1.12.6
-    - name: Install autoai-libs from test pypi for Python 3.9 and 3.10
-      if: ${{ matrix.python-version == 3.9  || matrix.python-version == '3.10'}}
-      run: pip install autoai-libs>=1.13.6
+      run: pip install -U 'numpy<1.24'
+    - name: Install autoai-libs from pypi
+      run: pip install "autoai-libs>=1.12.6"
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Install deps for test_autoai_output_consumption
@@ -267,7 +291,7 @@ jobs:
       run: pip install 'scikit-learn>=1.0'
     - name: Install deps for test_snapml
       if: ${{ matrix.test-case == 'test/test_snapml.py' }}
-      run: pip install 'numpy>=1.20.1'
+      run: pip install 'numpy>=1.20.1,<1.24'
     - name: Imbalanced learn version for Python 3.8
       if: ${{ matrix.test-case == 'test/test_interoperability.py' &&  matrix.python-version == 3.8}}
       run: pip install 'imbalanced-learn==0.9.0' 'scikit-learn==1.0.2'
@@ -294,9 +318,9 @@ jobs:
         python-version: ['3.10']
         setup-target: ['.']
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install system packages
@@ -312,7 +336,7 @@ jobs:
           ${{ runner.os }}-pip-new3
           ${{ runner.os }}-new3
     - name: Install numpy
-      run: pip install -U numpy
+      run: pip install -U 'numpy<1.24'
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Install pytest
@@ -327,6 +351,7 @@ jobs:
         pipdeptree -fl
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
+      continue-on-error: true  # we may not yet support the latest scikit-learn version
 
   test_notebooks_pr:
     name: Test Notebooks (PR)
@@ -355,9 +380,9 @@ jobs:
           # nbexcludes: '06_multobj.ipynb'
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache pip
@@ -373,7 +398,10 @@ jobs:
     - name: Install packages
       run: sudo apt-get install graphviz swig
     - name: Install numpy
-      run: pip install -U numpy
+      run: pip install -U 'numpy<1.24'
+    - name: Install autoai-libs from pypi
+      if: ${{ matrix.category == 'demo_' }}
+      run: pip install "autoai-libs>=1.12.6"
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: pip list packages
@@ -431,9 +459,9 @@ jobs:
           # nbexcludes: '06_multobj.ipynb'
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Cache pip
@@ -449,7 +477,10 @@ jobs:
     - name: Install packages
       run: sudo apt-get install graphviz swig
     - name: Install numpy
-      run: pip install -U numpy
+      run: pip install -U 'numpy<1.24'
+    - name: Install autoai-libs from pypi
+      if: ${{ matrix.category == 'demo_' }}
+      run: pip install "autoai-libs>=1.12.6"
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: pip list packages
@@ -478,15 +509,15 @@ jobs:
         python-version: [3.7]
         setup-target: ['.[fairness]']
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install system packages
       run: sudo apt-get install graphviz swig
     - name: Install numpy
-      run: pip install -U numpy
+      run: pip install -U 'numpy<1.24'
     - name: Install pytest
       run: pip install pytest
     - name: Install dependencies
@@ -505,14 +536,14 @@ jobs:
     runs-on: ubuntu-latest
     # This should run only on the master branch of the main repo
     if: github.repository == 'IBM/lale' && github.ref == 'refs/heads/master' && success()
-    needs: [static, test_matrix_master, test_newer, test_fairness, test_notebooks_master]
+    needs: [static, test_matrix_master, test_newer, test_fairness, test_notebooks_master, docs]
     strategy:
       matrix:
         python-version: [3.7]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies

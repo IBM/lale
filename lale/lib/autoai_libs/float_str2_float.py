@@ -19,16 +19,9 @@ import lale.operators
 
 
 class _FloatStr2FloatImpl:
-    def __init__(
-        self, dtypes_list, missing_values_reference_list=None, activate_flag=True
-    ):
-        self._hyperparams = {
-            "dtypes_list": dtypes_list,
-            "missing_values_reference_list": missing_values_reference_list,
-            "activate_flag": activate_flag,
-        }
+    def __init__(self, **hyperparams):
         self._wrapped_model = autoai_libs.transformers.exportable.FloatStr2Float(
-            **self._hyperparams
+            **hyperparams
         )
 
     def fit(self, X, y=None):

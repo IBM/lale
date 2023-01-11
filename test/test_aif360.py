@@ -1,4 +1,4 @@
-# Copyright 2020-2022 IBM Corporation
+# Copyright 2020-2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -55,6 +55,7 @@ from lale.lib.aif360 import (
     CalibratedEqOddsPostprocessing,
     DisparateImpactRemover,
     EqOddsPostprocessing,
+    FairSMOTE,
     GerryFairClassifier,
     MetaFairClassifier,
     OptimPreproc,
@@ -591,6 +592,12 @@ class TestAIF360Num(unittest.TestCase):
         estim = LogisticRegression(max_iter=1000)
         trainable_remi = EqOddsPostprocessing(**fairness_info, estimator=estim)
         self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.82, 1.02)
+
+    def test_fair_smote_pd_num(self):
+        fairness_info = self.creditg_pd_num["fairness_info"]
+        estim = LogisticRegression(max_iter=1000)
+        trainable_remi = FairSMOTE(estimator=estim, **fairness_info)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.70, 0.92)
 
     def test_gerry_fair_classifier_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
@@ -1143,6 +1150,12 @@ class TestAIF360Cat(unittest.TestCase):
         estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
         trainable_remi = EqOddsPostprocessing(**fairness_info, estimator=estim)
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.82, 1.02)
+
+    def test_fair_smote_pd_cat(self):
+        fairness_info = self.creditg_pd_cat["fairness_info"]
+        estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
+        trainable_remi = FairSMOTE(estimator=estim, **fairness_info)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.85, 1.05)
 
     def test_gerry_fair_classifier_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]

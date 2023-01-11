@@ -71,8 +71,7 @@ class _XGBClassifierImpl:
 
     def __init__(self, **hyperparams):
         self.validate_hyperparams(**hyperparams)
-        self._hyperparams = hyperparams
-        self._wrapped_model = xgboost.XGBClassifier(**self._hyperparams)
+        self._wrapped_model = xgboost.XGBClassifier(**hyperparams)
 
     def fit(self, X, y, **fit_params):
         renamed_X = _rename_all_features(X)
@@ -759,7 +758,7 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
             "default": None,
         },
         importance_type={
-            "description": "The feature importance type for the feature_importances_ property.",
+            "description": "The feature importance type for the `feature_importances_` property.",
             "enum": ["gain", "weight", "cover", "total_gain", "total_cover", None],
             "default": "gain",
         },

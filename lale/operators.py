@@ -2015,6 +2015,9 @@ class IndividualOp(Operator):
         hyperparam_obj = next(iter(self.hyperparam_schema().get("allOf", [])))
         original = hyperparam_obj.get("properties")
 
+        def is_for_optimizer(s) -> bool:
+            return ("forOptimizer" not in s) or s["forOptimizer"]
+
         def is_relevant(hp, s):
             if "relevantToOptimizer" in hyperparam_obj:
                 return hp in hyperparam_obj["relevantToOptimizer"]
@@ -2023,12 +2026,14 @@ class IndividualOp(Operator):
         relevant = {hp: s for hp, s in original.items() if is_relevant(hp, s)}
 
         def pick_one_type(schema):
+            if not is_for_optimizer(schema):
+                return None
             if "anyOf" in schema:
 
                 def by_type(typ):
                     for s in schema["anyOf"]:
                         if "type" in s and s["type"] == typ:
-                            if ("forOptimizer" not in s) or s["forOptimizer"]:
+                            if is_for_optimizer(s):
                                 return s
                     return None
 
@@ -2041,10 +2046,10 @@ class IndividualOp(Operator):
                     enums = []
                     for s in schema["anyOf"]:
                         if "enum" in s:
-                            if ("forOptimizer" not in s) or s["forOptimizer"]:
+                            if is_for_optimizer(s):
                                 enums.append(s)
                         elif s.get("type", None) == "boolean":
-                            if ("forOptimizer" not in s) or s["forOptimizer"]:
+                            if is_for_optimizer(s):
                                 bool_s = {"enum": [False, True]}
                                 d = s.get("default", None)
                                 if d is not None:
@@ -2068,11 +2073,15 @@ class IndividualOp(Operator):
                                     new_s["default"] = s["default"]
                                     break
                         return new_s
-
-                return schema["anyOf"][0]
+                if len(schema["anyOf"]) > 0 and is_for_optimizer(schema["anyOf"][0]):
+                    return schema["anyOf"][0]
+                else:
+                    return None
             return schema
 
-        unityped = {hp: pick_one_type(relevant[hp]) for hp in relevant}
+        unityped_with_none = {hp: pick_one_type(relevant[hp]) for hp in relevant}
+
+        unityped = {k: v for k, v in unityped_with_none.items() if v is not None}
 
         def add_default(schema):
             if "type" in schema:

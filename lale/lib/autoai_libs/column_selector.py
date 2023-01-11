@@ -20,13 +20,9 @@ import lale.operators
 
 
 class _ColumnSelectorImpl:
-    def __init__(self, columns_indices_list=None, activate_flag=True):
-        self._hyperparams = {
-            "columns_indices_list": columns_indices_list,
-            "activate_flag": activate_flag,
-        }
+    def __init__(self, **hyperparams):
         self._wrapped_model = autoai_libs.transformers.exportable.ColumnSelector(
-            **self._hyperparams
+            **hyperparams
         )
 
     def fit(self, X, y=None):

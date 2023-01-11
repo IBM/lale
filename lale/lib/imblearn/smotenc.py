@@ -1,4 +1,4 @@
-# Copyright 2019-2023 IBM Corporation
+# Copyright 2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import imblearn.over_sampling
+import numpy as np
 
 import lale.docstrings
 import lale.operators
@@ -23,9 +24,9 @@ from ._common_schemas import (
     _hparam_operator,
     _hparam_random_state,
     _hparam_sampling_strategy_anyof_neoc,
-    _input_fit_schema,
-    _input_predict_schema,
-    _input_transform_schema,
+    _input_fit_schema_cats,
+    _input_predict_schema_cats,
+    _input_transform_schema_cats,
     _output_decision_function_schema,
     _output_predict_proba_schema,
     _output_predict_schema,
@@ -34,13 +35,22 @@ from ._common_schemas import (
 from .base_resampler import _BaseResamplerImpl
 
 
-class _SMOTEImpl(_BaseResamplerImpl):
+class _SMOTENCImpl(_BaseResamplerImpl):
     def __init__(self, operator=None, **hyperparams):
         if operator is None:
             raise ValueError("Operator is a required argument.")
+        self._hyperparams = hyperparams
 
-        resampler_instance = imblearn.over_sampling.SMOTE(**hyperparams)
-        super().__init__(operator=operator, resampler=resampler_instance)
+        super().__init__(operator=operator, resampler=None)
+
+    def fit(self, X, y=None):
+        if self.resampler is None:
+            if self._hyperparams["categorical_features"] is None:
+                self._hyperparams["categorical_features"] = [
+                    not np.issubdtype(typ, np.number) for typ in X.dtypes
+                ]
+            self.resampler = imblearn.over_sampling.SMOTENC(**self._hyperparams)
+        return super().fit(X, y)
 
 
 _hyperparams_schema = {
@@ -48,10 +58,30 @@ _hyperparams_schema = {
         {
             "type": "object",
             "required": ["operator"],
-            "relevantToOptimizer": ["operator", "sampling_strategy"],
+            "relevantToOptimizer": ["operator"],
             "additionalProperties": False,
             "properties": {
                 "operator": _hparam_operator,
+                "categorical_features": {
+                    "description": "Specifies which features are categorical.",
+                    "anyOf": [
+                        {
+                            "description": "Treat all features with non-numeric dtype as categorical.",
+                            "enum": [None],
+                        },
+                        {
+                            "description": "Indices specifying the categorical features.",
+                            "type": "array",
+                            "items": {"type": "integer"},
+                        },
+                        {
+                            "description": "Mask array of shape `(n_features,)` where True indicates the categorical features.",
+                            "type": "array",
+                            "items": {"type": "boolean"},
+                        },
+                    ],
+                    "default": None,
+                },
                 "sampling_strategy": _hparam_sampling_strategy_anyof_neoc,
                 "random_state": _hparam_random_state,
                 "k_neighbors": {
@@ -67,8 +97,9 @@ _hyperparams_schema = {
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": """Class to perform over-sampling using Synthetic Minority Over-sampling Technique (SMOTE).""",
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.imblearn.smote.html",
+    "description": """Synthetic Minority Over-sampling Technique for Nominal and Continuous (SMOTENC).
+Can handle some nominal features, but not designed to work with only nominal features.""",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.imblearn.smotenc.html",
     "import_from": "imblearn.over_sampling",
     "type": "object",
     "tags": {
@@ -82,19 +113,19 @@ _combined_schemas = {
     },
     "properties": {
         "hyperparams": _hyperparams_schema,
-        "input_fit": _input_fit_schema,
-        "input_transform": _input_transform_schema,
+        "input_fit": _input_fit_schema_cats,
+        "input_transform": _input_transform_schema_cats,
         "output_transform": _output_transform_schema,
-        "input_predict": _input_predict_schema,
+        "input_predict": _input_predict_schema_cats,
         "output_predict": _output_predict_schema,
-        "input_predict_proba": _input_predict_schema,
+        "input_predict_proba": _input_predict_schema_cats,
         "output_predict_proba": _output_predict_proba_schema,
-        "input_decision_function": _input_predict_schema,
+        "input_decision_function": _input_predict_schema_cats,
         "output_decision_function": _output_decision_function_schema,
     },
 }
 
 
-SMOTE = lale.operators.make_operator(_SMOTEImpl, _combined_schemas)
+SMOTENC = lale.operators.make_operator(_SMOTENCImpl, _combined_schemas)
 
-lale.docstrings.set_docstrings(SMOTE)
+lale.docstrings.set_docstrings(SMOTENC)

@@ -1,4 +1,4 @@
-# Copyright 2019-2022 IBM Corporation
+# Copyright 2019-2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -430,8 +430,12 @@ def _op_to_json_rec(
                 hyperparams = {
                     k: v
                     for k, v in hyperparams.items()
-                    if not hp_schema.get(k, {}).get("transient", False)
+                    if hp_schema.get(k, {}).get("transient", False) is not True
                 }
+                for k, s in hp_schema.items():
+                    if s.get("transient", False) == "alwaysPrint":
+                        if k not in hyperparams and "default" in s:
+                            hyperparams[k] = s["default"]
                 steps: Dict[str, JSON_TYPE] = {}
                 jsn["hyperparams"] = _hps_to_json_rec(
                     hyperparams, cls2label, gensym, steps, add_custom_default
@@ -571,7 +575,8 @@ def _op_from_json_rec(jsn: JSON_TYPE) -> "lale.operators.Operator":
             or jsn["state"] == "trained"
             and jsn["coefs"] == "coefs_not_available"
         )
-        assert result.documentation_url() == jsn["documentation_url"]
+        if "documentation_url" in jsn:
+            assert result.documentation_url() == jsn["documentation_url"]
         return result
     assert False, f"unexpected JSON {jsn}"
 

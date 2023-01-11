@@ -24,62 +24,15 @@ import lale.operators
 
 
 class _SnapLinearRegressionImpl:
-    def __init__(
-        self,
-        max_iter=1000,
-        regularizer=1.0,
-        use_gpu=False,
-        device_ids=None,
-        dual=True,
-        verbose=False,
-        n_jobs=1,
-        penalty="l2",
-        tol=0.001,
-        generate_training_history=None,
-        privacy=False,
-        eta=0.3,
-        batch_size=100,
-        privacy_epsilon=10,
-        grad_clip=1,
-        fit_intercept=False,
-        intercept_scaling=1.0,
-        normalize=False,
-        kernel="linear",
-        gamma=1.0,
-        n_components=100,
-        random_state=None,
-    ):
+    def __init__(self, **hyperparams):
         assert (
             snapml_installed
         ), """Your Python environment does not have snapml installed. Install using: pip install snapml"""
-        self._hyperparams = {
-            "max_iter": max_iter,
-            "regularizer": regularizer,
-            "use_gpu": use_gpu,
-            "device_ids": device_ids,
-            "dual": dual,
-            "verbose": verbose,
-            "n_jobs": n_jobs,
-            "penalty": penalty,
-            "tol": tol,
-            "generate_training_history": generate_training_history,
-            "privacy": privacy,
-            "eta": eta,
-            "batch_size": batch_size,
-            "privacy_epsilon": privacy_epsilon,
-            "grad_clip": grad_clip,
-            "fit_intercept": fit_intercept,
-            "intercept_scaling": intercept_scaling,
-            "normalize": normalize,
-            "kernel": kernel,
-            "gamma": gamma,
-            "n_components": n_components,
-            "random_state": random_state,
-        }
-        modified_hps = {**self._hyperparams}
-        if modified_hps["device_ids"] is None:
-            modified_hps["device_ids"] = []  # TODO: support list as default
-        self._wrapped_model = snapml.LinearRegression(**modified_hps)
+
+        if hyperparams.get("device_ids", None) is None:
+            hyperparams["device_ids"] = []
+
+        self._wrapped_model = snapml.LinearRegression(**hyperparams)
 
     def fit(self, X, y, **fit_params):
         X = lale.datasets.data_schemas.strip_schema(X)
