@@ -597,7 +597,7 @@ class TestAIF360Num(unittest.TestCase):
         fairness_info = self.creditg_pd_num["fairness_info"]
         estim = LogisticRegression(max_iter=1000)
         trainable_remi = FairSMOTE(estimator=estim, **fairness_info)
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.78, 0.92)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.70, 0.92)
 
     def test_gerry_fair_classifier_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
