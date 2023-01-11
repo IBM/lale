@@ -58,7 +58,7 @@ class _AdversarialDebiasingImpl(_BaseInEstimatorImpl):
 or with
     pip install 'lale[full]'"""
         tf_version = packaging.version.parse(getattr(tf, "__version__"))
-        assert packaging.version.Version("1.13.1") <= tf_version
+        assert packaging.version.Version("1.13.1") <= tf_version, tf_version
         self.scope_name = scope_name
         self.protected_attributes = protected_attributes
         self.favorable_labels = favorable_labels
