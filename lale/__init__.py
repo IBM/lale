@@ -14,7 +14,7 @@
 
 import sys
 
-__version__ = "0.7.2"
+__version__ = "0.7.3"
 
 try:
     # This variable is injected in the __builtins__ by the build
