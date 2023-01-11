@@ -92,6 +92,7 @@ extras_require = {
         "docutils<0.17",
         "m2r2",
         "sphinxcontrib.apidoc",
+        "sphinxcontrib-svg2pdfconverter",
         "pytest",
         "pyspark",
         "func_timeout",

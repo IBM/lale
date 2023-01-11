@@ -63,8 +63,6 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-pip-new3
           ${{ runner.os }}-new3
-    - name: Install sphinx
-      run: pip install "sphinx>=5.0.0" "sphinx_rtd_theme>=0.5.2" "sphinxcontrib.apidoc"
     - name: Install doc dependencies
       run: pip install -r docs/requirements.txt
     - name: Install lale
@@ -76,7 +74,7 @@ jobs:
         sudo apt-get update -y &&
         sudo apt-get install -y
         latexmk texlive-latex-recommended texlive-latex-extra texlive-fonts-recommended
-        dvipng
+        dvipng librsvg2-bin
     - name: Run sphinx
       run: sphinx-build "." "_build" -W --keep-going
       working-directory: ./docs
