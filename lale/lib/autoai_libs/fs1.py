@@ -19,14 +19,9 @@ import lale.operators
 
 
 class _FS1Impl:
-    def __init__(self, cols_ids_must_keep, additional_col_count_to_keep, ptype):
-        self._hyperparams = {
-            "cols_ids_must_keep": cols_ids_must_keep,
-            "additional_col_count_to_keep": additional_col_count_to_keep,
-            "ptype": ptype,
-        }
+    def __init__(self, **hyperparams):
         self._wrapped_model = autoai_libs.cognito.transforms.transform_utils.FS1(
-            **self._hyperparams
+            **hyperparams
         )
 
     def fit(self, X, y=None, **fit_params):

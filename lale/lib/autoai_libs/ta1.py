@@ -20,31 +20,11 @@ import lale.operators
 
 
 class _TA1Impl:
-    def __init__(
-        self,
-        fun,
-        name=None,
-        datatypes=None,
-        feat_constraints=None,
-        tgraph=None,
-        apply_all=None,
-        col_names=None,
-        col_dtypes=None,
-        col_as_json_objects=None,
-    ):
-        self._hyperparams = {
-            "fun": fun,
-            "name": name,
-            "datatypes": datatypes,
-            "feat_constraints": feat_constraints,
-            "tgraph": tgraph,
-            "apply_all": apply_all,
-            "col_names": col_names,
-            "col_dtypes": col_dtypes,
-            "col_as_json_objects": col_as_json_objects,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
+
         self._wrapped_model = autoai_libs.cognito.transforms.transform_utils.TA1(
-            **self._hyperparams
+            **hyperparams
         )
 
     def fit(self, X, y=None, **fit_params):

@@ -19,16 +19,9 @@ import lale.operators
 
 
 class _TNoOpImpl:
-    def __init__(self, fun, name, datatypes, feat_constraints, tgraph=None):
-        self._hyperparams = {
-            "fun": fun,
-            "name": name,
-            "datatypes": datatypes,
-            "feat_constraints": feat_constraints,
-            "tgraph": tgraph,
-        }
+    def __init__(self, **hyperparams):
         self._wrapped_model = autoai_libs.cognito.transforms.transform_utils.TNoOp(
-            **self._hyperparams
+            **hyperparams
         )
 
     def fit(self, X, y=None, **fit_params):

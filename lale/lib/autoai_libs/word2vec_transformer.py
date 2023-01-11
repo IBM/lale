@@ -21,34 +21,16 @@ import lale.operators
 # This is currently needed just to hide get_params so that lale does not call clone
 # when doing a defensive copy
 class _Word2VecTransformerImpl:
-    def __init__(
-        self,
-        output_dim=30,
-        column_headers_list=None,
-        svd_num_iter=5,
-        drop_columns=False,
-        activate_flag=True,
-        min_count=5,
-        text_columns=None,
-        text_processing_options=None,
-    ):
-        if column_headers_list is None:
-            column_headers_list = []
-        if text_processing_options is None:
-            text_processing_options = {}
-        self._hyperparams = {
-            "output_dim": output_dim,
-            "column_headers_list": column_headers_list,
-            "svd_num_iter": svd_num_iter,
-            "drop_columns": drop_columns,
-            "activate_flag": activate_flag,
-            "min_count": min_count,
-            "text_columns": text_columns,
-            "text_processing_options": text_processing_options,
-        }
+    def __init__(self, **hyperparams):
+
+        if hyperparams.get("column_headers_list", None) is None:
+            hyperparams["column_headers_list"] = []
+        if hyperparams.get("text_processing_options", None) is None:
+            hyperparams["text_processing_options"] = []
+
         self._wrapped_model = (
             autoai_libs.transformers.text_transformers.Word2VecTransformer(
-                **self._hyperparams
+                **hyperparams
             )
         )
 
