@@ -19,29 +19,9 @@ import lale.operators
 
 
 class _TB2Impl:
-    def __init__(
-        self,
-        tans_class,
-        name,
-        datatypes1,
-        feat_constraints1,
-        datatypes2,
-        feat_constraints2,
-        tgraph=None,
-        apply_all=True,
-    ):
-        self._hyperparams = {
-            "tans_class": tans_class,
-            "name": name,
-            "datatypes1": datatypes1,
-            "feat_constraints1": feat_constraints1,
-            "datatypes2": datatypes2,
-            "feat_constraints2": feat_constraints2,
-            "tgraph": tgraph,
-            "apply_all": apply_all,
-        }
+    def __init__(self, **hyperparams):
         self._wrapped_model = autoai_libs.cognito.transforms.transform_utils.TB2(
-            **self._hyperparams
+            **hyperparams
         )
 
     def fit(self, X, y=None):

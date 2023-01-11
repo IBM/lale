@@ -17,22 +17,6 @@ import autoai_libs.cognito.transforms.transform_utils
 import lale.docstrings
 import lale.operators
 
-
-class _TB1Impl:
-    def __init__(self, **hyperparams):
-        self._wrapped_model = autoai_libs.cognito.transforms.transform_utils.TB1(
-            **hyperparams
-        )
-
-    def fit(self, X, y=None, **fit_params):
-        self._wrapped_model.fit(X, y, **fit_params)
-        return self
-
-    def transform(self, X):
-        result = self._wrapped_model.transform(X)
-        return result
-
-
 _hyperparams_schema = {
     "allOf": [
         {
@@ -163,6 +147,8 @@ _combined_schemas = {
 }
 
 
-TB1 = lale.operators.make_operator(_TB1Impl, _combined_schemas)
+TB1 = lale.operators.make_operator(
+    autoai_libs.cognito.transforms.transform_utils.TB1, _combined_schemas
+)
 
 lale.docstrings.set_docstrings(TB1)

@@ -18,21 +18,6 @@ import numpy as np
 import lale.docstrings
 import lale.operators
 
-
-class _CatImputerImpl:
-    def __init__(self, *args, **hyperparams):
-        self._wrapped_model = autoai_libs.transformers.exportable.CatImputer(
-            *args, **hyperparams
-        )
-
-    def fit(self, X, y=None, **fit_params):
-        self._wrapped_model.fit(X, y, **fit_params)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
-
 _hyperparams_schema = {
     "allOf": [
         {
@@ -155,7 +140,9 @@ _combined_schemas = {
     },
 }
 
-CatImputer = lale.operators.make_operator(_CatImputerImpl, _combined_schemas)
+CatImputer = lale.operators.make_operator(
+    autoai_libs.transformers.exportable.CatImputer, _combined_schemas
+)
 
 autoai_libs_version_str = getattr(autoai_libs, "__version__", None)
 if isinstance(autoai_libs_version_str, str):  # beware sphinx _MockModule

@@ -17,22 +17,6 @@ import autoai_libs.cognito.transforms.transform_utils
 import lale.docstrings
 import lale.operators
 
-
-class _TNoOpImpl:
-    def __init__(self, **hyperparams):
-        self._wrapped_model = autoai_libs.cognito.transforms.transform_utils.TNoOp(
-            **hyperparams
-        )
-
-    def fit(self, X, y=None, **fit_params):
-        self._wrapped_model.fit(X, y, **fit_params)
-        return self
-
-    def transform(self, X):
-        result = self._wrapped_model.transform(X)
-        return result
-
-
 _hyperparams_schema = {
     "allOf": [
         {
@@ -112,6 +96,8 @@ _combined_schemas = {
 }
 
 
-TNoOp = lale.operators.make_operator(_TNoOpImpl, _combined_schemas)
+TNoOp = lale.operators.make_operator(
+    autoai_libs.cognito.transforms.transform_utils.TNoOp, _combined_schemas
+)
 
 lale.docstrings.set_docstrings(TNoOp)

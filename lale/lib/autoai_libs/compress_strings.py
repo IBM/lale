@@ -17,21 +17,6 @@ import autoai_libs.transformers.exportable
 import lale.docstrings
 import lale.operators
 
-
-class _CompressStringsImpl:
-    def __init__(self, **hyperparams):
-        self._wrapped_model = autoai_libs.transformers.exportable.CompressStrings(
-            **hyperparams
-        )
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
-
 _hyperparams_schema = {
     "allOf": [
         {
@@ -177,6 +162,8 @@ _combined_schemas = {
 }
 
 
-CompressStrings = lale.operators.make_operator(_CompressStringsImpl, _combined_schemas)
+CompressStrings = lale.operators.make_operator(
+    autoai_libs.transformers.exportable.CompressStrings, _combined_schemas
+)
 
 lale.docstrings.set_docstrings(CompressStrings)
