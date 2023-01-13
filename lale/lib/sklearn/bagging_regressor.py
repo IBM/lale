@@ -23,38 +23,9 @@ from .function_transformer import FunctionTransformer
 
 
 class _BaggingRegressorImpl:
-    def __init__(
-        self,
-        base_estimator=None,
-        n_estimators=10,
-        *,
-        max_samples=1.0,
-        max_features=1.0,
-        bootstrap=True,
-        bootstrap_features=False,
-        oob_score=False,
-        warm_start=False,
-        n_jobs=None,
-        random_state=None,
-        verbose=0,
-    ):
-        estimator_impl = base_estimator
-
-        self._hyperparams = {
-            "base_estimator": estimator_impl,
-            "n_estimators": n_estimators,
-            "max_samples": max_samples,
-            "max_features": max_features,
-            "bootstrap": bootstrap,
-            "bootstrap_features": bootstrap_features,
-            "oob_score": oob_score,
-            "warm_start": warm_start,
-            "n_jobs": n_jobs,
-            "random_state": random_state,
-            "verbose": verbose,
-        }
-        self._wrapped_model = SKLModel(**self._hyperparams)
-        self._hyperparams["base_estimator"] = base_estimator
+    def __init__(self, **hyperparams):
+        self._wrapped_model = SKLModel(**hyperparams)
+        self._hyperparams = hyperparams
 
     def get_params(self, deep=True):
         out = self._wrapped_model.get_params(deep=deep)
