@@ -23,29 +23,17 @@ from .function_transformer import FunctionTransformer
 
 
 class _AdaBoostRegressorImpl:
-    def __init__(
-        self,
-        base_estimator=None,
-        *,
-        n_estimators=50,
-        learning_rate=1.0,
-        loss="linear",
-        random_state=None,
-    ):
+    def __init__(self, **hyperparams):
+        base_estimator = hyperparams.get("base_estimator", None)
         if base_estimator is None:
             estimator_impl = None
         else:
             estimator_impl = _FitSpecProxy(base_estimator)
 
-        self._hyperparams = {
-            "base_estimator": estimator_impl,
-            "n_estimators": n_estimators,
-            "learning_rate": learning_rate,
-            "loss": loss,
-            "random_state": random_state,
-        }
-        self._wrapped_model = SKLModel(**self._hyperparams)
-        self._hyperparams["base_estimator"] = base_estimator
+        base_hyperparams = {"base_estimator": estimator_impl}
+
+        self._wrapped_model = SKLModel(**{**hyperparams, **base_hyperparams})
+        self._hyperparams = hyperparams
 
     def get_params(self, deep=True):
         out = self._wrapped_model.get_params(deep=deep)
