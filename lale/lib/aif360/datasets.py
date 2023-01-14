@@ -229,7 +229,7 @@ def fetch_tae_df(preprocess=False):
 
     Parameters
     ----------
-    preprocess : boolean, optional, default False
+    preprocess : boolean or "y", optional, default False
 
       If True,
       encode protected attributes in X as 0 or 1 to indicate privileged group
@@ -237,6 +237,8 @@ def fetch_tae_df(preprocess=False):
       encode labels in y as 0 or 1 to indicate favorable outcomes;
       and apply one-hot encoding to any remaining features in X that
       are categorical and not protecteded attributes.
+      If "y", leave features X unchanged and only encode labels y as 0 or 1.
+      If False, encode neither features X nor labels y.
 
     Returns
     -------
@@ -256,12 +258,12 @@ def fetch_tae_df(preprocess=False):
           and mitigation operators in `lale.lib.aif360`.
     """
     (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
-        "tae", "classification", astype="pandas", preprocess=preprocess
+        "tae", "classification", astype="pandas", preprocess=(preprocess is True)
     )
     orig_X = pd.concat([train_X, test_X]).sort_index().astype(np.float64)
     orig_y = pd.concat([train_y, test_y]).sort_index().astype(np.float64)
 
-    if preprocess:
+    if preprocess is True:
         native_english_speaker = pd.Series(
             orig_X["whether_of_not_the_ta_is_a_native_english_speaker_1"] == 1,
             dtype=np.float64,
@@ -282,6 +284,18 @@ def fetch_tae_df(preprocess=False):
             ],
         }
         return encoded_X, encoded_y, fairness_info
+    elif preprocess == "y":
+        encoded_y = pd.Series(orig_y == 2, dtype=np.float64)
+        fairness_info = {
+            "favorable_labels": [1],
+            "protected_attributes": [
+                {
+                    "feature": "whether_of_not_the_ta_is_a_native_english_speaker",
+                    "reference_group": [1],
+                },
+            ],
+        }
+        return orig_X, encoded_y, fairness_info
     else:
         fairness_info = {
             "favorable_labels": [3],
