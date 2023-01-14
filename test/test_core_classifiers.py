@@ -404,7 +404,7 @@ class TestSpuriousSideConstraintsClassification(unittest.TestCase):
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
 
     def test_sgd_classifier(self):
-        reg = SGDClassifier(loss="squared_loss", epsilon=0.2)
+        reg = SGDClassifier(loss="squared_error", epsilon=0.2)
         reg.fit(self.X_train, self.y_train)
 
     def test_sgd_classifier_1(self):

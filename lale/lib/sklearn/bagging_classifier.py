@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import pandas as pd
+from packaging import version
 from sklearn.ensemble import BaggingClassifier as SKLModel
 
 import lale.docstrings
@@ -27,10 +28,18 @@ class _BaggingClassifierImpl:
         self._wrapped_model = SKLModel(**hyperparams)
         self._hyperparams = hyperparams
 
+    def _get_estimator_param_name(self):
+        be = self._hyperparams.get("base_estimator", "deprecated")
+        if be is None or be == "deprecated":
+            return "estimator"
+        else:
+            return "base_estimator"
+
     def get_params(self, deep=True):
         out = self._wrapped_model.get_params(deep=deep)
         # we want to return the lale operator, not the underlying impl
-        out["base_estimator"] = self._hyperparams["base_estimator"]
+        est_name = self._get_estimator_param_name()
+        out[est_name] = self._hyperparams[est_name]
         return out
 
     def fit(self, X, y, sample_weight=None):
@@ -40,8 +49,9 @@ class _BaggingClassifierImpl:
                 inverse_func=None,
                 check_inverse=False,
             )
-            self._hyperparams["base_estimator"] = (
-                feature_transformer >> self._hyperparams["base_estimator"]
+            est_name = self._get_estimator_param_name()
+            self._hyperparams[est_name] = (
+                feature_transformer >> self._hyperparams[est_name]
             )
             self._wrapped_model = SKLModel(**self._hyperparams)
         self._wrapped_model.fit(X, y, sample_weight)
@@ -322,5 +332,41 @@ _combined_schemas = {
 BaggingClassifier = lale.operators.make_operator(
     _BaggingClassifierImpl, _combined_schemas
 )
+
+if lale.operators.sklearn_version >= version.Version("1.2"):
+    BaggingClassifier = BaggingClassifier.customize_schema(
+        base_estimator={
+            "anyOf": [
+                {"laleType": "operator"},
+                {"enum": ["deprecated"]},
+            ],
+            "default": "deprecated",
+            "description": "Deprecated. Use `estimator` instead.",
+        },
+        estimator={
+            "anyOf": [
+                {"laleType": "operator"},
+                {"enum": [None], "description": "DecisionTreeClassifier"},
+            ],
+            "default": None,
+            "description": "The base estimator to fit on random subsets of the dataset.",
+        },
+        constraint={
+            "description": "Only `estimator` or `base_estimator` should be specified.  As `base_estimator` is deprecated, use `estimator`.",
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {"base_estimator": {"enum": [False, "deprecated"]}},
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "estimator": {"enum": [None]},
+                    },
+                },
+            ],
+        },
+        set_as_available=True,
+    )
 
 lale.docstrings.set_docstrings(BaggingClassifier)

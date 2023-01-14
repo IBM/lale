@@ -1,8 +1,10 @@
 from numpy import inf, nan
+from packaging import version
 from sklearn.linear_model import Ridge as Op
 
+import lale
 from lale.docstrings import set_docstrings
-from lale.operators import make_operator
+from lale.operators import make_operator, sklearn_version
 
 
 class _RidgeImpl:
@@ -194,5 +196,45 @@ _combined_schemas = {
     },
 }
 Ridge = make_operator(_RidgeImpl, _combined_schemas)
+
+if sklearn_version >= version.Version("1.0"):
+    # old: https://scikit-learn.org/0.24/modules/generated/sklearn.linear_model.Ridge.html
+    # new: https://scikit-learn.org/1.0/modules/generated/sklearn.linear_model.Ridge.html
+    from lale.schemas import Bool
+
+    Ridge = Ridge.customize_schema(
+        relevantToOptimizer=[
+            "alpha",
+            "fit_intercept",
+            "copy_X",
+            "max_iter",
+            "tol",
+            "solver",
+        ],
+        normalize=Bool(
+            desc="""This parameter is ignored when fit_intercept is set to False.
+If True, the regressors X will be normalized before regression by subtracting the mean and dividing by the l2-norm.
+If you wish to standardize, please use StandardScaler before calling fit on an estimator with normalize=False.""",
+            default=False,
+            forOptimizer=False,
+        ),
+        set_as_available=True,
+    )
+
+if sklearn_version >= version.Version("1.2"):
+    # old: https://scikit-learn.org/1.1/modules/generated/sklearn.linear_model.Ridge.html
+    # new: https://scikit-learn.org/1.2/modules/generated/sklearn.linear_model.Ridge.html
+
+    Ridge = Ridge.customize_schema(
+        tol={
+            "type": "number",
+            "minimumForOptimizer": 1e-08,
+            "maximumForOptimizer": 0.01,
+            "default": 0.0001,
+            "description": "Precision of the solution.",
+        },
+        normalize=None,
+        set_as_available=True,
+    )
 
 set_docstrings(Ridge)

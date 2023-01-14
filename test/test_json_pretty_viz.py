@@ -671,7 +671,6 @@ pipeline = make_pipeline(tam, lgbm_classifier)"""
         sklearn_pipeline = sklearn.pipeline.make_pipeline(
             autoai_libs.cognito.transforms.transform_utils.TAM(
                 tans_class=sklearn.cluster.FeatureAgglomeration(
-                    affinity="euclidean",
                     compute_full_tree="auto",
                     connectivity=None,
                     linkage="ward",

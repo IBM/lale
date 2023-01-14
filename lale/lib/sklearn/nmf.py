@@ -280,4 +280,9 @@ Set it to zero to have no regularization on H. If “same” (default), it takes
         set_as_available=True,
     )
 
+if lale.operators.sklearn_version >= version.Version("1.2"):
+    # new: https://scikit-learn.org/1.2/modules/generated/sklearn.decomposition.NMF.html
+
+    NMF = NMF.customize_schema(alpha=None, regularization=None, set_as_available=True)
+
 lale.docstrings.set_docstrings(NMF)

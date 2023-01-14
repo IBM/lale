@@ -30,6 +30,8 @@ from sklearn.decomposition import PCA as SkPCA
 import lale.datasets
 import lale.operators as Ops
 import lale.type_checking
+
+# from lale.helpers import get_sklearn_estimator_name
 from lale.helpers import nest_HPparams
 from lale.lib.lale import ConcatFeatures, Hyperopt, NoOp
 from lale.lib.rasl import categorical
@@ -670,21 +672,24 @@ class TestGetParams(unittest.TestCase):
     def test_deep_planned_nested_indiv_operator(self):
         from lale.lib.sklearn import BaggingClassifier, DecisionTreeClassifier
 
+        est_name = "base_estimator"
+
         dtc = DecisionTreeClassifier()
         clf = BaggingClassifier(base_estimator=dtc)
         params = clf.get_params(deep=True)
         filtered_params = self.remove_lale_params(params)
 
         # expected = LogisticRegression.get_defaults()
-        base = filtered_params["base_estimator"]
+        base = filtered_params[est_name]
         base_params = self.remove_lale_params(base.get_params(deep=True))
-        nested_base_params = nest_HPparams("base_estimator", base_params)
+
+        nested_base_params = nest_HPparams(est_name, base_params)
         self.assertDictEqual(
             {
                 k: v
                 for k, v in filtered_params.items()
-                if k.startswith("base_estimator__")
-                and not k.startswith("base_estimator___lale")
+                if k.startswith(f"{est_name}__")
+                and not k.startswith(f"{est_name}___lale")
             },
             nested_base_params,
         )
@@ -932,8 +937,12 @@ class TestHyperparamRanges(unittest.TestCase):
 
     def test_logisticregression(self):
         ranges, dists = LogisticRegression.get_param_ranges()
+        # allowed solver changes between sklearn versions, so we will just remove them from the comparison for now
+        del ranges["solver"]
+        del dists["solver"]
+
         expected_ranges = {
-            "solver": ["newton-cg", "liblinear", "sag", "saga", "lbfgs"],
+            # "solver": ["newton-cg", "liblinear", "sag", "saga", "lbfgs"],
             "dual": (False, True, False),
             "tol": (1e-08, 0.01, 0.0001),
             "fit_intercept": (False, True, True),
@@ -941,7 +950,7 @@ class TestHyperparamRanges(unittest.TestCase):
             "max_iter": (10, 1000, 100),
             "multi_class": ["ovr", "multinomial", "auto"],
         }
-        expected_dists = {"solver": (0, 4, 4), "multi_class": (0, 2, 2)}
+        expected_dists = {"multi_class": (0, 2, 2)}
 
         self.maxDiff = None
         self.assertEqual(ranges, expected_ranges)

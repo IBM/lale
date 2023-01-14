@@ -1,8 +1,10 @@
 from numpy import inf, nan
+from packaging import version
 from sklearn.kernel_ridge import KernelRidge as Op
 
+import lale
 from lale.docstrings import set_docstrings
-from lale.operators import make_operator
+from lale.operators import make_operator, sklearn_version
 
 
 class _KernelRidgeImpl:
@@ -152,5 +154,20 @@ _combined_schemas = {
     },
 }
 KernelRidge = make_operator(_KernelRidgeImpl, _combined_schemas)
+
+if sklearn_version >= version.Version("1.2"):
+    # new: "https://scikit-learn.org/1.2/modules/generated/sklearn.kernel_ridge.KernelRidge#sklearn-kernel_ridge-kernelridge",
+
+    KernelRidge = KernelRidge.customize_schema(
+        degree={
+            "type": "integer",
+            "minimumForOptimizer": 0,
+            "maximumForOptimizer": 100,
+            "distribution": "uniform",
+            "default": 3,
+            "description": "Degree of the polynomial kernel",
+        },
+        set_as_available=True,
+    )
 
 set_docstrings(KernelRidge)

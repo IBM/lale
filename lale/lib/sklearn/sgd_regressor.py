@@ -339,5 +339,27 @@ More details about the losses formulas can be found in the scikit-learn User Gui
         set_as_available=True,
     )
 
+if lale.operators.sklearn_version >= version.Version("1.2"):
+    # old: https://scikit-learn.org/1.1/modules/generated/sklearn.linear_model.SGDRegressor.html
+    # new: https://scikit-learn.org/1.2/modules/generated/sklearn.linear_model.SGDRegressor.html
+    SGDRegressor = SGDRegressor.customize_schema(
+        loss={
+            "description": """The loss function to be used.
+The possible values are ‘squared_error’, ‘huber’, ‘epsilon_insensitive’, or ‘squared_epsilon_insensitive’.
+The ‘squared_error’ refers to the ordinary least squares fit.
+‘huber’ modifies ‘squared_error’ to focus less on getting outliers correct by switching from squared to linear loss past a distance of epsilon.
+‘epsilon_insensitive’ ignores errors less than epsilon and is linear past that; this is the loss function used in SVR.
+‘squared_epsilon_insensitive’ is the same but becomes squared loss past a tolerance of epsilon.
+More details about the losses formulas can be found in the scikit-learn User Guide.""",
+            "enum": [
+                "squared_error",
+                "huber",
+                "epsilon_insensitive",
+                "squared_epsilon_insensitive",
+            ],
+            "default": "squared_error",
+        },
+        set_as_available=True,
+    )
 
 lale.docstrings.set_docstrings(SGDRegressor)
