@@ -528,8 +528,9 @@ class _BasePostEstimatorImpl:
         self.mitigator = mitigator
 
     def _decode(self, y):
-        assert isinstance(y, pd.Series)
-        assert len(self.favorable_labels) == 1 and len(self.not_favorable_labels) == 1
+        assert isinstance(y, pd.Series), type(y)
+        assert len(self.favorable_labels) == 1, self.favorable_labels
+        assert len(self.not_favorable_labels) == 1, self.not_favorable_labels
         favorable, not_favorable = (
             self.favorable_labels[0],
             self.not_favorable_labels[0],

@@ -36,7 +36,7 @@ _hparam_n_neighbors: JSON_TYPE = {
     "anyOf": [
         {
             "type": "integer",
-            "description": "Number of nearest neighbours to used to construct synthetic samples.",
+            "description": "Number of nearest neighbours to use to construct synthetic samples.",
         },
         {
             "laleType": "Any",

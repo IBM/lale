@@ -18,6 +18,12 @@ import numpy as np
 import lale.docstrings
 import lale.lib.lale
 import lale.operators
+from lale.lib.imblearn._common_schemas import (
+    _hparam_n_jobs,
+    _hparam_n_neighbors,
+    _hparam_random_state,
+    _hparam_sampling_strategy_anyof_neoc,
+)
 
 from .redacting import Redacting
 from .util import (
@@ -40,23 +46,27 @@ class _FairSMOTEImpl:
         protected_attributes,
         estimator,
         unfavorable_labels=None,
-        redact=True
+        redact=True,
+        **hyperparams,
     ):
         _validate_fairness_info(
             favorable_labels, protected_attributes, unfavorable_labels, False
         )
         if len(favorable_labels) != 1 or isinstance(favorable_labels[0], list):
-            raise ValueError("favorable label must be unique, found {favorable_labels}")
+            raise ValueError(
+                f"favorable label must be unique, found {favorable_labels}"
+            )
         if unfavorable_labels is not None:
             if len(unfavorable_labels) != 1 or isinstance(unfavorable_labels[0], list):
                 raise ValueError(
-                    "unfavorable label must be unique, found {unfavorable_labels}"
+                    f"unfavorable label must be unique, found {unfavorable_labels}"
                 )
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
         self.estimator = estimator
         self.unfavorable_labels = unfavorable_labels
         self.redact = redact
+        self.hyperparams = hyperparams
 
     def fit(self, X, y):
         fairness_info = {
@@ -65,31 +75,28 @@ class _FairSMOTEImpl:
             "unfavorable_labels": self.unfavorable_labels,
         }
         groups_and_y = _column_for_stratification(X, y, **fairness_info)
-        fav = self.favorable_labels[0]
         if self.unfavorable_labels is not None:
-            unfav = self.unfavorable_labels[0]
+            not_favorable_labels = self.unfavorable_labels
         else:
-            unfav = next(iter(set(y) - set(self.favorable_labels)))
+            not_favorable_labels = list(set(y) - set(self.favorable_labels))
+        if len(not_favorable_labels) != 1:
+            raise ValueError(
+                f"unfavorable label must be unique, found {not_favorable_labels}"
+            )
         cats_mask = [not np.issubdtype(typ, np.number) for typ in X.dtypes]
         if all(cats_mask):  # all nominal -> use SMOTEN
-            resampler = imblearn.over_sampling.SMOTEN(
-                sampling_strategy="not majority",
-                k_neighbors=5,
-            )
+            resampler = imblearn.over_sampling.SMOTEN(**self.hyperparams)
         elif not any(cats_mask):  # all continuous -> use vanilla SMOTE
-            resampler = imblearn.over_sampling.SMOTE(
-                sampling_strategy="not majority",
-                k_neighbors=5,
-            )
+            resampler = imblearn.over_sampling.SMOTE(**self.hyperparams)
         else:  # mix of nominal and continuous -> use SMOTENC
             resampler = imblearn.over_sampling.SMOTENC(
-                categorical_features=cats_mask,
-                sampling_strategy="not majority",
-                k_neighbors=5,
+                categorical_features=cats_mask, **self.hyperparams
             )
         resampled_X, resampled_groups_and_y = resampler.fit_resample(X, groups_and_y)
         resampled_y = resampled_groups_and_y.apply(
-            lambda s: fav if s[-1] == "T" else unfav
+            lambda s: self.favorable_labels[0]
+            if s[-1] == "T"
+            else not_favorable_labels[0]
         )
         if self.redact:
             redacting_trainable = Redacting(**fairness_info)
@@ -134,6 +141,14 @@ _hyperparams_schema = {
                     "type": "boolean",
                     "default": True,
                 },
+                "sampling_strategy": _hparam_sampling_strategy_anyof_neoc,
+                "random_state": _hparam_random_state,
+                "k_neighbors": {
+                    **_hparam_n_neighbors,
+                    "description": "Number of nearest neighbours to use to construct synthetic samples.",
+                    "default": 5,
+                },
+                "n_jobs": _hparam_n_jobs,
             },
         }
     ],
