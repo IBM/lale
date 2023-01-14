@@ -282,4 +282,19 @@ If you wish to standardize, please use StandardScaler before calling fit on an e
         set_as_available=True,
     )
 
+if lale.operators.sklearn_version >= version.Version("1.2"):
+    # old: https://scikit-learn.org/1.1/modules/generated/sklearn.linear_model.Ridge.html
+    # new: https://scikit-learn.org/1.2/modules/generated/sklearn.linear_model.Ridge.html
+
+    RidgeClassifier = RidgeClassifier.customize_schema(
+        tol={
+            "type": "number",
+            "minimumForOptimizer": 1e-08,
+            "maximumForOptimizer": 0.01,
+            "default": 0.0001,
+            "description": "Precision of the solution.",
+        },
+        normalize=None,
+    )
+
 lale.docstrings.set_docstrings(RidgeClassifier)

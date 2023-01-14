@@ -1,8 +1,10 @@
 from numpy import inf, nan
+from packaging import version
 from sklearn.linear_model import RANSACRegressor as Op
 
+import lale
 from lale.docstrings import set_docstrings
-from lale.operators import make_operator
+from lale.operators import make_operator, sklearn_version
 
 
 class _RANSACRegressorImpl:
@@ -230,5 +232,41 @@ _combined_schemas = {
     },
 }
 RANSACRegressor = make_operator(_RANSACRegressorImpl, _combined_schemas)
+
+if sklearn_version >= version.Version("1.2"):
+    # new: "https://scikit-learn.org/1.2/modules/generated/sklearn.linear_model.RANSACRegressor#sklearn-linear_model-ransacregressor"
+
+    RANSACRegressor = RANSACRegressor.customize_schema(
+        loss={
+            "anyOf": [
+                {"laleType": "callable", "forOptimizer": False},
+                {
+                    "enum": [
+                        "absolute_error",
+                        "squared_error",
+                    ]
+                },
+            ],
+            "default": "absolute_error",
+            "description": 'String inputs, "absolute_error" and "squared_error" are supported which find the absolute error and squared error per sample respectively',
+        },
+        max_skips={
+            "anyOf": [
+                {"type": "integer", "forOptimizer": False},
+                {"enum": [inf]},
+            ],
+            "default": inf,
+            "description": "Maximum number of iterations that can be skipped due to finding zero inliers or invalid data defined by ``is_data_valid`` or invalid models defined by ``is_model_valid``",
+        },
+        stop_n_inliers={
+            "anyOf": [
+                {"type": "integer", "forOptimizer": False},
+                {"enum": [inf]},
+            ],
+            "default": inf,
+            "description": "Stop iteration if at least this number of inliers are found.",
+        },
+        set_as_available=True,
+    )
 
 set_docstrings(RANSACRegressor)

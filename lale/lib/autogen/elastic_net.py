@@ -1,8 +1,10 @@
 from numpy import inf, nan
+from packaging import version
 from sklearn.linear_model import ElasticNet as Op
 
+import lale
 from lale.docstrings import set_docstrings
-from lale.operators import make_operator
+from lale.operators import make_operator, sklearn_version
 
 
 class _ElasticNetImpl:
@@ -202,5 +204,14 @@ _combined_schemas = {
     },
 }
 ElasticNet = make_operator(_ElasticNetImpl, _combined_schemas)
+
+
+if sklearn_version >= version.Version("1.2"):
+    # new: "https://scikit-learn.org/1.2/modules/generated/sklearn.linear_model.ElasticNet#sklearn-linear_model-elasticnet"
+
+    ElasticNet = ElasticNet.customize_schema(
+        normalize=None,
+        set_as_available=True,
+    )
 
 set_docstrings(ElasticNet)

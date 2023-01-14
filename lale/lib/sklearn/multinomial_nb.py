@@ -13,10 +13,12 @@
 # limitations under the License.
 
 import sklearn.naive_bayes
+from packaging import version
 
 import lale.docstrings
 import lale.operators
 
+from ...schemas import Bool
 from ._common_schemas import (
     schema_1D_cats,
     schema_2D_numbers,
@@ -111,5 +113,27 @@ _combined_schemas = {
 MultinomialNB = lale.operators.make_operator(
     sklearn.naive_bayes.MultinomialNB, _combined_schemas
 )
+
+if lale.operators.sklearn_version >= version.Version("1.2"):
+    MultinomialNB = MultinomialNB.customize_schema(
+        force_alpha=Bool(
+            default=False,
+            desc="""If False and alpha is less than 1e-10,
+it will set alpha to 1e-10. If True, alpha will remain unchanged.
+This may cause numerical errors if alpha is too close to 0.
+""",
+        )
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.4"):
+    MultinomialNB = MultinomialNB.customize_schema(
+        force_alpha=Bool(
+            default=True,
+            desc="""If False and alpha is less than 1e-10,
+it will set alpha to 1e-10. If True, alpha will remain unchanged.
+This may cause numerical errors if alpha is too close to 0.
+""",
+        )
+    )
 
 lale.docstrings.set_docstrings(MultinomialNB)

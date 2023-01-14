@@ -183,4 +183,17 @@ if lale.operators.sklearn_version >= version.Version("1.1"):
         }
     )
 
+if lale.operators.sklearn_version >= version.Version("1.2"):
+    # old: https://scikit-learn.org/1.1/modules/generated/sklearn.impute.SimpleImputer.html#sklearn.impute.SimpleImputer
+    # new: https://scikit-learn.org/1.2/modules/generated/sklearn.impute.SimpleImputer.html#sklearn.impute.SimpleImputer
+    SimpleImputer = SimpleImputer.customize_schema(
+        keep_empty_features={
+            "type": "boolean",
+            "default": False,
+            "description": """If True, features that consist exclusively of missing values when fit is called
+are returned in results when transform is called. The imputed value is always 0 except when strategy="constant"
+in which case fill_value will be used instead.""",
+        }
+    )
+
 lale.docstrings.set_docstrings(SimpleImputer)

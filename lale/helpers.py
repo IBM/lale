@@ -1194,3 +1194,17 @@ class GenSym:
             result = prefix
         self._names |= {result}
         return result
+
+
+def get_sklearn_estimator_name() -> str:
+    """Some higher order sklearn operators changed the name of the nested estimatator in later versions.
+    This returns the appropriate version dependent paramater name
+    """
+    from packaging import version
+
+    import lale.operators
+
+    if lale.operators.sklearn_version < version.Version("1.2"):
+        return "base_estimator"
+    else:
+        return "estimator"

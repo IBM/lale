@@ -1,8 +1,10 @@
 from numpy import inf, nan
+from packaging import version
 from sklearn.linear_model import LassoCV as Op
 
+import lale
 from lale.docstrings import set_docstrings
-from lale.operators import make_operator
+from lale.operators import make_operator, sklearn_version
 
 
 class _LassoCVImpl:
@@ -250,5 +252,13 @@ _combined_schemas = {
     },
 }
 LassoCV = make_operator(_LassoCVImpl, _combined_schemas)
+
+if sklearn_version >= version.Version("1.2"):
+    # new: "https://scikit-learn.org/1.2/modules/generated/sklearn.linear_model.LassoCV#sklearn-linear_model-lassocv"
+
+    LassoCV = LassoCV.customize_schema(
+        normalize=None,
+        set_as_available=True,
+    )
 
 set_docstrings(LassoCV)

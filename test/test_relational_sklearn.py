@@ -644,8 +644,20 @@ class TestOneHotEncoder(unittest.TestCase):
             self.assertEqual(sk_predicted.tolist(), rasl_predicted.tolist(), tgt)
 
 
+def _get_feature_names_out(op):
+    """later version of category_encoder's HashingEncoder changed the attribute name"""
+    fnames = getattr(op, "feature_names", None)
+    if fnames is not None:
+        return fnames
+    fnames = getattr(op, "get_feature_names_out", None)
+    assert fnames is not None
+    return fnames()
+
+
 def _check_trained_hashing_encoder(test, op1, op2, msg):
-    test.assertEqual(list(op1.feature_names), list(op2.feature_names), msg)
+    test.assertEqual(
+        list(_get_feature_names_out(op1)), list(_get_feature_names_out(op2)), msg
+    )
 
 
 class TestHashingEncoder(unittest.TestCase):
