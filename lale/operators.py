@@ -5399,19 +5399,19 @@ def customize_schema(
     output : Schema
         (or `output_*`) override the output schema for method `*`.
         `output_*` must be an existing method (already defined in the schema for lale operators, existing method for external operators)
-    constraint : Schema
-        Add a constraint in JSON schema format.
     relevantToOptimizer : String list
         update the set parameters that will be optimized.
-    param : Schema
-        Override the schema of the hyperparameter.
-        `param` must be an existing parameter (already defined in the schema for lale operators, __init__ parameter for external operators)
+    constraint : Schema
+        Add a constraint in JSON schema format.
     tags : Dict
         Override the tags of the operator.
     forwards: boolean or a list of strings
         Which methods/properties to forward to the underlying impl.  (False for none, True for all).
     set_as_available: bool
         Override the list of available operators so `get_available_operators` returns this customized operator.
+    param : Schema
+        Override the schema of the hyperparameter.
+        `param` must be an existing parameter (already defined in the schema for lale operators, __init__ parameter for external operators)
 
     Returns
     -------
