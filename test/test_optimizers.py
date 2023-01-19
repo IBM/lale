@@ -199,7 +199,7 @@ class TestSMAC(unittest.TestCase):
 
     def test_smac_timeout_zero_regression(self):
         planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
-        from sklearn.datasets import load_boston
+        from lale.datasets.util import load_boston
 
         X, y = load_boston(return_X_y=True)
         opt = SMAC(
@@ -230,7 +230,7 @@ class TestSMAC(unittest.TestCase):
     def test_smac_timeout_regression(self):
         import time
 
-        from sklearn.datasets import load_boston
+        from lale.datasets.util import load_boston
 
         planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
         X, y = load_boston(return_X_y=True)
@@ -412,7 +412,7 @@ class TestHyperopt(unittest.TestCase):
         import time
 
         planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
-        from sklearn.datasets import load_boston
+        from lale.datasets.util import load_boston
 
         X, y = load_boston(return_X_y=True)
 
@@ -435,7 +435,7 @@ class TestHyperopt(unittest.TestCase):
 
     def test_runtime_limit_zero_time_hor(self):
         planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
-        from sklearn.datasets import load_boston
+        from lale.datasets.util import load_boston
 
         X, y = load_boston(return_X_y=True)
 
@@ -702,7 +702,7 @@ class TestAutoConfigureClassification(unittest.TestCase):
 
 class TestAutoConfigureRegression(unittest.TestCase):
     def setUp(self):
-        from sklearn.datasets import load_boston
+        from lale.datasets.util import load_boston
 
         X, y = load_boston(return_X_y=True)
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
@@ -821,7 +821,7 @@ class TestGridSearchCV(unittest.TestCase):
         import time
 
         planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
-        from sklearn.datasets import load_boston
+        from lale.datasets.util import load_boston
 
         X, y = load_boston(return_X_y=True)
 
@@ -927,7 +927,7 @@ class TestHigherOrderOperators(unittest.TestCase):
         clf.fit(self.X_train, self.y_train)
 
     def test_ada_boost_regressor(self):
-        from sklearn.datasets import load_boston
+        from lale.datasets.util import load_boston
 
         X, y = load_boston(return_X_y=True)
         X_train, _X_test, y_train, _y_test = train_test_split(X, y)
@@ -943,7 +943,7 @@ class TestHigherOrderOperators(unittest.TestCase):
         )
 
     def test_ada_boost_regressor_pipe(self):
-        from sklearn.datasets import load_boston
+        from lale.datasets.util import load_boston
 
         X, y = load_boston(return_X_y=True)
         X_train, _X_test, y_train, _y_test = train_test_split(X, y)

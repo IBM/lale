@@ -671,8 +671,9 @@ class TestLogisticRegression(unittest.TestCase):
 
 class TestIsolationForest(unittest.TestCase):
     def setUp(self):
-        from sklearn.datasets import load_boston
         from sklearn.model_selection import train_test_split
+
+        from lale.datasets.util import load_boston
 
         data = load_boston()
         X, y = data.data, data.target
@@ -755,8 +756,9 @@ class TestIsolationForest(unittest.TestCase):
 
 class TestKMeans(unittest.TestCase):
     def setUp(self):
-        from sklearn.datasets import load_boston
         from sklearn.model_selection import train_test_split
+
+        from lale.datasets.util import load_boston
 
         data = load_boston()
         X, y = data.data, data.target

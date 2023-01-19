@@ -795,7 +795,9 @@ class TestAutoPipeline(unittest.TestCase):
 
     def test_sklearn_boston(self):
         # regression, categoricals+numbers, no missing values
-        all_X, all_y = sklearn.datasets.load_boston(return_X_y=True)
+        from lale.datasets.util import load_boston
+
+        all_X, all_y = load_boston(return_X_y=True)
         self._fit_predict("regression", all_X, all_y)
 
     def test_sklearn_diabetes(self):
@@ -824,7 +826,9 @@ class TestAutoPipeline(unittest.TestCase):
 
     def test_missing_boston(self):
         # regression, categoricals+numbers, synthetically added missing values
-        all_X, all_y = sklearn.datasets.load_boston(return_X_y=True)
+        from lale.datasets.util import load_boston
+
+        all_X, all_y = load_boston(return_X_y=True)
         with_missing_X = lale.helpers.add_missing_values(all_X)
         with self.assertRaisesRegex(ValueError, "Input.*contains NaN"):
             lr_trainable = LinearRegression()
