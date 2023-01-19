@@ -18,6 +18,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
 
 import lale.datasets.data_schemas
+from lale.datasets.util import load_boston
 
 
 def _bunch_to_df(bunch, schema_X, schema_y, test_size=0.2, random_state=42):
@@ -218,7 +219,7 @@ def california_housing_df(test_size=0.2, random_state=42):
 
 
 def boston_housing_df(test_size=0.2, random_state=42):
-    housing = sklearn.datasets.load_boston()
+    housing = load_boston()
     schema_X = {
         "description": "Features of Boston house prices dataset (regression).",
         "documentation_url": "https://scikit-learn.org/0.20/datasets/index.html#boston-house-prices-dataset",
