@@ -18,6 +18,11 @@ import numpy as np
 import lale.docstrings
 import lale.operators
 
+from ._common_schemas import (
+    _hparam_activate_flag_unmodified,
+    _hparam_sklearn_version_family,
+)
+
 
 class _NumImputerImpl:
     def __init__(self, *args, **hyperparams):
@@ -58,11 +63,7 @@ _hyperparams_schema = {
                     ],
                     "default": np.nan,
                 },
-                "activate_flag": {
-                    "description": "If False, transform(X) outputs the input numpy array X unmodified.",
-                    "type": "boolean",
-                    "default": True,
-                },
+                "activate_flag": _hparam_activate_flag_unmodified,
             },
         }
     ]
@@ -183,11 +184,7 @@ if isinstance(autoai_libs_version_str, str):  # beware sphinx _MockModule
                     desc="The placeholder for the missing values. All occurrences of missing_values will be imputed.",
                     default=np.nan,
                 ),
-                sklearn_version_family=Enum(
-                    desc="The sklearn version for backward compatibiity with versions 019 and 020dev. Currently unused.",
-                    values=["20", "21", "22", "23", "24", None, "1"],
-                    default=None,
-                ),
+                sklearn_version_family=_hparam_sklearn_version_family,
                 strategy=AnyOf(
                     types=[
                         Enum(

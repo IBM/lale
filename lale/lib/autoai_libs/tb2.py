@@ -17,6 +17,15 @@ import autoai_libs.cognito.transforms.transform_utils
 import lale.docstrings
 import lale.operators
 
+from ._common_schemas import (
+    _hparams_apply_all,
+    _hparams_datatypes,
+    _hparams_feat_constraints,
+    _hparams_tans_class,
+    _hparams_tgraph,
+    _hparams_transformer_name,
+)
+
 
 class _TB2Impl:
     def __init__(
@@ -71,58 +80,22 @@ _hyperparams_schema = {
             ],
             "relevantToOptimizer": [],
             "properties": {
-                "tans_class": {
-                    "description": "A class that implements fit() and transform() in accordance with the transformation function definition.",
-                    "laleType": "Any",
-                    "default": None,
-                },
-                "name": {
-                    "description": "A string name that uniquely identifies this transformer from others.",
-                    "anyOf": [{"type": "string"}, {"enum": [None]}],
-                    "default": None,
-                },
-                "datatypes1": {
-                    "description": "List of datatypes that are valid input (first argument) to the transformer function (numeric, float, int, etc.).",
-                    "anyOf": [
-                        {"type": "array", "items": {"type": "string"}},
-                        {"enum": [None]},
-                    ],
-                    "default": None,
-                },
-                "feat_constraints1": {
-                    "description": "All constraints that must be satisfied by a column to be considered a valid input (first argument) to this transform.",
-                    "laleType": "Any",
-                    "default": None,
-                },
-                "datatypes2": {
-                    "description": "List of datatypes that are valid input (second argument) to the transformer function (numeric, float, int, etc.).",
-                    "anyOf": [
-                        {"type": "array", "items": {"type": "string"}},
-                        {"enum": [None]},
-                    ],
-                    "default": None,
-                },
-                "feat_constraints2": {
-                    "description": "All constraints that must be satisfied by a column to be considered a valid input (second argument) to this transform.",
-                    "laleType": "Any",
-                    "default": None,
-                },
-                "tgraph": {
-                    "description": "Should be the invoking TGraph() object.",
-                    "anyOf": [
-                        {"laleType": "Any"},
-                        {
-                            "enum": [None],
-                            "description": "Passing None will result in some failure to detect some inefficiencies due to lack of caching.",
-                        },
-                    ],
-                    "default": None,
-                },
-                "apply_all": {
-                    "description": "Only use applyAll = True. It means that the transformer will enumerate all features (or feature sets) that match the specified criteria and apply the provided function to each.",
-                    "type": "boolean",
-                    "default": True,
-                },
+                "tans_class": _hparams_tans_class,
+                "name": _hparams_transformer_name,
+                "datatypes1": _hparams_datatypes(
+                    description="List of datatypes that are valid input (first argument) to the transformer function (numeric, float, int, etc.)."
+                ),
+                "feat_constraints1": _hparams_feat_constraints(
+                    description="All constraints that must be satisfied by a column to be considered a valid input (first argument) to this transform."
+                ),
+                "datatypes2": _hparams_datatypes(
+                    description="List of datatypes that are valid input (second argument) to the transformer function (numeric, float, int, etc.)."
+                ),
+                "feat_constraints2": _hparams_feat_constraints(
+                    description="All constraints that must be satisfied by a column to be considered a valid input (second argument) to this transform."
+                ),
+                "tgraph": _hparams_tgraph,
+                "apply_all": _hparams_apply_all,
             },
         }
     ]

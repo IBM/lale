@@ -17,6 +17,8 @@ import autoai_libs.transformers.exportable
 import lale.docstrings
 import lale.operators
 
+from ._common_schemas import _hparams_column_index_list
+
 
 class _NumpyPermuteArrayImpl:
     def __init__(self, **hyperparams):
@@ -41,14 +43,9 @@ _hyperparams_schema = {
             "required": ["permutation_indices", "axis"],
             "relevantToOptimizer": [],
             "properties": {
-                "permutation_indices": {
-                    "description": "List of indexes based on which columns will be rearranged.",
-                    "anyOf": [
-                        {"type": "array", "items": {"type": "integer", "minimum": 0}},
-                        {"enum": [None]},
-                    ],
-                    "default": None,
-                },
+                "permutation_indices": _hparams_column_index_list(
+                    description="List of indexes based on which columns will be rearranged."
+                ),
                 "axis": {
                     "anyOf": [
                         {"enum": [0, None], "description": "Permute along columns."},
