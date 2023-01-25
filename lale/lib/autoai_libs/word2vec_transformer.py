@@ -17,6 +17,8 @@ import autoai_libs.transformers.text_transformers
 import lale.docstrings
 import lale.operators
 
+from ._common_schemas import _hparam_activate_flag_features, _hparam_column_headers_list
+
 
 # This is currently needed just to hide get_params so that lale does not call clone
 # when doing a defensive copy
@@ -66,16 +68,10 @@ It then performs SVD on those vectors for dimensionality reduction.""",
                     "type": "integer",
                     "default": 30,
                 },
-                "column_headers_list": {
-                    "description": """Column headers passed from autoai_core. The new feature's column headers are
-appended to this.""",
-                    "anyOf": [
-                        {"type": "array", "items": {"type": "string"}},
-                        {"type": "array", "items": {"type": "integer"}},
-                        {"enum": [None]},
-                    ],
-                    "default": None,
-                },
+                "column_headers_list": _hparam_column_headers_list(
+                    description="""Column headers passed from autoai_core. The new feature's column headers are
+appended to this."""
+                ),
                 "svd_num_iter": {
                     "description": "Number of iterations for which svd was run.",
                     "type": "integer",
@@ -86,11 +82,7 @@ appended to this.""",
                     "type": "boolean",
                     "default": False,
                 },
-                "activate_flag": {
-                    "description": "If False, the features are not generated.",
-                    "type": "boolean",
-                    "default": True,
-                },
+                "activate_flag": _hparam_activate_flag_features,
                 "min_count": {
                     "description": "Word2vec model ignores all the words whose frequency is less than this.",
                     "type": "integer",

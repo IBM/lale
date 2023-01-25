@@ -19,6 +19,17 @@ import lale.docstrings
 import lale.helpers
 import lale.operators
 
+from ._common_schemas import (
+    _hparam_col_dtypes,
+    _hparams_apply_all,
+    _hparams_col_as_json_objects,
+    _hparams_col_names,
+    _hparams_datatype_spec,
+    _hparams_fun_pointer,
+    _hparams_tgraph,
+    _hparams_transformer_name,
+)
+
 
 class _TGenImpl:
     def __init__(self, **hyperparams):
@@ -58,16 +69,8 @@ _hyperparams_schema = {
             ],
             "relevantToOptimizer": [],
             "properties": {
-                "fun": {
-                    "description": "The function pointer.",
-                    "laleType": "Any",
-                    "default": None,
-                },
-                "name": {
-                    "description": "A string name that uniquely identifies this transformer from others.",
-                    "anyOf": [{"type": "string"}, {"enum": [None]}],
-                    "default": None,
-                },
+                "fun": _hparams_fun_pointer(description="The function pointer."),
+                "name": _hparams_transformer_name,
                 "arg_count": {
                     "description": "Number of arguments to the function, e.g., 1 for unary, 2 for binary, and so on.",
                     "type": "integer",
@@ -81,8 +84,7 @@ _hyperparams_schema = {
                             "type": "array",
                             "items": {
                                 "description": "List of datatypes that are valid input to the corresponding argument (numeric, float, int, etc.).",
-                                "type": "array",
-                                "items": {"type": "string"},
+                                **_hparams_datatype_spec,
                             },
                         },
                         {"enum": [None]},
@@ -104,43 +106,11 @@ _hyperparams_schema = {
                     ],
                     "default": None,
                 },
-                "tgraph": {
-                    "description": "Should be the invoking TGraph() object.",
-                    "anyOf": [
-                        {"laleType": "Any"},
-                        {
-                            "enum": [None],
-                            "description": "Passing None will result in some failure to detect some inefficiencies due to lack of caching.",
-                        },
-                    ],
-                    "default": None,
-                },
-                "apply_all": {
-                    "description": "Only use applyAll = True. It means that the transformer will enumerate all features (or feature sets) that match the specified criteria and apply the provided function to each.",
-                    "type": "boolean",
-                    "default": True,
-                },
-                "col_names": {
-                    "description": "Names of the feature columns in a list.",
-                    "anyOf": [
-                        {"type": "array", "items": {"type": "string"}},
-                        {"enum": [None]},
-                    ],
-                    "default": None,
-                },
-                "col_dtypes": {
-                    "description": "List of the datatypes of the feature columns.",
-                    "anyOf": [
-                        {"type": "array", "items": {"laleType": "Any"}},
-                        {"enum": [None]},
-                    ],
-                    "default": None,
-                },
-                "col_as_json_objects": {
-                    "description": "Names of the feature columns in a json dict.",
-                    "anyOf": [{"type": "object"}, {"enum": [None]}],
-                    "default": None,
-                },
+                "tgraph": _hparams_tgraph,
+                "apply_all": _hparams_apply_all,
+                "col_names": _hparams_col_names,
+                "col_dtypes": _hparam_col_dtypes,
+                "col_as_json_objects": _hparams_col_as_json_objects,
             },
         }
     ]

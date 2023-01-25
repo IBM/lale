@@ -17,6 +17,12 @@ import autoai_libs.cognito.transforms.transform_utils
 import lale.docstrings
 import lale.operators
 
+from ._common_schemas import (
+    _hparams_feat_constraints,
+    _hparams_fun_pointer,
+    _hparams_transformer_name,
+)
+
 
 class _TNoOpImpl:
     def __init__(self, **hyperparams):
@@ -42,26 +48,16 @@ _hyperparams_schema = {
             "required": ["fun", "name", "datatypes", "feat_constraints", "tgraph"],
             "relevantToOptimizer": [],
             "properties": {
-                "fun": {
-                    "description": "Function pointer (ignored).",
-                    "laleType": "Any",
-                    "default": None,
-                },
-                "name": {
-                    "description": "A string name that uniquely identifies this transformer from others.",
-                    "anyOf": [{"type": "string"}, {"enum": [None]}],
-                    "default": None,
-                },
+                "fun": _hparams_fun_pointer(description="Function pointer (ignored)."),
+                "name": _hparams_transformer_name,
                 "datatypes": {
                     "description": "List of datatypes that are valid input (ignored).",
                     "laleType": "Any",
                     "default": None,
                 },
-                "feat_constraints": {
-                    "description": "Constraints that must be satisfied by a column to be considered a valid input to this transform (ignored).",
-                    "laleType": "Any",
-                    "default": None,
-                },
+                "feat_constraints": _hparams_feat_constraints(
+                    description="Constraints that must be satisfied by a column to be considered a valid input to this transform (ignored)."
+                ),
                 "tgraph": {
                     "description": "Should be the invoking TGraph() object.",
                     "anyOf": [{"laleType": "Any"}, {"enum": [None]}],

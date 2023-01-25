@@ -18,6 +18,11 @@ import numpy as np
 import lale.docstrings
 import lale.operators
 
+from ._common_schemas import (
+    _hparam_activate_flag_unmodified,
+    _hparam_sklearn_version_family,
+)
+
 
 class _CatEncoderImpl:
     def __init__(self, encode_unknown_with="auto", **hyperparams):
@@ -132,16 +137,8 @@ In the inverse transform, an unknown category will be denoted as None.""",
                     "enum": ["error", "ignore"],
                     "default": "ignore",
                 },
-                "sklearn_version_family": {
-                    "description": "The sklearn version for backward compatibiity with versions 019 and 020dev. Currently unused.",
-                    "enum": ["20", "21", "22", "23", "24", None, "1"],
-                    "default": None,
-                },
-                "activate_flag": {
-                    "description": "If False, transform(X) outputs the input numpy array X unmodified.",
-                    "type": "boolean",
-                    "default": True,
-                },
+                "sklearn_version_family": _hparam_sklearn_version_family,
+                "activate_flag": _hparam_activate_flag_unmodified,
                 "encode_unknown_with": {
                     "description": """When an unknown categorical feature value is found during transform, and 'handle_unknown' is
 set to 'ignore', and encoding is 'ordinal', that value is encoded with this value. Default of 'auto' sets it to an integer equal to n+1, where
