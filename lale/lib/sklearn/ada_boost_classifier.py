@@ -18,6 +18,7 @@ from sklearn.ensemble import AdaBoostClassifier as SKLModel
 
 import lale.docstrings
 import lale.operators
+from lale.helpers import get_estimator_param_name_from_hyperparams
 
 from .fit_spec_proxy import _FitSpecProxy
 from .function_transformer import FunctionTransformer
@@ -26,7 +27,7 @@ from .function_transformer import FunctionTransformer
 class _AdaBoostClassifierImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
-        est_name = self._get_estimator_param_name()
+        est_name = get_estimator_param_name_from_hyperparams(self._hyperparams)
 
         base_estimator = hyperparams.get(est_name, None)
         if base_estimator is None:
@@ -38,17 +39,10 @@ class _AdaBoostClassifierImpl:
 
         self._wrapped_model = SKLModel(**{**hyperparams, **base_hyperparams})
 
-    def _get_estimator_param_name(self):
-        be = self._hyperparams.get("base_estimator", "deprecated")
-        if be is None or be == "deprecated":
-            return "estimator"
-        else:
-            return "base_estimator"
-
     def get_params(self, deep=True):
         out = self._wrapped_model.get_params(deep=deep)
         # we want to return the lale operator, not the underlying impl
-        est_name = self._get_estimator_param_name()
+        est_name = get_estimator_param_name_from_hyperparams(self._hyperparams)
         out[est_name] = self._hyperparams[est_name]
         return out
 
@@ -60,7 +54,7 @@ class _AdaBoostClassifierImpl:
                 check_inverse=False,
             )
 
-            est_name = self._get_estimator_param_name()
+            est_name = get_estimator_param_name_from_hyperparams(self._hyperparams)
             self._hyperparams[est_name] = _FitSpecProxy(
                 feature_transformer >> self._hyperparams[est_name]
             )

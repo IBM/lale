@@ -1208,3 +1208,11 @@ def get_sklearn_estimator_name() -> str:
         return "base_estimator"
     else:
         return "estimator"
+
+
+def get_estimator_param_name_from_hyperparams(hyperparams):
+    be = hyperparams.get("base_estimator", "deprecated")
+    if be == "deprecated" or (be is None and "estimator" in hyperparams):
+        return "estimator"
+    else:
+        return "base_estimator"

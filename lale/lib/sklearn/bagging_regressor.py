@@ -18,6 +18,7 @@ from sklearn.ensemble import BaggingRegressor as SKLModel
 
 import lale.docstrings
 import lale.operators
+from lale.helpers import get_estimator_param_name_from_hyperparams
 
 from ._common_schemas import schema_1D_numbers, schema_X_numbers
 from .function_transformer import FunctionTransformer
@@ -28,17 +29,10 @@ class _BaggingRegressorImpl:
         self._wrapped_model = SKLModel(**hyperparams)
         self._hyperparams = hyperparams
 
-    def _get_estimator_param_name(self):
-        be = self._hyperparams.get("base_estimator", "deprecated")
-        if be is None or be == "deprecated":
-            return "estimator"
-        else:
-            return "base_estimator"
-
     def get_params(self, deep=True):
         out = self._wrapped_model.get_params(deep=deep)
         # we want to return the lale operator, not the underlying impl
-        est_name = self._get_estimator_param_name()
+        est_name = get_estimator_param_name_from_hyperparams(self._hyperparams)
         out[est_name] = self._hyperparams[est_name]
         return out
 
@@ -50,7 +44,7 @@ class _BaggingRegressorImpl:
                 check_inverse=False,
             )
 
-            est_name = self._get_estimator_param_name()
+            est_name = get_estimator_param_name_from_hyperparams(self._hyperparams)
             self._hyperparams[est_name] = (
                 feature_transformer >> self._hyperparams[est_name]
             )
