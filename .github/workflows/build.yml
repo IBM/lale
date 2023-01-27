@@ -139,7 +139,7 @@ jobs:
           setup-target: '.[full,test]'
         - test-case: test/test_relational_sklearn.py
           python-version: 3.7
-          setup-target: '.[test]'
+          setup-target: '.[full,test]'
 
     steps:
     - uses: actions/checkout@v3
