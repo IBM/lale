@@ -13,12 +13,14 @@ repos:
       # Check Python source for debugger imports and
       # py37+ `breakpoint()`
       - id: debug-statements
+  #### BEGIN Temporarily disabled due to incompatibility between isort and poetry.
   # Clean up imports in Python using isort
-  - repo: https://github.com/pycqa/isort
-    rev: 5.10.1
-    hooks:
-      - id: isort
-        args: [--filter-files]
+  # - repo: https://github.com/pycqa/isort
+  #   rev: 5.10.1
+  #   hooks:
+  #     - id: isort
+  #       args: [--filter-files]
+  #### END
   # Format the python code with black
   - repo: https://github.com/psf/black
     rev: 22.10.0
