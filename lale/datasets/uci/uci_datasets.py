@@ -47,7 +47,7 @@ def download(dataset_id, zip_name, contents_files):
                 for full, base in zip(full_file_names, contents_files):
                     if not os.path.exists(full):
                         myzip.extract(base, data_dir)
-    assert all_downloaded
+    assert all_downloaded()
     return full_file_names
 
 
