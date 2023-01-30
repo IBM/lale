@@ -1,4 +1,4 @@
-# Copyright 2021, 2022 IBM Corporation
+# Copyright 2021-2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -48,6 +48,7 @@ Scikit-learn Operators
 * lale.lib.rasl. `SelectKBest`_
 * lale.lib.rasl. `SimpleImputer`_
 * lale.lib.rasl. `StandardScaler`_
+* lale.lib.rasl. `TargetEncoder`_
 
 Estimators
 ==========
@@ -112,6 +113,7 @@ Other Facilities
 .. _`SelectKBest`: lale.lib.rasl.select_k_best.html
 .. _`SimpleImputer`: lale.lib.rasl.simple_imputer.html
 .. _`StandardScaler`: lale.lib.rasl.standard_scaler.html
+.. _`TargetEncoder`: lale.lib.rasl.target_encoder.html
 
 .. _`categorical`: lale.lib.rasl.functions.html#lale.lib.rasl.functions.categorical
 .. _`date_time`: lale.lib.rasl.functions.html#lale.lib.rasl.functions.date_time
@@ -179,6 +181,7 @@ from .sort_index import SortIndex as SortIndex
 from .spark_explainer import SparkExplainer as SparkExplainer
 from .split_xy import SplitXy as SplitXy
 from .standard_scaler import StandardScaler as StandardScaler
+from .target_encoder import TargetEncoder as TargetEncoder
 from .task_graphs import Prio as Prio
 from .task_graphs import PrioBatch as PrioBatch
 from .task_graphs import PrioResourceAware as PrioResourceAware

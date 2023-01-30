@@ -1,4 +1,4 @@
-# Copyright 2021-2022 IBM Corporation
+# Copyright 2021-2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ import numpy as np
 import pandas as pd
 import sklearn
 import sklearn.datasets
-from category_encoders.hashing import HashingEncoder as SkHashingEncoder
+from category_encoders import HashingEncoder as SkHashingEncoder
 from sklearn.feature_selection import SelectKBest as SkSelectKBest
 from sklearn.impute import SimpleImputer as SkSimpleImputer
 from sklearn.metrics import accuracy_score as sk_accuracy_score
@@ -59,6 +59,7 @@ from lale.datasets.data_schemas import (
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
 from lale.expressions import it
 from lale.helpers import _ensure_pandas, create_data_loader
+from lale.lib.category_encoders import TargetEncoder as SkTargetEncoder
 from lale.lib.lightgbm import LGBMClassifier, LGBMRegressor
 from lale.lib.rasl import BatchedBaggingClassifier, ConcatFeatures, Convert
 from lale.lib.rasl import HashingEncoder as RaslHashingEncoder
@@ -70,6 +71,7 @@ from lale.lib.rasl import PrioBatch, PrioStep, Project, Scan
 from lale.lib.rasl import SelectKBest as RaslSelectKBest
 from lale.lib.rasl import SimpleImputer as RaslSimpleImputer
 from lale.lib.rasl import StandardScaler as RaslStandardScaler
+from lale.lib.rasl import TargetEncoder as RaslTargetEncoder
 from lale.lib.rasl import accuracy_score as rasl_accuracy_score
 from lale.lib.rasl import balanced_accuracy_score as rasl_balanced_accuracy_score
 from lale.lib.rasl import categorical
@@ -689,6 +691,7 @@ class TestHashingEncoder(unittest.TestCase):
         rasl_trainable = prefix >> RaslHashingEncoder()
         sk_trainable = prefix >> SkHashingEncoder()
         sk_trained = sk_trainable.fit(train_X_pd)
+        # TODO: test with multiple batches
         for tgt, dataset in self.tgt2creditg.items():
             (train_X, _train_y), (_test_X, _test_y) = dataset
             rasl_trained = rasl_trainable.fit(train_X)
@@ -735,6 +738,93 @@ class TestHashingEncoder(unittest.TestCase):
             rasl_predicted = rasl_trained.predict(test_X)
             self.assertEqual(sk_predicted.shape, rasl_predicted.shape, tgt)
             self.assertEqual(sk_predicted.tolist(), rasl_predicted.tolist(), tgt)
+
+
+def _check_trained_target_encoder(test, op1, op2, msg):
+    names1, names2 = _get_feature_names_out(op1), _get_feature_names_out(op2)
+    test.assertListEqual(list(names1), list(names2), msg)
+    test.assertSequenceEqual(op1.mapping.keys(), op2._col2cat2value.keys(), msg)
+    for col in op1.mapping.keys():
+        op1_cat2val = op1.mapping[col].to_dict()
+        op2_cat2val = op2._col2cat2value[col]
+        expected_keys = list(range(1, 1 + len(op2_cat2val))) + [-1, -2]
+        test.assertListEqual(list(op1_cat2val.keys()), expected_keys, (col, msg))
+        test.assertAlmostEqual(op1_cat2val[-1], op2._prior, msg=(col, msg))
+        for i, cat in enumerate(op2_cat2val.keys()):
+            test.assertAlmostEqual(
+                op1_cat2val[i + 1], op2_cat2val[cat], msg=(col, i, cat, msg)
+            )
+
+
+class TestTargetEncoder(unittest.TestCase):  # TODO: test with batches
+    @classmethod
+    def setUpClass(cls):
+        targets = ["pandas", "spark"]
+        cls.tgt2creditg = cast(
+            Dict[str, Any],
+            {
+                tgt: lale.datasets.openml.fetch(
+                    "credit-g",
+                    "classification",
+                    preprocess=False,
+                    astype=tgt,
+                )
+                for tgt in targets
+            },
+        )
+
+    def test_fit(self):
+        (train_X_pd, train_y_pd), (_, _) = self.tgt2creditg["pandas"]
+        classes = sorted(list(train_y_pd.unique()))
+        rasl_trainable = RaslTargetEncoder(classes=classes)
+        sk_trainable = SkTargetEncoder()
+        sk_trained = sk_trainable.fit(train_X_pd, train_y_pd)
+        for tgt, dataset in self.tgt2creditg.items():
+            (train_X, train_y), (_test_X, _test_y) = dataset
+            rasl_trained = rasl_trainable.fit(train_X, train_y)
+            _check_trained_target_encoder(self, sk_trained.impl, rasl_trained.impl, tgt)
+
+    def test_transform(self):
+        (train_X_pd, train_y_pd), (test_X_pd, _test_y_pd) = self.tgt2creditg["pandas"]
+        classes = sorted(list(train_y_pd.unique()))
+        rasl_trainable = RaslTargetEncoder(classes=classes)
+        sk_trainable = SkTargetEncoder()
+        sk_trained = sk_trainable.fit(train_X_pd, train_y_pd)
+        sk_transformed = sk_trained.transform(test_X_pd)
+        for tgt, dataset in self.tgt2creditg.items():
+            (train_X, train_y), (test_X, _test_y) = dataset
+            rasl_trained = rasl_trainable.fit(train_X, train_y)
+            _check_trained_target_encoder(self, sk_trained.impl, rasl_trained.impl, tgt)
+            rasl_transformed = rasl_trained.transform(test_X)
+            if tgt == "spark":
+                self.assertEqual(get_index_name(rasl_transformed), "index")
+            rasl_transformed = _ensure_pandas(rasl_transformed)
+            self.assertEqual(sk_transformed.shape, rasl_transformed.shape, tgt)
+            for row_idx in range(sk_transformed.shape[0]):
+                for col_idx in range(sk_transformed.shape[1]):
+                    self.assertEqual(
+                        sk_transformed.iloc[row_idx, col_idx],
+                        rasl_transformed.iloc[row_idx, col_idx],
+                        (row_idx, col_idx, tgt),
+                    )
+
+    def test_predict(self):
+        (train_X_pd, train_y_pd), (test_X_pd, _test_y_pd) = self.tgt2creditg["pandas"]
+        classes = sorted(list(train_y_pd.unique()))
+        sk_trainable = SkTargetEncoder() >> LogisticRegression()
+        sk_trained = sk_trainable.fit(train_X_pd, train_y_pd)
+        sk_predicted = sk_trained.predict(test_X_pd)
+        rasl_trainable = (
+            RaslTargetEncoder(classes=classes)
+            >> Convert(astype="pandas")
+            >> LogisticRegression()
+        )
+        for tgt, dataset in self.tgt2creditg.items():
+            (train_X, train_y), (test_X, _test_y) = dataset
+            rasl_trained = rasl_trainable.fit(train_X, train_y)
+            rasl_predicted = rasl_trained.predict(test_X)
+            self.assertEqual(sk_predicted.shape, rasl_predicted.shape, tgt)
+            self.assertListEqual(sk_predicted.tolist(), rasl_predicted.tolist(), tgt)
 
 
 def _check_trained_simple_imputer(test, op1, op2, msg):
