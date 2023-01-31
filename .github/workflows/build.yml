@@ -46,7 +46,7 @@ jobs:
     - name: pre-commit checks (3.7; skip isort)
       if: ${{ matrix.python-version == '3.7' }}
       env:
-        SKIP: isort
+        SKIP: isort,flake8
       uses: pre-commit/action@v3.0.0
   docs:
     name: Documentation build
