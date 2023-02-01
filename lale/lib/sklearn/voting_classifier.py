@@ -18,6 +18,7 @@ from packaging import version
 
 import lale.docstrings
 import lale.operators
+from lale.schemas import Bool
 
 _hyperparams_schema = {
     "description": "Soft Voting/Majority Rule classifier for unfitted estimators.",
@@ -270,6 +271,16 @@ if lale.operators.sklearn_version >= version.Version("0.21"):
             },
             "description": "List of (string, estimator) tuples. Invoking the ``fit`` method on the ``VotingClassifier`` will fit clones.",
         },
+        set_as_available=True,
+    )
+
+if lale.operators.sklearn_version >= version.Version("0.23"):
+    # new: https://scikit-learn.org/0.23/modules/generated/sklearn.ensemble.VotingClassifier.html
+    VotingClassifier = VotingClassifier.customize_schema(
+        verbose=Bool(
+            default=False,
+            desc="If True, the time elapsed while fitting will be printed as it is completed.",
+        ),
         set_as_available=True,
     )
 
