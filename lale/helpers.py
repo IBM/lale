@@ -31,6 +31,7 @@ from typing import (
     Tuple,
     TypeVar,
     Union,
+    overload,
 )
 
 import numpy as np
@@ -574,7 +575,31 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
             return lale_wrapper_found, sklearn_obj
         return lale_wrapper_found, class_
 
-    import lale.operators
+    @overload
+    def import_nested_params(orig_hyperparams: dict) -> dict:
+        ...
+
+    @overload
+    def import_nested_params(orig_hyperparams: Any) -> Any:
+        ...
+
+    def import_nested_params(orig_hyperparams):
+        if isinstance(orig_hyperparams, (tuple, list)):
+            new_list = [import_nested_params(e) for e in orig_hyperparams]
+            if isinstance(orig_hyperparams, tuple):
+                return tuple(new_list)
+            else:
+                return new_list
+        if isinstance(orig_hyperparams, dict):
+            return {k: import_nested_params(v) for k, v in orig_hyperparams.items()}
+        if isinstance(orig_hyperparams, object) and hasattr(
+            orig_hyperparams, "get_params"
+        ):
+            return import_from_sklearn_pipeline(
+                orig_hyperparams, fitted, is_hyperparam=True
+            )  # allow nested_op to be trainable
+        else:
+            return copy.deepcopy(orig_hyperparams)
 
     sklearn_obj = sklearn_pipeline
 
@@ -599,65 +624,7 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
     elif isinstance(sklearn_obj, lale.operators.Operator):
         return copy.deepcopy(sklearn_obj)
 
-    if isinstance(sklearn_pipeline, sklearn.pipeline.Pipeline):
-        nested_pipeline_steps = sklearn_pipeline.named_steps
-        nested_pipeline_lale_named_steps = [
-            (
-                nested_pipeline_step[0],
-                import_from_sklearn_pipeline(
-                    nested_pipeline_step[1], fitted=fitted, is_hyperparam=is_hyperparam
-                ),
-            )
-            for nested_pipeline_step in nested_pipeline_steps.items()
-        ]
-        if (
-            type(sklearn_pipeline)  # pylint:disable=unidiomatic-typecheck
-            == sklearn.pipeline.Pipeline
-        ):
-            nested_pipeline_lale_objects = [
-                nested_pipeline_lale_named_step[1]
-                for nested_pipeline_lale_named_step in nested_pipeline_lale_named_steps
-            ]
-            lale_op_obj = lale.operators.make_pipeline(*nested_pipeline_lale_objects)
-        else:
-            lale_wrapper_found, wrapper_class = find_lale_wrapper(sklearn_pipeline)
-            if lale_wrapper_found:
-                # This is a custom subclass of sklearn pipeline, so use the wrapper class
-                # instead of creating a lale pipeline
-                # We assume it has a hyperparameter `steps`.
-                if (
-                    not fitted
-                ):  # If fitted is False, we do not want to return a Trained operator.
-                    lale_op = wrapper_class
-                else:
-                    lale_op = lale.operators.TrainedIndividualOp(
-                        wrapper_class._name,
-                        wrapper_class._impl,
-                        wrapper_class._schemas,
-                        None,
-                        _lale_trained=True,
-                    )
-                other_hyperparams = sklearn_pipeline.get_params()
-                step_names = [name for name, _ in nested_pipeline_lale_named_steps]
-                keys_to_be_deleted = [
-                    key
-                    for key, _ in other_hyperparams.items()
-                    for step_name in step_names
-                    if key.startswith(step_name)
-                ]
-                for (
-                    key
-                ) in (
-                    keys_to_be_deleted
-                ):  # sklearn pipeline's get_params returns all mangled parameters of each step.
-                    del other_hyperparams[key]
-                del other_hyperparams["steps"]  # delete steps explicitly
-                lale_op_obj = lale_op(
-                    steps=nested_pipeline_lale_named_steps, **other_hyperparams
-                )
-            else:  # no conversion to lale if a wrapper is not found for a subclass of pipeline
-                return sklearn_pipeline
-    elif isinstance(sklearn_pipeline, sklearn.pipeline.FeatureUnion):
+    if isinstance(sklearn_pipeline, sklearn.pipeline.FeatureUnion):
         transformer_list = sklearn_pipeline.transformer_list
         concat_predecessors = [
             import_from_sklearn_pipeline(
@@ -673,21 +640,7 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
                 f"The input pipeline has a step {sklearn_obj} that is not scikit-learn compatible."
             )
         orig_hyperparams = sklearn_obj.get_params(deep=False)
-        higher_order = False
-        for hp_name, hp_val in orig_hyperparams.items():
-            higher_order = higher_order or hasattr(hp_val, "get_params")
-        if higher_order:
-            hyperparams = {}
-            for hp_name, hp_val in orig_hyperparams.items():
-                if hasattr(hp_val, "get_params"):
-                    nested_op = import_from_sklearn_pipeline(
-                        hp_val, fitted, is_hyperparam=True
-                    )  # allow nested_op to be trainable
-                    hyperparams[hp_name] = nested_op
-                else:
-                    hyperparams[hp_name] = hp_val
-        else:
-            hyperparams = orig_hyperparams
+        hyperparams = import_nested_params(orig_hyperparams)
 
         lale_wrapper_found, class_ = find_lale_wrapper(sklearn_obj)
 
@@ -704,13 +657,43 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
             )
         class_ = lale_op(**hyperparams)
         lale_op_obj = class_
-        if lale_wrapper_found and hasattr(class_._impl_instance(), "_wrapped_model"):
+
+        from lale.lib.sklearn import Pipeline as LaleSKPipelineWrapper
+
+        if lale_wrapper_found and isinstance(class_, LaleSKPipelineWrapper):  # type: ignore
+            return class_.shallow_impl._pipeline
+        cl_impl = class_.shallow_impl
+        if lale_wrapper_found and hasattr(cl_impl, "_wrapped_model"):
             wrapped_model = copy.deepcopy(sklearn_obj)
-            class_._impl_instance()._wrapped_model = wrapped_model
+            cl_impl._wrapped_model = wrapped_model
+
+            if hasattr(cl_impl, "set_params"):
+                try:
+                    new_impl = cl_impl.set_params(**hyperparams)
+                    class_._impl = new_impl
+                    class_._impl_class_ = new_impl.__class__
+                except NotImplementedError:
+                    # if the set_params method does not work, skip it and just rely on the clone
+                    pass
+            elif hasattr(wrapped_model, "set_params"):
+                try:
+                    cl_impl._wrapped_model = wrapped_model.set_params(**hyperparams)
+                except NotImplementedError:
+                    # if the set_params method does not work, skip it and just rely on the clone
+                    pass
+
         else:  # If there is no lale wrapper, there is no _wrapped_model
-            class_._impl = copy.deepcopy(sklearn_obj)
-            class_._impl_class_ = class_._impl.__class__
-            lale_op_obj = class_
+            cl_impl_new = copy.deepcopy(sklearn_obj)
+            if hasattr(cl_impl_new, "set_params"):
+                try:
+                    cl_impl_new = cl_impl_new.set_params(**hyperparams)
+                except NotImplementedError:
+                    # if the set_params method does not work, skip it and just rely on the clone
+                    pass
+
+            class_._impl = cl_impl_new
+            class_._impl_class_ = cl_impl_new.__class__
+
     return lale_op_obj
 
 
