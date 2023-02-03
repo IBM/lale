@@ -39,7 +39,12 @@ except ImportError:
 from test import EnableSchemaValidation  # pylint:disable=wrong-import-order
 
 from lale.datasets import pandas2spark
-from lale.datasets.data_schemas import add_table_name, get_index_name, get_table_name
+from lale.datasets.data_schemas import (
+    add_table_name,
+    get_index_name,
+    get_table_name,
+    make_optional_schema,
+)
 from lale.datasets.multitable import multitable_train_test_split
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
 from lale.expressions import (  # pylint:disable=redefined-builtin
@@ -2036,7 +2041,9 @@ class TestMap(unittest.TestCase):
 
                 if s is None:
                     ret["unknown_" + c] = it[c]
-                elif type_checking.is_subschema(s, {"type": "number"}):
+                elif type_checking.is_subschema(
+                    s, make_optional_schema({"type": "number"})
+                ):
                     ret["num_" + c] = it[c]
                     ret["shifted_" + c] = it[c] + 5
                 else:
@@ -2107,7 +2114,9 @@ class TestMap(unittest.TestCase):
     def test_project(self):
         from lale.lib.lale import Project
 
-        pipeline = Scan(table=it.go_products) >> Project(columns={"type": "number"})
+        pipeline = Scan(table=it.go_products) >> Project(
+            columns=make_optional_schema({"type": "number"})
+        )
         for _tgt, datasets in self.tgt2datasets.items():
             datasets = datasets["go_sales"]
             result = pipeline.fit(datasets).transform(datasets)
