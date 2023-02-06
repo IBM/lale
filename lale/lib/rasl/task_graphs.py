@@ -1270,7 +1270,7 @@ def _run_tasks_inner(
                 assert apply_pred.batch is not None
                 cache.load_input_batches(task)
                 input_X, input_y = apply_pred.batch.Xy
-                if trainee.is_supervised():
+                if trainee.is_supervised() and trainee.is_classifier():
                     task.trained = trainee.partial_fit(
                         input_X, input_y, classes=unique_class_labels
                     )
