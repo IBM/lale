@@ -1,8 +1,10 @@
 from numpy import inf, nan
+from packaging import version
 from sklearn.linear_model import ElasticNetCV as Op
 
+import lale
 from lale.docstrings import set_docstrings
-from lale.operators import make_operator
+from lale.operators import make_operator, sklearn_version
 
 
 class _ElasticNetCVImpl:
@@ -270,5 +272,13 @@ _combined_schemas = {
     },
 }
 ElasticNetCV = make_operator(_ElasticNetCVImpl, _combined_schemas)
+
+if sklearn_version >= version.Version("1.2"):
+    # new: "https://scikit-learn.org/1.2/modules/generated/sklearn.linear_model.ElasticNetCV#sklearn-linear_model-elasticnetcv"
+
+    ElasticNetCV = ElasticNetCV.customize_schema(
+        normalize=None,
+        set_as_available=True,
+    )
 
 set_docstrings(ElasticNetCV)

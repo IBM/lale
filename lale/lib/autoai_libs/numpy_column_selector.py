@@ -18,6 +18,8 @@ import pandas as pd
 import lale.docstrings
 import lale.operators
 
+from ._common_schemas import _hparams_column_index_list
+
 
 class _NumpyColumnSelectorImpl:
     def __init__(self, **hyperparams):
@@ -46,14 +48,9 @@ _hyperparams_schema = {
             "required": ["columns"],
             "relevantToOptimizer": [],
             "properties": {
-                "columns": {
-                    "description": "List of indices to select numpy columns.",
-                    "anyOf": [
-                        {"type": "array", "items": {"type": "integer", "minimum": 0}},
-                        {"enum": [None]},
-                    ],
-                    "default": None,
-                }
+                "columns": _hparams_column_index_list(
+                    description="List of indices to select numpy columns."
+                ),
             },
         }
     ]

@@ -1,4 +1,4 @@
-# Copyright 2021 IBM Corporation
+# Copyright 2021-2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,43 +15,16 @@
 from functools import reduce
 from typing import Any, List, Optional, Tuple
 
-import pandas as pd
-
 import lale.docstrings
 import lale.helpers
 import lale.operators
 from lale.expressions import Expr, hash_mod, it, ite
-from lale.helpers import _is_pandas_df, _is_spark_df
 from lale.lib.category_encoders import hashing_encoder
 from lale.lib.dataframe import count, get_columns
 
+from ._util import get_obj_cols
 from .map import Map
 from .monoid import Monoid, MonoidableOperator
-
-
-# Based on https://github.com/scikit-learn-contrib/category_encoders/blob/master/category_encoders/utils.py
-def get_obj_cols(df):
-    """
-    Returns names of 'object' columns in the DataFrame.
-    """
-    obj_cols = []
-    if _is_pandas_df(df):
-        for idx, dt in enumerate(df.dtypes):
-            if dt == "object" or is_category(dt):
-                obj_cols.append(df.columns.values[idx])
-    elif _is_spark_df(df):
-        for idx, (col, dt) in enumerate(df.dtypes):
-            if dt == "string":
-                obj_cols.append(col)
-    else:
-        assert False
-
-    return obj_cols
-
-
-# From https://github.com/scikit-learn-contrib/category_encoders/blob/master/category_encoders/utils.py
-def is_category(dtype):
-    return pd.api.types.is_categorical_dtype(dtype)
 
 
 class _HashingEncoderMonoid(Monoid):
@@ -178,9 +151,5 @@ Works on both pandas and Spark dataframes by using `Map`_ for `transform`, which
 }
 
 HashingEncoder = lale.operators.make_operator(_HashingEncoderImpl, _combined_schemas)
-
-# HashingEncoder = typing.cast(
-#     lale.operators.PlannedIndividualOp,
-# )
 
 lale.docstrings.set_docstrings(HashingEncoder)

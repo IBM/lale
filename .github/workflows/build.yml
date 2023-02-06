@@ -41,8 +41,13 @@ jobs:
         pip install pipdeptree
         pipdeptree -fl
     - name: pre-commit checks
+      if: ${{ matrix.python-version != '3.7' }}
       uses: pre-commit/action@v3.0.0
-
+    - name: pre-commit checks (3.7; skip isort and flake8)
+      if: ${{ matrix.python-version == '3.7' }}
+      env:
+        SKIP: isort,flake8
+      uses: pre-commit/action@v3.0.0
   docs:
     name: Documentation build
     runs-on: ubuntu-latest
@@ -139,7 +144,7 @@ jobs:
           setup-target: '.[full,test]'
         - test-case: test/test_relational_sklearn.py
           python-version: 3.7
-          setup-target: '.[test]'
+          setup-target: '.[full,test]'
 
     steps:
     - uses: actions/checkout@v3

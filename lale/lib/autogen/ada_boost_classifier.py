@@ -1,8 +1,9 @@
 from numpy import inf, nan
+from packaging import version
 from sklearn.ensemble import AdaBoostClassifier as Op
 
 from lale.docstrings import set_docstrings
-from lale.operators import make_operator
+from lale.operators import make_operator, sklearn_version
 
 
 class _AdaBoostClassifierImpl:
@@ -178,5 +179,41 @@ _combined_schemas = {
     },
 }
 AdaBoostClassifier = make_operator(_AdaBoostClassifierImpl, _combined_schemas)
+
+if sklearn_version >= version.Version("1.2"):
+    AdaBoostClassifier = AdaBoostClassifier.customize_schema(
+        base_estimator={
+            "anyOf": [
+                {"laleType": "operator"},
+                {"enum": ["deprecated"]},
+            ],
+            "default": "deprecated",
+            "description": "Deprecated. Use `estimator` instead.",
+        },
+        estimator={
+            "anyOf": [
+                {"laleType": "operator"},
+                {"enum": [None], "description": "DecisionTreeClassifier"},
+            ],
+            "default": None,
+            "description": "The base estimator to fit on random subsets of the dataset.",
+        },
+        constraint={
+            "description": "Only `estimator` or `base_estimator` should be specified.  As `base_estimator` is deprecated, use `estimator`.",
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {"base_estimator": {"enum": [False, "deprecated"]}},
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "estimator": {"enum": [None]},
+                    },
+                },
+            ],
+        },
+        set_as_available=True,
+    )
 
 set_docstrings(AdaBoostClassifier)

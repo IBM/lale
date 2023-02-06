@@ -20,6 +20,8 @@ from autoai_libs.transformers.date_time.date_time_transformer import (
 import lale.docstrings
 import lale.operators
 
+from ._common_schemas import _hparam_activate_flag_active, _hparam_column_headers_list
+
 
 class _DateTransformerImpl:
     def __init__(self, **hyperparams):
@@ -88,19 +90,9 @@ Default is None, in this case all the above options are applied""",
                     "type": "boolean",
                     "default": True,
                 },
-                "column_headers_list": {
-                    "description": "List containing the column names of the input array",
-                    "anyOf": [
-                        {
-                            "type": "array",
-                            "items": {
-                                "anyOf": [{"type": "string"}, {"type": "integer"}]
-                            },
-                        },
-                        {"enum": [None]},
-                    ],
-                    "default": None,
-                },
+                "column_headers_list": _hparam_column_headers_list(
+                    description="List containing the column names of the input array"
+                ),
                 "missing_values_reference_list": {
                     "description": "List containing missing values of the input array",
                     "anyOf": [
@@ -109,11 +101,7 @@ Default is None, in this case all the above options are applied""",
                     ],
                     "default": None,
                 },
-                "activate_flag": {
-                    "description": "Determines whether transformer is active or not.",
-                    "type": "boolean",
-                    "default": True,
-                },
+                "activate_flag": _hparam_activate_flag_active,
                 "float32_processing_flag": {
                     "description": "Flag that determines whether timestamps will be float32-compatible.",
                     "type": "boolean",

@@ -313,10 +313,17 @@ not.""",
                 {
                     "type": "object",
                     "properties": {
-                        "solver": {"not": {"enum": ["newton-cg", "sag", "lbfgs"]}}
+                        "solver": {
+                            "not": {
+                                "enum": ["newton-cg", "newton-cholesky", "sag", "lbfgs"]
+                            }
+                        }
                     },
                 },
-                {"type": "object", "properties": {"penalty": {"enum": ["l2", "none"]}}},
+                {
+                    "type": "object",
+                    "properties": {"penalty": {"enum": ["l2", "none", None]}},
+                },
             ],
         },
         {
@@ -356,7 +363,7 @@ not.""",
                 },
                 {
                     "type": "object",
-                    "properties": {"penalty": {"not": {"enum": ["none"]}}},
+                    "properties": {"penalty": {"not": {"enum": ["none", None]}}},
                 },
             ],
         },
@@ -496,6 +503,45 @@ if lale.operators.sklearn_version >= version.Version("0.22"):
                 types=[Float(minimum=0.0, maximum=1.0), Null()],
                 desc="The Elastic-Net mixing parameter.",
                 default=None,
+            ),
+            set_as_available=True,
+        ),
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.2"):
+    # old: https://scikit-learn.org/1.1/modules/generated/sklearn.linear_model.LogisticRegression.html
+    # new: https://scikit-learn.org/1.2/modules/generated/sklearn.linear_model.LogisticRegression.html
+    LogisticRegression = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        LogisticRegression.customize_schema(
+            solver=Enum(
+                values=[
+                    "lbfgs",
+                    "liblinear",
+                    "newton-cg",
+                    "newton-cholesky",
+                    "sag",
+                    "saga",
+                ],
+                desc="""Algorithm to use in the optimization problem. Default is ‘lbfgs’. To choose a solver, you might want to consider the following aspects:
+For small datasets, ‘liblinear’ is a good choice, whereas ‘sag’ and ‘saga’ are faster for large ones;
+For multiclass problems, only ‘newton-cg’, ‘sag’, ‘saga’ and ‘lbfgs’ handle multinomial loss;
+‘liblinear’ and is limited to one-versus-rest schemes.
+‘newton-cholesky’ is a good choice for n_samples >> n_features, especially with one-hot encoded categorical features with rare categories. Note that it is limited to binary classification and the one-versus-rest reduction for multiclass classification. Be aware that the memory usage of this solver has a quadratic dependency on n_features because it explicitly computes the Hessian matrix.
+""",
+                default="lbfgs",
+            ),
+            penalty=AnyOf(
+                [
+                    Enum(values=["l1", "l2", "elasticnet", None]),
+                    Enum(
+                        values=["none"],
+                        desc="deprecated.  Use None instead",
+                        forOptimizer=False,
+                    ),
+                ],
+                desc="Norm used in the penalization.",
+                default="l2",
             ),
             set_as_available=True,
         ),

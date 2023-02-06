@@ -17,6 +17,8 @@ import autoai_libs.transformers.exportable
 import lale.docstrings
 import lale.operators
 
+from ._common_schemas import _hparam_activate_flag_unmodified, _hparam_dtypes_list
+
 
 class _CompressStringsImpl:
     def __init__(self, **hyperparams):
@@ -52,32 +54,7 @@ _hyperparams_schema = {
                     "enum": ["string", "hash"],
                     "default": "string",
                 },
-                "dtypes_list": {
-                    "anyOf": [
-                        {
-                            "description": "Strings that denote the type of each column of the input numpy array X.",
-                            "type": "array",
-                            "items": {
-                                "enum": [
-                                    "char_str",
-                                    "int_str",
-                                    "float_str",
-                                    "float_num",
-                                    "float_int_num",
-                                    "int_num",
-                                    "boolean",
-                                    "Unknown",
-                                    "missing",
-                                ]
-                            },
-                        },
-                        {
-                            "description": "If None, the column types are discovered.",
-                            "enum": [None],
-                        },
-                    ],
-                    "default": None,
-                },
+                "dtypes_list": _hparam_dtypes_list,
                 "misslist_list": {
                     "anyOf": [
                         {
@@ -106,11 +83,7 @@ _hyperparams_schema = {
                     ],
                     "default": None,
                 },
-                "activate_flag": {
-                    "description": "If False, transform(X) outputs the input numpy array X unmodified.",
-                    "type": "boolean",
-                    "default": True,
-                },
+                "activate_flag": _hparam_activate_flag_unmodified,
             },
         }
     ]

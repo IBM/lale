@@ -172,4 +172,11 @@ If you wish to standardize, please use StandardScaler before calling fit on an e
         set_as_available=True,
     )
 
+if lale.operators.sklearn_version >= version.Version("1.2"):
+    # new: https://scikit-learn.org/1.2/modules/generated/sklearn.linear_model.LinearRegression.html
+    LinearRegression = LinearRegression.customize_schema(
+        normalize=None,
+        set_as_available=True,
+    )
+
 lale.docstrings.set_docstrings(LinearRegression)

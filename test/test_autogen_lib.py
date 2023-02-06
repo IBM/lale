@@ -185,7 +185,7 @@ transformers = [
     "MiniBatchDictionaryLearning",
     "MiniBatchKMeans",
     "MiniBatchSparsePCA",
-    "NMF",
+    # "NMF",
     "Normalizer",
     "Nystroem",
     "PCA",

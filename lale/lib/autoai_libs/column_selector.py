@@ -18,6 +18,8 @@ import pandas as pd
 import lale.docstrings
 import lale.operators
 
+from ._common_schemas import _hparam_activate_flag_active, _hparams_column_index_list
+
 
 class _ColumnSelectorImpl:
     def __init__(self, **hyperparams):
@@ -46,19 +48,10 @@ _hyperparams_schema = {
             "required": ["columns_indices_list", "activate_flag"],
             "relevantToOptimizer": [],
             "properties": {
-                "columns_indices_list": {
-                    "description": "List of indices to select numpy columns or list elements.",
-                    "anyOf": [
-                        {"type": "array", "items": {"type": "integer", "minimum": 0}},
-                        {"enum": [None]},
-                    ],
-                    "default": None,
-                },
-                "activate_flag": {
-                    "description": "Determines whether transformer is active or not.",
-                    "type": "boolean",
-                    "default": True,
-                },
+                "columns_indices_list": _hparams_column_index_list(
+                    description="List of indices to select numpy columns or list elements."
+                ),
+                "activate_flag": _hparam_activate_flag_active,
             },
         }
     ]

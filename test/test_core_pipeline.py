@@ -419,8 +419,7 @@ class TestImportExport(unittest.TestCase):
         from sklearn.pipeline import Pipeline
 
         pipe = Pipeline([("noop", None), ("gbc", GradientBoostingClassifier())])
-        with self.assertRaises(ValueError):
-            _ = import_from_sklearn_pipeline(pipe)
+        _ = import_from_sklearn_pipeline(pipe)
 
     def test_import_from_sklearn_pipeline_noop1(self):
         from sklearn.ensemble import GradientBoostingClassifier
@@ -435,6 +434,29 @@ class TestImportExport(unittest.TestCase):
 
         sklearn_pipeline = sk_make_pipeline(PCA(), LocalOutlierFactor())
         _ = import_from_sklearn_pipeline(sklearn_pipeline, fitted=False)
+
+    def test_import_from_sklearn_pipeline_higherorder(self):
+        from sklearn.ensemble import VotingClassifier as VC
+        from sklearn.feature_selection import f_regression
+        from sklearn.pipeline import Pipeline
+        from sklearn.svm import SVC as SklearnSVC
+
+        anova_filter = SkSelectKBest(f_regression, k=3)
+        clf = SklearnSVC(kernel="linear")
+        sklearn_pipeline = Pipeline(
+            [("anova", anova_filter), ("vc_svc", VC(estimators=[("clf", clf)]))]
+        )
+        lale_pipeline = typing.cast(
+            TrainablePipeline,
+            import_from_sklearn_pipeline(sklearn_pipeline),
+        )
+        # for i, pipeline_step in enumerate(sklearn_pipeline.named_steps):
+        #     sklearn_step_params = sklearn_pipeline.named_steps[
+        #         pipeline_step
+        #     ].get_params()
+        #     lale_sklearn_params = self.get_sklearn_params(lale_pipeline.steps_list()[i])
+        #     self.assertEqual(sklearn_step_params, lale_sklearn_params)
+        self.assert_equal_predictions(sklearn_pipeline, lale_pipeline)
 
     def test_export_to_sklearn_pipeline(self):
         lale_pipeline = PCA(n_components=3) >> KNeighborsClassifier()
@@ -795,7 +817,9 @@ class TestAutoPipeline(unittest.TestCase):
 
     def test_sklearn_boston(self):
         # regression, categoricals+numbers, no missing values
-        all_X, all_y = sklearn.datasets.load_boston(return_X_y=True)
+        from lale.datasets.util import load_boston
+
+        all_X, all_y = load_boston(return_X_y=True)
         self._fit_predict("regression", all_X, all_y)
 
     def test_sklearn_diabetes(self):
@@ -824,7 +848,9 @@ class TestAutoPipeline(unittest.TestCase):
 
     def test_missing_boston(self):
         # regression, categoricals+numbers, synthetically added missing values
-        all_X, all_y = sklearn.datasets.load_boston(return_X_y=True)
+        from lale.datasets.util import load_boston
+
+        all_X, all_y = load_boston(return_X_y=True)
         with_missing_X = lale.helpers.add_missing_values(all_X)
         with self.assertRaisesRegex(ValueError, "Input.*contains NaN"):
             lr_trainable = LinearRegression()

@@ -17,6 +17,12 @@ import autoai_libs.cognito.transforms.transform_utils
 import lale.docstrings
 import lale.operators
 
+from ._common_schemas import (
+    _hparam_fs_cols_ids_must_keep,
+    _hparams_fs_additional_col_count_to_keep,
+    _hparams_fs_ptype,
+)
+
 
 class _FS2Impl:
     def __init__(self, **hyperparams):
@@ -75,21 +81,9 @@ _hyperparams_schema = {
             ],
             "relevantToOptimizer": [],
             "properties": {
-                "cols_ids_must_keep": {
-                    "description": "Serial numbers of the columns that must be kept irrespective of their feature importance.",
-                    "laleType": "Any",  # Found a value `range(0, 20) in fs1`
-                    "default": [],
-                },
-                "additional_col_count_to_keep": {
-                    "description": "How many columns need to be retained.",
-                    "type": "integer",
-                    "minimum": 0,
-                },
-                "ptype": {
-                    "description": "Problem type.",
-                    "enum": ["classification", "regression"],
-                    "default": "classification",
-                },
+                "cols_ids_must_keep": _hparam_fs_cols_ids_must_keep,
+                "additional_col_count_to_keep": _hparams_fs_additional_col_count_to_keep,
+                "ptype": _hparams_fs_ptype,
                 "eval_algo": {
                     "description": "A supervised model where fit() sets `feature_importances_`.",
                     "laleType": "Any",

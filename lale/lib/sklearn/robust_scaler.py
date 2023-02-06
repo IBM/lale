@@ -55,7 +55,7 @@ _hyperparams_schema = {
                             "maximumForOptimizer": 0.999,
                         },
                     ],
-                    "default": [0.25, 0.75],
+                    "default": (0.25, 0.75),
                     "description": "Default: (25.0, 75.0) = (1st quantile, 3rd quantile) = IQR",
                 },
                 "copy": {

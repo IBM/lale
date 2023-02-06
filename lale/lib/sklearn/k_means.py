@@ -267,4 +267,27 @@ For now “auto” (kept for backward compatibiliy) chooses “elkan” but it m
         set_as_available=True,
     )
 
+    if sklearn_version >= version.Version("1.2"):
+        # old: https://scikit-learn.org/1.1/modules/generated/sklearn.cluster.KMeans.html
+        # new: https://scikit-learn.org/1.2/modules/generated/sklearn.cluster.KMeans.html
+        KMeans = KMeans.customize_schema(
+            n_init={
+                "anyOf": [
+                    {
+                        "type": "integer",
+                        "minimumForOptimizer": 3,
+                        "maximumForOptimizer": 10,
+                        "distribution": "uniform",
+                    },
+                    {
+                        "enum": ["auto"],
+                    },
+                ],
+                "default": 10,
+                "description": """Number of time the k-means algorithm will be run with different centroid seeds.
+The final results will be the best output of n_init consecutive runs in terms of inertia.
+When n_init='auto', the number of runs will be 10 if using init='random', and 1 if using init='kmeans++'.""",
+            }
+        )
+
 set_docstrings(KMeans)

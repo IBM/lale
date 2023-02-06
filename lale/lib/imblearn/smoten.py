@@ -56,7 +56,7 @@ _hyperparams_schema = {
                 "random_state": _hparam_random_state,
                 "k_neighbors": {
                     **_hparam_n_neighbors,
-                    "description": "Number of nearest neighbours to used to construct synthetic samples.",
+                    "description": "Number of nearest neighbours to use to construct synthetic samples.",
                     "default": 5,
                 },
                 "n_jobs": _hparam_n_jobs,

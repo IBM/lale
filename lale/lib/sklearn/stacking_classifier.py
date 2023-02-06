@@ -259,4 +259,9 @@ if lale.operators.sklearn_version >= version.Version("1.1"):
         set_as_available=True,
     )
 
+if lale.operators.sklearn_version >= version.Version("1.2"):
+    from lale.lib._common_schemas import schema_cv_1_1
+
+    StackingClassifier = StackingClassifier.customize_schema()
+
 lale.docstrings.set_docstrings(StackingClassifier)

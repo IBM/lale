@@ -17,6 +17,18 @@ import autoai_libs.cognito.transforms.transform_utils
 import lale.docstrings
 import lale.operators
 
+from ._common_schemas import (
+    _hparam_col_dtypes,
+    _hparams_apply_all,
+    _hparams_col_as_json_objects,
+    _hparams_col_names,
+    _hparams_datatypes,
+    _hparams_feat_constraints,
+    _hparams_tans_class,
+    _hparams_tgraph,
+    _hparams_transformer_name,
+)
+
 
 class _TB1Impl:
     def __init__(self, **hyperparams):
@@ -52,66 +64,19 @@ _hyperparams_schema = {
             ],
             "relevantToOptimizer": [],
             "properties": {
-                "tans_class": {
-                    "description": "A class that implements fit() and transform() in accordance with the transformation function definition.",
-                    "laleType": "Any",
-                    "default": None,
-                },
-                "name": {
-                    "description": "A string name that uniquely identifies this transformer from others.",
-                    "anyOf": [{"type": "string"}, {"enum": [None]}],
-                    "default": None,
-                },
-                "datatypes": {
-                    "description": "List of datatypes that are valid input to the transformer function (numeric, float, int, etc.).",
-                    "anyOf": [
-                        {"type": "array", "items": {"type": "string"}},
-                        {"enum": [None]},
-                    ],
-                    "default": None,
-                },
-                "feat_constraints": {
-                    "description": "All constraints that must be satisfied by a column to be considered a valid input to this transform.",
-                    "laleType": "Any",
-                    "default": None,
-                },
-                "tgraph": {
-                    "description": "Should be the invoking TGraph() object.",
-                    "anyOf": [
-                        {"laleType": "Any"},
-                        {
-                            "enum": [None],
-                            "description": "Passing None will result in some failure to detect some inefficiencies due to lack of caching.",
-                        },
-                    ],
-                    "default": None,
-                },
-                "apply_all": {
-                    "description": "Only use applyAll = True. It means that the transformer will enumerate all features (or feature sets) that match the specified criteria and apply the provided function to each.",
-                    "type": "boolean",
-                    "default": True,
-                },
-                "col_names": {
-                    "description": "Names of the feature columns in a list.",
-                    "anyOf": [
-                        {"type": "array", "items": {"type": "string"}},
-                        {"enum": [None]},
-                    ],
-                    "default": None,
-                },
-                "col_dtypes": {
-                    "description": "List of the datatypes of the feature columns.",
-                    "anyOf": [
-                        {"type": "array", "items": {"laleType": "Any"}},
-                        {"enum": [None]},
-                    ],
-                    "default": None,
-                },
-                "col_as_json_objects": {
-                    "description": "Names of the feature columns in a json dict.",
-                    "anyOf": [{"type": "object"}, {"enum": [None]}],
-                    "default": None,
-                },
+                "tans_class": _hparams_tans_class,
+                "name": _hparams_transformer_name,
+                "datatypes": _hparams_datatypes(
+                    description="List of datatypes that are valid input to the transformer function (numeric, float, int, etc.)."
+                ),
+                "feat_constraints": _hparams_feat_constraints(
+                    description="All constraints that must be satisfied by a column to be considered a valid input to this transform."
+                ),
+                "tgraph": _hparams_tgraph,
+                "apply_all": _hparams_apply_all,
+                "col_names": _hparams_col_names,
+                "col_dtypes": _hparam_col_dtypes,
+                "col_as_json_objects": _hparams_col_as_json_objects,
             },
         }
     ]

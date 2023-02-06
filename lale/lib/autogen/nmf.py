@@ -1,6 +1,7 @@
 from numpy import inf, nan
 from sklearn.decomposition import NMF as Op
 
+import lale
 from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 

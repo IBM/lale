@@ -106,7 +106,14 @@ _hyperparams_schema = {
         {
             "description": 'affinity, if linkage is "ward", only "euclidean" is accepted',
             "anyOf": [
-                {"type": "object", "properties": {"affinity": {"enum": ["euclidean"]}}},
+                {
+                    "type": "object",
+                    "properties": {"affinity": {"enum": ["euclidean", None]}},
+                },
+                {
+                    "type": "object",
+                    "properties": {"metric": {"enum": ["euclidean", None]}},
+                },
                 {
                     "type": "object",
                     "properties": {"linkage": {"not": {"enum": ["ward"]}}},
@@ -239,5 +246,57 @@ if lale.operators.sklearn_version >= version.Version("0.24"):
         set_as_available=True,
     )
 
+if lale.operators.sklearn_version >= version.Version("1.2"):
+    # new: https://scikit-learn.org/1.2/modules/generated/sklearn.cluster.FeatureAgglomeration.html
+    FeatureAgglomeration = FeatureAgglomeration.customize_schema(
+        affinity={
+            "anyOf": [
+                {
+                    "enum": [
+                        "euclidean",
+                        "l1",
+                        "l2",
+                        "manhattan",
+                        "cosine",
+                        "precomputed",
+                    ]
+                },
+                {"forOptimizer": False, "enum": [None, "deprecated"]},
+                {"forOptimizer": False, "laleType": "callable"},
+            ],
+            "default": "deprecated",
+            "description": "Metric used to compute the linkage.  Deprecated, please use `metric` instead.",
+        },
+        metric={
+            "anyOf": [
+                {
+                    "enum": [
+                        "euclidean",
+                        "l1",
+                        "l2",
+                        "manhattan",
+                        "cosine",
+                        "precomputed",
+                    ]
+                },
+                {
+                    "forOptimizer": False,
+                    "enum": [None],
+                    "description": "default is `euclidean`",
+                },
+                {"forOptimizer": False, "laleType": "callable"},
+            ],
+            "default": None,
+            "description": "Metric used to compute the linkage.  The default is `euclidean`",
+        },
+        set_as_available=True,
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.4"):
+    # new: https://scikit-learn.org/1.4/modules/generated/sklearn.cluster.FeatureAgglomeration.html
+    FeatureAgglomeration = FeatureAgglomeration.customize_schema(
+        affinity=None,
+        set_as_available=True,
+    )
 
 lale.docstrings.set_docstrings(FeatureAgglomeration)

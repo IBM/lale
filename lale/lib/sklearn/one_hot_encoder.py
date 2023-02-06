@@ -20,6 +20,7 @@ from packaging import version
 
 import lale.docstrings
 import lale.operators
+from lale.schemas import AnyOf, Bool, Enum
 
 sklearn_version = version.parse(getattr(sklearn, "__version__"))
 
@@ -30,7 +31,7 @@ _hyperparams_schema = {
             "description": "This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.",
             "type": "object",
             "additionalProperties": False,
-            "required": ["categories", "sparse", "dtype", "handle_unknown"],
+            "required": ["categories", "dtype", "handle_unknown"],
             "relevantToOptimizer": [],
             "properties": {
                 "categories": {
@@ -268,6 +269,26 @@ if sklearn_version >= version.Version("1.1"):
             "default": "error",
         },
         set_as_available=True,
+    )
+
+if sklearn_version >= version.Version("1.2"):
+    # new: https://scikit-learn.org/1.2/modules/generated/sklearn.preprocessing.OneHotEncoder.html
+    OneHotEncoder = OneHotEncoder.customize_schema(
+        sparse=AnyOf(
+            [
+                Bool(
+                    desc="Will return sparse matrix if set true, else array.",
+                    default=True,
+                    forOptimizer=False,
+                ),
+                Enum(values=["deprecated"]),
+            ],
+            default="deprecated",
+        ),
+        sparse_output=Bool(
+            desc="Will return sparse matrix if set true, else will return an array.",
+            default=True,
+        ),
     )
 
 lale.docstrings.set_docstrings(OneHotEncoder)

@@ -13,53 +13,27 @@
 # limitations under the License.
 
 import pandas as pd
+from packaging import version
 from sklearn.ensemble import BaggingClassifier as SKLModel
 
 import lale.docstrings
 import lale.operators
+from lale.helpers import get_estimator_param_name_from_hyperparams
 
 from ._common_schemas import schema_1D_cats, schema_2D_numbers, schema_X_numbers
 from .function_transformer import FunctionTransformer
 
 
 class _BaggingClassifierImpl:
-    def __init__(
-        self,
-        base_estimator=None,
-        n_estimators=10,
-        *,
-        max_samples=1.0,
-        max_features=1.0,
-        bootstrap=True,
-        bootstrap_features=False,
-        oob_score=False,
-        warm_start=False,
-        n_jobs=None,
-        random_state=None,
-        verbose=0,
-    ):
-        estimator_impl = base_estimator
-
-        self._hyperparams = {
-            "base_estimator": estimator_impl,
-            "n_estimators": n_estimators,
-            "max_samples": max_samples,
-            "max_features": max_features,
-            "bootstrap": bootstrap,
-            "bootstrap_features": bootstrap_features,
-            "oob_score": oob_score,
-            "warm_start": warm_start,
-            "n_jobs": n_jobs,
-            "random_state": random_state,
-            "verbose": verbose,
-        }
-        self._wrapped_model = SKLModel(**self._hyperparams)
-        self._hyperparams["base_estimator"] = base_estimator
+    def __init__(self, **hyperparams):
+        self._wrapped_model = SKLModel(**hyperparams)
+        self._hyperparams = hyperparams
 
     def get_params(self, deep=True):
         out = self._wrapped_model.get_params(deep=deep)
         # we want to return the lale operator, not the underlying impl
-        out["base_estimator"] = self._hyperparams["base_estimator"]
+        est_name = get_estimator_param_name_from_hyperparams(self._hyperparams)
+        out[est_name] = self._hyperparams[est_name]
         return out
 
     def fit(self, X, y, sample_weight=None):
@@ -69,8 +43,9 @@ class _BaggingClassifierImpl:
                 inverse_func=None,
                 check_inverse=False,
             )
-            self._hyperparams["base_estimator"] = (
-                feature_transformer >> self._hyperparams["base_estimator"]
+            est_name = get_estimator_param_name_from_hyperparams(self._hyperparams)
+            self._hyperparams[est_name] = (
+                feature_transformer >> self._hyperparams[est_name]
             )
             self._wrapped_model = SKLModel(**self._hyperparams)
         self._wrapped_model.fit(X, y, sample_weight)
@@ -351,5 +326,41 @@ _combined_schemas = {
 BaggingClassifier = lale.operators.make_operator(
     _BaggingClassifierImpl, _combined_schemas
 )
+
+if lale.operators.sklearn_version >= version.Version("1.2"):
+    BaggingClassifier = BaggingClassifier.customize_schema(
+        base_estimator={
+            "anyOf": [
+                {"laleType": "operator"},
+                {"enum": ["deprecated"]},
+            ],
+            "default": "deprecated",
+            "description": "Deprecated. Use `estimator` instead.",
+        },
+        estimator={
+            "anyOf": [
+                {"laleType": "operator"},
+                {"enum": [None], "description": "DecisionTreeClassifier"},
+            ],
+            "default": None,
+            "description": "The base estimator to fit on random subsets of the dataset.",
+        },
+        constraint={
+            "description": "Only `estimator` or `base_estimator` should be specified.  As `base_estimator` is deprecated, use `estimator`.",
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {"base_estimator": {"enum": [False, "deprecated"]}},
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "estimator": {"enum": [None]},
+                    },
+                },
+            ],
+        },
+        set_as_available=True,
+    )
 
 lale.docstrings.set_docstrings(BaggingClassifier)

@@ -14,15 +14,21 @@
 
 import contextlib
 import io
+import os
 import uuid
 
-import aif360.algorithms.inprocessing
 import packaging.version
 
 import lale.docstrings
 import lale.operators
 
-from .util import (
+# suppress spurious warnings from TensorFlow that are caused by
+# indirectly importing it via aif360.algorithms.inprocessing
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+
+import aif360.algorithms.inprocessing  # noqa:E402 # pylint:disable=wrong-import-position,wrong-import-order
+
+from .util import (  # noqa:E402 # pylint:disable=wrong-import-position,wrong-import-order
     _BaseInEstimatorImpl,
     _categorical_fairness_properties,
     _categorical_input_predict_proba_schema,

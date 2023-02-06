@@ -1,4 +1,4 @@
-# Copyright 2019-2022 IBM Corporation
+# Copyright 2019-2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -488,6 +488,22 @@ experiments_dict["kddcup99full"] = {
     "n_rows": 4898431,
 }
 
+experiments_dict["cholesterol"] = {
+    "dataset_url": "https://www.openml.org/d/204",
+    "download_arff_url": "https://www.openml.org/data/download/3641/dataset_2190_cholesterol.arff",
+    "task_type": "regression",
+    "target": "chol",
+    "n_rows": 303,
+}
+
+experiments_dict["cloud"] = {
+    "dataset_url": "https://www.openml.org/d/210",
+    "download_arff_url": "https://www.openml.org/data/download/3647/dataset_2196_cloud.arff",
+    "task_type": "regression",
+    "target": "te",
+    "n_rows": 108,
+}
+
 
 def add_schemas(schema_orig, target_col, train_X, test_X, train_y, test_y):
     from lale.datasets.data_schemas import add_schema
@@ -701,6 +717,7 @@ def fetch(
     else:
         col_names = [attr[0].lower() for attr in dataDictionary["attributes"]]
         df_all = pd.DataFrame(dataDictionary["data"], columns=col_names)
+        assert target_col in col_names, (target_col, col_names)
         y = df_all[target_col]
         # the type stubs for pandas are not currently complete enough to type this correctly
         y = y.squeeze()  # type: ignore

@@ -121,7 +121,7 @@ for clf in regressors:
 
 
 class TestSpuriousSideConstraintsRegression(unittest.TestCase):
-    # This was prompted buy a bug, keeping it as it may help with support for other sklearn versions
+    # This was prompted by a bug, keeping it as it may help with support for other sklearn versions
     def setUp(self):
         from sklearn.datasets import make_regression
         from sklearn.model_selection import train_test_split
@@ -138,12 +138,12 @@ class TestSpuriousSideConstraintsRegression(unittest.TestCase):
             criterion="friedman_mse",
             init=None,
             learning_rate=0.1,
-            loss="ls",
+            loss="squared_error",
         )
         reg.fit(self.X_train, self.y_train)
 
     def test_sgd_regressor(self):
-        reg = SGDRegressor(loss="squared_loss", epsilon=0.2)
+        reg = SGDRegressor(loss="squared_error", epsilon=0.2)
         reg.fit(self.X_train, self.y_train)
 
     def test_sgd_regressor_1(self):
@@ -220,7 +220,7 @@ class TestFriedmanMSE(unittest.TestCase):
 
 
 class TestRidge(unittest.TestCase):
-    # This was prompted buy a bug, keeping it as it may help with support for other sklearn versions
+    # This was prompted by a bug, keeping it as it may help with support for other sklearn versions
     def setUp(self):
         from sklearn.datasets import make_regression
         from sklearn.model_selection import train_test_split

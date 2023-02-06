@@ -83,7 +83,7 @@ class TestAutoConfigureClassification(unittest.TestCase):
         import time
 
         planned_pipeline = (MinMaxScaler | Normalizer) >> RandomForestRegressor
-        from sklearn.datasets import load_boston
+        from lale.datasets.util import load_boston
 
         X, y = load_boston(return_X_y=True)
 

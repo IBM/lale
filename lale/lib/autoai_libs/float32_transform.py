@@ -20,6 +20,8 @@ import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
 
+from ._common_schemas import _hparam_activate_flag_unmodified
+
 
 class _float32_transformImpl:
     def __init__(self, **hyperparams):
@@ -62,13 +64,7 @@ _hyperparams_schema = {
             "additionalProperties": False,
             "required": ["activate_flag"],
             "relevantToOptimizer": [],
-            "properties": {
-                "activate_flag": {
-                    "description": "If False, transform(X) outputs the input numpy array X unmodified.",
-                    "type": "boolean",
-                    "default": True,
-                }
-            },
+            "properties": {"activate_flag": _hparam_activate_flag_unmodified},
         }
     ]
 }
