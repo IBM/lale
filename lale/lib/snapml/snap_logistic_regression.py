@@ -25,7 +25,6 @@ import lale.operators
 
 class _SnapLogisticRegressionImpl:
     def __init__(self, **hyperparams):
-
         assert (
             snapml_installed
         ), """Your Python environment does not have snapml installed. Install using: pip install snapml"""

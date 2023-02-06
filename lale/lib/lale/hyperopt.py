@@ -126,7 +126,9 @@ class _HyperoptImpl:
             self.cv = check_cv(self.cv, y=y_train, classifier=is_clf)
         try:
             data_schema = lale.helpers.fold_schema(X_train, y_train, self.cv, is_clf)
-        except BaseException:  # we may not always be able to extract schema for the given data format.
+        except (
+            BaseException
+        ):  # we may not always be able to extract schema for the given data format.
             data_schema = None
         self.search_space = hyperopt.hp.choice(
             "meta_model",
@@ -303,7 +305,6 @@ class _HyperoptImpl:
         return self
 
     def predict(self, X_eval, **predict_params):
-
         warnings.filterwarnings("ignore")
         if self._best_estimator is None:
             raise ValueError(

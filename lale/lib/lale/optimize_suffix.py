@@ -29,7 +29,6 @@ logger.setLevel(logging.ERROR)
 
 
 class _OptimizeSuffix:
-
     _prefix: Optional[lale.operators.TrainedOperator]
     _optimizer: lale.operators.Operator
 

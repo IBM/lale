@@ -26,7 +26,6 @@ from ._common_schemas import (
 
 class _FS2Impl:
     def __init__(self, **hyperparams):
-
         self._wrapped_model = autoai_libs.cognito.transforms.transform_utils.FS2(
             **hyperparams
         )

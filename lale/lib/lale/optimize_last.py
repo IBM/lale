@@ -26,7 +26,6 @@ logger.setLevel(logging.ERROR)
 
 
 class _OptimizeLastImpl:
-
     _suffix_optimizer: lale.operators.Operator
 
     def __init__(

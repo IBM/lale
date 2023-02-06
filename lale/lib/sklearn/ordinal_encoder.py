@@ -108,7 +108,9 @@ class _OrdinalEncoderImpl:
         else:
             try:
                 X_tr = self._wrapped_model.inverse_transform(X)
-            except IndexError:  # which means the original inverse transform failed during the last step
+            except (
+                IndexError
+            ):  # which means the original inverse transform failed during the last step
                 n_samples, _ = X.shape
                 n_features = len(self._wrapped_model.categories_)
                 # dtype=object in order to insert None values

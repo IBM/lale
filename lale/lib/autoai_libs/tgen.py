@@ -33,7 +33,6 @@ from ._common_schemas import (
 
 class _TGenImpl:
     def __init__(self, **hyperparams):
-
         self._wrapped_model = autoai_libs.cognito.transforms.transform_utils.TGen(
             **hyperparams
         )

@@ -5,7 +5,6 @@ import lale.type_checking
 
 class TestTextEncoders(unittest.TestCase):
     def setUp(self):
-
         self.X_train = [
             "Boston locates in the East Coast",
             "Boston Celtics is part of the East conference of NBA",

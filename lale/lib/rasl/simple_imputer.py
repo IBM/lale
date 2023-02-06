@@ -172,7 +172,6 @@ class _SimpleImputerImpl(MonoidableOperator[_SimpleImputerMonoid]):
         self._transformer = None
 
     def fit(self, X, y=None):
-
         self._validate_input(X)
 
         agg_op = None

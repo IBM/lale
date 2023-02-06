@@ -277,7 +277,6 @@ class TestTee(unittest.TestCase):
         _ = trained.transform(test_X)
 
     def test_tee_def(self):
-
         from lale.lib.lale import Tee
 
         def check_data(X, y):
@@ -426,7 +425,6 @@ class TestClone(unittest.TestCase):
         vclf.fit(X, y)
 
     def test_fit_clones_impl(self):
-
         lr_trainable = LogisticRegression()
         iris = load_iris()
         X, y = iris.data, iris.target
@@ -1348,7 +1346,6 @@ class TestOperatorFowarding(unittest.TestCase):
                 )
 
     def test_bad_forwards_false_decl(self):
-
         _operator_forwarding_test_combined_schema2 = {
             "$schema": "http://json-schema.org/draft-04/schema#",
             "description": "Combined schema for expected data and hyperparameters.",
@@ -1368,7 +1365,6 @@ class TestOperatorFowarding(unittest.TestCase):
             _OperatorForwardingTest2.f()
 
     def test_bad_forwards_true_decl(self):
-
         _operator_forwarding_test_combined_schema2 = {
             "$schema": "http://json-schema.org/draft-04/schema#",
             "description": "Combined schema for expected data and hyperparameters.",

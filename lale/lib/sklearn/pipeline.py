@@ -25,7 +25,6 @@ from lale.schemas import Bool
 try:
     from sklearn.pipeline import if_delegate_has_method
 except ImportError as e:
-
     if lale.operators.sklearn_version >= version.Version("1.0"):
         from sklearn.utils.metaestimators import if_delegate_has_method
     else:

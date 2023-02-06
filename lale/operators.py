@@ -239,7 +239,6 @@ try:
         if_delegate_has_method,
     )
 except ImportError as imp_exc:
-
     if sklearn_version >= version.Version("1.0"):
         from sklearn.utils.metaestimators import if_delegate_has_method
     else:
@@ -774,10 +773,8 @@ class Operator(metaclass=AbstractVisitorMeta):
             ...
 
         def _replace(subject, original_op: "Operator", replacement_op: "Operator"):
-
             # if operator has steps, recursively iterate through steps and recombine
             if hasattr(subject, "steps"):
-
                 # special case if original_op has steps, check if it matches subject first
                 if hasattr(original_op, "steps"):
                     if _check_match(subject, original_op):
@@ -1523,7 +1520,6 @@ class IndividualOp(Operator):
 
     @classmethod
     def _add_nested_params(cls, output: Dict[str, Any], k: str, v: Any):
-
         nested_params = cls._get_nested_params(v)
         if nested_params:
             output.update(nest_HPparams(k, nested_params))
@@ -1713,7 +1709,6 @@ class IndividualOp(Operator):
             k, v = self._enum_to_strings(arg)
             hyperparams[k] = v
         for k, v in _fixup_hyperparams_dict(kwargs).items():
-
             if k in hyperparams:
                 raise ValueError(f"Duplicate argument {k}.")
             v = val_wrapper.unwrap(v)
@@ -1903,7 +1898,8 @@ class IndividualOp(Operator):
 
     def input_schema_predict_log_proba(self) -> JSON_TYPE:
         """Input schema for the predict_log_proba method.
-        We assume that it is the same as the predict_proba method if none has been defined explicitly."""
+        We assume that it is the same as the predict_proba method if none has been defined explicitly.
+        """
         if self.has_schema("input_predict_log_proba"):
             return self.get_schema("input_predict_log_proba")
         else:
@@ -1915,7 +1911,8 @@ class IndividualOp(Operator):
 
     def input_schema_score_samples(self) -> JSON_TYPE:
         """Input schema for the score_samples method.
-        We assume that it is the same as the predict method if none has been defined explicitly."""
+        We assume that it is the same as the predict method if none has been defined explicitly.
+        """
         if self.has_schema("input_score_samples"):
             return self.get_schema("input_score_samples")
         else:
@@ -1943,7 +1940,8 @@ class IndividualOp(Operator):
 
     def output_schema_score_samples(self) -> JSON_TYPE:
         """Output schema for the score_samples method.
-        We assume that it is the same as the predict method if none has been defined explicitly."""
+        We assume that it is the same as the predict method if none has been defined explicitly.
+        """
         if self.has_schema("output_score_samples"):
             return self.get_schema("output_score_samples")
         else:
@@ -1951,7 +1949,8 @@ class IndividualOp(Operator):
 
     def output_schema_predict_log_proba(self) -> JSON_TYPE:
         """Output schema for the predict_log_proba method.
-        We assume that it is the same as the predict_proba method if none has been defined explicitly."""
+        We assume that it is the same as the predict_proba method if none has been defined explicitly.
+        """
         if self.has_schema("output_predict_log_proba"):
             return self.get_schema("output_predict_log_proba")
         else:
@@ -3871,7 +3870,7 @@ class BasePipeline(Operator, Generic[OpType_co]):
                 else:
                     self._steps.append(step)
             self._preds = {step: [] for step in self._steps}
-            for (src, dst) in edges:
+            for src, dst in edges:
                 self._preds[dst].append(src)  # type: ignore
             if not ordered:
                 self.__sort_topologically()
@@ -3913,7 +3912,7 @@ class BasePipeline(Operator, Generic[OpType_co]):
                 )
             seen_steps.append(step)
         self._preds = {step: [] for step in self._steps}
-        for (src, dst) in edges:
+        for src, dst in edges:
             self._preds[dst].append(src)
         # Since this case is only allowed for linear pipelines, it is always
         # expected to be in topological order
@@ -3987,7 +3986,7 @@ class BasePipeline(Operator, Generic[OpType_co]):
         if len(my_steps) != len(other_steps):
             return False
 
-        for (m, o) in zip(my_steps, other_steps):
+        for m, o in zip(my_steps, other_steps):
             if not m._has_same_impl(o):
                 return False
         return True
@@ -4211,7 +4210,6 @@ class BasePipeline(Operator, Generic[OpType_co]):
         return True
 
     def get_defaults(self) -> Dict[str, Any]:
-
         defaults_list: Iterable[Dict[str, Any]] = (
             nest_HPparams(s.name(), s.get_defaults()) for s in self.steps_list()
         )
@@ -5130,7 +5128,7 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType_co]):
         if len(my_steps) != len(other_steps):
             return False
 
-        for (m, o) in zip(my_steps, other_steps):
+        for m, o in zip(my_steps, other_steps):
             if not m._has_same_impl(o):
                 return False
         return True

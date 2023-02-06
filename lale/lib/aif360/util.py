@@ -1240,7 +1240,8 @@ def accuracy_and_disparate_impact(
     .. _`accuracy`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html
     .. _`symmetric disparate impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.symmetric_disparate_impact
     .. _`Hyperopt`: lale.lib.lale.hyperopt.html#lale.lib.lale.hyperopt.Hyperopt
-    .. _`demo`: https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_aif360.ipynb"""
+    .. _`demo`: https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_aif360.ipynb
+    """
     return _AccuracyAndDisparateImpact(
         favorable_labels, protected_attributes, unfavorable_labels, fairness_weight
     )
@@ -1302,7 +1303,8 @@ def average_odds_difference(
     benefit for the unprivileged group. Fairness for this metric is
     between -0.1 and 0.1.
 
-    .. _`average odds difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.average_odds_difference"""
+    .. _`average odds difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.average_odds_difference
+    """
     return _AverageOddsDifference(
         favorable_labels,
         protected_attributes,
@@ -1423,7 +1425,8 @@ def balanced_accuracy_and_disparate_impact(
     .. _`balanced accuracy`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.balanced_accuracy_score.html
     .. _`symmetric disparate impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.symmetric_disparate_impact
     .. _`Hyperopt`: lale.lib.lale.hyperopt.html#lale.lib.lale.hyperopt.Hyperopt
-    .. _`demo`: https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_aif360.ipynb"""
+    .. _`demo`: https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_aif360.ipynb
+    """
     return _BalancedAccuracyAndDisparateImpact(
         favorable_labels, protected_attributes, unfavorable_labels, fairness_weight
     )
@@ -1536,7 +1539,8 @@ def equal_opportunity_difference(
     privileged group and a value >0 implies disparate benefit for the
     unprivileged group. Fairness for this metric is between -0.1 and 0.1.
 
-    .. _`equal opportunity difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.equal_opportunity_difference"""
+    .. _`equal opportunity difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.equal_opportunity_difference
+    """
     return _EqualOpportunityDifference(
         favorable_labels,
         protected_attributes,
@@ -1673,7 +1677,8 @@ def f1_and_disparate_impact(
     .. _`f1`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.f1_score.html
     .. _`symmetric disparate impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.symmetric_disparate_impact
     .. _`Hyperopt`: lale.lib.lale.hyperopt.html#lale.lib.lale.hyperopt.Hyperopt
-    .. _`demo`: https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_aif360.ipynb"""
+    .. _`demo`: https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_aif360.ipynb
+    """
     return _F1AndDisparateImpact(
         favorable_labels, protected_attributes, unfavorable_labels, fairness_weight
     )
@@ -1928,7 +1933,8 @@ def symmetric_disparate_impact(
     that either the privileged group or the unprivileged group is
     receiving a disparate benefit.
 
-    .. _`disparate impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.disparate_impact"""
+    .. _`disparate impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.disparate_impact
+    """
     return _SymmetricDisparateImpact(
         favorable_labels, protected_attributes, unfavorable_labels
     )
