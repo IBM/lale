@@ -20,7 +20,7 @@ import re
 import tempfile
 import unittest
 import urllib.request
-from typing import Any, Dict, cast
+from typing import Any, Dict, Tuple, cast
 
 import jsonschema
 import numpy as np
@@ -47,6 +47,7 @@ from sklearn.preprocessing import scale as sk_scale
 
 import lale.datasets
 import lale.datasets.openml
+import lale.datasets.openml.openml_datasets
 import lale.lib.aif360
 import lale.type_checking
 from lale.datasets import pandas2spark
@@ -86,6 +87,7 @@ from lale.lib.rasl import r2_score as rasl_r2_score
 from lale.lib.rasl.standard_scaler import scale as rasl_scale
 from lale.lib.sklearn import (
     DecisionTreeClassifier,
+    LinearRegression,
     LogisticRegression,
     RandomForestClassifier,
     SGDClassifier,
@@ -760,71 +762,140 @@ class TestTargetEncoder(unittest.TestCase):  # TODO: test with batches
     @classmethod
     def setUpClass(cls):
         targets = ["pandas", "spark"]
-        cls.tgt2creditg = cast(
-            Dict[str, Any],
+        dataset_names = [
+            "tae",  # 3-class classification
+            "cloud",  # regression
+            "credit-g",  # binary classification
+        ]
+        experiments_dict = lale.datasets.openml.openml_datasets.experiments_dict
+        cls.datasets = cast(
+            Dict[Tuple[str, str], Any],
             {
-                tgt: lale.datasets.openml.fetch(
-                    "credit-g",
-                    "classification",
+                (tgt, dataset_name): lale.datasets.openml.fetch(
+                    dataset_name,
+                    experiments_dict[dataset_name]["task_type"],
                     preprocess=False,
                     astype=tgt,
                 )
-                for tgt in targets
+                for tgt, dataset_name in itertools.product(targets, dataset_names)
             },
         )
 
     def test_fit(self):
-        (train_X_pd, train_y_pd), (_, _) = self.tgt2creditg["pandas"]
-        classes = sorted(list(train_y_pd.unique()))
-        rasl_trainable = RaslTargetEncoder(classes=classes)
-        sk_trainable = SkTargetEncoder()
-        sk_trained = sk_trainable.fit(train_X_pd, train_y_pd)
-        for tgt, dataset in self.tgt2creditg.items():
-            (train_X, train_y), (_test_X, _test_y) = dataset
+        for (tgt, dataset_name), dataset in self.datasets.items():
+            (train_X, train_y), (_, _) = dataset
+            (train_X_pd, train_y_pd), (_, _) = self.datasets["pandas", dataset_name]
+            sk_trainable = SkTargetEncoder()
+            sk_trained = sk_trainable.fit(train_X_pd, train_y_pd)
+            experiments_dict = lale.datasets.openml.openml_datasets.experiments_dict
+            if experiments_dict[dataset_name]["task_type"] == "regression":
+                rasl_trainable = RaslTargetEncoder()
+            else:
+                classes = sorted(list(train_y_pd.unique()))
+                rasl_trainable = RaslTargetEncoder(classes=classes)
             rasl_trained = rasl_trainable.fit(train_X, train_y)
-            _check_trained_target_encoder(self, sk_trained.impl, rasl_trained.impl, tgt)
+            _check_trained_target_encoder(
+                self, sk_trained.impl, rasl_trained.impl, (tgt, dataset_name)
+            )
+
+    def test_partial_fit(self):
+        for (tgt, dataset_name), dataset in self.datasets.items():
+            if tgt != "pandas":
+                continue
+            (train_X, train_y), (_, _) = dataset
+            experiments_dict = lale.datasets.openml.openml_datasets.experiments_dict
+            if experiments_dict[dataset_name]["task_type"] == "regression":
+                classes = None
+            else:
+                classes = sorted(list(_ensure_pandas(train_y).unique()))
+            rasl_trainable = RaslTargetEncoder(classes=classes)
+            rasl_trained = rasl_trainable.fit(train_X, train_y)
+            rasl_batched = RaslTargetEncoder(classes=classes)
+            for batch_X, batch_y in mockup_data_loader(train_X, train_y, 3, tgt):
+                rasl_batched = rasl_batched.partial_fit(batch_X, batch_y)
+            op1, op2 = rasl_trained.impl, rasl_batched.impl
+            self.assertAlmostEqual(op1._prior, op2._prior, msg=(tgt, dataset_name))
+            self.assertSequenceEqual(
+                op1._col2cat2value.keys(),
+                op2._col2cat2value.keys(),
+                msg=(tgt, dataset_name),
+            )
+            for col in op1._col2cat2value:
+                self.assertSequenceEqual(
+                    op1._col2cat2value[col].keys(),
+                    op2._col2cat2value[col].keys(),
+                    msg=(tgt, dataset_name, col),
+                )
+                for cat in op1._col2cat2value[col]:
+                    self.assertAlmostEqual(
+                        op1._col2cat2value[col][cat],
+                        op2._col2cat2value[col][cat],
+                        msg=(tgt, dataset_name, col, cat),
+                    )
 
     def test_transform(self):
-        (train_X_pd, train_y_pd), (test_X_pd, _test_y_pd) = self.tgt2creditg["pandas"]
-        classes = sorted(list(train_y_pd.unique()))
-        rasl_trainable = RaslTargetEncoder(classes=classes)
-        sk_trainable = SkTargetEncoder()
-        sk_trained = sk_trainable.fit(train_X_pd, train_y_pd)
-        sk_transformed = sk_trained.transform(test_X_pd)
-        for tgt, dataset in self.tgt2creditg.items():
-            (train_X, train_y), (test_X, _test_y) = dataset
+        for (tgt, dataset_name), dataset in self.datasets.items():
+            (train_X, train_y), (test_X, _) = dataset
+            (train_X_pd, train_y_pd), (test_X_pd, _) = self.datasets[
+                "pandas", dataset_name
+            ]
+            sk_trainable = SkTargetEncoder()
+            sk_trained = sk_trainable.fit(train_X_pd, train_y_pd)
+            sk_transformed = sk_trained.transform(test_X_pd)
+            experiments_dict = lale.datasets.openml.openml_datasets.experiments_dict
+            if experiments_dict[dataset_name]["task_type"] == "regression":
+                rasl_trainable = RaslTargetEncoder(classes=None)
+            else:
+                classes = sorted(list(train_y_pd.unique()))
+                rasl_trainable = RaslTargetEncoder(classes=classes)
             rasl_trained = rasl_trainable.fit(train_X, train_y)
-            _check_trained_target_encoder(self, sk_trained.impl, rasl_trained.impl, tgt)
+            _check_trained_target_encoder(
+                self, sk_trained.impl, rasl_trained.impl, (tgt, dataset_name)
+            )
             rasl_transformed = rasl_trained.transform(test_X)
             if tgt == "spark":
-                self.assertEqual(get_index_name(rasl_transformed), "index")
+                self.assertEqual(
+                    get_index_name(rasl_transformed), "index", (tgt, dataset_name)
+                )
             rasl_transformed = _ensure_pandas(rasl_transformed)
-            self.assertEqual(sk_transformed.shape, rasl_transformed.shape, tgt)
+            self.assertEqual(
+                sk_transformed.shape, rasl_transformed.shape, (tgt, dataset_name)
+            )
             for row_idx in range(sk_transformed.shape[0]):
                 for col_idx in range(sk_transformed.shape[1]):
                     self.assertEqual(
                         sk_transformed.iloc[row_idx, col_idx],
                         rasl_transformed.iloc[row_idx, col_idx],
-                        (row_idx, col_idx, tgt),
+                        (tgt, dataset_name, row_idx, col_idx),
                     )
 
     def test_predict(self):
-        (train_X_pd, train_y_pd), (test_X_pd, _test_y_pd) = self.tgt2creditg["pandas"]
-        classes = sorted(list(train_y_pd.unique()))
-        sk_trainable = SkTargetEncoder() >> LogisticRegression()
-        sk_trained = sk_trainable.fit(train_X_pd, train_y_pd)
-        sk_predicted = sk_trained.predict(test_X_pd)
-        rasl_trainable = (
-            RaslTargetEncoder(classes=classes)
-            >> Convert(astype="pandas")
-            >> LogisticRegression()
-        )
-        for tgt, dataset in self.tgt2creditg.items():
-            (train_X, train_y), (test_X, _test_y) = dataset
+        for (tgt, dataset_name), dataset in self.datasets.items():
+            (train_X, train_y), (test_X, _) = dataset
+            (train_X_pd, train_y_pd), (test_X_pd, _) = self.datasets[
+                "pandas", dataset_name
+            ]
+            experiments_dict = lale.datasets.openml.openml_datasets.experiments_dict
+            if experiments_dict[dataset_name]["task_type"] == "regression":
+                classes = None
+                est = LinearRegression()
+            else:
+                classes = sorted(list(train_y_pd.unique()))
+                est = LogisticRegression()
+            sk_trainable = SkTargetEncoder() >> est
+            sk_trained = sk_trainable.fit(train_X_pd, train_y_pd)
+            sk_predicted = sk_trained.predict(test_X_pd)
+            rasl_trainable = (
+                RaslTargetEncoder(classes=classes) >> Convert(astype="pandas") >> est
+            )
             rasl_trained = rasl_trainable.fit(train_X, train_y)
             rasl_predicted = rasl_trained.predict(test_X)
-            self.assertEqual(sk_predicted.shape, rasl_predicted.shape, tgt)
-            self.assertListEqual(sk_predicted.tolist(), rasl_predicted.tolist(), tgt)
+            self.assertEqual(
+                sk_predicted.shape, rasl_predicted.shape, (tgt, dataset_name)
+            )
+            self.assertListEqual(
+                sk_predicted.tolist(), rasl_predicted.tolist(), (tgt, dataset_name)
+            )
 
 
 def _check_trained_simple_imputer(test, op1, op2, msg):

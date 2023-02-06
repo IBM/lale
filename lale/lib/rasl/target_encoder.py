@@ -39,21 +39,27 @@ class _TargetEncoderMonoid(Monoid):
     def __init__(
         self,
         *,
-        feature_names: List[str],
+        feature_names_out: List[str],
+        y_sum: float,
+        y_count: int,
         col2cat2sum: Dict[str, Dict[Union[float, str], float]],
         col2cat2count: Dict[str, Dict[Union[float, str], int]],
     ):
-        self.feature_names = feature_names
+        self.feature_names_out = feature_names_out
         assert set(col2cat2sum.keys()) == set(col2cat2count.keys())
+        self.y_sum = y_sum
+        self.y_count = y_count
         self.col2cat2sum = col2cat2sum
         self.col2cat2count = col2cat2count
 
     def combine(self, other: "_TargetEncoderMonoid"):
-        assert list(self.feature_names) == list(other.feature_names)
+        assert list(self.feature_names_out) == list(other.feature_names_out)
         assert set(self.col2cat2sum.keys()) == set(other.col2cat2sum.keys())
         assert set(self.col2cat2count.keys()) == set(other.col2cat2count.keys())
         return _TargetEncoderMonoid(
-            feature_names=self.feature_names,
+            feature_names_out=self.feature_names_out,
+            y_sum=self.y_sum + other.y_sum,
+            y_count=self.y_count + other.y_count,
             col2cat2sum={
                 col: {
                     cat: cat2sum.get(cat, 0) + other.col2cat2sum[col].get(cat, 0)
@@ -81,16 +87,14 @@ class _TargetEncoderImpl(MonoidableOperator[_TargetEncoderMonoid]):
             self._transformer = self._build_transformer()
         return self._transformer.transform(X)
 
-    @property
-    def feature_names(self):
-        return self._feature_names
+    def get_feature_names_out(self):
+        return self.feature_names_out_
 
     def from_monoid(self, monoid: _TargetEncoderMonoid):
+        self._monoid = monoid
         self._transformer = None
-        self._feature_names = monoid.feature_names
-        total_sum = sum(sum(d.values()) for d in monoid.col2cat2sum.values())
-        total_count = sum(sum(d.values()) for d in monoid.col2cat2count.values())
-        self._prior = total_sum / total_count
+        self.feature_names_out_ = monoid.feature_names_out
+        self._prior = monoid.y_sum / monoid.y_count
         k = self._hyperparams["min_samples_leaf"]
         f = self._hyperparams["smoothing"]
 
@@ -122,7 +126,9 @@ class _TargetEncoderImpl(MonoidableOperator[_TargetEncoderMonoid]):
                 unknown_value=self._prior,
             )
 
-        return Map(columns={col: build_map_expr(col) for col in self._feature_names})
+        return Map(
+            columns={col: build_map_expr(col) for col in self.feature_names_out_}
+        )
 
     def to_monoid(self, batch: Tuple[Any, Any]):
         X, y = batch
@@ -132,7 +138,7 @@ class _TargetEncoderImpl(MonoidableOperator[_TargetEncoderMonoid]):
             y = pd.DataFrame({y_name: y})
         else:
             y = Map(columns={y_name: it[get_columns(y)[0]]}).transform(y)
-        assert lale.helpers._is_df(y)
+        assert lale.helpers._is_df(y), type(y)
         classes = self._hyperparams["classes"]
         if classes is not None:
             ordinal_encoder = Map(
@@ -141,6 +147,12 @@ class _TargetEncoderImpl(MonoidableOperator[_TargetEncoderMonoid]):
                 }
             )
             y = ordinal_encoder.transform(y)
+        y_aggregator = Aggregate(
+            columns={"sum": agg_sum(it[y_name]), "count": agg_count(it[y_name])}
+        )
+        y_aggregated = lale.helpers._ensure_pandas(y_aggregator.transform(y))
+        y_sum = y_aggregated["sum"].iat[0]
+        y_count = y_aggregated["count"].iat[0]
         Xy = ConcatFeatures.transform([X, y])
         if self._hyperparams["cols"] is None:
             self._hyperparams["cols"] = get_obj_cols(X)
@@ -158,7 +170,9 @@ class _TargetEncoderImpl(MonoidableOperator[_TargetEncoderMonoid]):
             col2cat2sum[col] = aggregated["sum"].to_dict()
             col2cat2count[col] = aggregated["count"].to_dict()
         return _TargetEncoderMonoid(
-            feature_names=X_columns,
+            feature_names_out=X_columns,
+            y_sum=y_sum,
+            y_count=y_count,
             col2cat2sum=col2cat2sum,
             col2cat2count=col2cat2count,
         )
@@ -193,29 +207,26 @@ TargetEncoder = lale.operators.make_operator(_TargetEncoderImpl, _combined_schem
 TargetEncoder = typing.cast(
     lale.operators.PlannedIndividualOp,
     TargetEncoder.customize_schema(
-        classes={  # TODO: implement classification with >2 classes
+        classes={
             "anyOf": [
                 {"enum": [None], "description": "Regression task."},
                 {
                     "type": "array",
                     "items": {"type": "number"},
-                    "description": "Binary classification task with numeric labels.",
+                    "description": "Classification task with numeric labels.",
                     "minItems": 2,
-                    "maxItems": 2,
                 },
                 {
                     "type": "array",
                     "items": {"type": "string"},
-                    "description": "Binary classification task with string labels.",
+                    "description": "Classification task with string labels.",
                     "minItems": 2,
-                    "maxItems": 2,
                 },
                 {
                     "type": "array",
                     "items": {"type": "boolean"},
-                    "description": "Binary classification task with Boolean labels.",
+                    "description": "Classification task with Boolean labels.",
                     "minItems": 2,
-                    "maxItems": 2,
                 },
             ],
             "default": None,
