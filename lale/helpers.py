@@ -1020,7 +1020,6 @@ def make_array_index_name(index, is_tuple: bool = False):
 
 
 def is_numeric_structure(structure_type: str):
-
     if structure_type in ["list", "tuple"]:
         return True
     elif structure_type == "dict":

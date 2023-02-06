@@ -24,7 +24,6 @@ from ._common_schemas import _hparam_activate_flag_features, _hparam_column_head
 # when doing a defensive copy
 class _Word2VecTransformerImpl:
     def __init__(self, **hyperparams):
-
         if hyperparams.get("column_headers_list", None) is None:
             hyperparams["column_headers_list"] = []
         if hyperparams.get("text_processing_options", None) is None:

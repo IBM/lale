@@ -171,7 +171,7 @@ class _AggregateImpl:
                 )
             from pyspark.sql.functions import lit
 
-            for (new_col_name, old_col_name) in mode_column_names:
+            for new_col_name, old_col_name in mode_column_names:
                 if self.exclude_value is not None:
                     if self.exclude_value in [np.nan, "nan"]:
                         filter_expr = ~isnan(old_col_name)

@@ -158,7 +158,6 @@ class _JoinImpl:
 
         # Implementation of join operator
         def join_df(left_df, right_df):
-
             # Joining spark dataframes
             if (_is_spark_df(left_df) or _is_spark_df_without_index(left_df)) and (
                 _is_spark_df(right_df) or _is_spark_df_without_index(right_df)

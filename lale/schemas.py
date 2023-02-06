@@ -26,7 +26,6 @@ Option = Union[Undefined, T]
 
 
 class Schema:
-
     schema: Dict[str, Any]
 
     def __init__(

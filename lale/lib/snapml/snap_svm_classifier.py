@@ -28,7 +28,6 @@ import lale.operators
 
 class _SnapSVMClassifierImpl:
     def __init__(self, **hyperparams):
-
         assert (
             snapml_version is not None
         ), """Your Python environment does not have snapml installed. Install using: pip install snapml"""

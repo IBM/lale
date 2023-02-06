@@ -679,7 +679,7 @@ def simplifyAll(schemas: List[JsonSchema], floatAny: bool) -> JsonSchema:
                 [] for _ in range(longest_item_list)
             ]
             additional_schemas: List[JsonSchema] = []
-            for (arr_item_list, arr_additional_schema) in item_list_entries:
+            for arr_item_list, arr_additional_schema in item_list_entries:
                 for x in range(longest_item_list):
                     ils = ret_item_list_list[x]
                     if x < len(arr_item_list):

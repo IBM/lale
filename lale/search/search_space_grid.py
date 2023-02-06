@@ -271,7 +271,6 @@ class SearchSpaceToGridVisitor(Visitor):
     def visitSearchSpaceProduct(
         self, op: SearchSpaceProduct
     ) -> SearchSpaceGridInternalType:
-
         sub_spaces = op.get_indexed_spaces()
 
         param_grids: List[List[SearchSpaceGrid]] = [
@@ -292,7 +291,6 @@ class SearchSpaceToGridVisitor(Visitor):
         return chained_grids
 
     def visitSearchSpaceDict(self, op: SearchSpaceDict) -> SearchSpaceGridInternalType:
-
         sub_spaces = op.space_dict.items()
 
         param_grids: List[List[SearchSpaceGrid]] = [

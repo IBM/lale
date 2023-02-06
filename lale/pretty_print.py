@@ -293,7 +293,7 @@ def _introduce_structure(pipeline: JSON_TYPE, gen: _CodeGenState) -> JSON_TYPE:
         steps = pipeline["steps"]
         preds: Dict[str, List[str]] = {step: [] for step in steps}
         succs: Dict[str, List[str]] = {step: [] for step in steps}
-        for (src, dst) in pipeline["edges"]:
+        for src, dst in pipeline["edges"]:
             preds[dst].append(src)
             succs[src].append(dst)
         return {"kind": "Graph", "steps": steps, "preds": preds, "succs": succs}

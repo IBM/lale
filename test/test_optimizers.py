@@ -344,7 +344,6 @@ class TestHyperopt(unittest.TestCase):
         pass
 
     def test_using_scoring(self):
-
         lr = LogisticRegression()
         clf = Hyperopt(estimator=lr, scoring="accuracy", cv=5, max_evals=1)
         trained = clf.fit(self.X_train, self.y_train)
@@ -540,7 +539,6 @@ class TestHyperopt(unittest.TestCase):
         _ = hyperopt_classifier.fit(train_X, train_y)
 
     def test_custom_scorer(self):
-
         pipeline = PCA() >> LogisticRegression()
 
         def custom_scorer(estimator, X, y, factor=0.1):
@@ -769,7 +767,6 @@ class TestGridSearchCV(unittest.TestCase):
             clf.fit(iris.data, iris.target)
 
     def test_with_gridsearchcv_auto_wrapped_pipe2(self):
-
         lr = LogisticRegression()
         pca1 = PCA()
         pca1._name = "PCA1"
@@ -1000,7 +997,6 @@ class TestTopKVotingClassifier(unittest.TestCase):
         trained.predict(self.X_test)
 
     def test_fit_args(self):
-
         ensemble = TopKVotingClassifier(
             estimator=(PCA() | Nystroem())
             >> (LogisticRegression() | KNeighborsClassifier()),
@@ -1021,7 +1017,6 @@ class TestTopKVotingClassifier(unittest.TestCase):
         self.assertLessEqual(len(final_ensemble._impl_instance().estimators), 3)
 
     def test_fit_default_args(self):
-
         with self.assertRaises(ValueError):
             _ = TopKVotingClassifier()
 

@@ -39,7 +39,6 @@ def _println_pos(message):
 
 
 class TestAutoAIOutputConsumption(unittest.TestCase):
-
     pickled_model_path = os.path.join(
         os.path.dirname(__file__),
         "..",
@@ -163,7 +162,6 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
             ), f"Exception was thrown during pretty print model prediction: {e}"
 
     def test_07_convert_model_to_lale(self):
-
         try:
             lale_pipeline = TestAutoAIOutputConsumption.model
             assert lale_pipeline is not None

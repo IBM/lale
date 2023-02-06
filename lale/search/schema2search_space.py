@@ -203,7 +203,7 @@ class SearchSpaceOperatorVisitor(Visitor):
         if hasattr(op, "_hyperparams"):
             hyperparams = op.hyperparams()
             if hyperparams:
-                for (k, v) in hyperparams.items():
+                for k, v in hyperparams.items():
                     add_sub_space(space, k, v)
         return space
 

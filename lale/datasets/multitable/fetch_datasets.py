@@ -58,7 +58,6 @@ def get_data_from_csv(datatype, data_file_name):
 
 
 def fetch_go_sales_dataset(datatype="pandas"):
-
     """
     Fetches the Go_Sales dataset from IBM's Watson's ML samples.
     It contains information about daily sales, methods, retailers
@@ -119,7 +118,6 @@ def fetch_go_sales_dataset(datatype="pandas"):
 
 
 def fetch_imdb_dataset(datatype="pandas"):
-
     """
     Fetches the IMDB movie dataset from Relational Dataset Repo.
     It contains information about directors, actors, roles
@@ -179,7 +177,6 @@ def fetch_imdb_dataset(datatype="pandas"):
 
 
 def fetch_creditg_multitable_dataset(datatype="pandas"):
-
     """
     Fetches credit-g dataset from OpenML, but in a multi-table format.
     It transforms the [credit-g](https://www.openml.org/d/31) dataset from OpenML

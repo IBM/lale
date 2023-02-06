@@ -16,7 +16,6 @@ from typing import Any, Iterator, List, Optional
 
 
 class VisitorPathError(ValueError):
-
     _path: List[Any]
 
     def __init__(self, path: List[Any], message: Optional[str] = None):

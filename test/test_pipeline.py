@@ -281,7 +281,6 @@ class TestPipeline(unittest.TestCase):
 
 class TestBatching2(unittest.TestCase):
     def setUp(self):
-
         data = load_iris()
         X, y = data.data, data.target
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)

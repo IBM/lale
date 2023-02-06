@@ -132,7 +132,6 @@ class TestSpuriousSideConstraintsRegression(unittest.TestCase):
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
 
     def test_gradient_boost_regressor(self):
-
         reg = GradientBoostingRegressor(
             alpha=0.9789984970831765,
             criterion="friedman_mse",

@@ -1608,7 +1608,6 @@ class TestMap(unittest.TestCase):
                 _ = trained.transform(df)
 
     def test_pands_with_hyperopt2(self):
-
         wrap_imported_operators()
         scan = Scan(table=it["main"])
         scan_0 = Scan(table=it["customers"])
@@ -2038,7 +2037,6 @@ class TestMap(unittest.TestCase):
             ret = {}
             schemas = self._get_col_schemas(X.columns, X)
             for c, s in schemas.items():
-
                 if s is None:
                     ret["unknown_" + c] = it[c]
                 elif type_checking.is_subschema(

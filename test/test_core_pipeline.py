@@ -145,7 +145,6 @@ class TestCreation(unittest.TestCase):
         _ = trained.predict(digits.data)
 
     def test_compose4(self):
-
         digits = sklearn.datasets.load_digits()
         _ = digits
         ohe = OneHotEncoder(handle_unknown=OneHotEncoder.enum.handle_unknown.ignore)

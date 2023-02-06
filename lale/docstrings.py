@@ -455,7 +455,6 @@ def set_docstrings(lale_op: "IndividualOp"):
     try:
         if __sphinx_build__:  # type: ignore
             try:
-
                 # impl = lale_op.impl_class
                 frm = inspect.stack()[1]
                 module = inspect.getmodule(frm[0])

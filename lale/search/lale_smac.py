@@ -202,7 +202,7 @@ def addSearchSpaceGrid(
 def addSearchSpaceGrids(grids: List[SearchSpaceGrid], cs: ConfigurationSpace) -> None:
     parent_disc = CategoricalHyperparameter(disc_str, range(len(grids)))
     cs.add_hyperparameter(parent_disc)
-    for (i, g) in enumerate(grids):
+    for i, g in enumerate(grids):
         addSearchSpaceGrid(g, i, parent_disc, cs)
 
 

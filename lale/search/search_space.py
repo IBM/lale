@@ -208,7 +208,6 @@ class SearchSpaceNumber(SearchSpacePrimitive):
         if self.exclusiveMinimum or self.minimum is None:
             ret += "("
         else:
-
             ret += "["
         if self.discrete:
             ret += "\u2308"
