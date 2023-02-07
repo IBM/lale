@@ -677,7 +677,9 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
                     pass
             elif hasattr(wrapped_model, "set_params"):
                 try:
-                    cl_impl._wrapped_model = wrapped_model.set_params(**hyperparams)
+                    new_wrapped_model = wrapped_model.set_params(**hyperparams)
+                    if new_wrapped_model is not None:
+                        cl_impl._wrapped_model = new_wrapped_model
                 except NotImplementedError:
                     # if the set_params method does not work, skip it and just rely on the clone
                     pass
@@ -686,7 +688,9 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
             cl_impl_new = copy.deepcopy(sklearn_obj)
             if hasattr(cl_impl_new, "set_params"):
                 try:
-                    cl_impl_new = cl_impl_new.set_params(**hyperparams)
+                    new_cl_impl_new = cl_impl_new.set_params(**hyperparams)
+                    if new_cl_impl_new is not None:
+                        cl_impl_new = new_cl_impl_new
                 except NotImplementedError:
                     # if the set_params method does not work, skip it and just rely on the clone
                     pass
