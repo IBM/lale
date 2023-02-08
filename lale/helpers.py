@@ -575,6 +575,21 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
             return lale_wrapper_found, sklearn_obj
         return lale_wrapper_found, class_
 
+    def is_same_param(new, old) -> bool:
+        if new is None:
+            return old is None
+        if isinstance(new, (int, float, str, bool)):
+            return new == old
+        else:
+            return new is old
+
+    def get_modified_params(new_hyperparams: dict, old_hyperparams: dict) -> dict:
+        return {
+            k: v
+            for k, v in new_hyperparams.items()
+            if not is_same_param(v, old_hyperparams.get(k, None))
+        }
+
     @overload
     def import_nested_params(orig_hyperparams: dict) -> dict:
         ...
@@ -669,7 +684,8 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
 
             if hasattr(cl_impl, "set_params"):
                 try:
-                    new_impl = cl_impl.set_params(**hyperparams)
+                    params = get_modified_params(hyperparams, orig_hyperparams)
+                    new_impl = cl_impl.set_params(**params)
                     class_._impl = new_impl
                     class_._impl_class_ = new_impl.__class__
                 except NotImplementedError:
@@ -677,7 +693,8 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
                     pass
             elif hasattr(wrapped_model, "set_params"):
                 try:
-                    new_wrapped_model = wrapped_model.set_params(**hyperparams)
+                    params = get_modified_params(hyperparams, orig_hyperparams)
+                    new_wrapped_model = wrapped_model.set_params(**params)
                     if new_wrapped_model is not None:
                         cl_impl._wrapped_model = new_wrapped_model
                 except NotImplementedError:
