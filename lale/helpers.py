@@ -547,154 +547,259 @@ def create_instance_from_hyperopt_search_space(
         assert False, f"Unknown operator type: {type(lale_object)}"
 
 
-def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=False):
-    # For all pipeline steps, identify equivalent lale wrappers if present,
-    # if not, call make operator on sklearn classes and create a lale pipeline.
-    # For higher order operators, we allow hyperparameters to be trainable even with
-    # fitted is True. This is achieved using the is_hyperparam flag.
+def find_lale_wrapper(sklearn_obj: Any) -> Optional[Any]:
+    """
+    :param sklearn_obj: An sklearn compatible object that may have a lale wrapper
+    :return: The lale wrapper type, or None if one could not be found
+    """
+    from .operator_wrapper import get_lale_wrapper_modules
 
-    def find_lale_wrapper(sklearn_obj):
-        from .operator_wrapper import get_lale_wrapper_modules
+    module_names = get_lale_wrapper_modules()
 
-        module_names = get_lale_wrapper_modules()
+    class_name = sklearn_obj.__class__.__name__
+    for module_name in module_names:
+        try:
+            module = importlib.import_module(module_name)
+        except ModuleNotFoundError:
+            continue
+        try:
+            class_ = getattr(module, class_name)
+            return class_
+        except AttributeError:
+            continue
+    return None
 
-        lale_wrapper_found = False
-        class_name = sklearn_obj.__class__.__name__
-        for module_name in module_names:
-            try:
-                module = importlib.import_module(module_name)
-            except ModuleNotFoundError:
-                continue
-            try:
-                class_ = getattr(module, class_name)
-                lale_wrapper_found = True
-                break
-            except AttributeError:
-                continue
-        else:
-            return lale_wrapper_found, sklearn_obj
-        return lale_wrapper_found, class_
+
+def _import_from_sklearn_inplace_helper(
+    sklearn_obj, fitted: bool = True, is_nested=False
+):
+    """
+    This method take an object and tries to wrap sklearn objects
+    (at the top level or contained within hyperparameters of other
+    sklearn objects).
+    It will modify the object to add in the appropriate lale wrappers.
+    It may also return a wrapper or different object than given.
+
+    :param sklearn_obj: the object that we are going to try and wrap
+    :param fitted: should we return a TrainedOperator
+    :param is_hyperparams: is this a nested invocation (which allows for returning
+    a Trainable operator even if fitted is set to True)
+    """
 
     @overload
-    def import_nested_params(orig_hyperparams: dict) -> dict:
+    def import_nested_params(
+        orig_hyperparams: dict, partial_dict: bool
+    ) -> Optional[dict]:
         ...
 
     @overload
-    def import_nested_params(orig_hyperparams: Any) -> Any:
+    def import_nested_params(orig_hyperparams: Any, partial_dict: bool) -> Any:
         ...
 
-    def import_nested_params(orig_hyperparams):
+    def import_nested_params(orig_hyperparams, partial_dict: bool = False):
+        """
+        look through lists/tuples/dictionaries for sklearn compatible objects to import.
+        :param orig_hyperparams: the input to recursively look through for sklearn compatible objects
+        :param partial_dict: If this is True and the input is a dictionary, the returned dictionary will only have the
+        keys with modified values
+        :return: Either a modified version of the input or None if nothing was changed
+        """
         if isinstance(orig_hyperparams, (tuple, list)):
-            new_list = [import_nested_params(e) for e in orig_hyperparams]
+            new_list: list = []
+            list_modified: bool = False
+            for e in orig_hyperparams:
+                new_e = import_nested_params(e, partial_dict=False)
+                if new_e is None:
+                    new_list.append(e)
+                else:
+                    new_list.append(new_e)
+                    list_modified = True
+            if not list_modified:
+                return None
             if isinstance(orig_hyperparams, tuple):
                 return tuple(new_list)
             else:
                 return new_list
         if isinstance(orig_hyperparams, dict):
-            return {k: import_nested_params(v) for k, v in orig_hyperparams.items()}
+            new_dict: dict = {}
+            dict_modified: bool = False
+            for k, v in orig_hyperparams.items():
+                new_v = import_nested_params(v, partial_dict=False)
+                if new_v is None:
+                    if not partial_dict:
+                        new_dict[k] = v
+                else:
+                    new_dict[k] = new_v
+                    dict_modified = True
+            if not dict_modified:
+                return None
+            return new_dict
         if isinstance(orig_hyperparams, object) and hasattr(
             orig_hyperparams, "get_params"
         ):
-            return import_from_sklearn_pipeline(
-                orig_hyperparams, fitted, is_hyperparam=True
+            newobj = _import_from_sklearn_inplace_helper(
+                orig_hyperparams, fitted=fitted, is_nested=True
             )  # allow nested_op to be trainable
+            if newobj is orig_hyperparams:
+                return None
+            return newobj
+        return None
+
+    if sklearn_obj is None:
+        return None
+
+    if isinstance(sklearn_obj, lale.operators.TrainedIndividualOp):
+        # if fitted=False, we may want to return a TrainedIndidivualOp
+        return sklearn_obj
+    # if the object is a trainable operator, we clean that up
+    if isinstance(sklearn_obj, lale.operators.TrainableIndividualOp) and hasattr(
+        sklearn_obj, "_trained"
+    ):
+        if fitted:
+            # get rid of the indirection, and just return the trained operator directly
+            return sklearn_obj._trained
         else:
-            return copy.deepcopy(orig_hyperparams)
-
-    sklearn_obj = sklearn_pipeline
-
-    if isinstance(sklearn_obj, lale.operators.TrainableIndividualOp):
-        if hasattr(sklearn_obj, "_trained"):
-            if fitted:
-                return copy.deepcopy(sklearn_obj._trained)
-            else:
-                delattr(sklearn_obj, "_trained")  # delete _trained before returning
-                return copy.deepcopy(sklearn_obj)
-        elif (
-            fitted and is_hyperparam or not hasattr(sklearn_obj._impl_instance(), "fit")
+            # since we are not supposed to be trained, delete the trained part
+            delattr(sklearn_obj, "_trained")  # delete _trained before returning
+            return sklearn_obj
+    if isinstance(sklearn_obj, lale.operators.Operator):
+        if (
+            fitted and is_nested or not hasattr(sklearn_obj._impl_instance(), "fit")
         ):  # Operators such as NoOp do not have a fit, so return them as is.
-            return copy.deepcopy(sklearn_obj)
-        elif fitted:
+            return sklearn_obj
+        if fitted:
             raise ValueError(
                 f"""The input pipeline has an operator {sklearn_obj} that is not trained and fitted is set to True,
                 please pass fitted=False if you want a trainable pipeline as output."""
             )
-        else:  # is a trainable, never trained and fitted=False
-            return copy.deepcopy(sklearn_obj)
-    elif isinstance(sklearn_obj, lale.operators.Operator):
-        return copy.deepcopy(sklearn_obj)
+        # the lale operator is not trained and fitted=False
+        return sklearn_obj
 
-    if isinstance(sklearn_pipeline, sklearn.pipeline.FeatureUnion):
-        transformer_list = sklearn_pipeline.transformer_list
+    # special case for FeatureUnion.
+    # An alternative would be to (like for sklearn pipeline)
+    # create a lale wrapper for the sklearn feature union
+    # as a higher order operator
+    # and then the special case would be just to throw away the outer wrapper
+    # Note that lale union does not currently support weights or other features of feature union.
+    if isinstance(sklearn_obj, sklearn.pipeline.FeatureUnion):
+        transformer_list = sklearn_obj.transformer_list
         concat_predecessors = [
-            import_from_sklearn_pipeline(
-                transformer[1], fitted=fitted, is_hyperparam=is_hyperparam
+            _import_from_sklearn_inplace_helper(
+                transformer[1], fitted=fitted, is_nested=is_nested
             )
             for transformer in transformer_list
         ]
-        lale_op_obj = lale.operators.make_union(*concat_predecessors)
+        return lale.operators.make_union(*concat_predecessors)
+
+    if not hasattr(sklearn_obj, "get_params"):
+        # if it does not have a get_params method,
+        # then we just return it without trying to wrap it
+        return sklearn_obj
+
+    class_ = find_lale_wrapper(sklearn_obj)
+    if not class_:
+        return sklearn_obj  # Return the original object
+
+    # next, we need to figure out what the right hyperparameters are
+    orig_hyperparams = sklearn_obj.get_params(deep=False)
+
+    hyperparams = import_nested_params(orig_hyperparams, partial_dict=True)
+    if hyperparams:
+        # if we have updated any of the hyperparameters then we modify them in the actual sklearn object
+        try:
+            new_obj = sklearn_obj.set_params(**hyperparams)
+            if new_obj is not None:
+                sklearn_obj = new_obj
+        except NotImplementedError:
+            # if the set_params method does not work, then do our best
+            pass
+
+        all_new_hyperparams = {**orig_hyperparams, **hyperparams}
     else:
-        # Validate that the sklearn_obj is a valid sklearn-compatible object
-        if sklearn_obj is None or not hasattr(sklearn_obj, "get_params"):
-            raise ValueError(
-                f"The input pipeline has a step {sklearn_obj} that is not scikit-learn compatible."
-            )
-        orig_hyperparams = sklearn_obj.get_params(deep=False)
-        hyperparams = import_nested_params(orig_hyperparams)
+        all_new_hyperparams = orig_hyperparams
 
-        lale_wrapper_found, class_ = find_lale_wrapper(sklearn_obj)
+    # now, we get the lale operator for the wrapper, with the corresponding hyperparameters
+    if not fitted:  # If fitted is False, we do not want to return a Trained operator.
+        lale_op_obj_base = class_
+    else:
+        lale_op_obj_base = lale.operators.TrainedIndividualOp(
+            class_._name,
+            class_._impl,
+            class_._schemas,
+            None,
+            _lale_trained=True,
+        )
 
-        if not lale_wrapper_found:
-            return class_  # Return the original object
+    lale_op_obj = lale_op_obj_base(**all_new_hyperparams)
+    from lale.lib.sklearn import Pipeline as LaleSKPipelineWrapper
 
-        if (
-            not fitted
-        ):  # If fitted is False, we do not want to return a Trained operator.
-            lale_op = class_
-        else:
-            lale_op = lale.operators.TrainedIndividualOp(
-                class_._name, class_._impl, class_._schemas, None, _lale_trained=True
-            )
-        class_ = lale_op(**hyperparams)
-        lale_op_obj = class_
+    # If this is a scklearn pipeline, then we want to discard the outer wrapper
+    # and just return a lale pipeline
+    if isinstance(lale_op_obj, LaleSKPipelineWrapper):  # type: ignore
+        return lale_op_obj.shallow_impl._pipeline
 
-        from lale.lib.sklearn import Pipeline as LaleSKPipelineWrapper
+    # at this point, the object's hyper-parameters are modified as needed
+    # and our wrapper is initialized with the correct hyperparameters.
+    # Now we need to replace the wrapper impl with our (possibly modified)
+    # sklearn object
+    cl_shallow_impl = lale_op_obj.shallow_impl
 
-        if lale_wrapper_found and isinstance(class_, LaleSKPipelineWrapper):  # type: ignore
-            return class_.shallow_impl._pipeline
-        cl_impl = class_.shallow_impl
-        if lale_wrapper_found and hasattr(cl_impl, "_wrapped_model"):
-            wrapped_model = copy.deepcopy(sklearn_obj)
-            cl_impl._wrapped_model = wrapped_model
-
-            if hasattr(cl_impl, "set_params"):
-                try:
-                    new_impl = cl_impl.set_params(**hyperparams)
-                    class_._impl = new_impl
-                    class_._impl_class_ = new_impl.__class__
-                except NotImplementedError:
-                    # if the set_params method does not work, skip it and just rely on the clone
-                    pass
-            elif hasattr(wrapped_model, "set_params"):
-                try:
-                    cl_impl._wrapped_model = wrapped_model.set_params(**hyperparams)
-                except NotImplementedError:
-                    # if the set_params method does not work, skip it and just rely on the clone
-                    pass
-
-        else:  # If there is no lale wrapper, there is no _wrapped_model
-            cl_impl_new = copy.deepcopy(sklearn_obj)
-            if hasattr(cl_impl_new, "set_params"):
-                try:
-                    cl_impl_new = cl_impl_new.set_params(**hyperparams)
-                except NotImplementedError:
-                    # if the set_params method does not work, skip it and just rely on the clone
-                    pass
-
-            class_._impl = cl_impl_new
-            class_._impl_class_ = cl_impl_new.__class__
+    if hasattr(cl_shallow_impl, "_wrapped_model"):
+        cl_shallow_impl._wrapped_model = sklearn_obj
+    else:
+        lale_op_obj._impl = sklearn_obj
+        lale_op_obj._impl_class_ = sklearn_obj.__class__
 
     return lale_op_obj
+
+
+def import_from_sklearn(sklearn_obj, fitted=True, in_place: bool = False):
+    """
+    This method take an object and tries to wrap sklearn objects
+    (at the top level or contained within hyperparameters of other
+    sklearn objects).
+    It will modify the object to add in the appropriate lale wrappers.
+    It may also return a wrapper or different object than given.
+
+    :param sklearn_obj: the object that we are going to try and wrap
+    :param fitted: should we return a TrainedOperator
+    :param in_place: should we try to mutate what we can in place, or should we
+           aggressively deepcopy everything
+    :return: The wrapped object (or the input object if we could not wrap it)
+    """
+    obj = sklearn_obj
+    if in_place:
+        obj = sklearn_obj
+    else:
+        obj = copy.deepcopy(sklearn_obj)
+    return _import_from_sklearn_inplace_helper(obj, fitted=fitted, is_nested=False)
+
+
+def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
+    """
+    Note: Same as import_from_sklearn.  This alternative name exists for backwards compatibility.
+
+    This method take an object and tries to wrap sklearn objects
+    (at the top level or contained within hyperparameters of other
+    sklearn objects).
+    It will modify the object to add in the appropriate lale wrappers.
+    It may also return a wrapper or different object than given.
+
+    :param sklearn_obj: the object that we are going to try and wrap
+    :param fitted: should we return a TrainedOperator
+    :param in_place: should we try to mutate what we can in place, or should we
+           aggressively deepcopy everything
+    :return: The wrapped object (or the input object if we could not wrap it)
+
+    """
+    op = import_from_sklearn(sklearn_pipeline, fitted=fitted, in_place=False)
+
+    from typing import cast
+
+    from lale.operators import TrainableOperator
+
+    # simplify using the returned value in the common case
+    return cast(TrainableOperator, op)
 
 
 class val_wrapper:
