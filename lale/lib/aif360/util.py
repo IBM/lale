@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
 
-_FAV_LABELS_TYPE = List[Union[int, float, str, List[Union[int, float, str]]]]
+_FAV_LABELS_TYPE = List[Union[float, str, bool, List[float]]]
 
 
 def dataset_to_pandas(
@@ -162,8 +162,9 @@ _categorical_fairness_properties: JSON_TYPE = {
         "minItems": 1,
         "items": {
             "anyOf": [
-                {"description": "Literal value.", "type": "string"},
                 {"description": "Numerical value.", "type": "number"},
+                {"description": "Literal string value.", "type": "string"},
+                {"description": "Boolean value.", "type": "boolean"},
                 {
                     "description": "Numeric range [a,b] from a to b inclusive.",
                     "type": "array",
@@ -249,8 +250,9 @@ _categorical_fairness_properties: JSON_TYPE = {
                 "minItems": 1,
                 "items": {
                     "anyOf": [
-                        {"description": "Literal value.", "type": "string"},
                         {"description": "Numerical value.", "type": "number"},
+                        {"description": "Literal string value.", "type": "string"},
+                        {"description": "Boolean value.", "type": "boolean"},
                         {
                             "description": "Numeric range [a,b] from a to b inclusive.",
                             "type": "array",
