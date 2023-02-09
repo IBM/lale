@@ -167,6 +167,13 @@ class TestAIF360Datasets(unittest.TestCase):
             X, y, fairness_info, 118, 5, {"No promotion", "Promotion"}, 0.498
         )
 
+    def test_dataset_ricci_pd_cat_bool(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_ricci_df(preprocess=False)
+        y = y == "Promotion"
+        self.assertIs(y.dtype, np.dtype("bool"))
+        fairness_info = {**fairness_info, "favorable_labels": [True]}
+        self._attempt_dataset(X, y, fairness_info, 118, 5, {False, True}, 0.498)
+
     def test_dataset_ricci_pd_num(self):
         X, y, fairness_info = lale.lib.aif360.fetch_ricci_df(preprocess=True)
         self._attempt_dataset(X, y, fairness_info, 118, 6, {0, 1}, 0.498)
@@ -1144,6 +1151,17 @@ class TestAIF360Cat(unittest.TestCase):
             **fairness_info, redact=False, preparation=self.prep_pd_cat
         ) >> LogisticRegression(max_iter=1000)
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.65, 0.75)
+
+    def test_disparate_impact_remover_pd_cat_bool(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_ricci_df(preprocess=False)
+        y = y == "Promotion"
+        self.assertIs(y.dtype, np.dtype("bool"))
+        fairness_info = {**fairness_info, "favorable_labels": [True]}
+        trainable_remi = DisparateImpactRemover(
+            **fairness_info, preparation=self.prep_pd_cat
+        ) >> LogisticRegression(max_iter=1000)
+        trained_remi = trainable_remi.fit(X, y)
+        _ = trained_remi.predict(X)
 
     def test_eq_odds_postprocessing_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
