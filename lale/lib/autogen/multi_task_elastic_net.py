@@ -1,6 +1,8 @@
 from numpy import inf, nan
+from packaging import version
 from sklearn.linear_model import MultiTaskElasticNet as Op
 
+import lale.operators
 from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
@@ -176,5 +178,10 @@ _combined_schemas = {
     },
 }
 MultiTaskElasticNet = make_operator(_MultiTaskElasticNetImpl, _combined_schemas)
+
+if lale.operators.sklearn_version >= version.Version("1.2"):
+    # old: https://scikit-learn.org/1.1/modules/generated/sklearn.linear_model.MultiTaskElasticNet.html
+    # new: https://scikit-learn.org/1.2/modules/generated/sklearn.linear_model.MultiTaskElasticNet.html
+    MultiTaskElasticNet = MultiTaskElasticNet.customize_schema(normalize=None)
 
 set_docstrings(MultiTaskElasticNet)

@@ -1,6 +1,8 @@
 from numpy import inf, nan
+from packaging import version
 from sklearn.linear_model import LinearRegression as Op
 
+import lale.operators
 from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
@@ -133,5 +135,10 @@ _combined_schemas = {
     },
 }
 LinearRegression = make_operator(_LinearRegressionImpl, _combined_schemas)
+
+if lale.operators.sklearn_version >= version.Version("1.2"):
+    # old: https://scikit-learn.org/1.1/modules/generated/sklearn.linear_model.LinearRegression.html
+    # new: https://scikit-learn.org/1.2/modules/generated/sklearn.linear_model.LinearRegression.html
+    LinearRegression = LinearRegression.customize_schema(normalize=None)
 
 set_docstrings(LinearRegression)
