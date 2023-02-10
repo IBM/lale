@@ -1,4 +1,4 @@
-# Copyright 2019-2022 IBM Corporation
+# Copyright 2019-2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -341,7 +341,7 @@ not.""",
             ],
         },
         {
-            "description": "The multi_class multinomial option is unavailable when the solver is liblinear.",
+            "description": "The multi_class multinomial option is unavailable when the solver is liblinear or newton-cholesky.",
             "anyOf": [
                 {
                     "type": "object",
@@ -349,7 +349,9 @@ not.""",
                 },
                 {
                     "type": "object",
-                    "properties": {"solver": {"not": {"enum": ["liblinear"]}}},
+                    "properties": {
+                        "solver": {"not": {"enum": ["liblinear", "newton-cholesky"]}}
+                    },
                 },
             ],
         },
