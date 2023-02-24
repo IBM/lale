@@ -99,6 +99,8 @@ class _TargetEncoderImpl(MonoidableOperator[_TargetEncoderMonoid]):
         f = self._hyperparams["smoothing"]
 
         def blend(posterior, sample_size):
+            if sample_size <= 1:
+                return self._prior
             weighting = scipy.special.expit((sample_size - k) / f)
             return weighting * posterior + (1 - weighting) * self._prior
 
@@ -132,7 +134,7 @@ class _TargetEncoderImpl(MonoidableOperator[_TargetEncoderMonoid]):
 
     def to_monoid(self, batch: Tuple[Any, Any]):
         X, y = batch
-        X_columns = typing.cast(List[str], get_columns(X))
+        X_columns = list(typing.cast(List[str], get_columns(X)))
         y_name = lale.helpers.GenSym(set(X_columns))("target")
         if isinstance(y, pd.Series):
             y = pd.DataFrame({y_name: y})
