@@ -1,4 +1,4 @@
-# Copyright 2021-2022 IBM Corporation
+# Copyright 2021-2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,11 +20,15 @@ from test.test_relational_sklearn import (
     _check_trained_select_k_best,
     _check_trained_simple_imputer,
     _check_trained_standard_scaler,
+    _check_trained_target_encoder,
 )
 
+import jsonschema
 import numpy as np
+import pandas as pd
 import sklearn
-from sklearn.datasets import load_digits
+from category_encoders import TargetEncoder as SkTargetEncoder
+from sklearn.datasets import fetch_openml, load_digits
 from sklearn.feature_selection import SelectKBest as SkSelectKBest
 from sklearn.impute import SimpleImputer as SkSimpleImputer
 from sklearn.preprocessing import MinMaxScaler as SkMinMaxScaler
@@ -40,6 +44,7 @@ from lale.lib.rasl import OrdinalEncoder as RaslOrdinalEncoder
 from lale.lib.rasl import SelectKBest as RaslSelectKBest
 from lale.lib.rasl import SimpleImputer as RaslSimpleImputer
 from lale.lib.rasl import StandardScaler as RaslStandardScaler
+from lale.lib.rasl import TargetEncoder as RaslTargetEncoder
 
 assert sklearn.__version__ >= "1.0", sklearn.__version__
 
@@ -49,14 +54,15 @@ def _check_data(self, sk_data, rasl_data, msg):
     self.assertEqual(sk_data.shape, rasl_data.shape, msg)
     for row_idx in range(sk_data.shape[0]):
         for col_idx in range(sk_data.shape[1]):
-            if np.isnan(sk_data[row_idx, col_idx]):
-                self.assertTrue(np.isnan(rasl_data.iloc[row_idx, col_idx]))
+            if isinstance(sk_data, np.ndarray):
+                sk_val = sk_data[row_idx, col_idx]
             else:
-                self.assertAlmostEqual(
-                    sk_data[row_idx, col_idx],
-                    rasl_data.iloc[row_idx, col_idx],
-                    msg=(row_idx, col_idx, msg),
-                )
+                sk_val = sk_data.iloc[row_idx, col_idx]
+            rasl_val = rasl_data.iloc[row_idx, col_idx]
+            if isinstance(sk_val, np.number) and np.isnan(sk_val):
+                self.assertTrue(np.isnan(rasl_val))
+            else:
+                self.assertAlmostEqual(sk_val, rasl_val, msg=(row_idx, col_idx, msg))
 
 
 class TestMinMaxScaler(unittest.TestCase):
@@ -355,3 +361,83 @@ class TestStandardScaler(unittest.TestCase):
             _check_trained_standard_scaler(self, sk_scaler, rasl_scaler, target)
             _check_data(self, sk_transformed_data, rasl_transformed_data, target)
             _check_data(self, sk_transformed_data2, rasl_transformed_data2, target)
+
+
+class TestTargetEncoder(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.targets = ["pandas"]
+        # cls.targets = ["pandas", "spark"]
+
+    def test_1(self):
+        """
+        From https://contrib.scikit-learn.org/category_encoders/targetencoder.html
+        >>> from category_encoders import *
+        >>> import pandas as pd
+        >>> from sklearn.datasets import fetch_openml
+        >>> display_cols = ["Id", "MSSubClass", "MSZoning", "LotFrontage", "YearBuilt", "Heating", "CentralAir"]
+        >>> bunch = fetch_openml(name="house_prices", as_frame=True)
+        >>> y = bunch.target > 200000
+        >>> X = pd.DataFrame(bunch.data, columns=bunch.feature_names)[display_cols]
+        >>> enc = TargetEncoder(cols=['CentralAir', 'Heating'], min_samples_leaf=20, smoothing=10).fit(X, y)
+        >>> numeric_dataset = enc.transform(X)
+        """
+        display_cols = [
+            "Id",
+            "MSSubClass",
+            "MSZoning",
+            "LotFrontage",
+            "YearBuilt",
+            "Heating",
+            "CentralAir",
+        ]
+        bunch = fetch_openml(name="house_prices", as_frame=True)
+        y = bunch.target > 200000
+        X = pd.DataFrame(bunch.data, columns=bunch.feature_names)[display_cols]
+        sk_enc = SkTargetEncoder(
+            cols=["CentralAir", "Heating"], min_samples_leaf=20, smoothing=10
+        ).fit(X, y)
+        sk_transformed = sk_enc.transform(X)
+        classes = sorted(list(y.unique()))
+        for target in self.targets:
+            rasl_enc = RaslTargetEncoder(
+                cols=["CentralAir", "Heating"],
+                min_samples_leaf=20,
+                smoothing=10,
+                classes=classes,
+            ).fit(X, y)
+            X2 = Convert(astype=target).transform(X)
+            rasl_transformed = rasl_enc.transform(X2)
+            _check_trained_target_encoder(self, sk_enc, rasl_enc.impl, target)
+            _check_data(self, sk_transformed, rasl_transformed, target)
+
+    def test_2(self):
+        """
+        >>> from category_encoders.datasets import load_compass
+        >>> X, y = load_compass()
+        >>> hierarchical_map = {'compass': {'N': ('N', 'NE'), 'S': ('S', 'SE'), 'W': 'W'}}
+        >>> enc = TargetEncoder(verbose=1, smoothing=2, min_samples_leaf=2, hierarchy=hierarchical_map, cols=['compass']).fit(X.loc[:,['compass']], y)
+        >>> hierarchy_dataset = enc.transform(X.loc[:,['compass']])
+        >>> print(hierarchy_dataset['compass'].values)
+        [0.62263617 0.62263617 0.90382995 0.90382995 0.90382995 0.17660024
+        0.17660024 0.46051953 0.46051953 0.46051953 0.46051953 0.40332791
+        0.40332791 0.40332791 0.40332791 0.40332791]
+        >>> X, y = load_postcodes('binary')
+        >>> cols = ['postcode']
+        >>> HIER_cols = ['HIER_postcode_1','HIER_postcode_2','HIER_postcode_3','HIER_postcode_4']
+        >>> enc = TargetEncoder(verbose=1, smoothing=2, min_samples_leaf=2, hierarchy=X[HIER_cols], cols=['postcode']).fit(X['postcode'], y)
+        >>> hierarchy_dataset = enc.transform(X['postcode'])
+        >>> print(hierarchy_dataset.loc[0:10, 'postcode'].values)
+        [0.75063473 0.90208756 0.88328833 0.77041254 0.68891504 0.85012847
+        0.76772574 0.88742357 0.7933824  0.63776756 0.9019973 ]
+        """
+        hierarchical_map = {"compass": {"N": ("N", "NE"), "S": ("S", "SE"), "W": "W"}}
+        # TODO: turn this into a real test if/when hierarchy implemented
+        with self.assertRaises(jsonschema.ValidationError):
+            _ = RaslTargetEncoder(
+                verbose=1,
+                smoothing=2,
+                min_samples_leaf=2,
+                hierarchy=hierarchical_map,
+                cols=["compass"],
+            )

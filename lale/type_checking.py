@@ -39,6 +39,7 @@ import jsonschema
 import jsonschema.exceptions
 import jsonschema.validators
 import jsonsubschema
+import numpy as np
 import numpy.random
 import sklearn.base
 
@@ -89,9 +90,18 @@ def _validate_lale_type(
             )
 
 
+def _is_extended_boolean(checker, instance):
+    # https://python-jsonschema.readthedocs.io/en/stable/validate/#jsonschema.TypeChecker
+    return isinstance(instance, (bool, np.bool_))
+
+
 # https://github.com/Julian/jsonschema/blob/master/jsonschema/validators.py
 _lale_validator = jsonschema.validators.extend(
-    validator=jsonschema.Draft4Validator, validators={"laleType": _validate_lale_type}
+    validator=jsonschema.Draft4Validator,
+    validators={"laleType": _validate_lale_type},
+    type_checker=jsonschema.Draft4Validator.TYPE_CHECKER.redefine(
+        "boolean", _is_extended_boolean
+    ),
 )
 
 

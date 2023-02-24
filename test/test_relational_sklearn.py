@@ -758,7 +758,7 @@ def _check_trained_target_encoder(test, op1, op2, msg):
             )
 
 
-class TestTargetEncoder(unittest.TestCase):  # TODO: test with batches
+class TestTargetEncoder(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         targets = ["pandas", "spark"]
