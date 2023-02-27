@@ -14,7 +14,6 @@
 import typing
 
 import aif360.algorithms.preprocessing
-import aif360.datasets
 import numpy as np
 import pandas as pd
 

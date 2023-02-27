@@ -1,4 +1,4 @@
-# Copyright 2019-2022 IBM Corporation
+# Copyright 2019-2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -190,6 +190,7 @@ zero or one to simplify the task for the mitigator.
 # this ensures that pyright considers them to be publicly available
 # and not private imports (this affects lale users that use pyright)
 
+from ._suppress_aif360_warnings import dummy as _dummy_from_suppress_warnings
 from .adversarial_debiasing import AdversarialDebiasing as AdversarialDebiasing
 from .calibrated_eq_odds_postprocessing import (
     CalibratedEqOddsPostprocessing as CalibratedEqOddsPostprocessing,
