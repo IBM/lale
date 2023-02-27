@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import aif360.algorithms.preprocessing
-import aif360.datasets
 import pandas as pd
 
 import lale.docstrings
