@@ -185,6 +185,11 @@ zero or one to simplify the task for the mitigator.
 
 """
 
+# Note: all imports should be done as
+# from .xxx import XXX as XXX
+# this ensures that pyright considers them to be publicly available
+# and not private imports (this affects lale users that use pyright)
+
 from ._suppress_aif360_warnings import dummy as _dummy_from_suppress_warnings
 from .adversarial_debiasing import AdversarialDebiasing as AdversarialDebiasing
 from .calibrated_eq_odds_postprocessing import (
@@ -237,8 +242,3 @@ from .util import r2_and_disparate_impact as r2_and_disparate_impact
 from .util import statistical_parity_difference as statistical_parity_difference
 from .util import symmetric_disparate_impact as symmetric_disparate_impact
 from .util import theil_index as theil_index
-
-# Note: all imports should be done as
-# from .xxx import XXX as XXX
-# this ensures that pyright considers them to be publicly available
-# and not private imports (this affects lale users that use pyright)
