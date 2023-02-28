@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019-2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 
 import sys
 
-__version__ = "0.7.5"
+__version__ = "0.7.6"
 
 try:
     # This variable is injected in the __builtins__ by the build
