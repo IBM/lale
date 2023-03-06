@@ -35,11 +35,15 @@ class _RejectOptionClassificationImpl(_BasePostEstimatorImpl):
         unfavorable_labels=None,
         estimator,
         redact=True,
+        repair_level=None,
         **hyperparams,
     ):
         prot_attr_names = [pa["feature"] for pa in protected_attributes]
         unprivileged_groups = [{name: 0 for name in prot_attr_names}]
         privileged_groups = [{name: 1 for name in prot_attr_names}]
+        if repair_level is not None:
+            hyperparams["metric_lb"] = -(1 - repair_level)
+            hyperparams["metric_ub"] = 1 - repair_level
         mitigator = aif360.algorithms.postprocessing.RejectOptionClassification(
             unprivileged_groups=unprivileged_groups,
             privileged_groups=privileged_groups,
@@ -132,12 +136,32 @@ _hyperparams_schema = {
                 "metric_ub": {
                     "description": "Upper bound of constraint on the metric value.",
                     "type": "number",
+                    "minimum": 0,
                     "default": 0.05,
+                    "maximum": 1,
                 },
                 "metric_lb": {
                     "description": "Lower bound of constraint on the metric value.",
                     "type": "number",
+                    "minimum": -1,
                     "default": -0.05,
+                    "maximum": 0,
+                },
+                "repair_level": {
+                    "description": "Repair amount from 0 = none to 1 = full.",
+                    "anyOf": [
+                        {
+                            "description": "Keep metric_lb and metric_ub unchanged.",
+                            "enum": [None],
+                        },
+                        {
+                            "description": "Set metric_ub = 1 - repair_level and metric_lb = - metric_ub.",
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1,
+                        },
+                    ],
+                    "default": None,
                 },
             },
         }
