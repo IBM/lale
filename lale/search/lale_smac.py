@@ -172,7 +172,7 @@ def HPValuetoSMAC(key: str, hp: SearchSpace) -> Hyperparameter:
             return v
 
     if isinstance(hp, SearchSpaceEnum):
-        return CategoricalHyperparameter(key, list(map(val_to_str, hp.vals)))
+        return CategoricalHyperparameter(key, [val_to_str(x) for x in hp.vals])
     elif isinstance(hp, SearchSpaceNumber):
         return SearchSpaceNumberToSMAC(key, hp)
     elif isinstance(hp, SearchSpaceArray):
