@@ -564,6 +564,7 @@ def is_liac_arff(obj) -> bool:
     }
     if not isinstance(obj, dict):
         return False
+
     for k, t in expected_types.items():
         if k not in obj or not isinstance(obj[k], t):
             return False
