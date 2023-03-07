@@ -19,6 +19,7 @@ from typing import Any, Dict, Optional
 from hyperopt import STATUS_OK
 
 import lale.docstrings
+import lale.helpers
 import lale.operators
 from lale.lib.lale import Hyperopt
 
@@ -100,7 +101,9 @@ class _TopKVotingClassifierImpl:
             predictions = None
         return predictions
 
-    def get_pipeline(self, pipeline_name=None, astype="lale"):
+    def get_pipeline(
+        self, pipeline_name=None, astype: lale.helpers.astype_type = "lale"
+    ):
         """Retrieve one of the trials.
 
         Parameters

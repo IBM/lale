@@ -14,6 +14,7 @@
 
 import functools
 import logging
+import sys
 from typing import List, Optional, Tuple, Union, cast
 
 import aif360.algorithms.postprocessing
@@ -30,12 +31,18 @@ import lale.lib.lale
 import lale.lib.rasl
 from lale.datasets.data_schemas import add_schema_adjusting_n_rows
 from lale.expressions import astype, it, sum  # pylint:disable=redefined-builtin
-from lale.helpers import GenSym, _ensure_pandas
+from lale.helpers import GenSym, _ensure_pandas, randomstate_type
 from lale.lib.dataframe import get_columns
 from lale.lib.rasl import Aggregate, ConcatFeatures, Map
 from lale.lib.rasl.metrics import MetricMonoid, MetricMonoidFactory
 from lale.operators import TrainablePipeline, TrainedOperator
 from lale.type_checking import JSON_TYPE, validate_schema_directly
+
+if sys.version_info >= (3, 8):
+    from typing import Literal  # raises a mypy error for <3.8
+else:
+    from typing_extensions import Literal
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
@@ -45,7 +52,7 @@ _FAV_LABELS_TYPE = List[Union[float, str, bool, List[float]]]
 
 
 def dataset_to_pandas(
-    dataset, return_only="Xy"
+    dataset, return_only: Literal["X", "y", "Xy"] = "Xy"
 ) -> Tuple[Optional[pd.Series], Optional[pd.Series]]:
     """
     Return pandas representation of the AIF360 dataset.
@@ -2018,7 +2025,7 @@ def fair_stratified_train_test_split(
     protected_attributes: List[JSON_TYPE],
     unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
     test_size: float = 0.25,
-    random_state=None,
+    random_state: randomstate_type = None,
 ) -> Tuple:
     """
     Splits X and y into random train and test subsets stratified by
@@ -2246,7 +2253,7 @@ class FairStratifiedKFold:
 
             Always ignored, exists for compatibility.
 
-        Yields
+        Returns
         ------
         result : tuple
 

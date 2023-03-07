@@ -105,7 +105,7 @@ _lale_validator = jsonschema.validators.extend(
 )
 
 
-def always_validate_schema(value, schema: JSON_TYPE, subsample_array: bool = True):
+def always_validate_schema(value: Any, schema: JSON_TYPE, subsample_array: bool = True):
     """Validate that the value is an instance of the schema.
 
     Parameters
@@ -133,7 +133,9 @@ def always_validate_schema(value, schema: JSON_TYPE, subsample_array: bool = Tru
         jsonschema.validate(json_value, sch, _lale_validator)
 
 
-def validate_schema_directly(value, schema: JSON_TYPE, subsample_array: bool = True):
+def validate_schema_directly(
+    value: Any, schema: JSON_TYPE, subsample_array: bool = True
+):
     """Validate that the value is an instance of the schema.
 
     Parameters
@@ -220,7 +222,7 @@ def _json_replace(subject, old, new):
     return subject  # nothing changed so share original object (not a copy)
 
 
-def is_subschema(sub_schema, super_schema) -> bool:
+def is_subschema(sub_schema: JSON_TYPE, super_schema: JSON_TYPE) -> bool:
     """Is sub_schema a subschema of super_schema?
 
     Parameters
@@ -235,7 +237,13 @@ def is_subschema(sub_schema, super_schema) -> bool:
     -------
     bool
         True if `sub_schema <: super_schema`, False otherwise.
+
+    Raises
+    ------
+    jsonschema.ValueError
+        An error occured while checking the subschema relation
     """
+
     new_sub = _json_replace(sub_schema, {"laleType": "Any"}, {"not": {}})
     try:
         return jsonsubschema.isSubschema(new_sub, super_schema)

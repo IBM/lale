@@ -197,6 +197,7 @@ from lale.helpers import (
     append_batch,
     are_hyperparameters_equal,
     assignee_name,
+    astype_type,
     fold_schema,
     get_name_and_index,
     is_empty_dict,
@@ -340,7 +341,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         return cls.__module__ + "." + cls.__name__  # type: ignore
 
     @abstractmethod
-    def validate_schema(self, X, y=None):
+    def validate_schema(self, X: Any, y: Any = None):
         """Validate that X and y are valid with respect to the input schema of this operator.
 
         Parameters
@@ -357,7 +358,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         pass
 
     @abstractmethod
-    def transform_schema(self, s_X) -> JSON_TYPE:
+    def transform_schema(self, s_X: JSON_TYPE) -> JSON_TYPE:
         """Return the output schema given the input schema.
 
         Parameters
@@ -423,7 +424,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         combinators: bool = True,
         assign_nested: bool = True,
         customize_schema: bool = False,  # pylint:disable=redefined-outer-name
-        astype: Union[Literal["lale"], Literal["sklearn"]] = "lale",
+        astype: astype_type = "lale",
         ipython_display: Literal[False] = False,
     ) -> str:
         ...
@@ -436,7 +437,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         combinators: bool = True,
         assign_nested: bool = True,
         customize_schema: bool = False,  # pylint:disable=redefined-outer-name
-        astype: Union[Literal["lale"], Literal["sklearn"]] = "lale",
+        astype: astype_type = "lale",
         ipython_display: Union[bool, Literal["input"]] = False,
     ) -> Optional[str]:
         ...
@@ -448,7 +449,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         combinators: bool = True,
         assign_nested: bool = True,
         customize_schema: bool = False,  # pylint:disable=redefined-outer-name
-        astype: Union[Literal["lale"], Literal["sklearn"]] = "lale",
+        astype: astype_type = "lale",
         ipython_display: Union[bool, Literal["input"]] = False,
     ) -> Optional[str]:
         """Returns the Python source code representation of the operator.
@@ -1004,7 +1005,13 @@ class PlannedOperator(Operator):
     # pylint:disable=abstract-method
 
     def auto_configure(
-        self, X, y=None, optimizer=None, cv=None, scoring=None, **kwargs
+        self,
+        X: Any,
+        y: Any = None,
+        optimizer: "Optional[PlannedIndividualOp]" = None,
+        cv: Any = None,
+        scoring: Any = None,
+        **kwargs,
     ) -> "TrainedOperator":
         """
         Perform combined algorithm selection and hyperparameter tuning on this planned operator.
@@ -1032,6 +1039,11 @@ class PlannedOperator(Operator):
         -------
         TrainableOperator
             Best operator discovered by the optimizer.
+
+        Raises
+        ------
+        ValueError
+            If an invalid optimizer is provided
         """
         if optimizer is None:
             raise ValueError("Please provide a valid optimizer for auto_configure.")
@@ -1043,7 +1055,9 @@ class PlannedOperator(Operator):
             kwargs["scoring"] = scoring
         optimizer_obj = optimizer(estimator=self, **kwargs)
         trained = optimizer_obj.fit(X, y)
-        return trained.get_pipeline()
+        ret_pipeline = trained.get_pipeline()
+        assert ret_pipeline is not None
+        return ret_pipeline
 
 
 PlannedOperator.__doc__ = (
@@ -1085,7 +1099,7 @@ class TrainableOperator(PlannedOperator):
         return make_pipeline(self, other)
 
     @abstractmethod
-    def fit(self, X, y=None, **fit_params) -> "TrainedOperator":
+    def fit(self, X: Any, y: Any = None, **fit_params) -> "TrainedOperator":
         """Train the learnable coefficients of this operator, if any.
 
         Return a trained version of this operator.  If this operator
@@ -1113,7 +1127,7 @@ class TrainableOperator(PlannedOperator):
         """
         pass
 
-    def fit_transform(self, X, y=None, **fit_params):
+    def fit_transform(self, X: Any, y: Any = None, **fit_params):
         """
         Fit to data, then transform it.
 
@@ -1190,13 +1204,14 @@ class TrainedOperator(TrainableOperator):
         return make_pipeline(self, other)
 
     @abstractmethod
-    def transform(self, X, y=None) -> Any:
+    def transform(self, X: Any, y: Any = None) -> Any:
         """Transform the data.
 
         Parameters
         ----------
         X :
             Features; see input_transform schema of the operator.
+        y : None
 
         Returns
         -------
@@ -1206,17 +1221,19 @@ class TrainedOperator(TrainableOperator):
         pass
 
     @abstractmethod
-    def _predict(self, X) -> Any:
+    def _predict(self, X: Any) -> Any:
         pass
 
     @abstractmethod
-    def predict(self, X, **predict_params) -> Any:
+    def predict(self, X: Any, **predict_params) -> Any:
         """Make predictions.
 
         Parameters
         ----------
         X :
             Features; see input_predict schema of the operator.
+        predict_params:
+            Additional parameters that should be passed to the predict method
 
         Returns
         -------
@@ -1226,7 +1243,7 @@ class TrainedOperator(TrainableOperator):
         pass
 
     @abstractmethod
-    def predict_proba(self, X):
+    def predict_proba(self, X: Any):
         """Probability estimates for all classes.
 
         Parameters
@@ -1242,7 +1259,7 @@ class TrainedOperator(TrainableOperator):
         pass
 
     @abstractmethod
-    def decision_function(self, X):
+    def decision_function(self, X: Any):
         """Confidence scores for all classes.
 
         Parameters
@@ -1258,7 +1275,7 @@ class TrainedOperator(TrainableOperator):
         pass
 
     @abstractmethod
-    def score_samples(self, X):
+    def score_samples(self, X: Any):
         """Scores for each sample in X. The type of scores depends on the operator.
 
         Parameters
@@ -1274,7 +1291,7 @@ class TrainedOperator(TrainableOperator):
         pass
 
     @abstractmethod
-    def score(self, X, y, **score_params):
+    def score(self, X: Any, y: Any, **score_params):
         """Performance evaluation with a default metric.
 
         Parameters
@@ -1294,7 +1311,7 @@ class TrainedOperator(TrainableOperator):
         pass
 
     @abstractmethod
-    def predict_log_proba(self, X):
+    def predict_log_proba(self, X: Any):
         """Predicted class log-probabilities for X.
 
         Parameters
@@ -2453,7 +2470,7 @@ class IndividualOp(Operator):
         if user_validator:
             user_validator(**hp_all)
 
-    def validate_schema(self, X, y=None):
+    def validate_schema(self, X: Any, y: Any = None):
         if self.has_method("fit"):
             X = self._validate_input_schema("X", X, "fit")
         method = "transform" if self.is_transformer() else "predict"
@@ -2541,7 +2558,7 @@ class IndividualOp(Operator):
             raise ValueError(f"{self.name()}.{method}() invalid result: {e}") from e
         return result
 
-    def transform_schema(self, s_X) -> JSON_TYPE:
+    def transform_schema(self, s_X: JSON_TYPE) -> JSON_TYPE:
         from lale.settings import disable_data_schema_validation
 
         if disable_data_schema_validation:
@@ -2624,7 +2641,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
 
     # give it a more precise type: if the input is an individual op, the output is as well
     def auto_configure(
-        self, X, y=None, optimizer=None, cv=None, scoring=None, **kwargs
+        self, X: Any, y: Any = None, optimizer=None, cv=None, scoring=None, **kwargs
     ) -> "TrainedIndividualOp":
         trained = super().auto_configure(
             X, y=y, optimizer=optimizer, cv=cv, scoring=scoring, **kwargs
@@ -2790,7 +2807,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         result = {**hp, "steps": trained_steps}
         return result
 
-    def _validate_hyperparam_data_constraints(self, X, y=None):
+    def _validate_hyperparam_data_constraints(self, X: Any, y: Any = None):
         from lale.settings import disable_hyperparams_schema_validation
 
         if disable_hyperparams_schema_validation:
@@ -2808,7 +2825,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
                 hp_explicit, hp_all, hp_schema_2, self.impl_class
             )
 
-    def fit(self, X, y=None, **fit_params) -> "TrainedIndividualOp":
+    def fit(self, X: Any, y: Any = None, **fit_params) -> "TrainedIndividualOp":
         # logger.info("%s enter fit %s", time.asctime(), self.name())
         X = self._validate_input_schema("X", X, "fit")
         y = self._validate_input_schema("y", y, "fit")
@@ -2845,7 +2862,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         # logger.info("%s exit  fit %s", time.asctime(), self.name())
         return result
 
-    def partial_fit(self, X, y=None, **fit_params) -> "TrainedIndividualOp":
+    def partial_fit(self, X: Any, y: Any = None, **fit_params) -> "TrainedIndividualOp":
         if not self.has_method("partial_fit"):
             raise AttributeError(f"{self.name()} has no partial_fit implemented.")
         X = self._validate_input_schema("X", X, "partial_fit")
@@ -2909,7 +2926,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
 
     @if_delegate_has_method(delegate="_impl")
     def get_pipeline(
-        self, pipeline_name: Optional[str] = None, astype: str = "lale"
+        self, pipeline_name: Optional[str] = None, astype: astype_type = "lale"
     ) -> Optional[TrainableOperator]:
         """
         .. deprecated:: 0.0.0
@@ -2942,7 +2959,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             raise ValueError("Must call `fit` before `summary`.") from exc
 
     @if_delegate_has_method(delegate="_impl")
-    def transform(self, X, y=None) -> Any:
+    def transform(self, X: Any, y: Any = None) -> Any:
         """
         .. deprecated:: 0.0.0
            The `transform` method is deprecated on a trainable
@@ -3088,7 +3105,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         assert result.is_frozen_trainable(), str(result.free_hyperparams())
         return result
 
-    def transform_schema(self, s_X):
+    def transform_schema(self, s_X: JSON_TYPE):
         from lale.settings import disable_data_schema_validation
 
         if disable_data_schema_validation:
@@ -3197,7 +3214,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         )
         return instance
 
-    def fit(self, X, y=None, **fit_params) -> "TrainedIndividualOp":
+    def fit(self, X: Any, y: Any = None, **fit_params) -> "TrainedIndividualOp":
         if self.has_method("fit") and not self.is_frozen_trained():
             filtered_fit_params = _fixup_hyperparams_dict(fit_params)
             try:
@@ -3208,13 +3225,15 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
             return self
 
     @if_delegate_has_method(delegate="_impl")
-    def transform(self, X, y=None) -> Any:
+    def transform(self, X: Any, y: Any = None) -> Any:
         """Transform the data.
 
         Parameters
         ----------
         X :
             Features; see input_transform schema of the operator.
+
+        y: None
 
         Returns
         -------
@@ -3236,7 +3255,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         return result
 
     @if_delegate_has_method(delegate="_impl")
-    def transform_X_y(self, X, y) -> Any:
+    def transform_X_y(self, X: Any, y: Any) -> Any:
         """Transform the data and target.
 
         Parameters
@@ -3268,13 +3287,15 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         return result
 
     @if_delegate_has_method(delegate="_impl")
-    def predict(self, X=None, **predict_params) -> Any:
+    def predict(self, X: Any = None, **predict_params) -> Any:
         """Make predictions.
 
         Parameters
         ----------
         X :
             Features; see input_predict schema of the operator.
+        predict_params:
+            Additional parameters that should be passed to the predict method
 
         Returns
         -------
@@ -3289,7 +3310,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         return result
 
     @if_delegate_has_method(delegate="_impl")
-    def predict_proba(self, X=None):
+    def predict_proba(self, X: Any = None):
         """Probability estimates for all classes.
 
         Parameters
@@ -3310,7 +3331,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         return result
 
     @if_delegate_has_method(delegate="_impl")
-    def decision_function(self, X=None):
+    def decision_function(self, X: Any = None):
         """Confidence scores for all classes.
 
         Parameters
@@ -3331,7 +3352,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         return result
 
     @if_delegate_has_method(delegate="_impl")
-    def score(self, X, y, **score_params) -> Any:
+    def score(self, X: Any, y: Any, **score_params) -> Any:
         """Performance evaluation with a default metric.
 
         Parameters
@@ -3358,7 +3379,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         return result
 
     @if_delegate_has_method(delegate="_impl")
-    def score_samples(self, X=None):
+    def score_samples(self, X: Any = None):
         """Scores for each sample in X. The type of scores depends on the operator.
 
         Parameters
@@ -3377,7 +3398,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         return result
 
     @if_delegate_has_method(delegate="_impl")
-    def predict_log_proba(self, X=None):
+    def predict_log_proba(self, X: Any = None):
         """Predicted class log-probabilities for X.
 
         Parameters
@@ -3417,18 +3438,18 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
 
     @overload
     def get_pipeline(
-        self, pipeline_name: None = None, astype: str = "lale"
+        self, pipeline_name: None = None, astype: astype_type = "lale"
     ) -> Optional[TrainedOperator]:
         ...
 
     @overload
     def get_pipeline(  # pylint:disable=signature-differs
-        self, pipeline_name: str, astype: str = "lale"
+        self, pipeline_name: str, astype: astype_type = "lale"
     ) -> Optional[TrainableOperator]:
         ...
 
     @if_delegate_has_method(delegate="_impl")
-    def get_pipeline(self, pipeline_name=None, astype="lale"):
+    def get_pipeline(self, pipeline_name=None, astype: astype_type = "lale"):
         result = self._impl_instance().get_pipeline(pipeline_name, astype)
         return result
 
@@ -3459,7 +3480,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
             **kwargs,
         )
 
-    def partial_fit(self, X, y=None, **fit_params) -> "TrainedIndividualOp":
+    def partial_fit(self, X: Any, y: Any = None, **fit_params) -> "TrainedIndividualOp":
         if not self.has_method("partial_fit"):
             raise AttributeError(f"{self.name()} has no partial_fit implemented.")
         X = self._validate_input_schema("X", X, "partial_fit")
@@ -4005,7 +4026,7 @@ class BasePipeline(Operator, Generic[OpType_co]):
         result = [s for s in self.steps_list() if is_source[s]]
         return result
 
-    def _validate_or_transform_schema(self, X, y=None, validate=True):
+    def _validate_or_transform_schema(self, X: Any, y: Any = None, validate=True):
         def combine_schemas(schemas):
             n_datasets = len(schemas)
             if n_datasets == 1:
@@ -4019,7 +4040,7 @@ class BasePipeline(Operator, Generic[OpType_co]):
                 }
             return result
 
-        outputs = {}
+        outputs: Dict[OpType_co, Any] = {}
         for operator in self._steps:
             preds = self._preds[operator]
             if len(preds) == 0:
@@ -4041,10 +4062,10 @@ class BasePipeline(Operator, Generic[OpType_co]):
             pipeline_outputs = [outputs[sink][0] for sink in sinks]
             return combine_schemas(pipeline_outputs)
 
-    def validate_schema(self, X, y=None):
+    def validate_schema(self, X: Any, y: Any = None):
         self._validate_or_transform_schema(X, y, validate=True)
 
-    def transform_schema(self, s_X):
+    def transform_schema(self, s_X: JSON_TYPE):
         from lale.settings import disable_data_schema_validation
 
         if disable_data_schema_validation:
@@ -4245,7 +4266,7 @@ class PlannedPipeline(BasePipeline[PlannedOpType_co], PlannedOperator):
 
     # give it a more precise type: if the input is a pipeline, the output is as well
     def auto_configure(
-        self, X, y=None, optimizer=None, cv=None, scoring=None, **kwargs
+        self, X: Any, y: Any = None, optimizer=None, cv=None, scoring=None, **kwargs
     ) -> "TrainedPipeline":
         trained = super().auto_configure(
             X, y=y, optimizer=optimizer, cv=cv, scoring=scoring, **kwargs
@@ -4288,7 +4309,9 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType_co], TrainableOperator):
         assert isinstance(pipe, TrainablePipeline)
         return pipe
 
-    def fit(self, X, y=None, **fit_params) -> "TrainedPipeline[TrainedIndividualOp]":
+    def fit(
+        self, X: Any, y: Any = None, **fit_params
+    ) -> "TrainedPipeline[TrainedIndividualOp]":
         # filtered_fit_params = _fixup_hyperparams_dict(fit_params)
         X = add_schema(X)
         y = add_schema(y)
@@ -4376,7 +4399,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType_co], TrainableOperator):
         self._trained = result
         return result
 
-    def transform(self, X, y=None) -> Any:
+    def transform(self, X: Any, y=None) -> Any:
         """
         .. deprecated:: 0.0.0
            The `transform` method is deprecated on a trainable
@@ -4387,7 +4410,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType_co], TrainableOperator):
         """
         warnings.warn(_mutation_warning("transform"), DeprecationWarning)
         try:
-            return self._trained.transform(X, y=None)
+            return self._trained.transform(X, y=y)
         except AttributeError as exc:
             raise ValueError("Must call `fit` before `transform`.") from exc
 
@@ -4516,7 +4539,12 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType_co], TrainableOperator):
         return TrainedPipeline(trained_steps, trained_edges, _lale_trained=True)
 
     def partial_fit(
-        self, X, y=None, freeze_trained_prefix=True, unsafe=False, **fit_params
+        self,
+        X: Any,
+        y: Any = None,
+        freeze_trained_prefix: bool = True,
+        unsafe: bool = False,
+        **fit_params,
     ) -> "TrainedPipeline[TrainedIndividualOp]":
         """partial_fit for a pipeline.
         This method assumes that all but the last node of a pipeline are frozen_trained and
@@ -4546,7 +4574,10 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType_co], TrainableOperator):
         -------
         TrainedPipeline :
             A partially trained pipeline, which can be trained further by other calls to partial_fit
-
+        Raises
+        ------
+        ValueError
+            The piepline has a non-frozen prefix
         """
         estimator_only = True
 
@@ -4635,7 +4666,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
         assert isinstance(pipe, TrainedPipeline)
         return pipe
 
-    def _predict(self, X, y=None, **predict_params):
+    def _predict(self, X: Any, y: Any = None, **predict_params):
         return self._predict_based_on_type(
             "predict", "_predict", X, y, **predict_params
         )
@@ -4646,14 +4677,14 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
             return strip_schema(result)  # otherwise scorers return zero-dim array
         return result
 
-    def transform(self, X, y=None) -> Any:
+    def transform(self, X: Any, y: Any = None) -> Any:
         # TODO: What does a transform on a pipeline mean, if the last step is not a transformer
         # can it be just the output of predict of the last step?
         # If this implementation changes, check to make sure that the implementation of
         # self.is_transformer is kept in sync with the new assumptions.
         return self._predict_based_on_type("transform", "transform", X, y)
 
-    def transform_X_y(self, X, y=None) -> Any:
+    def transform_X_y(self, X: Any, y: Any = None) -> Any:
         return self._predict_based_on_type("transform_X_y", "transform_X_y", X, y)
 
     def _predict_based_on_type(
@@ -4740,7 +4771,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
             return result_X, result_y
         return result_X
 
-    def predict_proba(self, X):
+    def predict_proba(self, X: Any):
         """Probability estimates for all classes.
 
         Parameters
@@ -4755,7 +4786,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
         """
         return self._predict_based_on_type("predict_proba", "predict_proba", X)
 
-    def decision_function(self, X):
+    def decision_function(self, X: Any):
         """Confidence scores for all classes.
 
         Parameters
@@ -4770,7 +4801,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
         """
         return self._predict_based_on_type("decision_function", "decision_function", X)
 
-    def score(self, X, y, **score_params):
+    def score(self, X: Any, y: Any, **score_params):
         """Performance evaluation with a default metric based on the final estimator.
 
         Parameters
@@ -4789,7 +4820,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
         """
         return self._predict_based_on_type("score", "score", X, y)
 
-    def score_samples(self, X=None):
+    def score_samples(self, X: Any = None):
         """Scores for each sample in X. There type of scores is based on the last operator in the pipeline.
 
         Parameters
@@ -4804,7 +4835,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
         """
         return self._predict_based_on_type("score_samples", "score_samples", X)
 
-    def predict_log_proba(self, X):
+    def predict_log_proba(self, X: Any):
         """Predicted class log-probabilities for X.
 
         Parameters
@@ -4819,21 +4850,23 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
         """
         return self._predict_based_on_type("predict_log_proba", "predict_log_proba", X)
 
-    def transform_with_batches(self, X, y=None, serialize=True):
+    def transform_with_batches(self, X: Any, y: Any = None, serialize: bool = True):
         """[summary]
 
         Parameters
         ----------
-        X : [type]
+        X : Any
             [description]
         y : [type], optional
             by default None
+        serialize: boolean
+            should data be serialized if needed
         Returns
         -------
         [type]
             [description]
         """
-        outputs = {}
+        outputs: Dict[TrainedOpType_co, tuple] = {}
         serialization_out_dir: Text = ""
         if serialize:
             serialization_out_dir = os.path.join(
@@ -4849,7 +4882,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
         output = None
 
         for batch_data in X:  # batching_transformer will output only one obj
-            if isinstance(batch_data, Tuple):
+            if isinstance(batch_data, tuple):
                 batch_X, batch_y = batch_data
             else:
                 batch_X = batch_data
@@ -4950,11 +4983,11 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
 
     def partial_fit(
         self,
-        X,
-        y=None,
-        freeze_trained_prefix=True,
-        unsafe=False,
-        classes=None,
+        X: Any,
+        y: Any = None,
+        freeze_trained_prefix: bool = True,
+        unsafe: bool = False,
+        classes: Any = None,
         **fit_params,
     ) -> "TrainedPipeline[TrainedIndividualOp]":
         """partial_fit for a pipeline.
@@ -4980,13 +5013,18 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
         fit_params:
             dict
             Additional keyword arguments to be passed to partial_fit of the estimator
-        classes:
+        classes: Any
 
         Returns
         -------
         TrainedPipeline :
             A partially trained pipeline, which can be trained further by other calls to partial_fit
 
+
+        Raises
+        ------
+        ValueError
+            The piepline has a non-frozen prefix
         """
         estimator_only = True
 
@@ -5102,7 +5140,7 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType_co]):
         """
         return [(s.name(), s) for s in self._steps]
 
-    def fit(self, X, y=None, **fit_params):
+    def fit(self, X: Any, y: Any = None, **fit_params):
         if len(self.steps_list()) == 1:
             s = self.steps_list()[0]
             if s is not None:
@@ -5139,11 +5177,11 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType_co]):
             return False
         return self.steps_list()[-1].is_supervised()
 
-    def validate_schema(self, X, y=None):
+    def validate_schema(self, X: Any, y: Any = None):
         for step in self.steps_list():
             step.validate_schema(X, y)
 
-    def transform_schema(self, s_X):
+    def transform_schema(self, s_X: JSON_TYPE):
         from lale.settings import disable_data_schema_validation
 
         if disable_data_schema_validation:
@@ -5375,7 +5413,7 @@ def _fixup_hyperparams_dict(d):
 CustomizeOpType = TypeVar("CustomizeOpType", bound=PlannedIndividualOp)
 
 
-def customize_schema(
+def customize_schema(  # pylint: disable=differing-param-doc,differing-type-doc
     op: CustomizeOpType,
     schemas: Optional[Schema] = None,
     relevantToOptimizer: Optional[List[str]] = None,
@@ -5389,6 +5427,8 @@ def customize_schema(
 
     Parameters
     ----------
+    op: Operator
+        The base operator to customize
     schemas : Schema
         A dictionary of json schemas for the operator. Override the entire schema and ignore other arguments
     input : Schema
@@ -5407,7 +5447,7 @@ def customize_schema(
         Which methods/properties to forward to the underlying impl.  (False for none, True for all).
     set_as_available: bool
         Override the list of available operators so `get_available_operators` returns this customized operator.
-    param : Schema
+    kwargs : Schema
         Override the schema of the hyperparameter.
         `param` must be an existing parameter (already defined in the schema for lale operators, __init__ parameter for external operators)
 

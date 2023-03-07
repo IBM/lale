@@ -23,10 +23,10 @@ from lale.datasets.data_schemas import (
     add_table_name,
     get_table_name,
 )
-from lale.helpers import _is_spark_df, _is_spark_df_without_index
+from lale.helpers import _is_spark_df, _is_spark_df_without_index, datatype_param_type
 
 
-def _convert(data, astype, X_or_y):
+def _convert(data, astype: datatype_param_type, X_or_y):
     if _is_spark_df(data):
         if astype == "pandas":
             if X_or_y == "X":
@@ -64,7 +64,9 @@ def _convert(data, astype, X_or_y):
 
 
 class _ConvertImpl:
-    def __init__(self, astype="pandas"):
+    astype: datatype_param_type
+
+    def __init__(self, astype: datatype_param_type = "pandas"):
         self.astype = astype
 
     def transform(self, X):

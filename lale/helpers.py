@@ -16,6 +16,7 @@ import ast
 import copy
 import importlib
 import logging
+import sys
 import time
 import traceback
 from importlib import util
@@ -38,11 +39,17 @@ import numpy as np
 import pandas as pd
 import scipy.sparse
 import sklearn.pipeline
+from numpy.random import RandomState
 from sklearn.metrics import accuracy_score, check_scoring, log_loss
 from sklearn.model_selection import StratifiedKFold
 from sklearn.utils.metaestimators import _safe_split
 
 import lale.datasets.data_schemas
+
+if sys.version_info >= (3, 8):
+    from typing import Literal  # raises a mypy error for <3.8
+else:
+    from typing_extensions import Literal
 
 try:
     import torch
@@ -60,6 +67,10 @@ if spark_installed:
 logger = logging.getLogger(__name__)
 
 LALE_NESTED_SPACE_KEY = "__lale_nested_space"
+
+astype_type = Literal["lale", "sklearn"]
+datatype_param_type = Literal["pandas", "spark"]
+randomstate_type = Union[RandomState, int, None]
 
 
 def make_nested_hyperopt_space(sub_space):
@@ -248,10 +259,10 @@ def cross_val_score_track_trials(
     estimator,
     X,
     y=None,
-    scoring=accuracy_score,
-    cv=5,
-    args_to_scorer=None,
-    args_to_cv=None,
+    scoring: Any = accuracy_score,
+    cv: Any = 5,
+    args_to_scorer: Optional[Dict[str, Any]] = None,
+    args_to_cv: Optional[Dict[str, Any]] = None,
     **fit_params,
 ):
     """
@@ -262,7 +273,8 @@ def cross_val_score_track_trials(
     ----------
 
     estimator: A valid sklearn_wrapper estimator
-    X, y: Valid data and target values that work with the estimator
+    X: Valid data that works with the estimator
+    y: Valid target that works with the estimator
     scoring: string or a scorer object created using
         https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html#sklearn.metrics.make_scorer.
         A string from sklearn.metrics.SCORERS.keys() can be used or a scorer created from one of
@@ -277,6 +289,7 @@ def cross_val_score_track_trials(
                 Used for cases where the scorer has a signature such as ``scorer(estimator, X, y, **kwargs)``.
     args_to_cv: A dictionary of additional keyword arguments to pass to the split method of cv.
                 This is only applicable when cv is not an integer.
+    fit_params: Additional parameters that should be passed when calling fit on the estimator
     Returns
     -------
         cv_results: a list of scores corresponding to each cross validation fold
@@ -321,7 +334,7 @@ def cross_val_score_track_trials(
     return result
 
 
-def cross_val_score(estimator, X, y=None, scoring=accuracy_score, cv=5):
+def cross_val_score(estimator, X, y=None, scoring: Any = accuracy_score, cv: Any = 5):
     """
     Use the given estimator to perform fit and predict for splits defined by 'cv' and compute the given score on
     each of the splits.
@@ -330,7 +343,8 @@ def cross_val_score(estimator, X, y=None, scoring=accuracy_score, cv=5):
     ----------
 
     estimator: A valid sklearn_wrapper estimator
-    X, y: Valid data and target values that work with the estimator
+    X: Valid data value that works with the estimator
+    y: Valid target value that works with the estimator
     scoring: a scorer object from sklearn.metrics (https://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics)
         Default value is accuracy_score.
     cv: an integer or an object that has a split function as a generator yielding (train, test) splits as arrays of indices.
@@ -596,7 +610,7 @@ def _import_from_sklearn_inplace_helper(
     def import_nested_params(orig_hyperparams: Any, partial_dict: bool) -> Any:
         ...
 
-    def import_nested_params(orig_hyperparams, partial_dict: bool = False):
+    def import_nested_params(orig_hyperparams: Any, partial_dict: bool = False):
         """
         look through lists/tuples/dictionaries for sklearn compatible objects to import.
         :param orig_hyperparams: the input to recursively look through for sklearn compatible objects
@@ -753,7 +767,7 @@ def _import_from_sklearn_inplace_helper(
     return lale_op_obj
 
 
-def import_from_sklearn(sklearn_obj, fitted=True, in_place: bool = False):
+def import_from_sklearn(sklearn_obj: Any, fitted: bool = True, in_place: bool = False):
     """
     This method take an object and tries to wrap sklearn objects
     (at the top level or contained within hyperparameters of other
@@ -775,7 +789,7 @@ def import_from_sklearn(sklearn_obj, fitted=True, in_place: bool = False):
     return _import_from_sklearn_inplace_helper(obj, fitted=fitted, is_nested=False)
 
 
-def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
+def import_from_sklearn_pipeline(sklearn_pipeline: Any, fitted: bool = True):
     """
     Note: Same as import_from_sklearn.  This alternative name exists for backwards compatibility.
 
@@ -785,10 +799,8 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
     It will modify the object to add in the appropriate lale wrappers.
     It may also return a wrapper or different object than given.
 
-    :param sklearn_obj: the object that we are going to try and wrap
+    :param sklearn_pipeline: the object that we are going to try and wrap
     :param fitted: should we return a TrainedOperator
-    :param in_place: should we try to mutate what we can in place, or should we
-           aggressively deepcopy everything
     :return: The wrapped object (or the input object if we could not wrap it)
 
     """
@@ -855,7 +867,13 @@ def append_batch(data, batch_data):
     )
 
 
-def create_data_loader(X, y=None, batch_size=1, num_workers=0, shuffle=True):
+def create_data_loader(
+    X: Any,
+    y: Any = None,
+    batch_size: int = 1,
+    num_workers: int = 0,
+    shuffle: bool = True,
+):
     """A function that takes a dataset as input and outputs a Pytorch dataloader.
 
     Parameters

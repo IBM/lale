@@ -21,6 +21,7 @@ from typing_extensions import Literal, TypeAlias
 
 import lale.helpers
 from lale.datasets import pandas2spark
+from lale.helpers import datatype_param_type
 
 from .split_xy import SplitXy
 
@@ -101,13 +102,13 @@ def mockup_data_loader(
 
 @overload
 def mockup_data_loader(
-    X: pd.DataFrame, y: pd.Series, n_batches: int, astype: str
+    X: pd.DataFrame, y: pd.Series, n_batches: int, astype: datatype_param_type
 ) -> Iterable[_PandasOrSparkBatch]:
     ...
 
 
 def mockup_data_loader(
-    X: pd.DataFrame, y: pd.Series, n_batches: int, astype: str
+    X: pd.DataFrame, y: pd.Series, n_batches: int, astype: datatype_param_type
 ) -> Iterable[_PandasOrSparkBatch]:
     """Split (X, y) into batches to emulate loading them incrementally.
 

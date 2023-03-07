@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Tuple
+from typing import Any, List, Tuple
 
 from numpy import random
 
@@ -25,15 +25,15 @@ except ImportError:
 
 
 from lale.datasets.data_schemas import add_table_name, get_table_name
-from lale.helpers import _is_pandas_df, _is_spark_df
+from lale.helpers import _is_pandas_df, _is_spark_df, randomstate_type
 
 
 def multitable_train_test_split(
-    dataset,
-    main_table_name,
-    label_column_name,
-    test_size=0.25,
-    random_state=None,
+    dataset: List[Any],
+    main_table_name: str,
+    label_column_name: str,
+    test_size: float = 0.25,
+    random_state: randomstate_type = None,
 ) -> Tuple:
     """
     Splits X and y into random train and test subsets stratified by
@@ -91,6 +91,12 @@ def multitable_train_test_split(
 
       - item 3: test_y
 
+
+    Raises
+    ------
+    jsonschema.ValueError
+        Bad configuration.  Either the table name was not found, or te provided list does not contain
+         spark or pandas dataframes
     """
     main_table_df = None
     index_of_main_table = -1

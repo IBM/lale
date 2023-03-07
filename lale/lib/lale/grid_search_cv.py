@@ -196,7 +196,9 @@ class _GridSearchCVImpl:
         assert self._best_estimator is not None
         return self._best_estimator.predict(X, **predict_params)
 
-    def get_pipeline(self, pipeline_name=None, astype="lale"):
+    def get_pipeline(
+        self, pipeline_name=None, astype: lale.helpers.astype_type = "lale"
+    ):
         if pipeline_name is not None:
             raise NotImplementedError("Cannot get pipeline by name yet.")
         result = self._best_estimator

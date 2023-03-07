@@ -14,14 +14,24 @@
 
 import inspect
 import logging
-from typing import Set
+import sys
+from typing import List, Optional, Set
 
 from lale.operators import Operator, clone_op, get_op_from_lale_lib
+
+if sys.version_info < (3, 9):
+    from typing import Container  # raises a mypy error for <3.8
+else:
+    from collections.abc import Container
 
 logger = logging.getLogger(__name__)
 
 
-def _wrap_operators_in_symtab(symtab, exclude_classes=None, wrapper_modules=None):
+def _wrap_operators_in_symtab(
+    symtab,
+    exclude_classes: Optional[Container[str]] = None,
+    wrapper_modules: Optional[List[str]] = None,
+) -> None:
     for name, impl in symtab.items():
         if (
             inspect.isclass(impl)
@@ -43,7 +53,10 @@ def _wrap_operators_in_symtab(symtab, exclude_classes=None, wrapper_modules=None
                     logger.info(f"Lale:Wrapped known operator:{name}")
 
 
-def wrap_imported_operators(exclude_classes=None, wrapper_modules=None):
+def wrap_imported_operators(
+    exclude_classes: Optional[Container[str]] = None,
+    wrapper_modules: Optional[List[str]] = None,
+) -> None:
     """Wrap the currently imported operators from the symbol table
     to their lale wrappers.
 
@@ -67,7 +80,7 @@ def wrap_imported_operators(exclude_classes=None, wrapper_modules=None):
     if wrapper_modules is not None:
         wrapper_modules.extend(get_lale_wrapper_modules())
     else:
-        wrapper_modules = get_lale_wrapper_modules()
+        wrapper_modules = list(get_lale_wrapper_modules())
     _wrap_operators_in_symtab(
         calling_frame.f_globals, exclude_classes, wrapper_modules=wrapper_modules
     )

@@ -164,12 +164,10 @@ class Grammar(Operator):
 
     def unfold(self, n: int) -> PlannedOperator:
         """
-        Explore the grammar `g` starting from `g.start` and generate all possible   choices after `n` derivations.
+        Explore this grammar `self.start` and generate all possible   choices after `n` derivations.
 
         Parameters
         ----------
-        g : Grammar
-            input grammar
         n : int
             number of derivations
 

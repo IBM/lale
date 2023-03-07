@@ -58,12 +58,14 @@ def get_parameter_grids(
     Parameters
     ----------
     op : The lale PlannedOperator
-    lale_num_samples : integer, optional
+    num_samples : integer, optional
         If set, will limit the number of samples for each distribution
-    lale_num_grids: integer or float, optional
+    num_grids: integer or float, optional
         if set to an integer => 1, it will determine how many parameter grids will be returned (at most)
         if set to an float between 0 and 1, it will determine what fraction should be returned
         note that setting it to 1 is treated as in integer.  To return all results, use None
+    pgo: Optional profile guided optimization data that guides discretization
+    data_schema: Optional schema for the input data. which is used for hyperparameter schema data constraints
     """
     return get_grid_search_parameter_grids(
         op,

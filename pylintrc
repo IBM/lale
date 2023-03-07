@@ -124,6 +124,8 @@ disable=
    too-many-locals,too-many-statements,
    too-many-boolean-expressions,too-many-nested-blocks
 
+load-plugins=pylint.extensions.docparams
+
 [FORMAT]
 
 good-names=X,y
