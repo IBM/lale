@@ -124,7 +124,7 @@ disable=
    too-many-locals,too-many-statements,
    too-many-boolean-expressions,too-many-nested-blocks
 
-load-plugins=pylint.extensions.docparams
+load-plugins=pylint.extensions.docparams,pylint.extensions.bad_builtin
 
 [FORMAT]
 

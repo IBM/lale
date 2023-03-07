@@ -186,7 +186,7 @@ class LoggingObserver:
                 if logger.isEnabledFor(logging.INFO):
                     s: str = "  " * self._indent
                     s += f"[observing({suffix})->] "
-                    s += ",".join(map(str, args))
+                    s += ",".join((str(x) for x in args))
                     if len(args) > 0 and len(kwargs) > 0:
                         s += ", "
                     for k, v in kwargs.items():
@@ -204,7 +204,7 @@ class LoggingObserver:
                 if logger.isEnabledFor(logging.INFO):
                     s: str = "  " * self._indent
                     s += f"[<-observed({suffix})] "
-                    s += ",".join(map(str, args))
+                    s += ",".join((str(x) for x in args))
                     for k, v in kwargs.items():
                         s += f"{k}->{v}"
                     logger.info(s)
@@ -219,7 +219,7 @@ class LoggingObserver:
                 if logger.isEnabledFor(logging.INFO):
                     s: str = "  " * self._indent
                     s += f"[!error!<-observed({suffix})] "
-                    s += ",".join(map(str, args))
+                    s += ",".join((str(x) for x in args))
                     for k, v in kwargs.items():
                         s += f"{k}->{v}"
                     logger.info(s)

@@ -34,7 +34,7 @@ class VisitorPathError(ValueError):
         return super().__str__()
 
     def path_string(self) -> str:
-        return "->".join(map(str, self.path))
+        return "->".join((str(x) for x in self.path))
 
     def __str__(self):
         pstr = self.path_string()

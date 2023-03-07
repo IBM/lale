@@ -120,7 +120,7 @@ class SearchSpaceEnum(SearchSpacePrimitive):
             self.pgo = FrequencyDistribution.asEnumValues(pgo, self.vals)
 
     def _focused_str(self, path: Optional[List[SearchSpace]] = None) -> str:
-        return "<" + ",".join(map(str, self.vals)) + ">"
+        return "<" + ",".join((str(x) for x in self.vals)) + ">"
 
 
 class SearchSpaceConstant(SearchSpaceEnum):

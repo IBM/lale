@@ -375,10 +375,7 @@ def _get_dataframe_from_compas_csv(violent_recidivism=False):
     if violent_recidivism:
         # violent recidivism dataset includes extra label column for some reason
         df = pd.DataFrame(
-            df,
-            columns=list(
-                filter(lambda x: x != "two_year_recid.1", df.columns.tolist())
-            ),
+            df, columns=[x for x in df.columns.tolist() if x != "two_year_recid.1"]
         ).sort_index()
     return df
 
@@ -514,7 +511,7 @@ def _get_pandas_and_fairness_info_from_compas_csv(violent_recidivism=False):
     # preprocessing steps performed by ProPublica team, even in the preprocess=False case
     df = _perform_default_preprocessing(df)
     X = pd.DataFrame(
-        df, columns=list(filter(lambda x: x != "two_year_recid", df.columns.tolist()))
+        df, columns=[x for x in df.columns.tolist() if x != "two_year_recid"]
     ).sort_index()
     y = pd.Series(
         df["two_year_recid"], name="two_year_recid", dtype=np.float64
@@ -893,7 +890,9 @@ def fetch_speeddating_df(preprocess: bool = False):
         def preprocessed_column_filter(x: str):
             return x.startswith("d_")
 
-        columns_to_drop.extend(list(filter(preprocessed_column_filter, orig_X.columns)))
+        columns_to_drop.extend(
+            [x for x in orig_X.columns if preprocessed_column_filter(x)]
+        )
 
         # drop has-null columns
         columns_to_drop.extend(["has_null_0", "has_null_1"])
@@ -903,14 +902,14 @@ def fetch_speeddating_df(preprocess: bool = False):
         def decision_column_filter(x: str):
             return x.startswith("decision")
 
-        columns_to_drop.extend(list(filter(decision_column_filter, orig_X.columns)))
+        columns_to_drop.extend([x for x in orig_X.columns if decision_column_filter(x)])
 
         # drop field columns
 
         def field_column_filter(x: str):
             return x.startswith("field")
 
-        columns_to_drop.extend(list(filter(field_column_filter, orig_X.columns)))
+        columns_to_drop.extend([x for x in orig_X.columns if field_column_filter(x)])
 
         # drop wave column
         columns_to_drop.append("wave")
@@ -1140,7 +1139,7 @@ def fetch_titanic_df(preprocess: bool = False):
             )
 
         columns_to_drop.extend(
-            list(filter(extra_categorical_columns_filter, orig_X.columns))
+            [x for x in orig_X.columns if extra_categorical_columns_filter(x)]
         )
         dropped_X = orig_X.drop(labels=columns_to_drop, axis=1)
         encoded_X = dropped_X.assign(sex=sex)
@@ -1193,7 +1192,7 @@ def _get_utilization_columns(fiscal_year):
 
 def _get_total_utilization(row, fiscal_year):
     cols = _get_utilization_columns(fiscal_year)
-    return sum(list(map(lambda x: row[x], cols)))
+    return sum((row[x] for x in cols))
 
 
 def _should_drop_column(x, fiscal_year):
@@ -1250,11 +1249,11 @@ def _fetch_meps_raw_df(panel, fiscal_year):
 
     df = df.rename(columns={"TOTEXP15": "UTILIZATION"})
     columns_to_drop = set(
-        filter(lambda x: _should_drop_column(x, fiscal_year), df.columns.tolist())
+        (x for x in df.columns.tolist() if _should_drop_column(x, fiscal_year))
     )
     df = df[sorted(set(df.columns.tolist()) - columns_to_drop, key=df.columns.get_loc)]
     X = pd.DataFrame(
-        df, columns=list(filter(lambda x: x != "UTILIZATION", df.columns.tolist()))
+        df, columns=[x for x in df.columns.tolist() if x != "UTILIZATION"]
     ).sort_index()
     y = pd.Series(df["UTILIZATION"], name="UTILIZATION").sort_index()
     fairness_info = {

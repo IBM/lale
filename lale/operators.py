@@ -5598,7 +5598,7 @@ def with_structured_params(
                 actual_key = elem_key
             with_structured_params(try_mutate, actual_key, elem_params, hyper)
         if isinstance(hyper, dict) and is_numeric_structure(structure_type):
-            max_key = max(map(int, hyper.keys()))
+            max_key = max((int(x) for x in hyper.keys()))
             hyper = [hyper.get(str(x), None) for x in range(max_key)]
         if structure_type == "tuple":
             hyper = tuple(hyper)
