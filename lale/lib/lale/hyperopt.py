@@ -343,7 +343,11 @@ class _HyperoptImpl:
         result = pd.DataFrame.from_records(records, index="name")
         return result
 
-    def get_pipeline(self, pipeline_name=None, astype="lale"):
+    def get_pipeline(
+        self,
+        pipeline_name: Optional[str] = None,
+        astype: lale.helpers.astype_type = "lale",
+    ):
         """Retrieve one of the trials.
 
         Parameters

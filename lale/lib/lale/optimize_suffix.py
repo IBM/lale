@@ -98,7 +98,12 @@ class _OptimizeSuffix:
     def summary(self, **kwargs):
         return self._optimizer.summary(**kwargs)
 
-    def get_pipeline(self, pipeline_name=None, astype="lale", **kwargs):
+    def get_pipeline(
+        self,
+        pipeline_name: Optional[str] = None,
+        astype: lale.helpers.astype_type = "lale",
+        **kwargs
+    ):
         """Retrieve one of the trials.
 
         Parameters
@@ -113,6 +118,9 @@ class _OptimizeSuffix:
 
         astype : 'lale' or 'sklearn', default 'lale'
             Type of resulting pipeline.
+
+        kwargs :
+            additional arguments to pass to the underlying optimizer
 
         Returns
         -------

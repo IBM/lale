@@ -220,7 +220,9 @@ or with
         """
         return self.trials
 
-    def get_pipeline(self, pipeline_name=None, astype="lale"):
+    def get_pipeline(
+        self, pipeline_name=None, astype: lale.helpers.astype_type = "lale"
+    ):
         if pipeline_name is not None:
             raise NotImplementedError("Cannot get pipeline by name yet.")
         result = getattr(self, "_best_estimator", None)

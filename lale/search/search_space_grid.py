@@ -75,6 +75,8 @@ def get_search_space_grids(
         if set to an integer => 1, it will determine how many parameter grids will be returned (at most)
         if set to an float between 0 and 1, it will determine what fraction should be returned
         note that setting it to 1 is treated as in integer.  To return all results, use None
+    pgo: Optional Profile Guided Optimization data that can be used when discretizing continuous parameters
+    data_schema: A schema for the actual data.  If provided, it is used to instantiate data dependent schema hyperamparameter specifications.
     """
     all_parameters = op_to_search_space_grids(op, pgo=pgo, data_schema=data_schema)
     if should_print_search_space("true", "all", "search_space_grids", "grids"):

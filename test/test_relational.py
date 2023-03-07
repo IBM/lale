@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import unittest
+from typing import List
 
 import jsonschema
 import numpy as np
@@ -77,7 +78,12 @@ from lale.expressions import (  # pylint:disable=redefined-builtin
     sum,
     variance,
 )
-from lale.helpers import _ensure_pandas, _is_pandas_df, _is_spark_df
+from lale.helpers import (
+    _ensure_pandas,
+    _is_pandas_df,
+    _is_spark_df,
+    datatype_param_type,
+)
 from lale.lib.dataframe import get_columns
 from lale.lib.lale import ConcatFeatures, Hyperopt, SplitXy
 from lale.lib.rasl import (
@@ -435,7 +441,7 @@ class TestScan(unittest.TestCase):
 class TestAlias(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        targets = ["pandas", "spark"]
+        targets: List[datatype_param_type] = ["pandas", "spark"]
         cls.tgt2datasets = {tgt: fetch_go_sales_dataset(tgt) for tgt in targets}
 
     def test_alias(self):
@@ -510,7 +516,7 @@ class TestAlias(unittest.TestCase):
 class TestGroupBy(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        targets = ["pandas", "spark"]
+        targets: List[datatype_param_type] = ["pandas", "spark"]
         cls.tgt2datasets = {tgt: fetch_go_sales_dataset(tgt) for tgt in targets}
 
     def test_groupby(self):
@@ -542,7 +548,7 @@ class TestGroupBy(unittest.TestCase):
 class TestAggregate(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        targets = ["pandas", "spark"]
+        targets: List[datatype_param_type] = ["pandas", "spark"]
         cls.tgt2datasets = {tgt: fetch_go_sales_dataset(tgt) for tgt in targets}
 
     def test_sales_not_grouped_single_col(self):
@@ -788,7 +794,7 @@ class TestJoin(unittest.TestCase):
     # Define pandas dataframes with different structures
     @classmethod
     def setUpClass(cls):
-        targets = ["pandas", "spark"]
+        targets: List[datatype_param_type] = ["pandas", "spark"]
         cls.tgt2datasets = {
             tgt: {"go_sales": fetch_go_sales_dataset(tgt)} for tgt in targets
         }
@@ -1098,7 +1104,7 @@ class TestJoin(unittest.TestCase):
 class TestMap(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        targets = ["pandas", "spark"]
+        targets: List[datatype_param_type] = ["pandas", "spark"]
         cls.tgt2datasets = {
             tgt: {"go_sales": fetch_go_sales_dataset(tgt)} for tgt in targets
         }
@@ -2487,7 +2493,7 @@ class TestTrainTestSplit(unittest.TestCase):
 class TestConvert(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.targets = ["pandas", "spark"]
+        cls.targets: List[datatype_param_type] = ["pandas", "spark"]
         cls.tgt2datasets = {tgt: fetch_go_sales_dataset(tgt) for tgt in cls.targets}
 
     def _check(self, src, dst, tgt):

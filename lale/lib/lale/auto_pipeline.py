@@ -289,7 +289,11 @@ class _AutoPipelineImpl:
             self._summary.sort_values(by="loss", inplace=True)
         return self._summary
 
-    def get_pipeline(self, pipeline_name=None, astype="lale"):
+    def get_pipeline(
+        self,
+        pipeline_name: Optional[str] = None,
+        astype: lale.helpers.astype_type = "lale",
+    ):
         """Retrieve one of the trials.
         Parameters
         ----------

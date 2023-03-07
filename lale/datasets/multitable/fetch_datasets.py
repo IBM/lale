@@ -21,6 +21,7 @@ import pandas as pd
 
 import lale.datasets.openml
 from lale.datasets.data_schemas import add_table_name
+from lale.helpers import datatype_param_type
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -38,8 +39,8 @@ except ImportError:
     spark_installed = False
 
 
-def get_data_from_csv(datatype, data_file_name):
-    datatype = datatype.casefold()
+def get_data_from_csv(datatype: datatype_param_type, data_file_name):
+    datatype = datatype.casefold()  # type: ignore
     if datatype == "pandas":
         return pd.read_csv(data_file_name)
     elif datatype == "spark":
@@ -57,7 +58,7 @@ def get_data_from_csv(datatype, data_file_name):
         )
 
 
-def fetch_go_sales_dataset(datatype="pandas"):
+def fetch_go_sales_dataset(datatype: datatype_param_type = "pandas"):
     """
     Fetches the Go_Sales dataset from IBM's Watson's ML samples.
     It contains information about daily sales, methods, retailers
@@ -117,7 +118,7 @@ def fetch_go_sales_dataset(datatype="pandas"):
     return go_sales_list
 
 
-def fetch_imdb_dataset(datatype="pandas"):
+def fetch_imdb_dataset(datatype: datatype_param_type = "pandas"):
     """
     Fetches the IMDB movie dataset from Relational Dataset Repo.
     It contains information about directors, actors, roles
@@ -150,6 +151,11 @@ def fetch_imdb_dataset(datatype="pandas"):
     Returns
     -------
     imdb_list : list of singleton dictionary of pandas / spark dataframes
+
+    Raises
+    ------
+    jsonschema.ValueError
+        dataset not found
     """
 
     download_data_dir = os.path.join(os.path.dirname(__file__), "imdb_data")
@@ -176,7 +182,7 @@ def fetch_imdb_dataset(datatype="pandas"):
     return imdb_list
 
 
-def fetch_creditg_multitable_dataset(datatype="pandas"):
+def fetch_creditg_multitable_dataset(datatype: datatype_param_type = "pandas"):
     """
     Fetches credit-g dataset from OpenML, but in a multi-table format.
     It transforms the [credit-g](https://www.openml.org/d/31) dataset from OpenML

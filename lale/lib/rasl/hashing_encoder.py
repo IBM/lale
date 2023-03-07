@@ -118,6 +118,11 @@ class _HashingEncoderImpl(MonoidableOperator[_HashingEncoderMonoid]):
         feature_names: list
             A list with all feature names transformed or added.
             Note: potentially dropped features are not included!
+
+        Raises
+        ------
+        jsonschema.ValueError
+            This function was called before fit was called.
         """
 
         if not isinstance(self.feature_names, list):

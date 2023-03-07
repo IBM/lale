@@ -20,7 +20,7 @@ import re
 import tempfile
 import unittest
 import urllib.request
-from typing import Any, Dict, Tuple, cast
+from typing import Any, Dict, List, Tuple, cast
 
 import jsonschema
 import numpy as np
@@ -59,7 +59,7 @@ from lale.datasets.data_schemas import (
 )
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
 from lale.expressions import it
-from lale.helpers import _ensure_pandas, create_data_loader
+from lale.helpers import _ensure_pandas, create_data_loader, datatype_param_type
 from lale.lib.category_encoders import TargetEncoder as SkTargetEncoder
 from lale.lib.lightgbm import LGBMClassifier, LGBMRegressor
 from lale.lib.rasl import BatchedBaggingClassifier, ConcatFeatures, Convert
@@ -148,7 +148,7 @@ def _check_trained_min_max_scaler(test, op1, op2, msg):
 class TestMinMaxScaler(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        targets = ["pandas", "spark"]
+        targets: List[datatype_param_type] = ["pandas", "spark"]
         cls.tgt2datasets = {tgt: fetch_go_sales_dataset(tgt) for tgt in targets}
 
     def test_get_params(self):
@@ -440,7 +440,7 @@ def _check_trained_ordinal_encoder(test, op1, op2, msg):
 class TestOrdinalEncoder(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        targets = ["pandas", "spark"]
+        targets: List[datatype_param_type] = ["pandas", "spark"]
         cls.tgt2gosales = {tgt: fetch_go_sales_dataset(tgt) for tgt in targets}
         cls.tgt2creditg = {
             tgt: lale.datasets.openml.fetch(
@@ -2060,7 +2060,8 @@ class TestTaskGraphsSpark(unittest.TestCase):
         sk_trainable = self._make_sk_trainable()
         sk_trained = sk_trainable.fit(train_X, train_y)
         unique_class_labels = list(train_y.unique())
-        for tgt, n_batches in itertools.product(["pandas", "spark"], [1, 3]):
+        datatype_list: List[datatype_param_type] = ["pandas", "spark"]
+        for tgt, n_batches in itertools.product(datatype_list, [1, 3]):
             rasl_trained = fit_with_batches(
                 pipeline=self._make_rasl_trainable(),
                 batches_train=mockup_data_loader(train_X, train_y, n_batches, tgt),
@@ -2091,7 +2092,8 @@ class TestTaskGraphsSpark(unittest.TestCase):
                 cv=KFold(3),
             )
         unique_class_labels = list(y.unique())
-        for tgt, n_batches in itertools.product(["pandas", "spark"], [1, 3]):
+        datatype_list: List[datatype_param_type] = ["pandas", "spark"]
+        for tgt, n_batches in itertools.product(datatype_list, [1, 3]):
             rasl_scores = rasl_cross_val_score(
                 pipeline=self._make_rasl_trainable(),
                 batches=mockup_data_loader(X, y, n_batches, tgt),
@@ -2119,7 +2121,8 @@ class TestTaskGraphsSpark(unittest.TestCase):
                 return_estimator=True,
             )
         unique_class_labels = list(y.unique())
-        for tgt, n_batches in itertools.product(["pandas", "spark"], [1, 3]):
+        datatype_list: List[datatype_param_type] = ["pandas", "spark"]
+        for tgt, n_batches in itertools.product(datatype_list, [1, 3]):
             rasl_scores = rasl_cross_validate(
                 pipeline=self._make_rasl_trainable(),
                 batches=mockup_data_loader(X, y, n_batches, tgt),

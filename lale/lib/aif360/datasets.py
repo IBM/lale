@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
 
 
-def fetch_adult_df(preprocess=False):
+def fetch_adult_df(preprocess: bool = False):
     """
     Fetch the `adult`_ dataset from OpenML and add `fairness_info`.
     It contains information about individuals from the 1994 U.S. census.
@@ -117,7 +117,7 @@ def fetch_adult_df(preprocess=False):
         return orig_X, orig_y, fairness_info
 
 
-def fetch_bank_df(preprocess=False):
+def fetch_bank_df(preprocess: bool = False):
     """
     Fetch the `bank-marketing`_ dataset from OpenML and add `fairness_info`.
 
@@ -211,7 +211,7 @@ def fetch_bank_df(preprocess=False):
         return orig_X, orig_y, fairness_info
 
 
-def fetch_tae_df(preprocess=False):
+def fetch_tae_df(preprocess: bool = False):
     """
     Fetch the `tae`_ dataset from OpenML and add `fairness_info`.
 
@@ -529,7 +529,7 @@ def _get_pandas_and_fairness_info_from_compas_csv(violent_recidivism=False):
     return X, y, fairness_info
 
 
-def fetch_compas_df(preprocess=False):
+def fetch_compas_df(preprocess: bool = False):
     """
     Fetch the `compas-two-years`_ dataset, also known as ProPublica recidivism, from GitHub and add `fairness_info`.
 
@@ -590,7 +590,7 @@ def fetch_compas_df(preprocess=False):
         )
 
 
-def fetch_compas_violent_df(preprocess=False):
+def fetch_compas_violent_df(preprocess: bool = False):
     """
     Fetch the `compas-two-years-violent`_ dataset, also known as ProPublica violent recidivism, from GitHub and add `fairness_info`.
 
@@ -683,7 +683,7 @@ def fetch_compas_violent_df(preprocess=False):
         )
 
 
-def fetch_creditg_df(preprocess=False):
+def fetch_creditg_df(preprocess: bool = False):
     """
     Fetch the `credit-g`_ dataset from OpenML and add `fairness_info`.
 
@@ -772,7 +772,7 @@ def fetch_creditg_df(preprocess=False):
         return orig_X, orig_y, fairness_info
 
 
-def fetch_ricci_df(preprocess=False):
+def fetch_ricci_df(preprocess: bool = False):
     """
     Fetch the `ricci_vs_destefano`_ dataset from OpenML and add `fairness_info`.
 
@@ -834,7 +834,7 @@ def fetch_ricci_df(preprocess=False):
         return orig_X, orig_y, fairness_info
 
 
-def fetch_speeddating_df(preprocess=False):
+def fetch_speeddating_df(preprocess: bool = False):
     """
     Fetch the `SpeedDating`_ dataset from OpenML and add `fairness_info`.
 
@@ -937,7 +937,7 @@ def fetch_speeddating_df(preprocess=False):
         return orig_X, orig_y, fairness_info
 
 
-def _fetch_boston_housing_df(preprocess=False):
+def _fetch_boston_housing_df(preprocess: bool = False):
     """
     Fetch the `Boston housing`_ dataset from sklearn and add `fairness info`.
 
@@ -1007,7 +1007,7 @@ def _fetch_boston_housing_df(preprocess=False):
         return orig_X, orig_y, fairness_info
 
 
-def fetch_nursery_df(preprocess=False):
+def fetch_nursery_df(preprocess: bool = False):
     """
     Fetch the `nursery`_ dataset from OpenML and add `fairness_info`.
 
@@ -1082,7 +1082,7 @@ def fetch_nursery_df(preprocess=False):
         return orig_X, orig_y, fairness_info
 
 
-def fetch_titanic_df(preprocess=False):
+def fetch_titanic_df(preprocess: bool = False):
     """
     Fetch the `Titanic`_ dataset from OpenML and add `fairness_info`.
 
@@ -1278,7 +1278,7 @@ def _get_pandas_and_fairness_info_from_meps_dataset(dataset):
     return X, y, fairness_info
 
 
-def fetch_meps_panel19_fy2015_df(preprocess=False):
+def fetch_meps_panel19_fy2015_df(preprocess: bool = False):
     """
     Fetch a subset of the `MEPS`_ dataset from aif360 and add fairness info.
 
@@ -1334,7 +1334,7 @@ def fetch_meps_panel19_fy2015_df(preprocess=False):
         return _fetch_meps_raw_df(Panel.PANEL19, FiscalYear.FY2015)
 
 
-def fetch_meps_panel20_fy2015_df(preprocess=False):
+def fetch_meps_panel20_fy2015_df(preprocess: bool = False):
     """
     Fetch a subset of the `MEPS`_ dataset from aif360 and add fairness info.
 
@@ -1390,7 +1390,7 @@ def fetch_meps_panel20_fy2015_df(preprocess=False):
         return _fetch_meps_raw_df(Panel.PANEL20, FiscalYear.FY2015)
 
 
-def fetch_meps_panel21_fy2016_df(preprocess=False):
+def fetch_meps_panel21_fy2016_df(preprocess: bool = False):
     """
     Fetch a subset of the `MEPS`_ dataset from aif360 and add fairness info.
 
