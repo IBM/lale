@@ -55,10 +55,10 @@ from lale.lib.aif360 import (
     CalibratedEqOddsPostprocessing,
     DisparateImpactRemover,
     EqOddsPostprocessing,
-    FairSMOTE,
     GerryFairClassifier,
     MetaFairClassifier,
     OptimPreproc,
+    Orbit,
     PrejudiceRemover,
     Redacting,
     RejectOptionClassification,
@@ -600,12 +600,6 @@ class TestAIF360Num(unittest.TestCase):
         trainable_remi = EqOddsPostprocessing(**fairness_info, estimator=estim)
         self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.82, 1.02)
 
-    def test_fair_smote_pd_num(self):
-        fairness_info = self.creditg_pd_num["fairness_info"]
-        estim = LogisticRegression(max_iter=1000)
-        trainable_remi = FairSMOTE(estimator=estim, **fairness_info)
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.70, 0.92)
-
     def test_gerry_fair_classifier_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
         trainable_remi = GerryFairClassifier(**fairness_info)
@@ -622,6 +616,12 @@ class TestAIF360Num(unittest.TestCase):
             fairness_info = self.creditg_pd_num["fairness_info"]
             trainable_remi = MetaFairClassifier(**fairness_info)
             self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.62, 0.87)
+
+    def test_orbit_pd_num(self):
+        fairness_info = self.creditg_pd_num["fairness_info"]
+        estim = LogisticRegression(max_iter=1000)
+        trainable_remi = Orbit(estimator=estim, **fairness_info)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.70, 0.92)
 
     def test_prejudice_remover_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
@@ -1169,12 +1169,6 @@ class TestAIF360Cat(unittest.TestCase):
         trainable_remi = EqOddsPostprocessing(**fairness_info, estimator=estim)
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.82, 1.02)
 
-    def test_fair_smote_pd_cat(self):
-        fairness_info = self.creditg_pd_cat["fairness_info"]
-        estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
-        trainable_remi = FairSMOTE(estimator=estim, **fairness_info)
-        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.85, 1.05)
-
     def test_gerry_fair_classifier_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         trainable_remi = GerryFairClassifier(
@@ -1206,6 +1200,12 @@ class TestAIF360Cat(unittest.TestCase):
                 max_iter=1000
             )
             # TODO: this test does not yet call fit or predict
+
+    def test_orbit_pd_cat(self):
+        fairness_info = self.creditg_pd_cat["fairness_info"]
+        estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
+        trainable_remi = Orbit(estimator=estim, **fairness_info)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.7, 0.92)
 
     def test_prejudice_remover_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]

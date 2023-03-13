@@ -46,8 +46,8 @@ See the following notebooks for more detailed examples:
 Pre-Estimator Mitigation Operators:
 ===================================
 * `DisparateImpactRemover`_
-* `FairSMOTE`_
 * `LFR`_
+* `Orbit`_
 * `Reweighing`_
 
 In-Estimator Mitigation Operators:
@@ -145,12 +145,12 @@ zero or one to simplify the task for the mitigator.
 .. _`CalibratedEqOddsPostprocessing`: lale.lib.aif360.calibrated_eq_odds_postprocessing.html#lale.lib.aif360.calibrated_eq_odds_postprocessing.CalibratedEqOddsPostprocessing
 .. _`DisparateImpactRemover`: lale.lib.aif360.disparate_impact_remover.html#lale.lib.aif360.disparate_impact_remover.DisparateImpactRemover
 .. _`EqOddsPostprocessing`: lale.lib.aif360.eq_odds_postprocessing.html#lale.lib.aif360.eq_odds_postprocessing.EqOddsPostprocessing
-.. _`FairSMOTE`: lale.lib.aif360.fair_smote.html#lale.lib.aif360.fair_smote.FairSMOTE
 .. _`FairStratifiedKFold`: lale.lib.aif360.util.html#lale.lib.aif360.util.FairStratifiedKFold
 .. _`LFR`: lale.lib.aif360.lfr.html#lale.lib.aif360.lfr.LFR
 .. _`GerryFairClassifier`: lale.lib.aif360.gerry_fair_classifier.html#lale.lib.aif360.gerry_fair_classifier.GerryFairClassifier
 .. _`MetaFairClassifier`: lale.lib.aif360.meta_fair_classifier.html#lale.lib.aif360.meta_fair_classifier.MetaFairClassifier
 .. _`OptimPreproc`: lale.lib.aif360.optim_preproc.html#lale.lib.aif360.optim_preproc.OptimPreproc
+.. _`Orbit`: lale.lib.aif360.fair_smote.html#lale.lib.aif360.orbit.Orbit
 .. _`PrejudiceRemover`: lale.lib.aif360.prejudice_remover.html#lale.lib.aif360.prejudice_remover.PrejudiceRemover
 .. _`ProtectedAttributesEncoder`: lale.lib.aif360.protected_attributes_encoder.html#lale.lib.aif360.protected_attributes_encoder.ProtectedAttributesEncoder
 .. _`Redacting`: lale.lib.aif360.redacting.html#lale.lib.aif360.redacting.Redacting
@@ -211,11 +211,11 @@ from .datasets import fetch_tae_df as fetch_tae_df
 from .datasets import fetch_titanic_df as fetch_titanic_df
 from .disparate_impact_remover import DisparateImpactRemover as DisparateImpactRemover
 from .eq_odds_postprocessing import EqOddsPostprocessing as EqOddsPostprocessing
-from .fair_smote import FairSMOTE as FairSMOTE
 from .gerry_fair_classifier import GerryFairClassifier as GerryFairClassifier
 from .lfr import LFR as LFR
 from .meta_fair_classifier import MetaFairClassifier as MetaFairClassifier
 from .optim_preproc import OptimPreproc as OptimPreproc
+from .orbit import Orbit as Orbit
 from .prejudice_remover import PrejudiceRemover as PrejudiceRemover
 from .protected_attributes_encoder import (
     ProtectedAttributesEncoder as ProtectedAttributesEncoder,
