@@ -150,7 +150,7 @@ zero or one to simplify the task for the mitigator.
 .. _`GerryFairClassifier`: lale.lib.aif360.gerry_fair_classifier.html#lale.lib.aif360.gerry_fair_classifier.GerryFairClassifier
 .. _`MetaFairClassifier`: lale.lib.aif360.meta_fair_classifier.html#lale.lib.aif360.meta_fair_classifier.MetaFairClassifier
 .. _`OptimPreproc`: lale.lib.aif360.optim_preproc.html#lale.lib.aif360.optim_preproc.OptimPreproc
-.. _`Orbit`: lale.lib.aif360.fair_smote.html#lale.lib.aif360.orbit.Orbit
+.. _`Orbit`: lale.lib.aif360.orbit.html#lale.lib.aif360.orbit.Orbit
 .. _`PrejudiceRemover`: lale.lib.aif360.prejudice_remover.html#lale.lib.aif360.prejudice_remover.PrejudiceRemover
 .. _`ProtectedAttributesEncoder`: lale.lib.aif360.protected_attributes_encoder.html#lale.lib.aif360.protected_attributes_encoder.ProtectedAttributesEncoder
 .. _`Redacting`: lale.lib.aif360.redacting.html#lale.lib.aif360.redacting.Redacting

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+import warnings
 from typing import Dict
 
 import imblearn.over_sampling
@@ -57,10 +58,24 @@ def _disparate_impact(s00, s01, s10, s11):
     return (s01 / (s00 + s01)) / (s11 / (s10 + s11))
 
 
-def _pick_sizes_11_largest(
-    osizes: Dict[str, int],
-    imbalance_repair_level: float,
-    bias_repair_level: float,
+def _sizes_to_string(sizes, prefix):
+    keys = sorted(sizes.keys())
+    sizes_string = ", ".join(f"{prefix}{k} {sizes[k]:3d}" for k in keys)
+    ci_string = f"{prefix}ci {_class_imbalance(*(sizes[k] for k in keys)):.3f}"
+    di_string = f"{prefix}di {_disparate_impact(*(sizes[k] for k in keys)):.3f}"
+    return f"{sizes_string}, {ci_string}, {di_string}"
+
+
+def _mapping_is_invertible(mapping):
+    return (
+        set(mapping.keys()) == {"00", "01", "10", "11"}
+        and set(mapping.values()) == {"00", "01", "10", "11"}
+        and all(mapping[mapping[k]] == k for k in mapping)
+    )
+
+
+def _pick_sizes_assuming_oci_and_odi_at_most_one(
+    osizes: Dict[str, int], imbalance_repair_level: float, bias_repair_level: float
 ) -> Dict[str, int]:
     """Pick new sizes for each intersection assuming the old 11 size is largest.
     If some other size is largest, use wrapper _pick_sizes_symmetric instead.
@@ -96,8 +111,9 @@ def _pick_sizes_11_largest(
     # we have two equations, one each for nci and ndi
     #    nci == (n00 + n10) / (n01 + n11)
     #    ndi == (n01 / (n00 + n01)) / (n11 / (n10 + n11))
-    # without loss of generality, assume the largest intersection is 11
-    assert o11 == max(o00, o01, o10, o11)  # see _pick_sizes_symmetric
+    # without loss of generality, assume oci <= 1 and odi <= 1
+    assert oci <= 1 and odi <= 1, _sizes_to_string(osizes, "o")
+    # that means we do not need to upsample o11
     # we will set n11 == o11, leaving three unknowns: n00, n01, n10
     # two equations admit multiple solutions for the three unknowns
     # algorithm to pick the solution that minimizes the amount of oversampling:
@@ -156,42 +172,57 @@ def _pick_sizes_11_largest(
 
     nsizes = invalid
     # to minimize n00, search candidate values in ascending order
-    for n00 in range(o00, o11 + 1):
+    for n00 in range(o00, sum(osizes.values()) + 1):
         nsizes = solve_for_n01_n10_given_00_11(n00, o11)
         okay = all(nsizes[k] >= osizes[k] for k in osizes)
         if okay:
             break
     if not all(nsizes[k] >= osizes[k] for k in osizes):
         logger.warning(f"insufficient upsampling for {osizes}")
-        nsizes = {k: o11 for k in osizes}
+        nsizes = {
+            "00": max(osizes["00"], osizes["01"]),
+            "01": max(osizes["00"], osizes["01"]),
+            "10": max(osizes["10"], osizes["11"]),
+            "11": max(osizes["10"], osizes["11"]),
+        }
+    return nsizes
+
+
+def _pick_sizes_assuming_oci_at_most_one(
+    osizes: Dict[str, int], imbalance_repair_level: float, bias_repair_level: float
+) -> Dict[str, int]:
+    oci = _class_imbalance(osizes["00"], osizes["01"], osizes["10"], osizes["11"])
+    assert oci <= 1, _sizes_to_string(osizes, "o")
+    odi = _disparate_impact(osizes["00"], osizes["01"], osizes["10"], osizes["11"])
+    if odi <= 1:
+        mapping = {"00": "00", "01": "01", "10": "10", "11": "11"}  # identity
+    else:
+        mapping = {"00": "10", "01": "11", "10": "00", "11": "01"}  # swap groups
+    assert _mapping_is_invertible(mapping), mapping
+    mapped_osizes = {k1: osizes[k2] for k1, k2 in mapping.items()}
+    mapped_nsizes = _pick_sizes_assuming_oci_and_odi_at_most_one(
+        mapped_osizes, imbalance_repair_level, bias_repair_level
+    )
+    nsizes = {k1: mapped_nsizes[k2] for k1, k2 in mapping.items()}
     return nsizes
 
 
 def _pick_sizes_symmetric(
-    osizes: Dict[str, int],
-    imbalance_repair_level: float,
-    bias_repair_level: float,
+    osizes: Dict[str, int], imbalance_repair_level: float, bias_repair_level: float
 ) -> Dict[str, int]:
     assert set(osizes.keys()) == {"00", "01", "10", "11"}, osizes.keys()
     assert 0 < min(osizes.values()), osizes
     assert 0 <= bias_repair_level <= 1, bias_repair_level
     assert 0 <= imbalance_repair_level <= 1, imbalance_repair_level
-    if osizes["11"] == max(osizes.values()):  # identity
-        mapping = {"00": "00", "01": "01", "10": "10", "11": "11"}
-    elif osizes["01"] == max(osizes.values()):  # swap groups
-        mapping = {"00": "10", "01": "11", "10": "00", "11": "01"}
-    elif osizes["10"] == max(osizes.values()):  # swap classes
-        mapping = {"00": "01", "01": "00", "10": "11", "11": "10"}
-    elif osizes["00"] == max(osizes.values()):  # swap both groups and classes
-        mapping = {"00": "11", "01": "10", "10": "01", "11": "00"}
+    oci = _class_imbalance(osizes["00"], osizes["01"], osizes["10"], osizes["11"])
+    if oci <= 1:
+        mapping = {"00": "00", "01": "01", "10": "10", "11": "11"}  # identity
     else:
-        assert False, "malformed osizes {osizes}"
-    assert set(mapping.keys()) == {"00", "01", "10", "11"}
-    assert set(mapping.values()) == {"00", "01", "10", "11"}
-    assert all(mapping[k2] == k1 for k1, k2 in mapping.items())
+        mapping = {"00": "01", "01": "00", "10": "11", "11": "10"}  # swap classes
+    assert _mapping_is_invertible(mapping), mapping
     mapped_osizes = {k1: osizes[k2] for k1, k2 in mapping.items()}
-    mapped_nsizes = _pick_sizes_11_largest(
-        mapped_osizes, bias_repair_level, imbalance_repair_level
+    mapped_nsizes = _pick_sizes_assuming_oci_at_most_one(
+        mapped_osizes, imbalance_repair_level, bias_repair_level
     )
     nsizes = {k1: mapped_nsizes[k2] for k1, k2 in mapping.items()}
     return nsizes
@@ -274,7 +305,9 @@ class _OrbitImpl:
             resampler = imblearn.over_sampling.SMOTENC(
                 categorical_features=cats_mask, **inner_hyperparams
             )
-        resampled_X, resampled_groups_and_y = resampler.fit_resample(X, group_and_y)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", category=UserWarning)
+            resampled_X, resampled_groups_and_y = resampler.fit_resample(X, group_and_y)
         resampled_y = resampled_groups_and_y.apply(
             lambda s: self.favorable_labels[0]
             if s[-1] == "1"
