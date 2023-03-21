@@ -11,12 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from packaging import version
+
 try:
     import snapml  # type: ignore
 
     snapml_installed = True
+    snapml_version = version.parse(getattr(snapml, "__version__"))
 except ImportError:
     snapml_installed = False
+    snapml_version = None
 
 import lale.datasets.data_schemas
 import lale.docstrings
@@ -344,5 +348,22 @@ _combined_schemas = {
 SnapBoostingMachineRegressor = lale.operators.make_operator(
     _SnapBoostingMachineRegressorImpl, _combined_schemas
 )
+
+if snapml_version is not None and snapml_version >= version.Version("1.12"):
+    SnapBoostingMachineRegressor = SnapBoostingMachineRegressor.customize_schema(
+        max_delta_step={
+            "description": """Regularization term to ensure numerical stability.""",
+            "anyOf": [
+                {
+                    "type": "number",
+                    "distribution": "loguniform",
+                    "minimumForOptimizer": 0.0,
+                    "maximumForOptimizer": 1.0,
+                },
+                {"enum": [None], "forOptimizer": False},
+            ],
+            "default": 0.0,
+        }
+    )
 
 lale.docstrings.set_docstrings(SnapBoostingMachineRegressor)
