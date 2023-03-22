@@ -356,11 +356,11 @@ if snapml_version is not None and snapml_version >= version.Version("1.12"):
             "anyOf": [
                 {
                     "type": "number",
-                    "distribution": "loguniform",
-                    "minimumForOptimizer": 0.0,
-                    "maximumForOptimizer": 1.0,
+                    "minimum": 0.0,
                 },
-                {"enum": [None], "forOptimizer": False},
+                {
+                    "enum": [None]
+                },
             ],
             "default": 0.0,
         }
