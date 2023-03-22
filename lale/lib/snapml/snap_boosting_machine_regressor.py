@@ -358,9 +358,7 @@ if snapml_version is not None and snapml_version >= version.Version("1.12"):
                     "type": "number",
                     "minimum": 0.0,
                 },
-                {
-                    "enum": [None]
-                },
+                {"enum": [None]},
             ],
             "default": 0.0,
         }
