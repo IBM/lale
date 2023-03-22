@@ -16,10 +16,8 @@ from packaging import version
 try:
     import snapml  # type: ignore
 
-    snapml_installed = True
     snapml_version = version.parse(getattr(snapml, "__version__"))
 except ImportError:
-    snapml_installed = False
     snapml_version = None
 
 import lale.datasets.data_schemas
@@ -30,7 +28,7 @@ import lale.operators
 class _SnapBoostingMachineRegressorImpl:
     def __init__(self, **hyperparams):
         assert (
-            snapml_installed
+            snapml_version is not None
         ), """Your Python environment does not have snapml installed. Install using: pip install snapml"""
 
         self._wrapped_model = snapml.SnapBoostingMachineRegressor(**hyperparams)
