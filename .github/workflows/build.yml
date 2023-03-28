@@ -33,7 +33,7 @@ jobs:
     - name: Install autoai-libs from pypi
       run: pip install "autoai-libs>=1.12.6"
     - name: Install dependencies
-      run: pip install --upgrade --upgrade-strategy eager .[full,test]
+      run: pip install --upgrade --upgrade-strategy eager .[full,test,dev]
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
@@ -42,12 +42,10 @@ jobs:
         pipdeptree -fl
     - name: pre-commit checks
       if: ${{ matrix.python-version != '3.7' }}
-      uses: pre-commit/action@v3.0.0
+      run: pre-commit run -a
     - name: pre-commit checks (3.7; skip isort and flake8)
       if: ${{ matrix.python-version == '3.7' }}
-      env:
-        SKIP: isort,flake8
-      uses: pre-commit/action@v3.0.0
+      run: SKIP=isort,flake8 pre-commit run -a
   docs:
     name: Documentation build
     runs-on: ubuntu-latest
