@@ -141,12 +141,13 @@ class _Batch:
 
     def load_spilled(self) -> None:
         assert isinstance(self.X, pathlib.Path) and isinstance(self.y, pathlib.Path)
+        # we know these are pickles written by us, so we can trust them
         try:
-            data_X = pd.read_pickle(self.X)
+            data_X = pd.read_pickle(self.X)  # nosec B301
         except FileNotFoundError:
             data_X = np.load(f"{self.X}" + ".npy", allow_pickle=True)
         try:
-            data_y = pd.read_pickle(self.y)
+            data_y = pd.read_pickle(self.y)  # nosec B301
         except FileNotFoundError:
             data_y = np.load(f"{self.y}" + ".npy", allow_pickle=True)
         self.X, self.y = data_X, data_y

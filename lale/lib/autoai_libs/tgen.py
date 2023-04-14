@@ -74,6 +74,7 @@ _hyperparams_schema = {
                     "description": "Number of arguments to the function, e.g., 1 for unary, 2 for binary, and so on.",
                     "type": "integer",
                     "minimum": 1,
+                    "transient": "alwaysPrint",  # since positional argument
                     "default": 1,
                 },
                 "datatypes_list": {
@@ -88,6 +89,7 @@ _hyperparams_schema = {
                         },
                         {"enum": [None]},
                     ],
+                    "transient": "alwaysPrint",  # since positional argument
                     "default": None,
                 },
                 "feat_constraints_list": {
@@ -103,6 +105,7 @@ _hyperparams_schema = {
                         },
                         {"enum": [None]},
                     ],
+                    "transient": "alwaysPrint",  # since positional argument
                     "default": None,
                 },
                 "tgraph": _hparams_tgraph,

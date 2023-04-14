@@ -45,11 +45,8 @@ Operator libraries
 * `lale.lib.category_encoders`_ based on `category_encoders`_
 * `lale.lib.imblearn`_ based on `imbalanced-learn`_
 * `lale.lib.lightgbm`_ based on `LightGBM`_
-* `lale.lib.pytorch`_ based on `PyTorch`_
 * `lale.lib.rasl`_ relational algebra in scikit-learn
 * `lale.lib.snapml`_ based on `Snap ML`_
-* `lale.lib.spacy`_ based on `spaCy`_
-* `lale.lib.tensorflow`_ based on `TensorFlow`_
 * `lale.lib.xgboost`_ based on `XGBoost`_
 
 .. _`lale.lib.sklearn`: modules/lale.lib.sklearn.html#module-lale.lib.sklearn

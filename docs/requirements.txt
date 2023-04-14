@@ -7,7 +7,7 @@ jsonschema
 jsonsubschema
 scikit-learn>=0.20.3
 scipy
-pandas
+pandas<2.0.0
 decorator
 h5py
 astunparse

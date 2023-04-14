@@ -1,4 +1,4 @@
-# Copyright 2020-2022 IBM Corporation
+# Copyright 2020-2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -50,6 +50,7 @@ _hyperparams_schema = {
                 "strategy": {
                     "description": "The imputation strategy.",
                     "enum": ["mean", "median", "most_frequent"],
+                    "transient": "alwaysPrint",  # since positional argument
                     "default": "mean",
                 },
                 "missing_values": {
@@ -61,6 +62,7 @@ _hyperparams_schema = {
                             "enum": [np.nan],
                         },
                     ],
+                    "transient": "alwaysPrint",  # since positional argument
                     "default": np.nan,
                 },
                 "activate_flag": _hparam_activate_flag_unmodified,

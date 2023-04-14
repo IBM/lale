@@ -1,4 +1,4 @@
-# Copyright 2020 IBM Corporation
+# Copyright 2020-2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -53,6 +53,7 @@ _hyperparams_schema = {
                 "datatypes": {
                     "description": "List of datatypes that are valid input (ignored).",
                     "laleType": "Any",
+                    "transient": "alwaysPrint",  # since positional argument
                     "default": None,
                 },
                 "feat_constraints": _hparams_feat_constraints(

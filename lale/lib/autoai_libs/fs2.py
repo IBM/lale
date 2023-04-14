@@ -86,6 +86,7 @@ _hyperparams_schema = {
                 "eval_algo": {
                     "description": "A supervised model where fit() sets `feature_importances_`.",
                     "laleType": "Any",
+                    "transient": "alwaysPrint",  # since positional argument
                     "default": None,
                 },
             },

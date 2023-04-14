@@ -71,6 +71,7 @@ _hparam_dtypes_list: JSON_TYPE = {
             "enum": [None],
         },
     ],
+    "transient": "alwaysPrint",  # since positional argument
     "default": None,
 }
 
@@ -96,18 +97,21 @@ def _hparam_column_headers_list(description: str) -> JSON_TYPE:
 _hparam_fs_cols_ids_must_keep: JSON_TYPE = {
     "description": "Serial numbers of the columns that must be kept irrespective of their feature importance.",
     "laleType": "Any",  # Found a value `range(0, 20)`
+    "transient": "alwaysPrint",  # since positional argument
     "default": [],
 }
 
 _hparams_fs_additional_col_count_to_keep: JSON_TYPE = {
     "description": "How many columns need to be retained.",
     "type": "integer",
+    "transient": "alwaysPrint",  # since positional argument
     "minimum": 0,
 }
 
 _hparams_fs_ptype: JSON_TYPE = {
     "description": "Problem type.",
     "enum": ["classification", "regression"],
+    "transient": "alwaysPrint",  # since positional argument
     "default": "classification",
 }
 
@@ -119,6 +123,7 @@ def _hparams_column_index_list(description: str) -> JSON_TYPE:
             {"type": "array", "items": {"type": "integer", "minimum": 0}},
             {"enum": [None]},
         ],
+        "transient": "alwaysPrint",  # since positional argument
         "default": None,
     }
 
@@ -126,6 +131,7 @@ def _hparams_column_index_list(description: str) -> JSON_TYPE:
 _hparams_transformer_name: JSON_TYPE = {
     "description": "A string name that uniquely identifies this transformer from others.",
     "anyOf": [{"type": "string"}, {"enum": [None]}],
+    "transient": "alwaysPrint",  # since positional argument
     "default": None,
 }
 
@@ -134,6 +140,7 @@ def _hparams_fun_pointer(description: str) -> JSON_TYPE:
     return {
         "description": description,
         "laleType": "Any",
+        "transient": "alwaysPrint",  # since positional argument
         "default": None,
     }
 
@@ -148,6 +155,7 @@ def _hparams_datatypes(description: str) -> JSON_TYPE:
             _hparams_datatype_spec,
             {"enum": [None]},
         ],
+        "transient": "alwaysPrint",  # since positional argument
         "default": None,
     }
 
@@ -156,6 +164,7 @@ def _hparams_feat_constraints(description: str) -> JSON_TYPE:
     return {
         "description": description,
         "laleType": "Any",
+        "transient": "alwaysPrint",  # since positional argument
         "default": None,
     }
 
@@ -196,5 +205,6 @@ _hparams_col_as_json_objects: JSON_TYPE = {
 _hparams_tans_class: JSON_TYPE = {
     "description": "A class that implements fit() and transform() in accordance with the transformation function definition.",
     "laleType": "Any",
+    "transient": "alwaysPrint",  # since positional argument
     "default": None,
 }
