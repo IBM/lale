@@ -1,4 +1,4 @@
-# Copyright 2019-2022 IBM Corporation
+# Copyright 2019-2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -94,7 +94,7 @@ extras_require = {
         "sphinxcontrib.apidoc",
         "sphinxcontrib-svg2pdfconverter",
         "pytest",
-        "pyspark",
+        "pyspark<=3.3.2",
         "func_timeout",
         "category-encoders",
         "pynisher==0.6.4",
