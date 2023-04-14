@@ -1,4 +1,4 @@
-# Copyright 2020-2022 IBM Corporation
+# Copyright 2020-2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -72,6 +72,7 @@ _hyperparams_schema = {
                             "description": "Replace with fill_value. Can be used with strings or numeric data.",
                         },
                     ],
+                    "transient": "alwaysPrint",  # since positional argument
                     "default": "mean",
                 },
                 "missing_values": {
@@ -82,6 +83,7 @@ _hyperparams_schema = {
                         {"enum": [np.nan]},
                         {"enum": [None]},
                     ],
+                    "transient": "alwaysPrint",  # since positional argument
                     "default": np.nan,
                 },
                 "sklearn_version_family": _hparam_sklearn_version_family,

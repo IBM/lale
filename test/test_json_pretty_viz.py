@@ -1,4 +1,4 @@
-# Copyright 2019-2022 IBM Corporation
+# Copyright 2019-2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -448,6 +448,33 @@ cat_encoder = CatEncoder(
 )
 pipeline = cat_encoder >> LR()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
+    def test_autoai_libs_cat_encoder_defaults(self):
+        import numpy as np
+
+        from lale.lib.autoai_libs import CatEncoder
+        from lale.lib.sklearn import LogisticRegression as LR
+
+        cat_encoder = CatEncoder(
+            dtype=np.float64, handle_unknown="error", sklearn_version_family="1"
+        )
+        pipeline = cat_encoder >> LR()
+        expected = """from autoai_libs.transformers.exportable import CatEncoder
+import numpy as np
+from sklearn.linear_model import LogisticRegression as LR
+from sklearn.pipeline import make_pipeline
+
+cat_encoder = CatEncoder(
+    dtype=np.float64,
+    handle_unknown="error",
+    sklearn_version_family="1",
+    encoding="ordinal",
+    categories="auto",
+)
+pipeline = make_pipeline(cat_encoder, LR())"""
+        self._roundtrip(
+            expected, lale.pretty_print.to_string(pipeline, astype="sklearn")
+        )
 
     def test_autoai_libs_fs1(self):
         from autoai_libs.cognito.transforms.transform_utils import FS1

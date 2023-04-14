@@ -1,4 +1,4 @@
-# Copyright 2020 IBM Corporation
+# Copyright 2020-2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -94,6 +94,7 @@ _hyperparams_schema = {
                 "encoding": {
                     "description": "The type of encoding to use.",
                     "enum": ["onehot", "ordinal"],
+                    "transient": "alwaysPrint",  # since positional argument
                     "default": "ordinal",
                 },
                 "categories": {
@@ -121,11 +122,13 @@ _hyperparams_schema = {
                             },
                         },
                     ],
+                    "transient": "alwaysPrint",  # since positional argument
                     "default": "auto",
                 },
                 "dtype": {
                     "description": "Desired dtype of output, must be number. See https://docs.scipy.org/doc/numpy-1.14.0/reference/arrays.scalars.html#arrays-scalars-built-in",
                     "laleType": "Any",
+                    "transient": "alwaysPrint",  # since positional argument
                     "default": "float64",
                 },
                 "handle_unknown": {
@@ -135,6 +138,7 @@ the resulting one-hot encoded columns for this feature will be all zeros for enc
 the resulting encoding with be set to the value indicated by `encode_unknown_with` for encoding 'ordinal'.
 In the inverse transform, an unknown category will be denoted as None.""",
                     "enum": ["error", "ignore"],
+                    "transient": "alwaysPrint",  # since positional argument
                     "default": "ignore",
                 },
                 "sklearn_version_family": _hparam_sklearn_version_family,
