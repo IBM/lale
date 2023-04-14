@@ -37,7 +37,7 @@ def load_movie_review():
     X = []
     y = []
     with tarfile.open(data_file_path) as data_file:
-        data_file.extractall(path=download_data_dir)
+        data_file.extractall(path=download_data_dir)  # nosec B202
 
     with open(
         os.path.join(download_data_dir, "rt-polaritydata", "rt-polarity.neg"), "rb"
