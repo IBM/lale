@@ -40,7 +40,7 @@ except ImportError:
 def pandas2spark(pandas_df):
     assert spark_installed
     spark_session = (
-        SparkSession.builder.master("local[2]")
+        SparkSession.builder.master("local[2]")  # type: ignore
         .config("spark.driver.memory", "64g")
         .getOrCreate()
     )
