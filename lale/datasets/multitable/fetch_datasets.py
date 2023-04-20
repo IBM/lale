@@ -45,7 +45,7 @@ def get_data_from_csv(datatype: datatype_param_type, data_file_name):
         return pd.read_csv(data_file_name)
     elif datatype == "spark":
         if spark_installed:
-            spark = SparkSession.builder.appName("GoSales Dataset").getOrCreate()
+            spark = SparkSession.builder.appName("GoSales Dataset").getOrCreate()  # type: ignore
             df = spark.read.options(inferSchema="True", delimiter=",").csv(
                 data_file_name, header=True
             )

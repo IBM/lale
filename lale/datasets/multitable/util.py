@@ -133,7 +133,7 @@ def multitable_train_test_split(
         train_y = train_main_df[label_column_name]
         test_y = test_main_df[label_column_name]
     elif _is_spark_df(main_table_df):
-        spark_session = SparkSession.builder.appName(
+        spark_session = SparkSession.builder.appName(  # type: ignore
             "multitable_train_test_split"
         ).getOrCreate()
         train_main_df = spark_session.createDataFrame(

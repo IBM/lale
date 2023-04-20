@@ -2190,7 +2190,7 @@ class TestMap(unittest.TestCase):
 
     def test_spark_null(self):
         spark_session = (
-            SparkSession.builder.master("local[2]")
+            SparkSession.builder.master("local[2]")  # type: ignore
             .config("spark.driver.memory", "64g")
             .getOrCreate()
         )
