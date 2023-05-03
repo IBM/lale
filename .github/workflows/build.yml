@@ -31,7 +31,7 @@ jobs:
     - name: Install numpy
       run: pip install -U 'numpy<1.24'
     - name: Install autoai-libs from pypi
-      run: pip install "autoai-libs>=1.12.6"
+      run: pip install "gensim>4.1.2 autoai-libs>=1.12.6"
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager .[full,test,dev]
     - name: pip list packages
@@ -165,7 +165,7 @@ jobs:
     - name: Install numpy
       run: pip install -U 'numpy<1.24'
     - name: Install autoai-libs from pypi
-      run: pip install "autoai-libs>=1.12.6 gensim>4.1.2"
+      run: pip install "gensim>4.1.2 autoai-libs>=1.12.6"
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Install deps for test_autoai_output_consumption
@@ -277,7 +277,7 @@ jobs:
     - name: Install numpy
       run: pip install -U 'numpy<1.24'
     - name: Install autoai-libs from pypi
-      run: pip install "autoai-libs>=1.12.6 gensim>4.1.2"
+      run: pip install "gensim>4.1.2 autoai-libs>=1.12.6"
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Install deps for test_autoai_output_consumption
@@ -404,7 +404,7 @@ jobs:
       run: pip install -U 'numpy<1.24'
     - name: Install autoai-libs from pypi
       if: ${{ matrix.category == 'demo_' }}
-      run: pip install "autoai-libs>=1.12.6 gensim>4.1.2"
+      run: pip install "gensim>4.1.2 autoai-libs>=1.12.6"
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: pip list packages
@@ -483,7 +483,7 @@ jobs:
       run: pip install -U 'numpy<1.24'
     - name: Install autoai-libs from pypi
       if: ${{ matrix.category == 'demo_' }}
-      run: pip install "autoai-libs>=1.12.6  gensim>4.1.2"
+      run: pip install "gensim>4.1.2 autoai-libs>=1.12.6"
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: pip list packages
