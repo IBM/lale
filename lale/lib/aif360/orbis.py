@@ -228,7 +228,7 @@ def _pick_sizes_symmetric(
     return nsizes
 
 
-class _OrbitImpl:
+class _OrbisImpl:
     def __init__(
         self,
         *,
@@ -400,7 +400,7 @@ _hyperparams_schema = {
 }
 
 _combined_schemas = {
-    "description": """Orbit (Oversampling to Repair Bias and Imbalance Together) pre-estimator fairness mitigator.
+    "description": """Orbis (Oversampling to Repair Bias and Imbalance Simultaneously) pre-estimator fairness mitigator.
 Uses `SMOTENC`_ (Synthetic Minority Over-sampling Technique for Nominal
 and Continuous) to oversample not only members of the minority class,
 but also members of unprivileged groups. Internally, this works by
@@ -411,7 +411,7 @@ come from AIF360.
 
 .. _`SMOTENC`: https://imbalanced-learn.org/stable/references/generated/imblearn.over_sampling.SMOTENC.html
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.fair_smotenc.html#lale.lib.aif360.orbit.Orbit",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.fair_smotenc.html#lale.lib.aif360.orbis.Orbis",
     "type": "object",
     "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
     "properties": {
@@ -425,6 +425,6 @@ come from AIF360.
 }
 
 
-Orbit = lale.operators.make_operator(_OrbitImpl, _combined_schemas)
+Orbis = lale.operators.make_operator(_OrbisImpl, _combined_schemas)
 
-lale.docstrings.set_docstrings(Orbit)
+lale.docstrings.set_docstrings(Orbis)
