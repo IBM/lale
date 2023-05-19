@@ -27,6 +27,7 @@ Operators:
 * `ADASYN`_
 * `BorderlineSMOTE`_
 * `RandomOverSampler`_
+* `RandomUnderSampler`_
 * `SMOTE`_
 * `SMOTEN`_
 * `SMOTENC`_
@@ -41,6 +42,7 @@ Operators:
 .. _`ADASYN`: lale.lib.imblearn.adasyn.html
 .. _`BorderlineSMOTE`: lale.lib.imblearn.borderline_smote.html
 .. _`RandomOverSampler`: lale.lib.imblearn.random_over_sampler.html
+.. _`RandomUnderSampler`: lale.lib.imblearn.random_under_sampler.html
 .. _`SMOTE`: lale.lib.imblearn.smote.html
 .. _`SMOTEN`: lale.lib.imblearn.smoten.html
 .. _`SMOTENC`: lale.lib.imblearn.smotenc.html
@@ -67,6 +69,7 @@ from .instance_hardness_threshold import (
     InstanceHardnessThreshold as InstanceHardnessThreshold,
 )
 from .random_over_sampler import RandomOverSampler as RandomOverSampler
+from .random_under_sampler import RandomUnderSampler as RandomUnderSampler
 from .repeated_edited_nearest_neighbours import (
     RepeatedEditedNearestNeighbours as RepeatedEditedNearestNeighbours,
 )

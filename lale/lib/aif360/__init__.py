@@ -47,7 +47,7 @@ Pre-Estimator Mitigation Operators:
 ===================================
 * `DisparateImpactRemover`_
 * `LFR`_
-* `Orbit`_
+* `Orbis`_
 * `Reweighing`_
 
 In-Estimator Mitigation Operators:
@@ -150,7 +150,7 @@ zero or one to simplify the task for the mitigator.
 .. _`GerryFairClassifier`: lale.lib.aif360.gerry_fair_classifier.html#lale.lib.aif360.gerry_fair_classifier.GerryFairClassifier
 .. _`MetaFairClassifier`: lale.lib.aif360.meta_fair_classifier.html#lale.lib.aif360.meta_fair_classifier.MetaFairClassifier
 .. _`OptimPreproc`: lale.lib.aif360.optim_preproc.html#lale.lib.aif360.optim_preproc.OptimPreproc
-.. _`Orbit`: lale.lib.aif360.orbit.html#lale.lib.aif360.orbit.Orbit
+.. _`Orbis`: lale.lib.aif360.orbis.html#lale.lib.aif360.orbis.Orbis
 .. _`PrejudiceRemover`: lale.lib.aif360.prejudice_remover.html#lale.lib.aif360.prejudice_remover.PrejudiceRemover
 .. _`ProtectedAttributesEncoder`: lale.lib.aif360.protected_attributes_encoder.html#lale.lib.aif360.protected_attributes_encoder.ProtectedAttributesEncoder
 .. _`Redacting`: lale.lib.aif360.redacting.html#lale.lib.aif360.redacting.Redacting
@@ -215,7 +215,7 @@ from .gerry_fair_classifier import GerryFairClassifier as GerryFairClassifier
 from .lfr import LFR as LFR
 from .meta_fair_classifier import MetaFairClassifier as MetaFairClassifier
 from .optim_preproc import OptimPreproc as OptimPreproc
-from .orbit import Orbit as Orbit
+from .orbis import Orbis as Orbis
 from .prejudice_remover import PrejudiceRemover as PrejudiceRemover
 from .protected_attributes_encoder import (
     ProtectedAttributesEncoder as ProtectedAttributesEncoder,

@@ -131,6 +131,7 @@ resamplers = [
     "lale.lib.imblearn.BorderlineSMOTE",
     "lale.lib.imblearn.SVMSMOTE",
     "lale.lib.imblearn.RandomOverSampler",
+    "lale.lib.imblearn.RandomUnderSampler",
     "lale.lib.imblearn.CondensedNearestNeighbour",
     "lale.lib.imblearn.EditedNearestNeighbours",
     "lale.lib.imblearn.RepeatedEditedNearestNeighbours",
