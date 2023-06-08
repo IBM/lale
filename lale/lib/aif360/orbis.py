@@ -27,7 +27,7 @@ from lale.lib.imblearn._common_schemas import (
     _hparam_n_jobs,
     _hparam_n_neighbors,
     _hparam_random_state,
-    _hparam_sampling_strategy_anyof_neoc,
+    _hparam_sampling_strategy_anyof_neoc_over,
 )
 
 from .protected_attributes_encoder import ProtectedAttributesEncoder
@@ -370,7 +370,7 @@ _hyperparams_schema = {
                     "maximum": 1.0,
                     "default": 0.8,
                 },
-                "sampling_strategy": _hparam_sampling_strategy_anyof_neoc,
+                "sampling_strategy": _hparam_sampling_strategy_anyof_neoc_over,
                 "random_state": _hparam_random_state,
                 "k_neighbors": {
                     **_hparam_n_neighbors,

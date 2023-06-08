@@ -20,7 +20,7 @@ import lale.operators
 from ._common_schemas import (
     _hparam_operator,
     _hparam_random_state,
-    _hparam_sampling_strategy_anyof_neoc,
+    _hparam_sampling_strategy_anyof_neoc_under,
     _input_fit_schema_cats,
     _input_predict_schema_cats,
     _input_transform_schema_cats,
@@ -50,7 +50,7 @@ _hyperparams_schema = {
             "additionalProperties": False,
             "properties": {
                 "operator": _hparam_operator,
-                "sampling_strategy": _hparam_sampling_strategy_anyof_neoc,
+                "sampling_strategy": _hparam_sampling_strategy_anyof_neoc_under,
                 "random_state": _hparam_random_state,
                 "replacement": {
                     "description": "Whether the sample is with or without replacement.",
