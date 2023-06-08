@@ -63,6 +63,7 @@ from lale.lib.aif360 import (
     Redacting,
     RejectOptionClassification,
     Reweighing,
+    Urbis,
     count_fairness_groups,
     fair_stratified_train_test_split,
 )
@@ -646,6 +647,12 @@ class TestAIF360Num(unittest.TestCase):
         estim = LogisticRegression(max_iter=1000)
         trainable_remi = Reweighing(estimator=estim, **fairness_info)
         self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.82, 0.92)
+
+    def test_urbis_pd_num(self):
+        fairness_info = self.creditg_pd_num["fairness_info"]
+        estim = LogisticRegression(max_iter=1000)
+        trainable_remi = Urbis(estimator=estim, **fairness_info)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.70, 0.92)
 
     def test_sans_mitigation_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
@@ -1234,6 +1241,12 @@ class TestAIF360Cat(unittest.TestCase):
         estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
         trainable_remi = Reweighing(estimator=estim, **fairness_info)
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.85, 1.00)
+
+    def test_urbis_pd_cat(self):
+        fairness_info = self.creditg_pd_cat["fairness_info"]
+        estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
+        trainable_remi = Urbis(estimator=estim, **fairness_info)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.7, 0.92)
 
     def test_pd_cat_y_not_series(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]

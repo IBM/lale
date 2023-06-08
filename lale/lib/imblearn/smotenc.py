@@ -23,7 +23,7 @@ from ._common_schemas import (
     _hparam_n_neighbors,
     _hparam_operator,
     _hparam_random_state,
-    _hparam_sampling_strategy_anyof_neoc,
+    _hparam_sampling_strategy_anyof_neoc_over,
     _input_fit_schema_cats,
     _input_predict_schema_cats,
     _input_transform_schema_cats,
@@ -82,7 +82,7 @@ _hyperparams_schema = {
                     ],
                     "default": None,
                 },
-                "sampling_strategy": _hparam_sampling_strategy_anyof_neoc,
+                "sampling_strategy": _hparam_sampling_strategy_anyof_neoc_over,
                 "random_state": _hparam_random_state,
                 "k_neighbors": {
                     **_hparam_n_neighbors,

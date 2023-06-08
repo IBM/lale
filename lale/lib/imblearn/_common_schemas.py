@@ -90,7 +90,7 @@ samples in the majority class.
     An error is raised for multi-class classification.""",
 }
 
-_hparam_sampling_strategy_enum = {
+_hparam_sampling_strategy_enum_over = {
     "enum": ["minority", "not minority", "not majority", "all", "auto"],
     "description": """The class targeted by the resampling.
 The number of samples in the different classes will be equalized.
@@ -101,6 +101,19 @@ Possible choices are:
 - ``'not majority'``: resample all classes but the majority class;
 - ``'all'``: resample all classes;
 - ``'auto'``: equivalent to ``'not majority'``.""",
+}
+
+_hparam_sampling_strategy_enum_under = {
+    "enum": ["majority", "not minority", "not majority", "all", "auto"],
+    "description": """The class targeted by the resampling.
+The number of samples in the different classes will be equalized.
+Possible choices are:
+
+- ``'majority'``: resample only the majority class;
+- ``'not minority'``: resample all classes but the minority class;
+- ``'not majority'``: resample all classes but the majority class;
+- ``'all'``: resample all classes;
+- ``'auto'``: equivalent to ``'not minority'``.""",
 }
 
 _hparam_sampling_strategy_object = {
@@ -128,18 +141,29 @@ _hparam_sampling_strategy_list = {
 _hparam_sampling_strategy_anyof_elc = {
     "description": "Sampling information to resample the data set.",
     "anyOf": [
-        _hparam_sampling_strategy_enum,
+        _hparam_sampling_strategy_enum_over,
         _hparam_sampling_strategy_list,
         _hparam_sampling_strategy_callable,
     ],
     "default": "auto",
 }
 
-_hparam_sampling_strategy_anyof_neoc = {
+_hparam_sampling_strategy_anyof_neoc_over = {
     "description": "Sampling information to resample the data set.",
     "anyOf": [
         _hparam_sampling_strategy_number,
-        _hparam_sampling_strategy_enum,
+        _hparam_sampling_strategy_enum_over,
+        _hparam_sampling_strategy_object,
+        _hparam_sampling_strategy_callable,
+    ],
+    "default": "auto",
+}
+
+_hparam_sampling_strategy_anyof_neoc_under = {
+    "description": "Sampling information to resample the data set.",
+    "anyOf": [
+        _hparam_sampling_strategy_number,
+        _hparam_sampling_strategy_enum_under,
         _hparam_sampling_strategy_object,
         _hparam_sampling_strategy_callable,
     ],

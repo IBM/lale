@@ -23,7 +23,7 @@ from ._common_schemas import (
     _hparam_n_neighbors,
     _hparam_operator,
     _hparam_random_state,
-    _hparam_sampling_strategy_anyof_neoc,
+    _hparam_sampling_strategy_anyof_neoc_over,
     _input_fit_schema,
     _input_predict_schema,
     _input_transform_schema,
@@ -61,7 +61,7 @@ _hyperparams_schema = {
             "additionalProperties": False,
             "properties": {
                 "operator": _hparam_operator,
-                "sampling_strategy": _hparam_sampling_strategy_anyof_neoc,
+                "sampling_strategy": _hparam_sampling_strategy_anyof_neoc_over,
                 "random_state": _hparam_random_state,
                 "n_neighbors": {**_hparam_n_neighbors, "default": 5},
                 "n_jobs": _hparam_n_jobs,

@@ -49,6 +49,7 @@ Pre-Estimator Mitigation Operators:
 * `LFR`_
 * `Orbis`_
 * `Reweighing`_
+* `Urbis`_
 
 In-Estimator Mitigation Operators:
 ==================================
@@ -156,6 +157,7 @@ zero or one to simplify the task for the mitigator.
 .. _`Redacting`: lale.lib.aif360.redacting.html#lale.lib.aif360.redacting.Redacting
 .. _`RejectOptionClassification`: lale.lib.aif360.reject_option_classification.html#lale.lib.aif360.reject_option_classification.RejectOptionClassification
 .. _`Reweighing`: lale.lib.aif360.reweighing.html#lale.lib.aif360.reweighing.Reweighing
+.. _`Urbis`: lale.lib.aif360.urbis.html#lale.lib.aif360.urbis.Urbis
 .. _`accuracy_and_disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.accuracy_and_disparate_impact
 .. _`average_odds_difference`: lale.lib.aif360.util.html#lale.lib.aif360.util.average_odds_difference
 .. _`balanced_accuracy_and_disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.balanced_accuracy_and_disparate_impact
@@ -225,6 +227,7 @@ from .reject_option_classification import (
     RejectOptionClassification as RejectOptionClassification,
 )
 from .reweighing import Reweighing as Reweighing
+from .urbis import Urbis as Urbis
 from .util import FAIRNESS_INFO_SCHEMA as FAIRNESS_INFO_SCHEMA
 from .util import FairStratifiedKFold as FairStratifiedKFold
 from .util import accuracy_and_disparate_impact as accuracy_and_disparate_impact
