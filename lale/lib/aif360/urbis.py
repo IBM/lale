@@ -13,10 +13,11 @@
 # limitations under the License.
 
 import logging
-from typing import Dict
+from typing import Dict, Set
 
 import imblearn.under_sampling
 import pandas as pd
+import numpy as np
 
 import lale.docstrings
 import lale.lib.lale
@@ -37,14 +38,73 @@ from .util import (
     _categorical_supervised_input_fit_schema,
     _validate_fairness_info,
 )
+from ._mystic_util import calc_undersample_soln
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
 
-def _pick_sizes(osizes: Dict[str, int]) -> Dict[str, int]:
-    smallest = min(osizes.values())
-    nsizes = {k: smallest for k in osizes.keys()}
+# This method assumes we have at most 9 classes and binary protected attributes
+# (should revisit if these assumptions change)
+def _pick_sizes(
+    osizes: Dict[str, int], imbalance_repair_level: float, bias_repair_level: float, favorable_labels: Set[int]
+) -> Dict[str, int]:
+    class_count_dict = {}
+    for k, v in osizes.items():
+        c = k[-1]
+        if c not in class_count_dict:
+            class_count_dict[c] = 0
+        class_count_dict[c] += v
+    
+    sorted_by_count = sorted(class_count_dict.items(), key=lambda x: x[1])
+    oci = []
+    for i in range(len(sorted_by_count)-1):
+        oci.append(sorted_by_count[i][1] / sorted_by_count[i+1][1])
+    
+    class_mapping = {old:new for new, (old, _) in enumerate(sorted_by_count)}
+    group_mapping = {k:k for k in osizes.keys()}
+    for old, new in class_mapping:
+        old_groups = list(filter(lambda x: x[-1] == old, group_mapping.keys()))
+        for g in old_groups:
+            group_mapping[g] = group_mapping[g][:-1] + new
+    mapped_osizes = {k1: osizes[k2] for k1, k2 in group_mapping.items()}
+
+    odi = []
+    num_prot_attr = len(group_mapping.keys()[0])-1
+    for pa in range(num_prot_attr):
+        disadv_grp = list(filter(lambda x: x[pa] == "0", group_mapping.keys()))
+        adv_grp = list(filter(lambda x: x[pa] == "1", group_mapping.keys()))
+        disadv_grp_adv_cls = list(filter(lambda x: int(x[-1]) in favorable_labels, disadv_grp))
+        disadv_grp_adv_cls_ct = sum(list(map(lambda x: mapped_osizes[x], disadv_grp_adv_cls)))
+        disadv_grp_disadv_cls = list(filter(lambda x: int(x[-1]) not in favorable_labels, disadv_grp))
+        disadv_grp_disadv_cls_ct = sum(list(map(lambda x: mapped_osizes[x] not in favorable_labels, disadv_grp_disadv_cls)))
+        adv_grp_disadv_cls = list(filter(lambda x: int(x[-1]) in favorable_labels, adv_grp))
+        adv_grp_disadv_cls_ct = list(filter(lambda x: mapped_osizes[x] not in favorable_labels, adv_grp_disadv_cls))
+        adv_grp_adv_cls = list(filter(lambda x: int(x[-1]) not in favorable_labels, adv_grp))
+        adv_grp_adv_cls_ct = list(filter(lambda x: mapped_osizes[x] in favorable_labels, adv_grp_adv_cls))
+        calc_di = ((disadv_grp_adv_cls_ct) / (disadv_grp_adv_cls_ct + disadv_grp_disadv_cls_ct)) / ((adv_grp_adv_cls_ct) / (adv_grp_adv_cls_ct + adv_grp_disadv_cls_ct))
+        if calc_di <= 1:
+            odi.append(calc_di)
+        else:
+            odi.append(1/calc_di)
+            for g in disadv_grp:
+                group_mapping[g] = group_mapping[g][0:pa] + "1" + group_mapping[g][pa+1:]
+            for g in adv_grp:
+                group_mapping[g] = group_mapping[g][0:pa] + "0" + group_mapping[g][pa+1:]
+    mapped_osizes = {k1: mapped_osizes[k2] for k1, k2 in group_mapping.items()}
+    sorted_osizes = list(map(lambda x: x[1], sorted(mapped_osizes.items(), key=lambda x: x[0])))
+    o_flat = np.array(sorted_osizes)
+    oci_vec = np.array(oci).reshape(-1,1)
+    nci_vec = oci_vec + imbalance_repair_level * (1 - oci_vec)
+    odi_vec = np.array(odi).reshape(-1,1)
+    ndi_vec = odi_vec + bias_repair_level * (1 - odi_vec)
+    
+    n_flat = calc_undersample_soln(o_flat, favorable_labels, nci_vec, ndi_vec)
+    sorted_osize_keys = sorted(mapped_osizes.keys())
+    mapped_nsize_tups = list(zip(sorted_osize_keys, n_flat))
+    mapped_nsize_dict = {k:v for (k,v) in mapped_nsize_tups}
+    nsizes = {g1:mapped_nsize_dict[g2] for g1,g2 in group_mapping.items()}
+
     return nsizes
 
 
@@ -57,6 +117,8 @@ class _UrbisImpl:
         estimator,
         unfavorable_labels=None,
         redact=True,
+        imbalance_repair_level=0.8,
+        bias_repair_level=0.8,
         **hyperparams,
     ):
         _validate_fairness_info(
@@ -67,6 +129,8 @@ class _UrbisImpl:
         self.estimator = estimator
         self.unfavorable_labels = unfavorable_labels
         self.redact = redact
+        self.imbalance_repair_level = imbalance_repair_level
+        self.bias_repair_level = bias_repair_level
         self.hyperparams = hyperparams
 
     def fit(self, X, y):
@@ -89,6 +153,9 @@ class _UrbisImpl:
                 **self.hyperparams,
                 "sampling_strategy": _pick_sizes(
                     group_and_y.value_counts().sort_index().to_dict(),
+                    self.imbalance_repair_level,
+                    self.bias_repair_level,
+                    set(self.favorable_labels)
                 ),
             }
         else:
