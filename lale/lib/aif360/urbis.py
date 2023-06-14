@@ -63,26 +63,33 @@ def _pick_sizes(
     for i in range(len(sorted_by_count)-1):
         oci.append(sorted_by_count[i][1] / sorted_by_count[i+1][1])
     
+    # if any class reordering has happened, update the group mapping and favorable_labels (for di calculations) accordingly
     class_mapping = {old:new for new, (old, _) in enumerate(sorted_by_count)}
     group_mapping = {k:k for k in osizes.keys()}
     for old, new in class_mapping:
+        if int(old) in favorable_labels:
+            favorable_labels.remove(int(old))
+            favorable_labels.add(int(new))
         old_groups = list(filter(lambda x: x[-1] == old, group_mapping.keys()))
         for g in old_groups:
             group_mapping[g] = group_mapping[g][:-1] + new
     
+    mapped_osizes = {k1: osizes[k2] for k1, k2 in group_mapping.items()}
+
+    # calculate di ratios and invert if needed
     odi = []
     num_prot_attr = len(group_mapping.keys()[0])-1
     for pa in range(num_prot_attr):
         disadv_grp = list(filter(lambda x: x[pa] == "0", group_mapping.keys()))
         adv_grp = list(filter(lambda x: x[pa] == "1", group_mapping.keys()))
         disadv_grp_adv_cls = list(filter(lambda x: int(x[-1]) in favorable_labels, disadv_grp))
-        disadv_grp_adv_cls_ct = sum(list(map(lambda x: osizes[x], disadv_grp_adv_cls)))
+        disadv_grp_adv_cls_ct = sum(list(map(lambda x: mapped_osizes[x], disadv_grp_adv_cls)))
         disadv_grp_disadv_cls = list(filter(lambda x: int(x[-1]) not in favorable_labels, disadv_grp))
-        disadv_grp_disadv_cls_ct = sum(list(map(lambda x: osizes[x] not in favorable_labels, disadv_grp_disadv_cls)))
+        disadv_grp_disadv_cls_ct = sum(list(map(lambda x: mapped_osizes[x] not in favorable_labels, disadv_grp_disadv_cls)))
         adv_grp_disadv_cls = list(filter(lambda x: int(x[-1]) in favorable_labels, adv_grp))
-        adv_grp_disadv_cls_ct = list(filter(lambda x: osizes[x] not in favorable_labels, adv_grp_disadv_cls))
+        adv_grp_disadv_cls_ct = list(filter(lambda x: mapped_osizes[x] not in favorable_labels, adv_grp_disadv_cls))
         adv_grp_adv_cls = list(filter(lambda x: int(x[-1]) not in favorable_labels, adv_grp))
-        adv_grp_adv_cls_ct = list(filter(lambda x: osizes[x] in favorable_labels, adv_grp_adv_cls))
+        adv_grp_adv_cls_ct = list(filter(lambda x: mapped_osizes[x] in favorable_labels, adv_grp_adv_cls))
         calc_di = ((disadv_grp_adv_cls_ct) / (disadv_grp_adv_cls_ct + disadv_grp_disadv_cls_ct)) / ((adv_grp_adv_cls_ct) / (adv_grp_adv_cls_ct + adv_grp_disadv_cls_ct))
         if calc_di <= 1:
             odi.append(calc_di)
@@ -92,14 +99,17 @@ def _pick_sizes(
                 group_mapping[g] = group_mapping[g][0:pa] + "1" + group_mapping[g][pa+1:]
             for g in adv_grp:
                 group_mapping[g] = group_mapping[g][0:pa] + "0" + group_mapping[g][pa+1:]
+    # recompute mapping based on any flipping of protected attribute values
     mapped_osizes = {k1: osizes[k2] for k1, k2 in group_mapping.items()}
     sorted_osizes = list(map(lambda x: x[1], sorted(mapped_osizes.items(), key=lambda x: x[0])))
+    # construct variables for solver
     o_flat = np.array(sorted_osizes)
     oci_vec = np.array(oci).reshape(-1,1)
     nci_vec = oci_vec + imbalance_repair_level * (1 - oci_vec)
     odi_vec = np.array(odi).reshape(-1,1)
     ndi_vec = odi_vec + bias_repair_level * (1 - odi_vec)
     
+    # pass into solver
     n_flat = calc_undersample_soln(o_flat, favorable_labels, nci_vec, ndi_vec)
     sorted_osize_keys = sorted(mapped_osizes.keys())
     mapped_nsize_tups = list(zip(sorted_osize_keys, n_flat))
