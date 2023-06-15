@@ -113,18 +113,18 @@ def create_ci_penalties(n_ci, n_di):
     ci_penalties = []
 
     # specify C-1 class imbalance constraints as heavy penalties
-    for j in range(C - 1):
+    for i in range(C - 1):
 
         def condition(x):
             reshape_list = []
-            for k in range(A):
+            for j in range(A):
                 reshape_list.append(2)
             reshape_list.append(C)
             ndx = np.array(x).reshape(reshape_list)
             return (
-                np.sum(ndx[(slice(None),) * A + (k,)])
-                / np.sum(ndx[(slice(None),) * A + (k + 1,)])
-            ) - n_ci[k, 0]
+                np.sum(ndx[(slice(None),) * A + (i,)])
+                / np.sum(ndx[(slice(None),) * A + (i + 1,)])
+            ) - n_ci[i, 0]
 
         @quadratic_equality(condition, k=1e6, h=10)
         def penalty(x):
@@ -140,45 +140,45 @@ def create_di_penalties(n_ci, n_di, F):
     di_penalties = []
 
     # specify A disparate imapct ratio constraints as heavy penalties
-    for j in range(A):
+    for i in range(A):
 
         def condition(x):
             reshape_list = []
-            for k in range(A):
+            for j in range(A):
                 reshape_list.append(2)
             reshape_list.append(C)
             ndx = np.array(x).reshape(reshape_list)
             di_ratio_top = np.sum(
                 ndx[
-                    (slice(None),) * k
+                    (slice(None),) * i
                     + (0,)
-                    + (slice(None),) * (A - k - 1)
+                    + (slice(None),) * (A - i - 1)
                     + (tuple(F),)
                 ]
             ) / np.sum(
                 ndx[
-                    (slice(None),) * k
+                    (slice(None),) * i
                     + (0,)
-                    + (slice(None),) * (A - k - 1)
+                    + (slice(None),) * (A - i - 1)
                     + (slice(None),)
                 ]
             )
             di_ratio_bottom = np.sum(
                 ndx[
-                    (slice(None),) * k
+                    (slice(None),) * i
                     + (1,)
-                    + (slice(None),) * (A - k - 1)
+                    + (slice(None),) * (A - i - 1)
                     + (tuple(F),)
                 ]
             ) / np.sum(
                 ndx[
-                    (slice(None),) * k
+                    (slice(None),) * i
                     + (1,)
-                    + (slice(None),) * (A - k - 1)
+                    + (slice(None),) * (A - i - 1)
                     + (slice(None),)
                 ]
             )
-            return (di_ratio_top / di_ratio_bottom) - n_di[k, 0]
+            return (di_ratio_top / di_ratio_bottom) - n_di[i, 0]
 
         @quadratic_equality(condition, k=1e6, h=10)
         def penalty(x):
