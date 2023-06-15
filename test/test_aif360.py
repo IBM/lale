@@ -67,6 +67,7 @@ from lale.lib.aif360 import (
     count_fairness_groups,
     fair_stratified_train_test_split,
 )
+from lale.lib.aif360.urbis import _pick_sizes as urbis_pick_sizes
 from lale.lib.lale import ConcatFeatures, Project
 from lale.lib.rasl import mockup_data_loader
 from lale.lib.sklearn import (
@@ -75,7 +76,6 @@ from lale.lib.sklearn import (
     LogisticRegression,
     OneHotEncoder,
 )
-from lale.lib.aif360.urbis import _pick_sizes as urbis_pick_sizes
 
 
 class TestAIF360Datasets(unittest.TestCase):
@@ -660,49 +660,34 @@ class TestAIF360Num(unittest.TestCase):
         trainable_remi = LogisticRegression(max_iter=1000)
         self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.5, 1.0)
 
+
 class TestAIF360UrbisPickSizes(unittest.TestCase):
     @classmethod
-    def setUp(self):
+    def setUp(cls):
         from mystic.tools import random_seed
+
         random_seed(42)
-        self.maxDiff = None
 
     def test_urbis_pick_sizes_single_pa_single_class_normal(self):
-        osizes = {
-            "00": 100,
-            "01": 200,
-            "10": 300,
-            "11": 400
-        }
+        osizes = {"00": 100, "01": 200, "10": 300, "11": 400}
         imbalance_repair_level = 1
         bias_repair_level = 1
         favorable_labels = set([1])
-        nsizes = urbis_pick_sizes(osizes, imbalance_repair_level, bias_repair_level, favorable_labels)
-        self.assertDictEqual(nsizes, {
-            "00": 100,
-            "01": 100,
-            "10": 300,
-            "11": 300
-        })
-    
+        nsizes = urbis_pick_sizes(
+            osizes, imbalance_repair_level, bias_repair_level, favorable_labels
+        )
+        self.assertDictEqual(nsizes, {"00": 100, "01": 100, "10": 300, "11": 300})
+
     def test_urbis_pick_sizes_single_pa_single_class_reversed(self):
-        osizes = {
-            "00": 400,
-            "01": 300,
-            "10": 200,
-            "11": 100
-        }
+        osizes = {"00": 400, "01": 300, "10": 200, "11": 100}
         imbalance_repair_level = 1
         bias_repair_level = 1
         favorable_labels = set([1])
-        nsizes = urbis_pick_sizes(osizes, imbalance_repair_level, bias_repair_level, favorable_labels)
-        self.assertDictEqual(nsizes, {
-            "00": 300,
-            "01": 300,
-            "10": 100,
-            "11": 100
-        })
-    
+        nsizes = urbis_pick_sizes(
+            osizes, imbalance_repair_level, bias_repair_level, favorable_labels
+        )
+        self.assertDictEqual(nsizes, {"00": 300, "01": 300, "10": 100, "11": 100})
+
     def test_urbis_pick_sizes_multi_pa_multi_class_normal(self):
         osizes = {
             "000": 570,
@@ -716,27 +701,32 @@ class TestAIF360UrbisPickSizes(unittest.TestCase):
             "102": 7270,
             "110": 7370,
             "111": 7471,
-            "112": 7571
+            "112": 7571,
         }
         imbalance_repair_level = 1
         bias_repair_level = 1
         favorable_labels = set([1])
-        nsizes = urbis_pick_sizes(osizes, imbalance_repair_level, bias_repair_level, favorable_labels)
-        self.assertDictEqual(nsizes, {
-            "000": 570,
-            "001": 670,
-            "002": 743,
-            "010": 870,
-            "011": 970,
-            "012": 1061,
-            "100": 7070,
-            "101": 7170,
-            "102": 7136,
-            "110": 7370,
-            "111": 7471,
-            "112": 7408
-        })
-    
+        nsizes = urbis_pick_sizes(
+            osizes, imbalance_repair_level, bias_repair_level, favorable_labels
+        )
+        self.assertDictEqual(
+            nsizes,
+            {
+                "000": 570,
+                "001": 670,
+                "002": 743,
+                "010": 870,
+                "011": 970,
+                "012": 1061,
+                "100": 7070,
+                "101": 7170,
+                "102": 7136,
+                "110": 7370,
+                "111": 7471,
+                "112": 7408,
+            },
+        )
+
     def test_urbis_pick_sizes_multi_pa_multi_class_reversed(self):
         osizes = {
             "112": 100,
@@ -750,26 +740,31 @@ class TestAIF360UrbisPickSizes(unittest.TestCase):
             "010": 900,
             "002": 3000,
             "001": 1100,
-            "000": 1200
+            "000": 1200,
         }
         imbalance_repair_level = 1
         bias_repair_level = 1
         favorable_labels = set([2])
-        nsizes = urbis_pick_sizes(osizes, imbalance_repair_level, bias_repair_level, favorable_labels)
-        self.assertDictEqual(nsizes, {
-            "112": 100,
-            "111": 26,
-            "110": 300,
-            "102": 259,
-            "101": 500,
-            "100": 600,
-            "012": 700,
-            "011": 11,
-            "010": 900,
-            "002": 1942,
-            "001": 1100,
-            "000": 1200
-        })
+        nsizes = urbis_pick_sizes(
+            osizes, imbalance_repair_level, bias_repair_level, favorable_labels
+        )
+        self.assertDictEqual(
+            nsizes,
+            {
+                "112": 100,
+                "111": 26,
+                "110": 300,
+                "102": 259,
+                "101": 500,
+                "100": 600,
+                "012": 700,
+                "011": 11,
+                "010": 900,
+                "002": 1942,
+                "001": 1100,
+                "000": 1200,
+            },
+        )
 
 
 class TestAIF360Cat(unittest.TestCase):

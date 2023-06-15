@@ -17,7 +17,6 @@ from typing import Dict, Set
 
 import imblearn.under_sampling
 import pandas as pd
-import numpy as np
 
 import lale.docstrings
 import lale.lib.lale
@@ -27,6 +26,7 @@ from lale.lib.imblearn._common_schemas import (
     _hparam_sampling_strategy_anyof_neoc_under,
 )
 
+from ._mystic_util import calc_undersample_soln, obtain_solver_info, parse_solver_soln
 from .protected_attributes_encoder import ProtectedAttributesEncoder
 from .redacting import Redacting
 from .util import (
@@ -38,7 +38,6 @@ from .util import (
     _categorical_supervised_input_fit_schema,
     _validate_fairness_info,
 )
-from ._mystic_util import calc_undersample_soln, obtain_solver_info, parse_solver_soln
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
@@ -47,10 +46,15 @@ logger.setLevel(logging.WARNING)
 # This method assumes we have at most 9 classes and binary protected attributes
 # (should revisit if these assumptions change)
 def _pick_sizes(
-    osizes: Dict[str, int], imbalance_repair_level: float, bias_repair_level: float, favorable_labels: Set[int]
+    osizes: Dict[str, int],
+    imbalance_repair_level: float,
+    bias_repair_level: float,
+    favorable_labels: Set[int],
 ) -> Dict[str, int]:
-    group_mapping, o_flat, nci_vec, ndi_vec = obtain_solver_info(osizes, imbalance_repair_level, bias_repair_level, favorable_labels)
-    
+    group_mapping, o_flat, nci_vec, ndi_vec = obtain_solver_info(
+        osizes, imbalance_repair_level, bias_repair_level, favorable_labels
+    )
+
     # pass into solver
     n_flat = calc_undersample_soln(o_flat, favorable_labels, nci_vec, ndi_vec)
 
@@ -104,7 +108,7 @@ class _UrbisImpl:
                     group_and_y.value_counts().sort_index().to_dict(),
                     self.imbalance_repair_level,
                     self.bias_repair_level,
-                    set(self.favorable_labels)
+                    set(self.favorable_labels),
                 ),
             }
         else:
