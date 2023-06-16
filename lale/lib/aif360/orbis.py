@@ -46,8 +46,12 @@ from .util import (
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
+
 def _pick_sizes(
-    osizes: Dict[str, int], imbalance_repair_level: float, bias_repair_level: float, favorable_labels: Set[int]
+    osizes: Dict[str, int],
+    imbalance_repair_level: float,
+    bias_repair_level: float,
+    favorable_labels: Set[int],
 ) -> Dict[str, int]:
     group_mapping, o_flat, nci_vec, ndi_vec = obtain_solver_info(
         osizes, imbalance_repair_level, bias_repair_level, favorable_labels

@@ -255,6 +255,7 @@ def calc_undersample_soln(o_flat, F, n_ci, n_di):
     )
     return result
 
+
 def calc_mixedsample_soln(o_flat, F, n_ci, n_di):
     # integer constraint
     ints = np.round
@@ -264,7 +265,7 @@ def calc_mixedsample_soln(o_flat, F, n_ci, n_di):
         return np.sum(np.abs(x - o_flat))
 
     # specify 0 as lower bounds and infinity as upper bounds (objective function will implicitly enforce bounds)
-    bounds = list(map(lambda x: (0, float('inf')), o_flat))
+    bounds = list(map(lambda x: (0, float("inf")), o_flat))
 
     # combine all penalties
     ci_penalties = create_ci_penalties(n_ci, n_di)
@@ -275,5 +276,15 @@ def calc_mixedsample_soln(o_flat, F, n_ci, n_di):
     constraint = ints
 
     # pass to solver
-    result = diffev2(cost, x0=o_flat, bounds=bounds, constraints=constraint, penalty=all_penalties, full_output=False, disp=False, npop=50, gtol=100,)
+    result = diffev2(
+        cost,
+        x0=o_flat,
+        bounds=bounds,
+        constraints=constraint,
+        penalty=all_penalties,
+        full_output=False,
+        disp=False,
+        npop=50,
+        gtol=100,
+    )
     return result

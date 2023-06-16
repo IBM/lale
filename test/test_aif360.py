@@ -67,8 +67,8 @@ from lale.lib.aif360 import (
     count_fairness_groups,
     fair_stratified_train_test_split,
 )
-from lale.lib.aif360.urbis import _pick_sizes as urbis_pick_sizes
 from lale.lib.aif360.orbis import _pick_sizes as orbis_pick_sizes
+from lale.lib.aif360.urbis import _pick_sizes as urbis_pick_sizes
 from lale.lib.lale import ConcatFeatures, Project
 from lale.lib.rasl import mockup_data_loader
 from lale.lib.sklearn import (
@@ -765,6 +765,7 @@ class TestAIF360UrbisPickSizes(unittest.TestCase):
                 "000": 1200,
             },
         )
+
 
 class TestAIF360OrbisPickSizes(unittest.TestCase):
     def setUp(self):
