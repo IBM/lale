@@ -14,7 +14,7 @@
 
 import logging
 import warnings
-from typing import Dict
+from typing import Dict, Set
 
 import imblearn.over_sampling
 import numpy as np
@@ -30,6 +30,7 @@ from lale.lib.imblearn._common_schemas import (
     _hparam_sampling_strategy_anyof_neoc_over,
 )
 
+from ._mystic_util import calc_oversample_soln, obtain_solver_info, parse_solver_soln
 from .protected_attributes_encoder import ProtectedAttributesEncoder
 from .redacting import Redacting
 from .util import (
@@ -207,25 +208,17 @@ def _pick_sizes_assuming_oci_at_most_one(
     return nsizes
 
 
-def _pick_sizes_symmetric(
-    osizes: Dict[str, int], imbalance_repair_level: float, bias_repair_level: float
+def _pick_sizes(
+    osizes: Dict[str, int], imbalance_repair_level: float, bias_repair_level: float, favorable_labels: Set[int]
 ) -> Dict[str, int]:
-    assert set(osizes.keys()) == {"00", "01", "10", "11"}, osizes.keys()
-    assert 0 < min(osizes.values()), osizes
-    assert 0 <= bias_repair_level <= 1, bias_repair_level
-    assert 0 <= imbalance_repair_level <= 1, imbalance_repair_level
-    oci = _class_imbalance(osizes["00"], osizes["01"], osizes["10"], osizes["11"])
-    if oci <= 1:
-        mapping = {"00": "00", "01": "01", "10": "10", "11": "11"}  # identity
-    else:
-        mapping = {"00": "01", "01": "00", "10": "11", "11": "10"}  # swap classes
-    assert _mapping_is_invertible(mapping), mapping
-    mapped_osizes = {k1: osizes[k2] for k1, k2 in mapping.items()}
-    mapped_nsizes = _pick_sizes_assuming_oci_at_most_one(
-        mapped_osizes, imbalance_repair_level, bias_repair_level
+    group_mapping, o_flat, nci_vec, ndi_vec = obtain_solver_info(
+        osizes, imbalance_repair_level, bias_repair_level, favorable_labels
     )
-    nsizes = {k1: mapped_nsizes[k2] for k1, k2 in mapping.items()}
-    return nsizes
+
+    # pass into solver
+    n_flat = calc_oversample_soln(o_flat, favorable_labels, nci_vec, ndi_vec)
+
+    return parse_solver_soln(n_flat, group_mapping)
 
 
 class _OrbisImpl:
@@ -280,10 +273,11 @@ class _OrbisImpl:
         if self.hyperparams["sampling_strategy"] == "auto":
             inner_hyperparams = {
                 **self.hyperparams,
-                "sampling_strategy": _pick_sizes_symmetric(
+                "sampling_strategy": _pick_sizes(
                     group_and_y.value_counts().sort_index().to_dict(),
                     self.imbalance_repair_level,
                     self.bias_repair_level,
+                    set(self.favorable_labels),
                 ),
             }
         else:
