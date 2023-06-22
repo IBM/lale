@@ -46,7 +46,7 @@ def obtain_solver_info(
             group_mapping[g] = group_mapping[g][:-1] + str(new)
 
     mapped_osizes = {k1: osizes[k2] for k1, k2 in group_mapping.items()}
-    
+
     # calculate di ratios and invert if needed
     odi = []
     num_prot_attr = len(list(group_mapping.keys())[0]) - 1
@@ -66,7 +66,7 @@ def obtain_solver_info(
         calc_di = (
             (disadv_grp_adv_cls_ct) / (disadv_grp_adv_cls_ct + disadv_grp_disadv_cls_ct)
         ) / ((adv_grp_adv_cls_ct) / (adv_grp_adv_cls_ct + adv_grp_disadv_cls_ct))
-        
+
         if calc_di <= 1:
             odi.append(calc_di)
         else:
@@ -82,7 +82,7 @@ def obtain_solver_info(
 
     # recompute mapping based on any flipping of protected attribute values
     mapped_osizes = {k1: osizes[k2] for k1, k2 in group_mapping.items()}
-    
+
     sorted_osizes = [x[1] for x in sorted(mapped_osizes.items(), key=lambda x: x[0])]
 
     # construct variables for solver

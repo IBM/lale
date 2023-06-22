@@ -664,7 +664,7 @@ class TestAIF360Num(unittest.TestCase):
 class TestAIF360UrbisPickSizes(unittest.TestCase):
     def setUp(self):
         from mystic.tools import random_seed
-        
+
         random_seed(42)
 
     def test_urbis_pick_sizes_single_pa_single_class_normal(self):
