@@ -54,10 +54,10 @@ def _pick_sizes(
     group_mapping, o_flat, nci_vec, ndi_vec = obtain_solver_info(
         osizes, imbalance_repair_level, bias_repair_level, favorable_labels
     )
-
+    
     # pass into solver
     n_flat = calc_undersample_soln(o_flat, favorable_labels, nci_vec, ndi_vec)
-
+    
     return parse_solver_soln(n_flat, group_mapping)
 
 

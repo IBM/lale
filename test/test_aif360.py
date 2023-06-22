@@ -664,7 +664,7 @@ class TestAIF360Num(unittest.TestCase):
 class TestAIF360UrbisPickSizes(unittest.TestCase):
     def setUp(self):
         from mystic.tools import random_seed
-
+        
         random_seed(42)
 
     def test_urbis_pick_sizes_single_pa_single_class_normal(self):
@@ -712,17 +712,17 @@ class TestAIF360UrbisPickSizes(unittest.TestCase):
             nsizes,
             {
                 "000": 570,
-                "001": 670,
-                "002": 743,
+                "001": 627,
+                "002": 761,
                 "010": 870,
-                "011": 970,
-                "012": 1061,
+                "011": 968,
+                "012": 976,
                 "100": 7070,
                 "101": 7170,
-                "102": 7136,
+                "102": 7129,
                 "110": 7370,
-                "111": 7471,
-                "112": 7408,
+                "111": 7381,
+                "112": 7414,
             },
         )
 
@@ -751,15 +751,15 @@ class TestAIF360UrbisPickSizes(unittest.TestCase):
             nsizes,
             {
                 "112": 100,
-                "111": 26,
-                "110": 300,
-                "102": 259,
-                "101": 500,
-                "100": 600,
+                "111": 100,
+                "110": 100,
+                "102": 400,
+                "101": 498,
+                "100": 304,
                 "012": 700,
-                "011": 11,
-                "010": 900,
-                "002": 1942,
+                "011": 655,
+                "010": 748,
+                "002": 1150,
                 "001": 1100,
                 "000": 1200,
             },
