@@ -101,6 +101,9 @@ class _UrbisImpl:
             lambda row: "".join([str(v) for v in row]), axis=1
         )
         assert X.shape[0] == group_and_y.shape[0]
+        # TODO: Figure out a better workaround
+        if isinstance(self.favorable_labels[0], str):
+            self.favorable_labels = set([1])
         if self.hyperparams["sampling_strategy"] == "auto":
             inner_hyperparams = {
                 **self.hyperparams,

@@ -10,7 +10,7 @@ def parse_solver_soln(n_flat, group_mapping):
     sorted_osize_keys = sorted(group_mapping.keys())
     mapped_nsize_tups = list(zip(sorted_osize_keys, n_flat))
     mapped_nsize_dict = dict(mapped_nsize_tups)
-    nsizes = {g2: mapped_nsize_dict[g1] for g1, g2 in group_mapping.items()}
+    nsizes = {g2: int(mapped_nsize_dict[g1]) for g1, g2 in group_mapping.items()}
     return nsizes
 
 
