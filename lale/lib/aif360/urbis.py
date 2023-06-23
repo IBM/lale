@@ -17,6 +17,7 @@ from typing import Dict, Set
 
 import imblearn.under_sampling
 import pandas as pd
+from sklearn.preprocessing import LabelEncoder
 
 import lale.docstrings
 import lale.lib.lale
@@ -95,8 +96,12 @@ class _UrbisImpl:
         prot_attr_enc = ProtectedAttributesEncoder(
             **fairness_info, remainder="drop", combine="keep_separate"
         )
-        encoded_X, encoded_y = prot_attr_enc.transform_X_y(X, y)
-        encoded_Xy = pd.concat([encoded_X, encoded_y], axis=1)
+        encoded_X = prot_attr_enc.transform(X).reset_index(drop=True)
+        lab_enc = LabelEncoder()
+        encoded_y = pd.Series(lab_enc.fit_transform(y))
+        label_mapping = dict(zip(lab_enc.classes_, lab_enc.transform(lab_enc.classes_)))
+        fav_set = set(label_mapping[x] for x in self.favorable_labels)
+        encoded_Xy = pd.concat([encoded_X, encoded_y], axis=1, ignore_index=True)
         group_and_y = encoded_Xy.apply(
             lambda row: "".join([str(v) for v in row]), axis=1
         )
@@ -108,7 +113,7 @@ class _UrbisImpl:
                     group_and_y.value_counts().sort_index().to_dict(),
                     self.imbalance_repair_level,
                     self.bias_repair_level,
-                    set(self.favorable_labels),
+                    fav_set,
                 ),
             }
         else:
@@ -160,6 +165,20 @@ _hyperparams_schema = {
                     "description": "Whether to redact protected attributes before data preparation (recommended) or not.",
                     "type": "boolean",
                     "default": True,
+                },
+                "imbalance_repair_level": {
+                    "description": "How much to repair for class imbalance (0 means original imbalance, 1 means perfect balance).",
+                    "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 1.0,
+                    "default": 0.8,
+                },
+                "bias_repair_level": {
+                    "description": "How much to repair for group bias (0 means original bias, 1 means perfect fairness).",
+                    "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 1.0,
+                    "default": 0.8,
                 },
                 "sampling_strategy": _hparam_sampling_strategy_anyof_neoc_under,
                 "random_state": _hparam_random_state,
