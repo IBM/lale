@@ -66,6 +66,7 @@ else:
 
 extras_require = {
     "full": [
+        "mystic",
         "xgboost<=1.5.1",
         "lightgbm",
         "snapml>=1.7.0rc3,<1.12.0",
@@ -84,6 +85,7 @@ extras_require = {
     ],
     "dev": ["pre-commit"],
     "test": [
+        "mystic",
         "joblib",
         "ipython<8.8.0",
         "jupyter",
@@ -100,6 +102,7 @@ extras_require = {
         "pynisher==0.6.4",
     ],
     "fairness": [
+        "mystic",
         "liac-arff>=2.4.0",
         "aif360<0.6.0",
         "imbalanced-learn",

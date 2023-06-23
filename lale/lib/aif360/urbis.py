@@ -13,10 +13,11 @@
 # limitations under the License.
 
 import logging
-from typing import Dict
+from typing import Dict, Set
 
 import imblearn.under_sampling
 import pandas as pd
+from sklearn.preprocessing import LabelEncoder
 
 import lale.docstrings
 import lale.lib.lale
@@ -26,6 +27,7 @@ from lale.lib.imblearn._common_schemas import (
     _hparam_sampling_strategy_anyof_neoc_under,
 )
 
+from ._mystic_util import calc_undersample_soln, obtain_solver_info, parse_solver_soln
 from .protected_attributes_encoder import ProtectedAttributesEncoder
 from .redacting import Redacting
 from .util import (
@@ -42,10 +44,22 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
 
-def _pick_sizes(osizes: Dict[str, int]) -> Dict[str, int]:
-    smallest = min(osizes.values())
-    nsizes = {k: smallest for k in osizes.keys()}
-    return nsizes
+# This method assumes we have at most 9 classes and binary protected attributes
+# (should revisit if these assumptions change)
+def _pick_sizes(
+    osizes: Dict[str, int],
+    imbalance_repair_level: float,
+    bias_repair_level: float,
+    favorable_labels: Set[int],
+) -> Dict[str, int]:
+    group_mapping, o_flat, nci_vec, ndi_vec = obtain_solver_info(
+        osizes, imbalance_repair_level, bias_repair_level, favorable_labels
+    )
+
+    # pass into solver
+    n_flat = calc_undersample_soln(o_flat, favorable_labels, nci_vec, ndi_vec)
+
+    return parse_solver_soln(n_flat, group_mapping)
 
 
 class _UrbisImpl:
@@ -57,6 +71,8 @@ class _UrbisImpl:
         estimator,
         unfavorable_labels=None,
         redact=True,
+        imbalance_repair_level=0.8,
+        bias_repair_level=0.8,
         **hyperparams,
     ):
         _validate_fairness_info(
@@ -67,6 +83,8 @@ class _UrbisImpl:
         self.estimator = estimator
         self.unfavorable_labels = unfavorable_labels
         self.redact = redact
+        self.imbalance_repair_level = imbalance_repair_level
+        self.bias_repair_level = bias_repair_level
         self.hyperparams = hyperparams
 
     def fit(self, X, y):
@@ -78,8 +96,12 @@ class _UrbisImpl:
         prot_attr_enc = ProtectedAttributesEncoder(
             **fairness_info, remainder="drop", combine="keep_separate"
         )
-        encoded_X, encoded_y = prot_attr_enc.transform_X_y(X, y)
-        encoded_Xy = pd.concat([encoded_X, encoded_y], axis=1)
+        encoded_X = prot_attr_enc.transform(X).reset_index(drop=True)
+        lab_enc = LabelEncoder()
+        encoded_y = pd.Series(lab_enc.fit_transform(y))
+        label_mapping = dict(zip(lab_enc.classes_, lab_enc.transform(lab_enc.classes_)))
+        fav_set = set(label_mapping[x] for x in self.favorable_labels)
+        encoded_Xy = pd.concat([encoded_X, encoded_y], axis=1, ignore_index=True)
         group_and_y = encoded_Xy.apply(
             lambda row: "".join([str(v) for v in row]), axis=1
         )
@@ -89,6 +111,9 @@ class _UrbisImpl:
                 **self.hyperparams,
                 "sampling_strategy": _pick_sizes(
                     group_and_y.value_counts().sort_index().to_dict(),
+                    self.imbalance_repair_level,
+                    self.bias_repair_level,
+                    fav_set,
                 ),
             }
         else:
@@ -140,6 +165,20 @@ _hyperparams_schema = {
                     "description": "Whether to redact protected attributes before data preparation (recommended) or not.",
                     "type": "boolean",
                     "default": True,
+                },
+                "imbalance_repair_level": {
+                    "description": "How much to repair for class imbalance (0 means original imbalance, 1 means perfect balance).",
+                    "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 1.0,
+                    "default": 0.8,
+                },
+                "bias_repair_level": {
+                    "description": "How much to repair for group bias (0 means original bias, 1 means perfect fairness).",
+                    "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 1.0,
+                    "default": 0.8,
                 },
                 "sampling_strategy": _hparam_sampling_strategy_anyof_neoc_under,
                 "random_state": _hparam_random_state,
