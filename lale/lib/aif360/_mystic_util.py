@@ -215,7 +215,7 @@ def calc_undersample_soln(o_flat, F, n_ci, n_di):
     # minimize negative sum of new number of examples (equivalent to maximizing positive sum)
     def cost(x):
         return -np.sum(x)
-    
+
     # specify observed example counts as upper bounds and minimum observed count as lower bounds
     bounds = [(min(o_flat), x) for x in o_flat]
 
@@ -241,6 +241,7 @@ def calc_undersample_soln(o_flat, F, n_ci, n_di):
     )
     return result
 
+
 def calc_mixedsample_soln(o_flat, F, n_ci, n_di):
     # integer constraint
     ints = np.round
@@ -251,7 +252,7 @@ def calc_mixedsample_soln(o_flat, F, n_ci, n_di):
 
     # specify minimum and maximum observed counts as lower bounds and upper bounds
     bounds = [(min(o_flat), max(o_flat)) for _ in o_flat]
-    
+
     # combine all penalties
     ci_penalties = create_ci_penalties(n_ci, n_di)
     di_penalties = create_di_penalties(n_ci, n_di, F)
