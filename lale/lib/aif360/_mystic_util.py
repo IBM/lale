@@ -288,3 +288,37 @@ def calc_mixedsample_soln(o_flat, F, n_ci, n_di):
         gtol=100,
     )
     return result
+
+
+def calc_mixedsample_soln(o_flat, F, n_ci, n_di):
+    # integer constraint
+    ints = np.round
+
+    # minimize sum of absolute value of differences from original numbers of examples
+    def cost(x):
+        return np.sum(np.abs(x - o_flat))
+
+    # specify minimum and maximum observed counts as lower bounds and upper bounds
+    bounds = [(min(o_flat), max(o_flat)) for _ in o_flat]
+
+    # combine all penalties
+    ci_penalties = create_ci_penalties(n_ci, n_di)
+    di_penalties = create_di_penalties(n_ci, n_di, F)
+    all_penalties = and_(*ci_penalties, *di_penalties)
+
+    # integer constraint
+    constraint = ints
+
+    # pass to solver
+    result = diffev2(
+        cost,
+        x0=o_flat,
+        bounds=bounds,
+        constraints=constraint,
+        penalty=all_penalties,
+        full_output=False,
+        disp=False,
+        npop=50,
+        gtol=100,
+    )
+    return result

@@ -19,6 +19,7 @@ from typing import Dict, Set
 import imblearn.over_sampling
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import LabelEncoder
 
 import lale.docstrings
 import lale.lib.lale
@@ -106,8 +107,12 @@ class _OrbisImpl:
         prot_attr_enc = ProtectedAttributesEncoder(
             **fairness_info, remainder="drop", combine="and"
         )
-        encoded_X, encoded_y = prot_attr_enc.transform_X_y(X, y)
-        encoded_Xy = pd.concat([encoded_X, encoded_y], axis=1)
+        encoded_X = prot_attr_enc.transform(X).reset_index(drop=True)
+        lab_enc = LabelEncoder()
+        encoded_y = pd.Series(lab_enc.fit_transform(y))
+        label_mapping = dict(zip(lab_enc.classes_, lab_enc.transform(lab_enc.classes_)))
+        fav_set = set(label_mapping[x] for x in self.favorable_labels)
+        encoded_Xy = pd.concat([encoded_X, encoded_y], axis=1, ignore_index=True)
         group_and_y = encoded_Xy.apply(
             lambda row: "".join([str(v) for v in row]), axis=1
         )
@@ -119,7 +124,7 @@ class _OrbisImpl:
                     group_and_y.value_counts().sort_index().to_dict(),
                     self.imbalance_repair_level,
                     self.bias_repair_level,
-                    set(self.favorable_labels),
+                    fav_set,
                 ),
             }
         else:
