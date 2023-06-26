@@ -16,7 +16,9 @@ import logging
 from typing import Dict, Set
 
 import imblearn.under_sampling
+import numpy as np
 import pandas as pd
+from numpy.testing import assert_allclose
 from sklearn.preprocessing import LabelEncoder
 
 import lale.docstrings
@@ -27,7 +29,13 @@ from lale.lib.imblearn._common_schemas import (
     _hparam_sampling_strategy_anyof_neoc_under,
 )
 
-from ._mystic_util import calc_undersample_soln, obtain_solver_info, parse_solver_soln
+from ._mystic_util import (
+    _calculate_ci_ratios,
+    _calculate_di_ratios,
+    calc_undersample_soln,
+    obtain_solver_info,
+    parse_solver_soln,
+)
 from .protected_attributes_encoder import ProtectedAttributesEncoder
 from .redacting import Redacting
 from .util import (
@@ -59,7 +67,14 @@ def _pick_sizes(
     # pass into solver
     n_flat = calc_undersample_soln(o_flat, favorable_labels, nci_vec, ndi_vec)
 
-    return parse_solver_soln(n_flat, group_mapping)
+    nsizes = parse_solver_soln(n_flat, group_mapping)
+    obtained_ci = np.array(_calculate_ci_ratios(nsizes)).reshape(-1, 1)
+    obtained_di = np.array(
+        _calculate_di_ratios(nsizes, favorable_labels, symmetric=True)
+    ).reshape(-1, 1)
+    assert_allclose(obtained_ci, nci_vec, rtol=0.05)
+    assert_allclose(obtained_di, ndi_vec, rtol=0.05)
+    return nsizes
 
 
 class _UrbisImpl:
