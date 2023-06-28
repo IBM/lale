@@ -63,12 +63,10 @@ from lale.lib.aif360 import (
     Redacting,
     RejectOptionClassification,
     Reweighing,
-    Urbis,
     count_fairness_groups,
     fair_stratified_train_test_split,
 )
 from lale.lib.aif360.orbis import _pick_sizes as orbis_pick_sizes
-from lale.lib.aif360.urbis import _pick_sizes as urbis_pick_sizes
 from lale.lib.lale import ConcatFeatures, Project
 from lale.lib.rasl import mockup_data_loader
 from lale.lib.sklearn import (
@@ -620,11 +618,29 @@ class TestAIF360Num(unittest.TestCase):
             trainable_remi = MetaFairClassifier(**fairness_info)
             self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.62, 0.87)
 
-    def test_orbis_pd_num(self):
+    def test_orbis_mixed_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
         estim = LogisticRegression(max_iter=1000)
-        trainable_remi = Orbis(estimator=estim, **fairness_info)
+        trainable_remi = Orbis(
+            estimator=estim, **fairness_info, sampling_strategy="over"
+        )
         self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.70, 0.92)
+
+    def test_orbis_over_pd_num(self):
+        fairness_info = self.creditg_pd_num["fairness_info"]
+        estim = LogisticRegression(max_iter=1000)
+        trainable_remi = Orbis(
+            estimator=estim, **fairness_info, sampling_strategy="over"
+        )
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.70, 0.92)
+
+    def test_orbis_under_pd_num(self):
+        fairness_info = self.creditg_pd_num["fairness_info"]
+        estim = LogisticRegression(max_iter=1000)
+        trainable_remi = Orbis(
+            estimator=estim, **fairness_info, sampling_strategy="under"
+        )
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.70, 1.05)
 
     def test_prejudice_remover_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
@@ -650,45 +666,40 @@ class TestAIF360Num(unittest.TestCase):
         trainable_remi = Reweighing(estimator=estim, **fairness_info)
         self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.82, 0.92)
 
-    def test_urbis_pd_num(self):
-        fairness_info = self.creditg_pd_num["fairness_info"]
-        estim = LogisticRegression(max_iter=1000)
-        trainable_remi = Urbis(estimator=estim, **fairness_info)
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.70, 1.05)
-
     def test_sans_mitigation_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
         trainable_remi = LogisticRegression(max_iter=1000)
         self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.5, 1.0)
 
 
-class TestAIF360UrbisPickSizes(unittest.TestCase):
+class TestAIF360OrbisPickSizes(unittest.TestCase):
     def setUp(self):
         from mystic.tools import random_seed
 
         random_seed(42)
+        self.maxDiff = None
 
-    def test_urbis_pick_sizes_single_pa_single_class_normal(self):
-        osizes = {"00": 100, "01": 200, "10": 300, "11": 400}
-        imbalance_repair_level = 1
-        bias_repair_level = 1
-        favorable_labels = set([1])
-        nsizes = urbis_pick_sizes(
-            osizes, imbalance_repair_level, bias_repair_level, favorable_labels
+    def test_pick_sizes_mixed_single_pa_single_class_normal(self):
+        nsizes = orbis_pick_sizes(
+            osizes={"00": 100, "01": 200, "10": 300, "11": 400},
+            imbalance_repair_level=1,
+            bias_repair_level=1,
+            favorable_labels={1},
+            sampling_strategy="mixed",
         )
-        self.assertDictEqual(nsizes, {"00": 100, "01": 100, "10": 300, "11": 300})
+        self.assertDictEqual(nsizes, {"00": 122, "01": 122, "10": 398, "11": 398})
 
-    def test_urbis_pick_sizes_single_pa_single_class_reversed(self):
-        osizes = {"00": 400, "01": 300, "10": 200, "11": 100}
-        imbalance_repair_level = 1
-        bias_repair_level = 1
-        favorable_labels = set([1])
-        nsizes = urbis_pick_sizes(
-            osizes, imbalance_repair_level, bias_repair_level, favorable_labels
+    def test_pick_sizes_mixed_single_pa_single_class_reversed(self):
+        nsizes = orbis_pick_sizes(
+            osizes={"00": 400, "01": 300, "10": 200, "11": 100},
+            imbalance_repair_level=1,
+            bias_repair_level=1,
+            favorable_labels={1},
+            sampling_strategy="mixed",
         )
-        self.assertDictEqual(nsizes, {"00": 300, "01": 300, "10": 100, "11": 100})
+        self.assertDictEqual(nsizes, {"00": 398, "01": 398, "10": 122, "11": 122})
 
-    def test_urbis_pick_sizes_multi_pa_multi_class_normal(self):
+    def test_pick_sizes_mixed_multi_pa_multi_class_normal(self):
         osizes = {
             "000": 570,
             "001": 670,
@@ -703,31 +714,32 @@ class TestAIF360UrbisPickSizes(unittest.TestCase):
             "111": 7471,
             "112": 7571,
         }
-        imbalance_repair_level = 1
-        bias_repair_level = 1
-        favorable_labels = set([1])
-        nsizes = urbis_pick_sizes(
-            osizes, imbalance_repair_level, bias_repair_level, favorable_labels
+        nsizes = orbis_pick_sizes(
+            osizes,
+            imbalance_repair_level=1,
+            bias_repair_level=1,
+            favorable_labels={1},
+            sampling_strategy="mixed",
         )
         self.assertDictEqual(
             nsizes,
             {
-                "000": 570,
-                "001": 627,
-                "002": 761,
-                "010": 870,
-                "011": 968,
-                "012": 976,
-                "100": 7070,
+                "000": 573,
+                "001": 670,
+                "002": 725,
+                "010": 923,
+                "011": 970,
+                "012": 1059,
+                "100": 7246,
                 "101": 7170,
-                "102": 7129,
-                "110": 7370,
-                "111": 7381,
-                "112": 7414,
+                "102": 7137,
+                "110": 7406,
+                "111": 7471,
+                "112": 7495,
             },
         )
 
-    def test_urbis_pick_sizes_multi_pa_multi_class_reversed(self):
+    def test_pick_sizes_mixed_multi_pa_multi_class_reversed(self):
         osizes = {
             "112": 100,
             "111": 200,
@@ -742,58 +754,52 @@ class TestAIF360UrbisPickSizes(unittest.TestCase):
             "001": 1100,
             "000": 1200,
         }
-        imbalance_repair_level = 1
-        bias_repair_level = 1
-        favorable_labels = set([2])
-        nsizes = urbis_pick_sizes(
-            osizes, imbalance_repair_level, bias_repair_level, favorable_labels
+        nsizes = orbis_pick_sizes(
+            osizes,
+            imbalance_repair_level=1,
+            bias_repair_level=1,
+            favorable_labels={2},
+            sampling_strategy="mixed",
         )
         self.assertDictEqual(
             nsizes,
             {
-                "112": 100,
-                "111": 100,
-                "110": 100,
-                "102": 400,
-                "101": 498,
-                "100": 304,
-                "012": 700,
-                "011": 655,
-                "010": 748,
-                "002": 1150,
-                "001": 1100,
+                "002": 1406,
                 "000": 1200,
+                "001": 1308,
+                "012": 700,
+                "010": 900,
+                "011": 800,
+                "102": 400,
+                "100": 600,
+                "101": 500,
+                "112": 306,
+                "110": 111,
+                "111": 200,
             },
         )
 
-
-class TestAIF360OrbisPickSizes(unittest.TestCase):
-    def setUp(self):
-        from mystic.tools import random_seed
-
-        random_seed(42)
-
-    def test_orbis_pick_sizes_single_pa_single_class_normal(self):
-        osizes = {"00": 100, "01": 200, "10": 300, "11": 400}
-        imbalance_repair_level = 1
-        bias_repair_level = 1
-        favorable_labels = set([1])
+    def test_pick_sizes_over_single_pa_single_class_normal(self):
         nsizes = orbis_pick_sizes(
-            osizes, imbalance_repair_level, bias_repair_level, favorable_labels
+            osizes={"00": 100, "01": 200, "10": 300, "11": 400},
+            imbalance_repair_level=1,
+            bias_repair_level=1,
+            favorable_labels={1},
+            sampling_strategy="over",
         )
         self.assertDictEqual(nsizes, {"00": 200, "01": 200, "10": 400, "11": 400})
 
-    def test_orbis_pick_sizes_single_pa_single_class_reversed(self):
-        osizes = {"00": 400, "01": 300, "10": 200, "11": 100}
-        imbalance_repair_level = 1
-        bias_repair_level = 1
-        favorable_labels = set([1])
+    def test_pick_sizes_over_single_pa_single_class_reversed(self):
         nsizes = orbis_pick_sizes(
-            osizes, imbalance_repair_level, bias_repair_level, favorable_labels
+            osizes={"00": 400, "01": 300, "10": 200, "11": 100},
+            imbalance_repair_level=1,
+            bias_repair_level=1,
+            favorable_labels={1},
+            sampling_strategy="over",
         )
         self.assertDictEqual(nsizes, {"00": 400, "01": 400, "10": 200, "11": 200})
 
-    def test_orbis_pick_sizes_multi_pa_multi_class_normal(self):
+    def test_pick_sizes_over_multi_pa_multi_class_normal(self):
         osizes = {
             "000": 570,
             "001": 670,
@@ -808,11 +814,12 @@ class TestAIF360OrbisPickSizes(unittest.TestCase):
             "111": 7471,
             "112": 7571,
         }
-        imbalance_repair_level = 1
-        bias_repair_level = 1
-        favorable_labels = set([1])
         nsizes = orbis_pick_sizes(
-            osizes, imbalance_repair_level, bias_repair_level, favorable_labels
+            osizes,
+            imbalance_repair_level=1,
+            bias_repair_level=1,
+            favorable_labels={1},
+            sampling_strategy="over",
         )
         self.assertDictEqual(
             nsizes,
@@ -832,7 +839,7 @@ class TestAIF360OrbisPickSizes(unittest.TestCase):
             },
         )
 
-    def test_orbis_pick_sizes_multi_pa_multi_class_reversed(self):
+    def test_pick_sizes_over_multi_pa_multi_class_reversed(self):
         osizes = {
             "112": 100,
             "111": 200,
@@ -847,11 +854,12 @@ class TestAIF360OrbisPickSizes(unittest.TestCase):
             "001": 1100,
             "000": 1200,
         }
-        imbalance_repair_level = 1
-        bias_repair_level = 1
-        favorable_labels = set([2])
         nsizes = orbis_pick_sizes(
-            osizes, imbalance_repair_level, bias_repair_level, favorable_labels
+            osizes,
+            imbalance_repair_level=1,
+            bias_repair_level=1,
+            favorable_labels={2},
+            sampling_strategy="over",
         )
         self.assertDictEqual(
             nsizes,
@@ -868,6 +876,106 @@ class TestAIF360OrbisPickSizes(unittest.TestCase):
                 "002": 3000,
                 "001": 2981,
                 "000": 2688,
+            },
+        )
+
+    def test_pick_sizes_under_single_pa_single_class_normal(self):
+        nsizes = orbis_pick_sizes(
+            osizes={"00": 100, "01": 200, "10": 300, "11": 400},
+            imbalance_repair_level=1,
+            bias_repair_level=1,
+            favorable_labels={1},
+            sampling_strategy="under",
+        )
+        self.assertDictEqual(nsizes, {"00": 100, "01": 100, "10": 300, "11": 300})
+
+    def test_pick_sizes_under_single_pa_single_class_reversed(self):
+        nsizes = orbis_pick_sizes(
+            osizes={"00": 400, "01": 300, "10": 200, "11": 100},
+            imbalance_repair_level=1,
+            bias_repair_level=1,
+            favorable_labels={1},
+            sampling_strategy="under",
+        )
+        self.assertDictEqual(nsizes, {"00": 300, "01": 300, "10": 100, "11": 100})
+
+    def test_pick_sizes_under_multi_pa_multi_class_normal(self):
+        osizes = {
+            "000": 570,
+            "001": 670,
+            "002": 770,
+            "010": 870,
+            "011": 970,
+            "012": 1070,
+            "100": 7070,
+            "101": 7170,
+            "102": 7270,
+            "110": 7370,
+            "111": 7471,
+            "112": 7571,
+        }
+        nsizes = orbis_pick_sizes(
+            osizes,
+            imbalance_repair_level=1,
+            bias_repair_level=1,
+            favorable_labels={1},
+            sampling_strategy="under",
+        )
+        self.assertDictEqual(
+            nsizes,
+            {
+                "000": 570,
+                "001": 627,
+                "002": 761,
+                "010": 870,
+                "011": 968,
+                "012": 976,
+                "100": 7070,
+                "101": 7170,
+                "102": 7129,
+                "110": 7370,
+                "111": 7381,
+                "112": 7414,
+            },
+        )
+
+    def test_pick_sizes_under_multi_pa_multi_class_reversed(self):
+        osizes = {
+            "112": 100,
+            "111": 200,
+            "110": 300,
+            "102": 400,
+            "101": 500,
+            "100": 600,
+            "012": 700,
+            "011": 800,
+            "010": 900,
+            "002": 3000,
+            "001": 1100,
+            "000": 1200,
+        }
+        nsizes = orbis_pick_sizes(
+            osizes,
+            imbalance_repair_level=1,
+            bias_repair_level=1,
+            favorable_labels={2},
+            sampling_strategy="under",
+        )
+        self.assertDictEqual(
+            nsizes,
+            {
+                "112": 100,
+                "111": 100,
+                "110": 100,
+                "102": 400,
+                "101": 498,
+                "100": 304,
+                "012": 700,
+                "011": 655,
+                "010": 748,
+                "002": 1150,
+                "001": 1100,
+                "000": 1200,
             },
         )
 
@@ -1420,11 +1528,29 @@ class TestAIF360Cat(unittest.TestCase):
             )
             # TODO: this test does not yet call fit or predict
 
-    def test_orbis_pd_cat(self):
+    def test_orbis_mixed_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
-        trainable_remi = Orbis(estimator=estim, **fairness_info)
+        trainable_remi = Orbis(
+            estimator=estim, **fairness_info, sampling_strategy="mixed"
+        )
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.7, 0.92)
+
+    def test_orbis_over_pd_cat(self):
+        fairness_info = self.creditg_pd_cat["fairness_info"]
+        estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
+        trainable_remi = Orbis(
+            estimator=estim, **fairness_info, sampling_strategy="over"
+        )
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.7, 0.92)
+
+    def test_orbis_under_pd_cat(self):
+        fairness_info = self.creditg_pd_cat["fairness_info"]
+        estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
+        trainable_remi = Orbis(
+            estimator=estim, **fairness_info, sampling_strategy="under"
+        )
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.7, 1.05)
 
     def test_prejudice_remover_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
@@ -1453,12 +1579,6 @@ class TestAIF360Cat(unittest.TestCase):
         estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
         trainable_remi = Reweighing(estimator=estim, **fairness_info)
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.85, 1.00)
-
-    def test_urbis_pd_cat(self):
-        fairness_info = self.creditg_pd_cat["fairness_info"]
-        estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
-        trainable_remi = Urbis(estimator=estim, **fairness_info)
-        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.7, 1.05)
 
     def test_pd_cat_y_not_series(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
