@@ -24,10 +24,13 @@ from numpy.testing import assert_allclose
 from sklearn.preprocessing import LabelEncoder
 
 import lale.docstrings
-import lale.helpers
 import lale.lib.lale
 import lale.operators
-from lale.lib.imblearn._common_schemas import _hparam_random_state
+from lale.lib.imblearn._common_schemas import (
+    _hparam_n_jobs,
+    _hparam_n_neighbors,
+    _hparam_random_state,
+)
 
 from ._mystic_util import (
     _calculate_ci_ratios,
@@ -151,6 +154,14 @@ class _OrbisImpl:
         # under-sample
         under_sizes = {k: min(ns, osizes[k]) for k, ns in nsizes.items()}
         under_hparams = {**self.hyperparams, "sampling_strategy": under_sizes}
+        under_hparams = {
+            **{
+                h: v
+                for h, v in self.hyperparams.items()
+                if h not in ["k_neighbors", "n_jobs"]
+            },
+            "sampling_strategy": under_sizes,
+        }
         under_op = imblearn.under_sampling.RandomUnderSampler(**under_hparams)
         under_Xyy_all, _ = under_op.fit_resample(Xyy, diaeresis_y)
         shrunk_labels = [k for k, ns in nsizes.items() if ns < osizes[k]]
@@ -158,7 +169,7 @@ class _OrbisImpl:
         # over-sample
         over_sizes = {k: max(ns, osizes[k]) for k, ns in nsizes.items()}
         over_hparams = {
-            **lale.helpers.dict_without(self.hyperparams, "replacement"),
+            **{h: v for h, v in self.hyperparams.items() if h not in ["replacement"]},
             "sampling_strategy": over_sizes,
         }
         cats_mask = [not np.issubdtype(typ, np.number) for typ in Xyy.dtypes]
@@ -254,11 +265,17 @@ Possible choices are:
                     "default": "mixed",
                 },
                 "random_state": _hparam_random_state,
+                "k_neighbors": {
+                    **_hparam_n_neighbors,
+                    "description": "Number of nearest neighbours to use to construct synthetic samples.",
+                    "default": 5,
+                },
                 "replacement": {
                     "description": "Whether under-sampling is with or without replacement.",
                     "type": "boolean",
                     "default": False,
                 },
+                "n_jobs": _hparam_n_jobs,
             },
         },
         {
@@ -283,7 +300,7 @@ Possible choices are:
 }
 
 _combined_schemas = {
-    "description": """Orbis (Undersampling to Repair Bias and Imbalance Simultaneously) pre-estimator fairness mitigator.
+    "description": """Orbis (Oversampling to Repair Bias and Imbalance Simultaneously) pre-estimator fairness mitigator.
 Uses `SMOTE`_ and `RandomUnderSampler`_ to resample not only for
 repairing class imbalance, but also group bias.
 Internally, this works by replacing class labels by the cross product
