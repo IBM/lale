@@ -62,6 +62,7 @@ Feature transformation:
 * lale.lib.autoai_libs. `TGen`_
 * lale.lib.autoai_libs. `FS1`_
 * lale.lib.autoai_libs. `FS2`_
+* lale.lib.autoai_libs. `NSFA`_
 
 .. _`ColumnSelector`: lale.lib.autoai_libs.column_selector.html
 .. _`NumpyColumnSelector`: lale.lib.autoai_libs.numpy_column_selector.html
@@ -88,6 +89,7 @@ Feature transformation:
 .. _`TGen`: lale.lib.autoai_libs.tgen.html
 .. _`FS1`: lale.lib.autoai_libs.fs1.html
 .. _`FS2`: lale.lib.autoai_libs.fs2.html
+.. _`NSFA`: lale.lib.autoai_libs.nsfa.html
 """
 
 from lale import register_lale_wrapper_modules
@@ -102,6 +104,7 @@ from .float32_transform import float32_transform as float32_transform
 from .float_str2_float import FloatStr2Float as FloatStr2Float
 from .fs1 import FS1 as FS1
 from .fs2 import FS2 as FS2
+from .nsfa import NSFA as NSFA
 from .num_imputer import NumImputer as NumImputer
 from .numpy_column_selector import NumpyColumnSelector as NumpyColumnSelector
 from .numpy_permute_array import NumpyPermuteArray as NumpyPermuteArray
