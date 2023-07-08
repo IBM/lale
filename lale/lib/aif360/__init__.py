@@ -83,14 +83,21 @@ Datasets:
 * `fetch_compas_df`_
 * `fetch_compas_violent_df`_
 * `fetch_creditg_df`_
+* `fetch_default_credit_df`_
+* `fetch_health_retirement_df`_
+* `fetch_heart_disease_df`_
+* `fetch_law_school_df`_
 * `fetch_meps_panel19_fy2015_df`_
 * `fetch_meps_panel20_fy2015_df`_
 * `fetch_meps_panel21_fy2016_df`_
 * `fetch_nursery_df`_
 * `fetch_ricci_df`_
 * `fetch_speeddating_df`_
+* `fetch_student_math_df`_
+* `fetch_student_por_df`_
 * `fetch_tae_df`_
 * `fetch_titanic_df`_
+* `fetch_us_crime_df`_
 
 Other Classes and Operators:
 ============================
@@ -170,13 +177,20 @@ zero or one to simplify the task for the mitigator.
 .. _`fetch_compas_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_compas_df
 .. _`fetch_compas_violent_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_compas_violent_df
 .. _`fetch_creditg_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_creditg_df
+.. _`fetch_default_credit_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_default_credit_df
+.. _`fetch_health_retirement_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_health_retirement_df
+.. _`fetch_heart_disease_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_heart_disease_df
+.. _`fetch_law_school_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_law_school_df
 .. _`fetch_ricci_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_ricci_df
 .. _`fetch_speeddating_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_speeddating_df
 .. _`fetch_nursery_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_nursery_df
 .. _`fetch_titanic_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_titanic_df
+.. _`fetch_us_crime_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_us_crime_df
 .. _`fetch_meps_panel19_fy2015_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_meps_panel19_fy2015_df
 .. _`fetch_meps_panel20_fy2015_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_meps_panel20_fy2015_df
 .. _`fetch_meps_panel21_fy2016_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_meps_panel21_fy2016_df
+.. _`fetch_student_math_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_student_math_df
+.. _`fetch_student_por_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_student_por_df
 .. _`fetch_tae_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_tae_df
 .. _`r2_and_disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.r2_and_disparate_impact
 .. _`statistical_parity_difference`: lale.lib.aif360.util.html#lale.lib.aif360.util.statistical_parity_difference
@@ -201,14 +215,21 @@ from .datasets import fetch_bank_df as fetch_bank_df
 from .datasets import fetch_compas_df as fetch_compas_df
 from .datasets import fetch_compas_violent_df as fetch_compas_violent_df
 from .datasets import fetch_creditg_df as fetch_creditg_df
+from .datasets import fetch_default_credit_df as fetch_default_credit_df
+from .datasets import fetch_health_retirement_df as fetch_health_retirement_df
+from .datasets import fetch_heart_disease_df as fetch_heart_disease_df
+from .datasets import fetch_law_school_df as fetch_law_school_df
 from .datasets import fetch_meps_panel19_fy2015_df as fetch_meps_panel19_fy2015_df
 from .datasets import fetch_meps_panel20_fy2015_df as fetch_meps_panel20_fy2015_df
 from .datasets import fetch_meps_panel21_fy2016_df as fetch_meps_panel21_fy2016_df
 from .datasets import fetch_nursery_df as fetch_nursery_df
 from .datasets import fetch_ricci_df as fetch_ricci_df
 from .datasets import fetch_speeddating_df as fetch_speeddating_df
+from .datasets import fetch_student_math_df as fetch_student_math_df
+from .datasets import fetch_student_por_df as fetch_student_por_df
 from .datasets import fetch_tae_df as fetch_tae_df
 from .datasets import fetch_titanic_df as fetch_titanic_df
+from .datasets import fetch_us_crime_df as fetch_us_crime_df
 from .disparate_impact_remover import DisparateImpactRemover as DisparateImpactRemover
 from .eq_odds_postprocessing import EqOddsPostprocessing as EqOddsPostprocessing
 from .gerry_fair_classifier import GerryFairClassifier as GerryFairClassifier

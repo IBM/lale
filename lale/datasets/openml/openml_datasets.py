@@ -504,6 +504,62 @@ experiments_dict["cloud"] = {
     "n_rows": 108,
 }
 
+experiments_dict["heart-disease"] = {
+    "dataset_url": "https://www.openml.org/d/43398",
+    "download_arff_url": "https://www.openml.org/data/download/22102223/dataset",
+    "task_type": "classification",
+    "target": "target",
+    "n_rows": 303,
+}
+
+experiments_dict["UCI-student-performance-mat"] = {
+    "dataset_url": "https://www.openml.org/d/42352",
+    "download_arff_url": "https://www.openml.org/data/download/21826977/mat.arff",
+    "task_type": "regression",
+    "target": "g3",
+    "n_rows": 395,
+}
+
+experiments_dict["UCI-student-performance-por"] = {
+    "dataset_url": "https://www.openml.org/d/42351",
+    "download_arff_url": "https://www.openml.org/data/download/21826962/por.arff",
+    "task_type": "regression",
+    "target": "g3",
+    "n_rows": 649,
+}
+
+experiments_dict["us_crime"] = {
+    "dataset_url": "https://www.openml.org/d/315",
+    "download_arff_url": "https://www.openml.org/data/download/52219/phpeZQVCe",
+    "task_type": "regression",
+    "target": "violentcrimesperpop",
+    "n_rows": 1_994,
+}
+
+experiments_dict["national-longitudinal-survey-binary"] = {
+    "dataset_url": "https://www.openml.org/d/43892",
+    "download_arff_url": "https://www.openml.org/data/download/22102800/file8627017dbe5e7.arff",
+    "task_type": "classification",
+    "target": "income96gt17",
+    "n_rows": 4_908,
+}
+
+experiments_dict["law-school-admission-bianry"] = {
+    "dataset_url": "https://www.openml.org/d/43890",
+    "download_arff_url": "https://www.openml.org/data/download/22102798/file862706e533fa5.arff",
+    "task_type": "classification",
+    "target": "ugpagt3",
+    "n_rows": 20_800,
+}
+
+experiments_dict["Default-of-Credit-Card-Clients-Dataset"] = {
+    "dataset_url": "https://www.openml.org/d/43435",
+    "download_arff_url": "https://www.openml.org/data/download/22102260/dataset",
+    "task_type": "classification",
+    "target": "default.payment.next.month",
+    "n_rows": 30_000,
+}
+
 
 def add_schemas(schema_orig, target_col, train_X, test_X, train_y, test_y):
     from lale.datasets.data_schemas import add_schema

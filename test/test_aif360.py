@@ -146,6 +146,22 @@ class TestAIF360Datasets(unittest.TestCase):
         X, y, fairness_info = lale.lib.aif360.fetch_creditg_df(preprocess=True)
         self._attempt_dataset(X, y, fairness_info, 1_000, 58, {0, 1}, 0.748)
 
+    def test_dataset_default_credit_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_default_credit_df()
+        self._attempt_dataset(X, y, fairness_info, 30_000, 24, {0, 1}, 0.957)
+
+    def test_dataset_health_retirement_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_health_retirement_df()
+        self._attempt_dataset(X, y, fairness_info, 4908, 16, {"0", "1"}, 0.587)
+
+    def test_dataset_heart_disease_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_heart_disease_df()
+        self._attempt_dataset(X, y, fairness_info, 303, 13, {0, 1}, 0.589)
+
+    def test_dataset_law_school_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_law_school_df()
+        self._attempt_dataset(X, y, fairness_info, 20_800, 11, {"FALSE", "TRUE"}, 0.704)
+
     def test_dataset_nursery_pd_cat(self):
         X, y, fairness_info = lale.lib.aif360.fetch_nursery_df(preprocess=False)
         self._attempt_dataset(
@@ -187,6 +203,14 @@ class TestAIF360Datasets(unittest.TestCase):
         X, y, fairness_info = lale.lib.aif360.fetch_speeddating_df(preprocess=True)
         self._attempt_dataset(X, y, fairness_info, 8_378, 70, {0, 1}, 0.853)
 
+    def test_dataset_student_math_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_student_math_df()
+        self._attempt_dataset(X, y, fairness_info, 395, 32, {0, 1}, 0.894)
+
+    def test_dataset_student_por_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_student_por_df()
+        self._attempt_dataset(X, y, fairness_info, 649, 32, {0, 1}, 0.858)
+
     def test_dataset_boston_housing_pd_cat(self):
         X, y, fairness_info = lale.lib.aif360._fetch_boston_housing_df(preprocess=False)
         # TODO: consider better way of handling "set_y" parameter for regression problems
@@ -212,6 +236,10 @@ class TestAIF360Datasets(unittest.TestCase):
     def test_dataset_tae_pd_num(self):
         X, y, fairness_info = lale.lib.aif360.fetch_tae_df(preprocess=True)
         self._attempt_dataset(X, y, fairness_info, 151, 6, {0, 1}, 0.449)
+
+    def test_dataset_us_crime_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_us_crime_df()
+        self._attempt_dataset(X, y, fairness_info, 1_994, 102, {0, 1}, 0.888)
 
     @classmethod
     def _try_download_csv(cls, filename):
