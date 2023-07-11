@@ -213,13 +213,13 @@ def fetch_bank_df(preprocess: bool = False):
 
 def fetch_default_credit_df():
     """
-    Fetch the `Default-of-Credit-Card-Clients-Dataset`_ dataset from OpenML and add `fairness_info`.
-
+    Fetch the `Default of Credit Card Clients Dataset`_ from OpenML and add `fairness_info`.
     It is a binary classification to predict whether the customer suffers
     a default in the next month (1) or not (0).
-    The dataset has 30,000 rows and 24 columns.
+    The dataset has 30,000 rows and 24 columns, all numeric.
+    The protected attribute is sex and the disparate impact is 0.957.
 
-    .. _`Default-of-Credit-Card-Clients-Dataset`: https://www.openml.org/d/43435
+    .. _`Default of Credit Card Clients Dataset`: https://www.openml.org/d/43435
 
     Returns
     -------
@@ -255,71 +255,12 @@ def fetch_default_credit_df():
     return orig_X, orig_y, fairness_info
 
 
-def fetch_health_retirement_df():
-    """
-    Fetch the `national-longitudinal-survey-binary`_ (also known as "University of Michigan Health and Retirement Study (HRS)") dataset from OpenML and add `fairness_info`.
-
-    It is a binary classification to predict whether the income at a
-    certain time exceeds a threshold, with 4,908 rows and 16 columns.
-
-    .. _`national-longitudinal-survey-binary`: https://www.openml.org/d/43892
-
-    Returns
-    -------
-    result : tuple
-
-      - item 0: pandas Dataframe
-
-          Features X, including both protected and non-protected attributes.
-
-      - item 1: pandas Series
-
-          Labels y.
-
-      - item 3: fairness_info
-
-          JSON meta-data following the format understood by fairness metrics
-          and mitigation operators in `lale.lib.aif360`.
-    """
-    (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
-        "national-longitudinal-survey-binary",
-        "classification",
-        astype="pandas",
-        preprocess=False,
-    )
-    orig_X = pd.concat([train_X, test_X]).sort_index()
-    orig_y = pd.concat([train_y, test_y]).sort_index()
-    fairness_info = {
-        "favorable_labels": ["1"],
-        "protected_attributes": [
-            {
-                "feature": "race",
-                "reference_group": [
-                    "ENGLISH",
-                    "GERMAN",
-                    "IRISH",
-                    "FRENCH",
-                    "AMERICAN",
-                    "ITALIAN",
-                    "POLISH",
-                    "SCOTTISH",
-                    "RUSSIAN",
-                    "GREEK",
-                    "WELSH",
-                ],
-            },
-            {"feature": "gender", "reference_group": ["Male"]},
-        ],
-    }
-    return orig_X, orig_y, fairness_info
-
-
 def fetch_heart_disease_df():
     """
     Fetch the `heart-disease`_ dataset from OpenML and add `fairness_info`.
-
     It is a binary classification to predict heart disease from the
-    Cleveland database, with 303 rows and 13 columns.
+    Cleveland database, with 303 rows and 13 columns, all numeric.
+    The protected attribute is age and the disparate impact is 0.589.
 
     .. _`heart-disease`: https://www.openml.org/d/43398
 
@@ -354,17 +295,113 @@ def fetch_heart_disease_df():
     return orig_X, orig_y, fairness_info
 
 
+def fetch_law_school_df():
+    """Fetch the `law school`_ dataset from OpenML and add `fairness_info`.
+    This function returns both X and y unchanged, since the dataset
+    was already binarized by the OpenML contributors, with the target
+    of predicting whether the GPA is greater than 3.
+    The protected attributes is race1 and the disparate impact is 0.704.
+    The dataset has 20,800 rows and 11 columns (5 categorical and 6
+    numeric columns).
+
+    .. _`law school`: https://www.openml.org/d/43890
+
+    Returns
+    -------
+    result : tuple
+
+      - item 0: pandas Dataframe
+
+          Features X, including both protected and non-protected attributes.
+
+      - item 1: pandas Series
+
+          Labels y.
+
+      - item 3: fairness_info
+
+          JSON meta-data following the format understood by fairness metrics
+          and mitigation operators in `lale.lib.aif360`.
+
+    """
+    (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
+        "law-school-admission-bianry",
+        "classification",
+        astype="pandas",
+        preprocess=False,
+    )
+    orig_X = pd.concat([train_X, test_X]).sort_index()
+    orig_y = pd.concat([train_y, test_y]).sort_index()
+    fairness_info = {
+        "favorable_labels": ["TRUE"],
+        "protected_attributes": [
+            {"feature": "race1", "reference_group": ["white"]},
+        ],
+    }
+    return orig_X, orig_y, fairness_info
+
+
+def fetch_nlsy_df():
+    """
+    Fetch the `National Longitudinal Survey for the Youth (NLSY)`_ (also known as "University of Michigan Health and Retirement Study (HRS)") dataset from OpenML and add `fairness_info`.
+
+    It is a binary classification to predict whether the income at a
+    certain time exceeds a threshold, with 4,908 rows and 15 columns
+    (comprising 6 categorical and 9 numerical columns).
+    The protected attributes are age and gender and the disparate
+    impact is 0.668.
+
+    .. _`National Longitudinal Survey for the Youth (NLSY)`: https://www.openml.org/d/43892
+
+    Returns
+    -------
+    result : tuple
+
+      - item 0: pandas Dataframe
+
+          Features X, including both protected and non-protected attributes.
+
+      - item 1: pandas Series
+
+          Labels y.
+
+      - item 3: fairness_info
+
+          JSON meta-data following the format understood by fairness metrics
+          and mitigation operators in `lale.lib.aif360`.
+    """
+    (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
+        "national-longitudinal-survey-binary",
+        "classification",
+        astype="pandas",
+        preprocess=False,
+    )
+    orig_X = pd.concat([train_X, test_X]).sort_index()
+    orig_y = pd.concat([train_y, test_y]).sort_index()
+    dropped_X = orig_X.drop(labels=["income96"], axis=1)
+    fairness_info = {
+        "favorable_labels": ["1"],
+        "protected_attributes": [
+            {"feature": "age", "reference_group": [[18, 120]]},
+            {"feature": "gender", "reference_group": ["Male"]},
+        ],
+    }
+    return dropped_X, orig_y, fairness_info
+
+
 def fetch_student_math_df():
     """
-    Fetch the `UCI-student-performance-mat`_ dataset from OpenML and add `fairness_info`.
+    Fetch the `Student Performance (Math)`_ dataset from OpenML and add `fairness_info`.
 
     The original prediction target is a integer math grade from 1 to 20.
     This function returns X unchanged but with a binarized version of
     the target y, using 1 for values >=10 and 0 otherwise.
-    The two protected attributes are sex and age.
-    The dataset has 395 rows and 32 columns.
+    The two protected attributes are sex and age
+    and the disparate impact is 0.894.
+    The dataset has 395 rows and 32 columns,
+    including both categorical and numeric columns.
 
-    .. _`UCI-student-performance-mat`: https://www.openml.org/d/42352
+    .. _`Student Performance (Math)`: https://www.openml.org/d/42352
 
     Returns
     -------
@@ -399,62 +436,19 @@ def fetch_student_math_df():
     return orig_X, encoded_y, fairness_info
 
 
-def fetch_law_school_df():
-    """
-    Fetch the `law-school-admission-bianry`_ (sic) dataset from OpenML and add `fairness_info`.
-
-    This function returns both X and y unchanged, since the dataset
-    was already binarized by the OpenML contributors.
-    The protected attributes is race1.
-    The dataset has 20,800 rows and 11 columns.
-
-    .. _`law-school-admission-bianry`: https://www.openml.org/d/43890
-
-    Returns
-    -------
-    result : tuple
-
-      - item 0: pandas Dataframe
-
-          Features X, including both protected and non-protected attributes.
-
-      - item 1: pandas Series
-
-          Labels y.
-
-      - item 3: fairness_info
-
-          JSON meta-data following the format understood by fairness metrics
-          and mitigation operators in `lale.lib.aif360`.
-    """
-    (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
-        "law-school-admission-bianry",
-        "classification",
-        astype="pandas",
-        preprocess=False,
-    )
-    orig_X = pd.concat([train_X, test_X]).sort_index()
-    orig_y = pd.concat([train_y, test_y]).sort_index()
-    fairness_info = {
-        "favorable_labels": ["TRUE"],
-        "protected_attributes": [
-            {"feature": "race1", "reference_group": ["white"]},
-        ],
-    }
-    return orig_X, orig_y, fairness_info
-
-
 def fetch_student_por_df():
     """
-    Fetch the `UCI-student-performance-por`_ dataset from OpenML and add `fairness_info`.
+    Fetch the `Student Performance (Portuguese)`_ dataset from OpenML and add `fairness_info`.
 
     The original prediction target is a integer Portuguese grade from 1 to 20.
     This function returns X unchanged but with a binarized version of
     the target y, using 1 for values >=10 and 0 otherwise.
-    The two protected attributes are sex and age.
-    The dataset has 649 rows and 32 columns.
+    The two protected attributes are sex and age
+    and the disparate impact is 0.858.
+    The dataset has 649 rows and 32 columns,
+    including both categorical and numeric columns.
 
-    .. _`UCI-student-performance-por`: https://www.openml.org/d/42351
+    .. _`Student Performance (Portuguese)`: https://www.openml.org/d/42351
 
     Returns
     -------
@@ -590,13 +584,14 @@ def fetch_tae_df(preprocess: bool = False):
 def fetch_us_crime_df():
     """
     Fetch the `us_crime`_ (also known as "communities and crime") dataset from OpenML and add `fairness_info`.
-
     The original dataset has several columns with a large number of
     missing values, which this function drops.
     The binary protected attribute is blackgt6pct, which is derived by
     thresholding racepctblack > 0.06 and dropping the original racepctblack.
     The binary target is derived by thresholding its original y > 0.70.
-    The resulting dataset has 1,994 rows and 102 columns.
+    The disparate impact is 0.888.
+    The resulting dataset has 1,994 rows and 102 columns,
+    all but one of which are numeric.
 
     .. _`us_crime`: https://www.openml.org/d/315
 

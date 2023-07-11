@@ -150,10 +150,6 @@ class TestAIF360Datasets(unittest.TestCase):
         X, y, fairness_info = lale.lib.aif360.fetch_default_credit_df()
         self._attempt_dataset(X, y, fairness_info, 30_000, 24, {0, 1}, 0.957)
 
-    def test_dataset_health_retirement_pd_cat(self):
-        X, y, fairness_info = lale.lib.aif360.fetch_health_retirement_df()
-        self._attempt_dataset(X, y, fairness_info, 4908, 16, {"0", "1"}, 0.587)
-
     def test_dataset_heart_disease_pd_cat(self):
         X, y, fairness_info = lale.lib.aif360.fetch_heart_disease_df()
         self._attempt_dataset(X, y, fairness_info, 303, 13, {0, 1}, 0.589)
@@ -161,6 +157,10 @@ class TestAIF360Datasets(unittest.TestCase):
     def test_dataset_law_school_pd_cat(self):
         X, y, fairness_info = lale.lib.aif360.fetch_law_school_df()
         self._attempt_dataset(X, y, fairness_info, 20_800, 11, {"FALSE", "TRUE"}, 0.704)
+
+    def test_dataset_nlsy_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_nlsy_df()
+        self._attempt_dataset(X, y, fairness_info, 4908, 15, {"0", "1"}, 0.668)
 
     def test_dataset_nursery_pd_cat(self):
         X, y, fairness_info = lale.lib.aif360.fetch_nursery_df(preprocess=False)
