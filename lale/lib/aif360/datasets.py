@@ -1,4 +1,4 @@
-# Copyright 2021 IBM Corporation
+# Copyright 2021-2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -211,6 +211,278 @@ def fetch_bank_df(preprocess: bool = False):
         return orig_X, orig_y, fairness_info
 
 
+def fetch_default_credit_df():
+    """
+    Fetch the `Default of Credit Card Clients Dataset`_ from OpenML and add `fairness_info`.
+    It is a binary classification to predict whether the customer suffers
+    a default in the next month (1) or not (0).
+    The dataset has 30,000 rows and 24 columns, all numeric.
+    The protected attribute is sex and the disparate impact is 0.957.
+
+    .. _`Default of Credit Card Clients Dataset`: https://www.openml.org/d/43435
+
+    Returns
+    -------
+    result : tuple
+
+      - item 0: pandas Dataframe
+
+          Features X, including both protected and non-protected attributes.
+
+      - item 1: pandas Series
+
+          Labels y.
+
+      - item 3: fairness_info
+
+          JSON meta-data following the format understood by fairness metrics
+          and mitigation operators in `lale.lib.aif360`.
+    """
+    (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
+        "Default-of-Credit-Card-Clients-Dataset",
+        "classification",
+        astype="pandas",
+        preprocess=False,
+    )
+    orig_X = pd.concat([train_X, test_X]).sort_index()
+    orig_y = pd.concat([train_y, test_y]).sort_index()
+    fairness_info = {
+        "favorable_labels": [0],
+        "protected_attributes": [
+            {"feature": "sex", "reference_group": [2]},  # female
+        ],
+    }
+    return orig_X, orig_y, fairness_info
+
+
+def fetch_heart_disease_df():
+    """
+    Fetch the `heart-disease`_ dataset from OpenML and add `fairness_info`.
+    It is a binary classification to predict heart disease from the
+    Cleveland database, with 303 rows and 13 columns, all numeric.
+    The protected attribute is age and the disparate impact is 0.589.
+
+    .. _`heart-disease`: https://www.openml.org/d/43398
+
+    Returns
+    -------
+    result : tuple
+
+      - item 0: pandas Dataframe
+
+          Features X, including both protected and non-protected attributes.
+
+      - item 1: pandas Series
+
+          Labels y.
+
+      - item 3: fairness_info
+
+          JSON meta-data following the format understood by fairness metrics
+          and mitigation operators in `lale.lib.aif360`.
+    """
+    (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
+        "heart-disease", "classification", astype="pandas", preprocess=False
+    )
+    orig_X = pd.concat([train_X, test_X]).sort_index()
+    orig_y = pd.concat([train_y, test_y]).sort_index()
+    fairness_info = {
+        "favorable_labels": [1],
+        "protected_attributes": [
+            {"feature": "age", "reference_group": [[0, 54]]},
+        ],
+    }
+    return orig_X, orig_y, fairness_info
+
+
+def fetch_law_school_df():
+    """Fetch the `law school`_ dataset from OpenML and add `fairness_info`.
+    This function returns both X and y unchanged, since the dataset
+    was already binarized by the OpenML contributors, with the target
+    of predicting whether the GPA is greater than 3.
+    The protected attributes is race1 and the disparate impact is 0.704.
+    The dataset has 20,800 rows and 11 columns (5 categorical and 6
+    numeric columns).
+
+    .. _`law school`: https://www.openml.org/d/43890
+
+    Returns
+    -------
+    result : tuple
+
+      - item 0: pandas Dataframe
+
+          Features X, including both protected and non-protected attributes.
+
+      - item 1: pandas Series
+
+          Labels y.
+
+      - item 3: fairness_info
+
+          JSON meta-data following the format understood by fairness metrics
+          and mitigation operators in `lale.lib.aif360`.
+
+    """
+    (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
+        "law-school-admission-bianry",
+        "classification",
+        astype="pandas",
+        preprocess=False,
+    )
+    orig_X = pd.concat([train_X, test_X]).sort_index()
+    orig_y = pd.concat([train_y, test_y]).sort_index()
+    fairness_info = {
+        "favorable_labels": ["TRUE"],
+        "protected_attributes": [
+            {"feature": "race1", "reference_group": ["white"]},
+        ],
+    }
+    return orig_X, orig_y, fairness_info
+
+
+def fetch_nlsy_df():
+    """
+    Fetch the `National Longitudinal Survey for the Youth (NLSY)`_ (also known as "University of Michigan Health and Retirement Study (HRS)") dataset from OpenML and add `fairness_info`.
+
+    It is a binary classification to predict whether the income at a
+    certain time exceeds a threshold, with 4,908 rows and 15 columns
+    (comprising 6 categorical and 9 numerical columns).
+    The protected attributes are age and gender and the disparate
+    impact is 0.668.
+
+    .. _`National Longitudinal Survey for the Youth (NLSY)`: https://www.openml.org/d/43892
+
+    Returns
+    -------
+    result : tuple
+
+      - item 0: pandas Dataframe
+
+          Features X, including both protected and non-protected attributes.
+
+      - item 1: pandas Series
+
+          Labels y.
+
+      - item 3: fairness_info
+
+          JSON meta-data following the format understood by fairness metrics
+          and mitigation operators in `lale.lib.aif360`.
+    """
+    (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
+        "national-longitudinal-survey-binary",
+        "classification",
+        astype="pandas",
+        preprocess=False,
+    )
+    orig_X = pd.concat([train_X, test_X]).sort_index()
+    orig_y = pd.concat([train_y, test_y]).sort_index()
+    dropped_X = orig_X.drop(labels=["income96"], axis=1)
+    fairness_info = {
+        "favorable_labels": ["1"],
+        "protected_attributes": [
+            {"feature": "age", "reference_group": [[18, 120]]},
+            {"feature": "gender", "reference_group": ["Male"]},
+        ],
+    }
+    return dropped_X, orig_y, fairness_info
+
+
+def fetch_student_math_df():
+    """
+    Fetch the `Student Performance (Math)`_ dataset from OpenML and add `fairness_info`.
+
+    The original prediction target is a integer math grade from 1 to 20.
+    This function returns X unchanged but with a binarized version of
+    the target y, using 1 for values >=10 and 0 otherwise.
+    The two protected attributes are sex and age
+    and the disparate impact is 0.894.
+    The dataset has 395 rows and 32 columns,
+    including both categorical and numeric columns.
+
+    .. _`Student Performance (Math)`: https://www.openml.org/d/42352
+
+    Returns
+    -------
+    result : tuple
+
+      - item 0: pandas Dataframe
+
+          Features X, including both protected and non-protected attributes.
+
+      - item 1: pandas Series
+
+          Labels y.
+
+      - item 3: fairness_info
+
+          JSON meta-data following the format understood by fairness metrics
+          and mitigation operators in `lale.lib.aif360`.
+    """
+    (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
+        "UCI-student-performance-mat", "regression", astype="pandas", preprocess=False
+    )
+    orig_X = pd.concat([train_X, test_X]).sort_index()
+    orig_y = pd.concat([train_y, test_y]).sort_index()
+    encoded_y = pd.Series(orig_y >= 12, dtype=np.float64, name="g3_ge_10")
+    fairness_info = {
+        "favorable_labels": [1],
+        "protected_attributes": [
+            {"feature": "sex", "reference_group": ["F"]},
+            {"feature": "age", "reference_group": [[0, 17]]},
+        ],
+    }
+    return orig_X, encoded_y, fairness_info
+
+
+def fetch_student_por_df():
+    """
+    Fetch the `Student Performance (Portuguese)`_ dataset from OpenML and add `fairness_info`.
+
+    The original prediction target is a integer Portuguese grade from 1 to 20.
+    This function returns X unchanged but with a binarized version of
+    the target y, using 1 for values >=10 and 0 otherwise.
+    The two protected attributes are sex and age
+    and the disparate impact is 0.858.
+    The dataset has 649 rows and 32 columns,
+    including both categorical and numeric columns.
+
+    .. _`Student Performance (Portuguese)`: https://www.openml.org/d/42351
+
+    Returns
+    -------
+    result : tuple
+
+      - item 0: pandas Dataframe
+
+          Features X, including both protected and non-protected attributes.
+
+      - item 1: pandas Series
+
+          Labels y.
+
+      - item 3: fairness_info
+
+          JSON meta-data following the format understood by fairness metrics
+          and mitigation operators in `lale.lib.aif360`.
+    """
+    (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
+        "UCI-student-performance-por", "regression", astype="pandas", preprocess=False
+    )
+    orig_X = pd.concat([train_X, test_X]).sort_index()
+    orig_y = pd.concat([train_y, test_y]).sort_index()
+    encoded_y = pd.Series(orig_y >= 10, dtype=np.float64, name="g3_ge_10")
+    fairness_info = {
+        "favorable_labels": [1],
+        "protected_attributes": [
+            {"feature": "sex", "reference_group": ["F"]},
+            {"feature": "age", "reference_group": [[0, 17]]},
+        ],
+    }
+    return orig_X, encoded_y, fairness_info
+
+
 def fetch_tae_df(preprocess: bool = False):
     """
     Fetch the `tae`_ dataset from OpenML and add `fairness_info`.
@@ -307,6 +579,54 @@ def fetch_tae_df(preprocess: bool = False):
             ],
         }
         return orig_X, orig_y, fairness_info
+
+
+def fetch_us_crime_df():
+    """
+    Fetch the `us_crime`_ (also known as "communities and crime") dataset from OpenML and add `fairness_info`.
+    The original dataset has several columns with a large number of
+    missing values, which this function drops.
+    The binary protected attribute is blackgt6pct, which is derived by
+    thresholding racepctblack > 0.06 and dropping the original racepctblack.
+    The binary target is derived by thresholding its original y > 0.70.
+    The disparate impact is 0.888.
+    The resulting dataset has 1,994 rows and 102 columns,
+    all but one of which are numeric.
+
+    .. _`us_crime`: https://www.openml.org/d/315
+
+    Returns
+    -------
+    result : tuple
+
+      - item 0: pandas Dataframe
+
+          Features X, including both protected and non-protected attributes.
+
+      - item 1: pandas Series
+
+          Labels y.
+
+      - item 3: fairness_info
+
+          JSON meta-data following the format understood by fairness metrics
+          and mitigation operators in `lale.lib.aif360`.
+    """
+    (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
+        "us_crime", "regression", astype="pandas", preprocess=False
+    )
+    orig_X = pd.concat([train_X, test_X]).sort_index()
+    orig_y = pd.concat([train_y, test_y]).sort_index()
+    blackgt6pct = orig_X.racepctblack > 0.06
+    to_drop = ["racepctblack"] + [c for c in orig_X.columns if orig_X[c].hasnans]
+    dropped_X = orig_X.drop(labels=to_drop, axis=1)
+    encoded_X = dropped_X.assign(blackgt6pct=blackgt6pct)
+    encoded_y = pd.Series(orig_y >= 0.7, name="crimegt70pct")
+    fairness_info = {
+        "favorable_labels": [0],
+        "protected_attributes": [{"feature": "blackgt6pct", "reference_group": [0]}],
+    }
+    return encoded_X, encoded_y, fairness_info
 
 
 # COMPAS HELPERS
