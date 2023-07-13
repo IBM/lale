@@ -220,9 +220,7 @@ def simplifyAll(schemas: List[JsonSchema], floatAny: bool) -> JsonSchema:
     s_one: List[JsonSchema] = []
 
     s_not: List[JsonSchema] = []
-    s_not_number_list: List[
-        JsonSchema
-    ] = (
+    s_not_number_list: List[JsonSchema] = (
         []
     )  # a list of schemas that are a top level 'not' with a type='integer' or 'number' under it
 

@@ -141,16 +141,13 @@ class FrequencyDistribution(Generic[T]):
         return cast(int, np.int_(self.cumulative_freqs[-1]))
 
     @overload
-    def __getitem__(self, key: int) -> T:
-        ...
+    def __getitem__(self, key: int) -> T: ...
 
     @overload
-    def __getitem__(self, key: Sequence[int]) -> Sequence[T]:
-        ...
+    def __getitem__(self, key: Sequence[int]) -> Sequence[T]: ...
 
     @overload
-    def __getitem__(self, key: slice) -> Sequence[T]:
-        ...
+    def __getitem__(self, key: slice) -> Sequence[T]: ...
 
     def __getitem__(
         self, key: Union[int, Sequence[int], slice]

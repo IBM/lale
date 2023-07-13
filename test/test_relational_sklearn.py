@@ -928,12 +928,12 @@ class TestSimpleImputer(unittest.TestCase):
         for tgt, datasets in self.tgt2adult.items():
             (train_X, train_y), (test_X, test_y) = datasets
             if tgt == "pandas":
-                train_X.loc[
-                    train_X[col_name] == value, col_name
-                ] = missing_value  # type:ignore
-                test_X.loc[
-                    test_X[col_name] == value, col_name
-                ] = missing_value  # type:ignore
+                train_X.loc[train_X[col_name] == value, col_name] = (
+                    missing_value
+                )  # type:ignore
+                test_X.loc[test_X[col_name] == value, col_name] = (
+                    missing_value
+                )  # type:ignore
             elif tgt == "spark":
                 from pyspark.sql.functions import col, when
 

@@ -133,9 +133,11 @@ class _ConcatFeaturesImpl:
             result = np.concatenate(np_datasets, axis=1)
         name = reduce(
             (
-                lambda x, y: get_table_name(x)
-                if get_table_name(x) == get_table_name(y)
-                else None
+                lambda x, y: (
+                    get_table_name(x)
+                    if get_table_name(x) == get_table_name(y)
+                    else None
+                )
             ),
             X,
         )

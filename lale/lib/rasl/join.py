@@ -100,9 +100,9 @@ class _JoinImpl:
         assert pred is not None
         for key in pred:
             if isinstance(key, list):
-                sub_list_tables: List[
-                    str
-                ] = []  # use an ordered list to improve error messages
+                sub_list_tables: List[str] = (
+                    []
+                )  # use an ordered list to improve error messages
                 for sub_key in key:
                     (
                         left_table_name,

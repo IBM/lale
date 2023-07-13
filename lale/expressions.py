@@ -102,12 +102,10 @@ class Expr:
     # the type: ignore statements are needed because the type of object.__eq__
     # in typeshed is overly restrictive (to catch common errors)
     @overload  # type: ignore
-    def __eq__(self, other: Union["Expr", str, int, float, bool]) -> "Expr":
-        ...
+    def __eq__(self, other: Union["Expr", str, int, float, bool]) -> "Expr": ...
 
     @overload  # type: ignore
-    def __eq__(self, other: None) -> Literal[False]:
-        ...
+    def __eq__(self, other: None) -> Literal[False]: ...
 
     def __eq__(self, other: Union["Expr", str, int, float, bool, None]):
         if isinstance(other, Expr):
@@ -124,12 +122,10 @@ class Expr:
             return False
 
     @overload
-    def __ge__(self, other: Union["Expr", str, int, float, bool]) -> "Expr":
-        ...
+    def __ge__(self, other: Union["Expr", str, int, float, bool]) -> "Expr": ...
 
     @overload
-    def __ge__(self, other: None) -> Literal[False]:
-        ...
+    def __ge__(self, other: None) -> Literal[False]: ...
 
     def __ge__(self, other):
         if isinstance(other, Expr):
@@ -165,12 +161,10 @@ class Expr:
         return Expr(subscript)
 
     @overload
-    def __gt__(self, other: Union["Expr", str, int, float, bool]) -> "Expr":
-        ...
+    def __gt__(self, other: Union["Expr", str, int, float, bool]) -> "Expr": ...
 
     @overload
-    def __gt__(self, other: None) -> Literal[False]:
-        ...
+    def __gt__(self, other: None) -> Literal[False]: ...
 
     def __gt__(self, other):
         if isinstance(other, Expr):
@@ -187,12 +181,10 @@ class Expr:
             return False
 
     @overload
-    def __le__(self, other: Union["Expr", str, int, float, bool]) -> "Expr":
-        ...
+    def __le__(self, other: Union["Expr", str, int, float, bool]) -> "Expr": ...
 
     @overload
-    def __le__(self, other: None) -> Literal[False]:
-        ...
+    def __le__(self, other: None) -> Literal[False]: ...
 
     def __le__(self, other):
         if isinstance(other, Expr):
@@ -211,12 +203,10 @@ class Expr:
             return False
 
     @overload
-    def __lt__(self, other: Union["Expr", str, int, float, bool]) -> "Expr":
-        ...
+    def __lt__(self, other: Union["Expr", str, int, float, bool]) -> "Expr": ...
 
     @overload
-    def __lt__(self, other: None) -> Literal[False]:
-        ...
+    def __lt__(self, other: None) -> Literal[False]: ...
 
     def __lt__(self, other):
         if isinstance(other, Expr):
@@ -233,12 +223,10 @@ class Expr:
             return False
 
     @overload  # type: ignore
-    def __ne__(self, other: Union["Expr", str, int, float, bool]) -> "Expr":
-        ...
+    def __ne__(self, other: Union["Expr", str, int, float, bool]) -> "Expr": ...
 
     @overload  # type: ignore
-    def __ne__(self, other: None) -> Literal[False]:
-        ...
+    def __ne__(self, other: None) -> Literal[False]: ...
 
     def __ne__(self, other):
         if isinstance(other, Expr):
@@ -264,113 +252,93 @@ class Expr:
         return result
 
     @overload
-    def __add__(self, other: Union["Expr", str, int, float, bool]) -> "Expr":
-        ...
+    def __add__(self, other: Union["Expr", str, int, float, bool]) -> "Expr": ...
 
     @overload
-    def __add__(self, other: None) -> Literal[False]:
-        ...
+    def __add__(self, other: None) -> Literal[False]: ...
 
     def __add__(self, other) -> Union["Expr", Literal[False]]:
         return _make_binop(ast.Add(), self._expr, other)
 
     @overload
-    def __sub__(self, other: Union["Expr", str, int, float, bool]) -> "Expr":
-        ...
+    def __sub__(self, other: Union["Expr", str, int, float, bool]) -> "Expr": ...
 
     @overload
-    def __sub__(self, other: None) -> Literal[False]:
-        ...
+    def __sub__(self, other: None) -> Literal[False]: ...
 
     def __sub__(self, other) -> Union["Expr", Literal[False]]:
         return _make_binop(ast.Sub(), self._expr, other)
 
     @overload
-    def __mul__(self, other: Union["Expr", str, int, float, bool]) -> "Expr":
-        ...
+    def __mul__(self, other: Union["Expr", str, int, float, bool]) -> "Expr": ...
 
     @overload
-    def __mul__(self, other: None) -> Literal[False]:
-        ...
+    def __mul__(self, other: None) -> Literal[False]: ...
 
     def __mul__(self, other) -> Union["Expr", Literal[False]]:
         return _make_binop(ast.Mult(), self._expr, other)
 
     @overload
-    def __truediv__(self, other: Union["Expr", str, int, float, bool]) -> "Expr":
-        ...
+    def __truediv__(self, other: Union["Expr", str, int, float, bool]) -> "Expr": ...
 
     @overload
-    def __truediv__(self, other: None) -> Literal[False]:
-        ...
+    def __truediv__(self, other: None) -> Literal[False]: ...
 
     def __truediv__(self, other) -> Union["Expr", Literal[False]]:
         return _make_binop(ast.Div(), self._expr, other)
 
     @overload
-    def __floordiv__(self, other: Union["Expr", str, int, float, bool]) -> "Expr":
-        ...
+    def __floordiv__(self, other: Union["Expr", str, int, float, bool]) -> "Expr": ...
 
     @overload
-    def __floordiv__(self, other: None) -> Literal[False]:
-        ...
+    def __floordiv__(self, other: None) -> Literal[False]: ...
 
     def __floordiv__(self, other) -> Union["Expr", Literal[False]]:
         return _make_binop(ast.FloorDiv(), self._expr, other)
 
     @overload
-    def __mod__(self, other: Union["Expr", str, int, float, bool]) -> "Expr":
-        ...
+    def __mod__(self, other: Union["Expr", str, int, float, bool]) -> "Expr": ...
 
     @overload
-    def __mod__(self, other: None) -> Literal[False]:
-        ...
+    def __mod__(self, other: None) -> Literal[False]: ...
 
     def __mod__(self, other) -> Union["Expr", Literal[False]]:
         return _make_binop(ast.Mod(), self._expr, other)
 
     @overload
-    def __pow__(self, other: Union["Expr", str, int, float, bool]) -> "Expr":
-        ...
+    def __pow__(self, other: Union["Expr", str, int, float, bool]) -> "Expr": ...
 
     @overload
-    def __pow__(self, other: None) -> Literal[False]:
-        ...
+    def __pow__(self, other: None) -> Literal[False]: ...
 
     def __pow__(self, other) -> Union["Expr", Literal[False]]:
         return _make_binop(ast.Pow(), self._expr, other)
 
     @overload
-    def __and__(self, other: Union["Expr", str, int, float, bool]) -> "Expr":
-        ...
+    def __and__(self, other: Union["Expr", str, int, float, bool]) -> "Expr": ...
 
     @overload
-    def __and__(self, other: None) -> Literal[False]:
-        ...
+    def __and__(self, other: None) -> Literal[False]: ...
 
     def __and__(self, other) -> Union["Expr", Literal[False]]:
         return _make_binop(ast.BitAnd(), self._expr, other)
 
     @overload
-    def __or__(self, other: Union["Expr", str, int, float, bool]) -> "Expr":
-        ...
+    def __or__(self, other: Union["Expr", str, int, float, bool]) -> "Expr": ...
 
     @overload
-    def __or__(self, other: None) -> Literal[False]:
-        ...
+    def __or__(self, other: None) -> Literal[False]: ...
 
     def __or__(self, other) -> Union["Expr", Literal[False]]:
         return _make_binop(ast.BitOr(), self._expr, other)
 
 
 @overload
-def _make_binop(op, left: Any, other: Union[Expr, str, int, float, bool]) -> Expr:
-    ...
+def _make_binop(op, left: Any, other: Union[Expr, str, int, float, bool]) -> Expr: ...
 
 
 @overload
-def _make_binop(op, left: Any, other: None) -> Literal[False]:
-    ...
+def _make_binop(op, left: Any, other: None) -> Literal[False]: ...
 
 
 def _make_binop(

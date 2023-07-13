@@ -74,9 +74,9 @@ class _TopKVotingClassifierImpl:
             del args_to_optimizer["max_evals"]
         except KeyError:
             pass
-        args_to_optimizer[
-            "max_evals"
-        ] = 1  # Currently, voting classifier has no useful hyperparameters to tune.
+        args_to_optimizer["max_evals"] = (
+            1  # Currently, voting classifier has no useful hyperparameters to tune.
+        )
         optimizer_instance2 = self.optimizer(estimator=voting, **args_to_optimizer)
         trained_optimizer2 = optimizer_instance2.fit(X_train, y_train, **fit_params)
         self._best_estimator = trained_optimizer2.get_pipeline()

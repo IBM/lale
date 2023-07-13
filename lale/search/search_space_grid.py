@@ -221,9 +221,9 @@ class SearchSpaceToGridVisitor(Visitor):
                     nested_vspace: List[SearchSpaceGrid] = nest_all_HPparams(k, vspace)
                     if nested_vspace:
                         kvs_complex.append(nested_vspace)
-            nested_space_choices: Iterable[
-                Iterable[SearchSpaceGrid]
-            ] = itertools.product(*kvs_complex)
+            nested_space_choices: Iterable[Iterable[SearchSpaceGrid]] = (
+                itertools.product(*kvs_complex)
+            )
             nested_space_choices_lists: List[List[SearchSpaceGrid]] = [
                 list(x) for x in nested_space_choices
             ]
