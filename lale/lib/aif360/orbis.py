@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
 import warnings
 from typing import Dict, Set
 
@@ -20,8 +19,8 @@ import imblearn.over_sampling
 import imblearn.under_sampling
 import numpy as np
 import pandas as pd
+import sklearn.preprocessing
 from numpy.testing import assert_allclose
-from sklearn.preprocessing import LabelEncoder
 
 import lale.docstrings
 import lale.lib.lale
@@ -53,13 +52,26 @@ from .util import (
     _validate_fairness_info,
 )
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
+
+def _make_diaeresis(X, y, fairness_info, combine):
+    prot_attr_enc = ProtectedAttributesEncoder(
+        **fairness_info, remainder="drop", combine=combine
+    )
+    encoded_X = prot_attr_enc.transform(X)
+    lab_enc = sklearn.preprocessing.LabelEncoder().fit(y)
+    encoded_y = pd.Series(lab_enc.transform(y), index=y.index)
+    encoded_Xy = pd.concat([encoded_X, encoded_y], axis=1, ignore_index=True)
+    diaeresis_y = encoded_Xy.apply(
+        lambda row: "".join([str(v) for v in row]), axis=1
+    ).rename("diaeresis_y")
+    assert X.shape[0] == diaeresis_y.shape[0]
+    fav_set = set(lab_enc.transform(fairness_info["favorable_labels"]))
+    return diaeresis_y, fav_set
 
 
 # This method assumes we have at most 9 classes and binary protected attributes
 # (should revisit if these assumptions change)
-def _pick_sizes(
+def _orbis_pick_sizes(
     osizes: Dict[str, int],
     imbalance_repair_level: float,
     bias_repair_level: float,
@@ -96,6 +108,52 @@ def _pick_sizes(
     return nsizes
 
 
+def _orbis_resample(X, y, diaeresis_y, osizes, nsizes, sampler_hparams):
+    # concat y so we can get it back out without needing an inverse to diaeresis
+    # concat diaeresis_y so we can filter on it after resampling
+    Xyy = pd.concat([X, y, diaeresis_y], axis=1)
+    # under-sample entire data, then keep only shrunk labels
+    under_sizes = {k: min(ns, osizes[k]) for k, ns in nsizes.items()}
+    under_hparams = {
+        **{
+            h: v
+            for h, v in sampler_hparams.items()
+            if h not in ["k_neighbors", "n_jobs"]
+        },
+        "sampling_strategy": under_sizes,
+    }
+    under_op = imblearn.under_sampling.RandomUnderSampler(**under_hparams)
+    under_Xyy_all, _ = under_op.fit_resample(Xyy, diaeresis_y)
+    shrunk_labels = [k for k, ns in nsizes.items() if ns < osizes[k]]
+    under_Xyy = under_Xyy_all[under_Xyy_all.iloc[:, -1].isin(shrunk_labels)]
+    # over-sample entire data, then keep only not-shrunk labels
+    over_sizes = {k: max(ns, osizes[k]) for k, ns in nsizes.items()}
+    over_hparams = {
+        **{h: v for h, v in sampler_hparams.items() if h not in ["replacement"]},
+        "sampling_strategy": over_sizes,
+    }
+    cats_mask = [not np.issubdtype(typ, np.number) for typ in Xyy.dtypes]
+    if all(cats_mask):  # all nominal -> use SMOTEN
+        over_op = imblearn.over_sampling.SMOTEN(**over_hparams)
+    elif not any(cats_mask):  # all continuous -> use vanilla SMOTE
+        over_op = imblearn.over_sampling.SMOTE(**over_hparams)
+    else:  # mix of nominal and continuous -> use SMOTENC
+        over_op = imblearn.over_sampling.SMOTENC(
+            categorical_features=cats_mask, **over_hparams
+        )
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=UserWarning)
+        over_Xyy_all, _ = over_op.fit_resample(Xyy, diaeresis_y)
+    not_shrunk_labels = [k for k in nsizes if k not in shrunk_labels]
+    over_Xyy = over_Xyy_all[over_Xyy_all.iloc[:, -1].isin(not_shrunk_labels)]
+    # combine and use sample(frac=1) to randomize the order of instances
+    assert set(over_Xyy.iloc[:, -1].unique()).isdisjoint(under_Xyy.iloc[:, -1])
+    resampled_Xyy = pd.concat([under_Xyy, over_Xyy], axis=0).sample(frac=1)
+    resampled_X = resampled_Xyy.iloc[:, :-2]
+    resampled_y = resampled_Xyy.iloc[:, -2]
+    return resampled_X, resampled_y
+
+
 class _OrbisImpl:
     def __init__(
         self,
@@ -108,91 +166,46 @@ class _OrbisImpl:
         imbalance_repair_level=0.8,
         bias_repair_level=0.8,
         combine="keep_separate",
-        **hyperparams,
+        sampling_strategy="mixed",
+        **sampler_hparams,
     ):
-        _validate_fairness_info(
-            favorable_labels, protected_attributes, unfavorable_labels, False
-        )
-        self.favorable_labels = favorable_labels
-        self.protected_attributes = protected_attributes
+        self.fairness_info = {
+            "favorable_labels": favorable_labels,
+            "protected_attributes": protected_attributes,
+            "unfavorable_labels": unfavorable_labels,
+        }
+        _validate_fairness_info(**self.fairness_info, check_schema=False)
         self.estimator = estimator
-        self.unfavorable_labels = unfavorable_labels
         self.redact = redact
         self.imbalance_repair_level = imbalance_repair_level
         self.bias_repair_level = bias_repair_level
         self.combine = combine
-        self.hyperparams = hyperparams
+        self.sampling_strategy = sampling_strategy
+        self.sampler_hparams = sampler_hparams
+
+    @property
+    def classes_(self):
+        return self.estimator.classes_
 
     def fit(self, X, y):
-        fairness_info = {
-            "favorable_labels": self.favorable_labels,
-            "protected_attributes": self.protected_attributes,
-            "unfavorable_labels": self.unfavorable_labels,
-        }
-        prot_attr_enc = ProtectedAttributesEncoder(
-            **fairness_info, remainder="drop", combine=self.combine
-        )
-        encoded_X = prot_attr_enc.transform(X)
-        lab_enc = LabelEncoder()
-        encoded_y = pd.Series(lab_enc.fit_transform(y), index=y.index)
-        label_mapping = dict(zip(lab_enc.classes_, lab_enc.transform(lab_enc.classes_)))
-        fav_set = set(label_mapping[x] for x in self.favorable_labels)
-        encoded_Xy = pd.concat([encoded_X, encoded_y], axis=1, ignore_index=True)
-        diaeresis_y = encoded_Xy.apply(
-            lambda row: "".join([str(v) for v in row]), axis=1
-        ).rename("diaeresis_y")
-        assert X.shape[0] == diaeresis_y.shape[0]
+        assert isinstance(X, pd.DataFrame), "not yet implemented"
+        assert X.shape[0] == y.shape[0], (X.shape, y.shape)
+        if not isinstance(y, pd.Series):
+            y = pd.Series(y, index=X.index, name="y")
+        diaeresis_y, fav_set = _make_diaeresis(X, y, self.fairness_info, self.combine)
         osizes = diaeresis_y.value_counts().sort_index().to_dict()
-        nsizes = _pick_sizes(
+        nsizes = _orbis_pick_sizes(
             osizes,
             self.imbalance_repair_level,
             self.bias_repair_level,
             fav_set,
-            self.hyperparams["sampling_strategy"],
+            self.sampling_strategy,
         )
-        Xyy = pd.concat([X, y, diaeresis_y], axis=1)
-        # under-sample
-        under_sizes = {k: min(ns, osizes[k]) for k, ns in nsizes.items()}
-        under_hparams = {**self.hyperparams, "sampling_strategy": under_sizes}
-        under_hparams = {
-            **{
-                h: v
-                for h, v in self.hyperparams.items()
-                if h not in ["k_neighbors", "n_jobs"]
-            },
-            "sampling_strategy": under_sizes,
-        }
-        under_op = imblearn.under_sampling.RandomUnderSampler(**under_hparams)
-        under_Xyy_all, _ = under_op.fit_resample(Xyy, diaeresis_y)
-        shrunk_labels = [k for k, ns in nsizes.items() if ns < osizes[k]]
-        under_Xyy = under_Xyy_all[under_Xyy_all.iloc[:, -1].isin(shrunk_labels)]
-        # over-sample
-        over_sizes = {k: max(ns, osizes[k]) for k, ns in nsizes.items()}
-        over_hparams = {
-            **{h: v for h, v in self.hyperparams.items() if h not in ["replacement"]},
-            "sampling_strategy": over_sizes,
-        }
-        cats_mask = [not np.issubdtype(typ, np.number) for typ in Xyy.dtypes]
-        if all(cats_mask):  # all nominal -> use SMOTEN
-            over_op = imblearn.over_sampling.SMOTEN(**over_hparams)
-        elif not any(cats_mask):  # all continuous -> use vanilla SMOTE
-            over_op = imblearn.over_sampling.SMOTE(**over_hparams)
-        else:  # mix of nominal and continuous -> use SMOTENC
-            over_op = imblearn.over_sampling.SMOTENC(
-                categorical_features=cats_mask, **over_hparams
-            )
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", category=UserWarning)
-            over_Xyy_all, _ = over_op.fit_resample(Xyy, diaeresis_y)
-        not_shrunk_labels = [k for k in nsizes if k not in shrunk_labels]
-        over_Xyy = over_Xyy_all[over_Xyy_all.iloc[:, -1].isin(not_shrunk_labels)]
-        # shuffle and redact
-        resampled_Xyy = pd.concat([under_Xyy, over_Xyy], axis=0).sample(frac=1)
-        resampled_X = resampled_Xyy.iloc[:, :-2]
-        resampled_y = resampled_Xyy.iloc[:, -2]
+        resampled_X, resampled_y = _orbis_resample(
+            X, y, diaeresis_y, osizes, nsizes, self.sampler_hparams
+        )
         if self.redact:
-            redacting_trainable = Redacting(**fairness_info)
-            self.redacting = redacting_trainable.fit(resampled_X)
+            self.redacting = Redacting(**self.fairness_info).fit(resampled_X)
         else:
             self.redacting = lale.lib.lale.NoOp
         redacted_X = self.redacting.transform(resampled_X)
@@ -216,11 +229,7 @@ _hyperparams_schema = {
         {
             "type": "object",
             "additionalProperties": False,
-            "required": [
-                *_categorical_fairness_properties.keys(),
-                "estimator",
-                "redact",
-            ],
+            "required": [*_categorical_fairness_properties.keys(), "estimator"],
             "relevantToOptimizer": ["imbalance_repair_level", "bias_repair_level"],
             "properties": {
                 **_categorical_fairness_properties,
@@ -264,22 +273,22 @@ Possible choices are:
 - ``'maximum'``: over-sample everything to the size of the largest intersection.""",
                     "default": "mixed",
                 },
-                "random_state": _hparam_random_state,
-                "k_neighbors": {
-                    **_hparam_n_neighbors,
-                    "description": "Number of nearest neighbours to use to construct synthetic samples.",
-                    "default": 5,
-                },
                 "replacement": {
                     "description": "Whether under-sampling is with or without replacement.",
                     "type": "boolean",
                     "default": False,
                 },
                 "n_jobs": _hparam_n_jobs,
+                "random_state": _hparam_random_state,
+                "k_neighbors": {
+                    **_hparam_n_neighbors,
+                    "description": "Number of nearest neighbours to use to construct synthetic samples.",
+                    "default": 5,
+                },
             },
         },
         {
-            "description": "For sampling_strategy is minimum or maximum, both repair levels must be 1.",
+            "description": "When sampling_strategy is minimum or maximum, both repair levels must be 1.",
             "anyOf": [
                 {
                     "type": "object",
@@ -300,7 +309,8 @@ Possible choices are:
 }
 
 _combined_schemas = {
-    "description": """Orbis (Oversampling to Repair Bias and Imbalance Simultaneously) pre-estimator fairness mitigator.
+    "description": """Experimental Orbis (Oversampling to Repair Bias and Imbalance Simultaneously) pre-estimator fairness mitigator.
+Work in progress and subject to change; only supports pandas DataFrame so far.
 Uses `SMOTE`_ and `RandomUnderSampler`_ to resample not only for
 repairing class imbalance, but also group bias.
 Internally, this works by replacing class labels by the cross product
@@ -312,7 +322,7 @@ come from AIF360.
 .. _`RandomUnderSampler`: https://imbalanced-learn.org/stable/references/generated/imblearn.under_sampling.RandomUnderSampler.html
 .. _`SMOTE`: https://imbalanced-learn.org/stable/references/generated/imblearn.over_sampling.SMOTE.html
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.fair_smotenc.html#lale.lib.aif360.orbis.Orbis",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.orbis.html#lale.lib.aif360.orbis.Orbis",
     "type": "object",
     "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
     "properties": {

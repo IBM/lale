@@ -1481,12 +1481,12 @@ def fetch_titanic_df(preprocess: bool = False):
 
 
 # MEPS HELPERS
-class FiscalYear(Enum):
+class _MepsYear(Enum):
     FY2015 = 15
     FY2016 = 16
 
 
-class Panel(Enum):
+class _MepsPanel(Enum):
     PANEL19 = 19
     PANEL20 = 20
     PANEL21 = 21
@@ -1522,11 +1522,11 @@ def _should_drop_column(x, fiscal_year):
 
 def _fetch_meps_raw_df(panel, fiscal_year):
     filename = ""
-    if fiscal_year == FiscalYear.FY2015:
-        assert panel in [Panel.PANEL19, Panel.PANEL20]
+    if fiscal_year == _MepsYear.FY2015:
+        assert panel in [_MepsPanel.PANEL19, _MepsPanel.PANEL20]
         filename = "h181.csv"
-    elif fiscal_year == FiscalYear.FY2016:
-        assert panel == Panel.PANEL21
+    elif fiscal_year == _MepsYear.FY2016:
+        assert panel == _MepsPanel.PANEL21
         filename = "h192.csv"
     else:
         logger.error(f"Unexpected FiscalYear received: {fiscal_year}")
@@ -1650,7 +1650,7 @@ def fetch_meps_panel19_fy2015_df(preprocess: bool = False):
         dataset = aif360.datasets.MEPSDataset19()
         return _get_pandas_and_fairness_info_from_meps_dataset(dataset)
     else:
-        return _fetch_meps_raw_df(Panel.PANEL19, FiscalYear.FY2015)
+        return _fetch_meps_raw_df(_MepsPanel.PANEL19, _MepsYear.FY2015)
 
 
 def fetch_meps_panel20_fy2015_df(preprocess: bool = False):
@@ -1706,7 +1706,7 @@ def fetch_meps_panel20_fy2015_df(preprocess: bool = False):
         dataset = aif360.datasets.MEPSDataset20()
         return _get_pandas_and_fairness_info_from_meps_dataset(dataset)
     else:
-        return _fetch_meps_raw_df(Panel.PANEL20, FiscalYear.FY2015)
+        return _fetch_meps_raw_df(_MepsPanel.PANEL20, _MepsYear.FY2015)
 
 
 def fetch_meps_panel21_fy2016_df(preprocess: bool = False):
@@ -1762,4 +1762,4 @@ def fetch_meps_panel21_fy2016_df(preprocess: bool = False):
         dataset = aif360.datasets.MEPSDataset21()
         return _get_pandas_and_fairness_info_from_meps_dataset(dataset)
     else:
-        return _fetch_meps_raw_df(Panel.PANEL21, FiscalYear.FY2016)
+        return _fetch_meps_raw_df(_MepsPanel.PANEL21, _MepsYear.FY2016)
