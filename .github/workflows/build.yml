@@ -174,7 +174,7 @@ jobs:
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Install deps for test_autoai_output_consumption
       if: ${{ matrix.test-case == 'test/test_autoai_output_consumption.py' }}
-      run: pip install 'scikit-learn==0.23.1' 'lightgbm==3.3.0' 'scipy==1.8.1' 'cython==0.29.36'
+      run: pip install 'cython==0.29.36' 'scikit-learn==0.23.1' 'lightgbm==3.3.0' 'scipy==1.8.1'
     - name: Install deps for test_lale_lib_versions
       if: ${{ matrix.test-case == 'test/test_lale_lib_versions.py' }}
       run: pip install 'scikit-learn==0.20.3' 'xgboost==0.90'
@@ -288,7 +288,7 @@ jobs:
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Install deps for test_autoai_output_consumption
       if: ${{ matrix.test-case == 'test/test_autoai_output_consumption.py' }}
-      run: pip install 'scikit-learn==0.23.1' 'lightgbm==3.3.0' 'scipy==1.8.1' 'cython==0.29.36'
+      run: pip install 'cython==0.29.36' 'scikit-learn==0.23.1' 'lightgbm==3.3.0' 'scipy==1.8.1'
     - name: Install deps for test_lale_lib_versions
       if: ${{ matrix.test-case == 'test/test_lale_lib_versions.py' }}
       run: pip install 'scikit-learn==0.20.3' 'xgboost==0.90'
