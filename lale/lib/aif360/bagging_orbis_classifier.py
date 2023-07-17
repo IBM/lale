@@ -23,6 +23,7 @@ import lale.operators
 from lale.lib.imblearn._common_schemas import _hparam_n_jobs, _hparam_random_state
 
 from .orbis import Orbis
+from .orbis import _hyperparams_schema as orbis_hyperparams_schema
 from .util import (
     _categorical_fairness_properties,
     _categorical_input_predict_proba_schema,
@@ -32,6 +33,10 @@ from .util import (
     _categorical_supervised_input_fit_schema,
     _validate_fairness_info,
 )
+
+
+def _orbis_schema(hparam):
+    return orbis_hyperparams_schema["allOf"][0]["properties"][hparam]
 
 
 class _BaggingOrbisClassifierImpl:
@@ -177,12 +182,10 @@ _hyperparams_schema = {
                     "distribution": "uniform",
                     "default": 10,
                 },
-                "imbalance_repair_level": Orbis.hyperparam_schema(
-                    "imbalance_repair_level"
-                ),
-                "bias_repair_level": Orbis.hyperparam_schema("bias_repair_level"),
-                "combine": Orbis.hyperparam_schema("combine"),
-                "sampling_strategy": Orbis.hyperparam_schema("sampling_strategy"),
+                "imbalance_repair_level": _orbis_schema("imbalance_repair_level"),
+                "bias_repair_level": _orbis_schema("bias_repair_level"),
+                "combine": _orbis_schema("combine"),
+                "sampling_strategy": _orbis_schema("sampling_strategy"),
                 "replacement": {
                     "description": "Whether under-sampling is with or without replacement.",
                     "type": "boolean",
