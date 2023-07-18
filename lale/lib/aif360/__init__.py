@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Scikit-learn compatible wrappers for several operators and metrics from AIF360_ along with schemas to enable hyperparameter tuning.
+"""Scikit-learn compatible wrappers for several operators and metrics from AIF360_ along with schemas to enable hyperparameter tuning, as well as functions for fetching fairness dataset.
 
 .. _AIF360: https://github.com/IBM/AIF360
 
@@ -53,6 +53,7 @@ Pre-Estimator Mitigation Operators:
 In-Estimator Mitigation Operators:
 ==================================
 * `AdversarialDebiasing`_
+* `BaggingOrbisClassifier`_
 * `GerryFairClassifier`_
 * `MetaFairClassifier`_
 * `PrejudiceRemover`_
@@ -62,19 +63,6 @@ Post-Estimator Mitigation Operators:
 * `CalibratedEqOddsPostprocessing`_
 * `EqOddsPostprocessing`_
 * `RejectOptionClassification`_
-
-Metrics:
-========
-* `accuracy_and_disparate_impact`_
-* `balanced_accuracy_and_disparate_impact`_
-* `average_odds_difference`_
-* `disparate_impact`_
-* `equal_opportunity_difference`_
-* `f1_and_disparate_impact`_
-* `r2_and_disparate_impact`_
-* `statistical_parity_difference`_
-* `symmetric_disparate_impact`_
-* `theil_index`_
 
 Datasets:
 =========
@@ -98,6 +86,19 @@ Datasets:
 * `fetch_tae_df`_
 * `fetch_titanic_df`_
 * `fetch_us_crime_df`_
+
+Metrics:
+========
+* `accuracy_and_disparate_impact`_
+* `balanced_accuracy_and_disparate_impact`_
+* `average_odds_difference`_
+* `disparate_impact`_
+* `equal_opportunity_difference`_
+* `f1_and_disparate_impact`_
+* `r2_and_disparate_impact`_
+* `statistical_parity_difference`_
+* `symmetric_disparate_impact`_
+* `theil_index`_
 
 Other Classes and Operators:
 ============================
@@ -149,6 +150,7 @@ zero or one to simplify the task for the mitigator.
 
 
 .. _`AdversarialDebiasing`: lale.lib.aif360.adversarial_debiasing.html#lale.lib.aif360.adversarial_debiasing.AdversarialDebiasing
+.. _`BaggingOrbisClassifier`: lale.lib.aif360.bagging_orbis.html#lale.lib.aif360.bagging_orbis_classifier.BaggingOrbisClassifier
 .. _`CalibratedEqOddsPostprocessing`: lale.lib.aif360.calibrated_eq_odds_postprocessing.html#lale.lib.aif360.calibrated_eq_odds_postprocessing.CalibratedEqOddsPostprocessing
 .. _`DisparateImpactRemover`: lale.lib.aif360.disparate_impact_remover.html#lale.lib.aif360.disparate_impact_remover.DisparateImpactRemover
 .. _`EqOddsPostprocessing`: lale.lib.aif360.eq_odds_postprocessing.html#lale.lib.aif360.eq_odds_postprocessing.EqOddsPostprocessing
@@ -206,6 +208,7 @@ zero or one to simplify the task for the mitigator.
 
 from ._suppress_aif360_warnings import dummy as _dummy_from_suppress_warnings
 from .adversarial_debiasing import AdversarialDebiasing as AdversarialDebiasing
+from .bagging_orbis_classifier import BaggingOrbisClassifier as BaggingOrbisClassifier
 from .calibrated_eq_odds_postprocessing import (
     CalibratedEqOddsPostprocessing as CalibratedEqOddsPostprocessing,
 )

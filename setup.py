@@ -68,7 +68,7 @@ extras_require = {
     "full": [
         "mystic",
         "xgboost<=1.5.1",
-        "lightgbm",
+        "lightgbm<4.0.0",
         "snapml>=1.7.0rc3,<1.12.0",
         "liac-arff>=2.4.0",
         "tensorflow>=2.4.0",
