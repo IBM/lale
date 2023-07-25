@@ -52,6 +52,7 @@ from lale.datasets.data_schemas import NDArrayWithSchema
 from lale.lib.aif360 import (
     LFR,
     AdversarialDebiasing,
+    BaggingOrbisClassifier,
     CalibratedEqOddsPostprocessing,
     DisparateImpactRemover,
     EqOddsPostprocessing,
@@ -66,7 +67,7 @@ from lale.lib.aif360 import (
     count_fairness_groups,
     fair_stratified_train_test_split,
 )
-from lale.lib.aif360.orbis import _pick_sizes as orbis_pick_sizes
+from lale.lib.aif360.orbis import _orbis_pick_sizes
 from lale.lib.lale import ConcatFeatures, Project
 from lale.lib.rasl import mockup_data_loader
 from lale.lib.sklearn import (
@@ -146,6 +147,22 @@ class TestAIF360Datasets(unittest.TestCase):
         X, y, fairness_info = lale.lib.aif360.fetch_creditg_df(preprocess=True)
         self._attempt_dataset(X, y, fairness_info, 1_000, 58, {0, 1}, 0.748)
 
+    def test_dataset_default_credit_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_default_credit_df()
+        self._attempt_dataset(X, y, fairness_info, 30_000, 24, {0, 1}, 0.957)
+
+    def test_dataset_heart_disease_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_heart_disease_df()
+        self._attempt_dataset(X, y, fairness_info, 303, 13, {0, 1}, 0.589)
+
+    def test_dataset_law_school_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_law_school_df()
+        self._attempt_dataset(X, y, fairness_info, 20_800, 11, {"FALSE", "TRUE"}, 0.704)
+
+    def test_dataset_nlsy_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_nlsy_df()
+        self._attempt_dataset(X, y, fairness_info, 4908, 15, {"0", "1"}, 0.668)
+
     def test_dataset_nursery_pd_cat(self):
         X, y, fairness_info = lale.lib.aif360.fetch_nursery_df(preprocess=False)
         self._attempt_dataset(
@@ -187,6 +204,14 @@ class TestAIF360Datasets(unittest.TestCase):
         X, y, fairness_info = lale.lib.aif360.fetch_speeddating_df(preprocess=True)
         self._attempt_dataset(X, y, fairness_info, 8_378, 70, {0, 1}, 0.853)
 
+    def test_dataset_student_math_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_student_math_df()
+        self._attempt_dataset(X, y, fairness_info, 395, 32, {0, 1}, 0.894)
+
+    def test_dataset_student_por_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_student_por_df()
+        self._attempt_dataset(X, y, fairness_info, 649, 32, {0, 1}, 0.858)
+
     def test_dataset_boston_housing_pd_cat(self):
         X, y, fairness_info = lale.lib.aif360._fetch_boston_housing_df(preprocess=False)
         # TODO: consider better way of handling "set_y" parameter for regression problems
@@ -212,6 +237,10 @@ class TestAIF360Datasets(unittest.TestCase):
     def test_dataset_tae_pd_num(self):
         X, y, fairness_info = lale.lib.aif360.fetch_tae_df(preprocess=True)
         self._attempt_dataset(X, y, fairness_info, 151, 6, {0, 1}, 0.449)
+
+    def test_dataset_us_crime_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_us_crime_df()
+        self._attempt_dataset(X, y, fairness_info, 1_994, 102, {0, 1}, 0.888)
 
     @classmethod
     def _try_download_csv(cls, filename):
@@ -258,7 +287,7 @@ class TestAIF360Datasets(unittest.TestCase):
         )
         self._attempt_dataset(X, y, fairness_info, 16578, 1825, {0, 1}, 0.496)
 
-    def test_dataset_meps_panel19_fy_2015_pd_num(self):
+    def test_dataset_meps_panel19_fy2015_pd_num(self):
         X, y, fairness_info = lale.lib.aif360.fetch_meps_panel19_fy2015_df(
             preprocess=True
         )
@@ -680,7 +709,7 @@ class TestAIF360OrbisPickSizes(unittest.TestCase):
         self.maxDiff = None
 
     def test_pick_sizes_mixed_single_pa_single_class_normal(self):
-        nsizes = orbis_pick_sizes(
+        nsizes = _orbis_pick_sizes(
             osizes={"00": 100, "01": 200, "10": 300, "11": 400},
             imbalance_repair_level=1,
             bias_repair_level=1,
@@ -690,7 +719,7 @@ class TestAIF360OrbisPickSizes(unittest.TestCase):
         self.assertDictEqual(nsizes, {"00": 122, "01": 122, "10": 398, "11": 398})
 
     def test_pick_sizes_mixed_single_pa_single_class_reversed(self):
-        nsizes = orbis_pick_sizes(
+        nsizes = _orbis_pick_sizes(
             osizes={"00": 400, "01": 300, "10": 200, "11": 100},
             imbalance_repair_level=1,
             bias_repair_level=1,
@@ -714,7 +743,7 @@ class TestAIF360OrbisPickSizes(unittest.TestCase):
             "111": 7471,
             "112": 7571,
         }
-        nsizes = orbis_pick_sizes(
+        nsizes = _orbis_pick_sizes(
             osizes,
             imbalance_repair_level=1,
             bias_repair_level=1,
@@ -754,7 +783,7 @@ class TestAIF360OrbisPickSizes(unittest.TestCase):
             "001": 1100,
             "000": 1200,
         }
-        nsizes = orbis_pick_sizes(
+        nsizes = _orbis_pick_sizes(
             osizes,
             imbalance_repair_level=1,
             bias_repair_level=1,
@@ -780,7 +809,7 @@ class TestAIF360OrbisPickSizes(unittest.TestCase):
         )
 
     def test_pick_sizes_over_single_pa_single_class_normal(self):
-        nsizes = orbis_pick_sizes(
+        nsizes = _orbis_pick_sizes(
             osizes={"00": 100, "01": 200, "10": 300, "11": 400},
             imbalance_repair_level=1,
             bias_repair_level=1,
@@ -790,7 +819,7 @@ class TestAIF360OrbisPickSizes(unittest.TestCase):
         self.assertDictEqual(nsizes, {"00": 200, "01": 200, "10": 400, "11": 400})
 
     def test_pick_sizes_over_single_pa_single_class_reversed(self):
-        nsizes = orbis_pick_sizes(
+        nsizes = _orbis_pick_sizes(
             osizes={"00": 400, "01": 300, "10": 200, "11": 100},
             imbalance_repair_level=1,
             bias_repair_level=1,
@@ -814,7 +843,7 @@ class TestAIF360OrbisPickSizes(unittest.TestCase):
             "111": 7471,
             "112": 7571,
         }
-        nsizes = orbis_pick_sizes(
+        nsizes = _orbis_pick_sizes(
             osizes,
             imbalance_repair_level=1,
             bias_repair_level=1,
@@ -854,7 +883,7 @@ class TestAIF360OrbisPickSizes(unittest.TestCase):
             "001": 1100,
             "000": 1200,
         }
-        nsizes = orbis_pick_sizes(
+        nsizes = _orbis_pick_sizes(
             osizes,
             imbalance_repair_level=1,
             bias_repair_level=1,
@@ -880,7 +909,7 @@ class TestAIF360OrbisPickSizes(unittest.TestCase):
         )
 
     def test_pick_sizes_under_single_pa_single_class_normal(self):
-        nsizes = orbis_pick_sizes(
+        nsizes = _orbis_pick_sizes(
             osizes={"00": 100, "01": 200, "10": 300, "11": 400},
             imbalance_repair_level=1,
             bias_repair_level=1,
@@ -890,7 +919,7 @@ class TestAIF360OrbisPickSizes(unittest.TestCase):
         self.assertDictEqual(nsizes, {"00": 100, "01": 100, "10": 300, "11": 300})
 
     def test_pick_sizes_under_single_pa_single_class_reversed(self):
-        nsizes = orbis_pick_sizes(
+        nsizes = _orbis_pick_sizes(
             osizes={"00": 400, "01": 300, "10": 200, "11": 100},
             imbalance_repair_level=1,
             bias_repair_level=1,
@@ -914,7 +943,7 @@ class TestAIF360OrbisPickSizes(unittest.TestCase):
             "111": 7471,
             "112": 7571,
         }
-        nsizes = orbis_pick_sizes(
+        nsizes = _orbis_pick_sizes(
             osizes,
             imbalance_repair_level=1,
             bias_repair_level=1,
@@ -954,7 +983,7 @@ class TestAIF360OrbisPickSizes(unittest.TestCase):
             "001": 1100,
             "000": 1200,
         }
-        nsizes = orbis_pick_sizes(
+        nsizes = _orbis_pick_sizes(
             osizes,
             imbalance_repair_level=1,
             bias_repair_level=1,
@@ -1456,6 +1485,13 @@ class TestAIF360Cat(unittest.TestCase):
                 **fairness_info, preparation=self.prep_pd_cat
             )
             self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.0, 1.5)
+
+    def test_bagging_orbis_classifier_pd_cat(self):
+        fairness_info = self.creditg_pd_cat["fairness_info"]
+        trainable_remi = BaggingOrbisClassifier(
+            **fairness_info, preparation=self.prep_pd_cat
+        )
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.7, 0.92)
 
     def test_calibrated_eq_odds_postprocessing_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]

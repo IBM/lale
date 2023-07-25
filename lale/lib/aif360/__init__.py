@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Scikit-learn compatible wrappers for several operators and metrics from AIF360_ along with schemas to enable hyperparameter tuning.
+"""Scikit-learn compatible wrappers for several operators and metrics from AIF360_ along with schemas to enable hyperparameter tuning, as well as functions for fetching fairness dataset.
 
 .. _AIF360: https://github.com/IBM/AIF360
 
@@ -53,6 +53,7 @@ Pre-Estimator Mitigation Operators:
 In-Estimator Mitigation Operators:
 ==================================
 * `AdversarialDebiasing`_
+* `BaggingOrbisClassifier`_
 * `GerryFairClassifier`_
 * `MetaFairClassifier`_
 * `PrejudiceRemover`_
@@ -62,6 +63,29 @@ Post-Estimator Mitigation Operators:
 * `CalibratedEqOddsPostprocessing`_
 * `EqOddsPostprocessing`_
 * `RejectOptionClassification`_
+
+Datasets:
+=========
+* `fetch_adult_df`_
+* `fetch_bank_df`_
+* `fetch_compas_df`_
+* `fetch_compas_violent_df`_
+* `fetch_creditg_df`_
+* `fetch_default_credit_df`_
+* `fetch_heart_disease_df`_
+* `fetch_law_school_df`_
+* `fetch_meps_panel19_fy2015_df`_
+* `fetch_meps_panel20_fy2015_df`_
+* `fetch_meps_panel21_fy2016_df`_
+* `fetch_nlsy_df`_
+* `fetch_nursery_df`_
+* `fetch_ricci_df`_
+* `fetch_speeddating_df`_
+* `fetch_student_math_df`_
+* `fetch_student_por_df`_
+* `fetch_tae_df`_
+* `fetch_titanic_df`_
+* `fetch_us_crime_df`_
 
 Metrics:
 ========
@@ -75,22 +99,6 @@ Metrics:
 * `statistical_parity_difference`_
 * `symmetric_disparate_impact`_
 * `theil_index`_
-
-Datasets:
-=========
-* `fetch_adult_df`_
-* `fetch_bank_df`_
-* `fetch_compas_df`_
-* `fetch_compas_violent_df`_
-* `fetch_creditg_df`_
-* `fetch_meps_panel19_fy2015_df`_
-* `fetch_meps_panel20_fy2015_df`_
-* `fetch_meps_panel21_fy2016_df`_
-* `fetch_nursery_df`_
-* `fetch_ricci_df`_
-* `fetch_speeddating_df`_
-* `fetch_tae_df`_
-* `fetch_titanic_df`_
 
 Other Classes and Operators:
 ============================
@@ -142,6 +150,7 @@ zero or one to simplify the task for the mitigator.
 
 
 .. _`AdversarialDebiasing`: lale.lib.aif360.adversarial_debiasing.html#lale.lib.aif360.adversarial_debiasing.AdversarialDebiasing
+.. _`BaggingOrbisClassifier`: lale.lib.aif360.bagging_orbis.html#lale.lib.aif360.bagging_orbis_classifier.BaggingOrbisClassifier
 .. _`CalibratedEqOddsPostprocessing`: lale.lib.aif360.calibrated_eq_odds_postprocessing.html#lale.lib.aif360.calibrated_eq_odds_postprocessing.CalibratedEqOddsPostprocessing
 .. _`DisparateImpactRemover`: lale.lib.aif360.disparate_impact_remover.html#lale.lib.aif360.disparate_impact_remover.DisparateImpactRemover
 .. _`EqOddsPostprocessing`: lale.lib.aif360.eq_odds_postprocessing.html#lale.lib.aif360.eq_odds_postprocessing.EqOddsPostprocessing
@@ -170,14 +179,21 @@ zero or one to simplify the task for the mitigator.
 .. _`fetch_compas_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_compas_df
 .. _`fetch_compas_violent_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_compas_violent_df
 .. _`fetch_creditg_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_creditg_df
-.. _`fetch_ricci_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_ricci_df
-.. _`fetch_speeddating_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_speeddating_df
-.. _`fetch_nursery_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_nursery_df
-.. _`fetch_titanic_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_titanic_df
+.. _`fetch_default_credit_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_default_credit_df
+.. _`fetch_heart_disease_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_heart_disease_df
+.. _`fetch_law_school_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_law_school_df
 .. _`fetch_meps_panel19_fy2015_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_meps_panel19_fy2015_df
 .. _`fetch_meps_panel20_fy2015_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_meps_panel20_fy2015_df
 .. _`fetch_meps_panel21_fy2016_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_meps_panel21_fy2016_df
+.. _`fetch_nlsy_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_nlsy_df
+.. _`fetch_nursery_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_nursery_df
+.. _`fetch_ricci_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_ricci_df
+.. _`fetch_speeddating_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_speeddating_df
+.. _`fetch_student_math_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_student_math_df
+.. _`fetch_student_por_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_student_por_df
 .. _`fetch_tae_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_tae_df
+.. _`fetch_titanic_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_titanic_df
+.. _`fetch_us_crime_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_us_crime_df
 .. _`r2_and_disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.r2_and_disparate_impact
 .. _`statistical_parity_difference`: lale.lib.aif360.util.html#lale.lib.aif360.util.statistical_parity_difference
 .. _`symmetric_disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.symmetric_disparate_impact
@@ -192,6 +208,7 @@ zero or one to simplify the task for the mitigator.
 
 from ._suppress_aif360_warnings import dummy as _dummy_from_suppress_warnings
 from .adversarial_debiasing import AdversarialDebiasing as AdversarialDebiasing
+from .bagging_orbis_classifier import BaggingOrbisClassifier as BaggingOrbisClassifier
 from .calibrated_eq_odds_postprocessing import (
     CalibratedEqOddsPostprocessing as CalibratedEqOddsPostprocessing,
 )
@@ -201,14 +218,21 @@ from .datasets import fetch_bank_df as fetch_bank_df
 from .datasets import fetch_compas_df as fetch_compas_df
 from .datasets import fetch_compas_violent_df as fetch_compas_violent_df
 from .datasets import fetch_creditg_df as fetch_creditg_df
+from .datasets import fetch_default_credit_df as fetch_default_credit_df
+from .datasets import fetch_heart_disease_df as fetch_heart_disease_df
+from .datasets import fetch_law_school_df as fetch_law_school_df
 from .datasets import fetch_meps_panel19_fy2015_df as fetch_meps_panel19_fy2015_df
 from .datasets import fetch_meps_panel20_fy2015_df as fetch_meps_panel20_fy2015_df
 from .datasets import fetch_meps_panel21_fy2016_df as fetch_meps_panel21_fy2016_df
+from .datasets import fetch_nlsy_df as fetch_nlsy_df
 from .datasets import fetch_nursery_df as fetch_nursery_df
 from .datasets import fetch_ricci_df as fetch_ricci_df
 from .datasets import fetch_speeddating_df as fetch_speeddating_df
+from .datasets import fetch_student_math_df as fetch_student_math_df
+from .datasets import fetch_student_por_df as fetch_student_por_df
 from .datasets import fetch_tae_df as fetch_tae_df
 from .datasets import fetch_titanic_df as fetch_titanic_df
+from .datasets import fetch_us_crime_df as fetch_us_crime_df
 from .disparate_impact_remover import DisparateImpactRemover as DisparateImpactRemover
 from .eq_odds_postprocessing import EqOddsPostprocessing as EqOddsPostprocessing
 from .gerry_fair_classifier import GerryFairClassifier as GerryFairClassifier
