@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019-2023 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,8 @@
 # limitations under the License.
 
 
+from typing import List, Optional
+
 import numpy as np
 import pandas as pd
 import sklearn
@@ -26,15 +28,33 @@ import lale.operators
 class _SimpleImputerImpl:
     def __init__(self, **hyperparams):
         self._wrapped_model = sklearn.impute.SimpleImputer(**hyperparams)
+        self._out_names: Optional[List[str]] = None
+
+    def _find_out_names(self, X):
+        if self._out_names is None and isinstance(X, pd.DataFrame):
+            self._out_names = [
+                c for i, c in enumerate(X.columns) if i not in self._all_missing
+            ]
 
     def fit(self, X, y=None):
         self._wrapped_model.fit(X, y)
+        missing_mask = sklearn.impute.MissingIndicator(
+            missing_values=self._wrapped_model.missing_values,
+            features="all",
+        ).fit_transform(X, y)
+        self._all_missing = [i for i in range(X.shape[1]) if np.all(missing_mask[:, i])]
+        self._find_out_names(X)
         return self
 
     def transform(self, X):
         result = self._wrapped_model.transform(X)
+        self._find_out_names(X)
         if isinstance(X, pd.DataFrame):
-            result = pd.DataFrame(data=result, index=X.index, columns=X.columns)
+            assert self._out_names is not None
+            assert result.shape[1] == len(self._out_names)
+            result = pd.DataFrame(data=result, index=X.index, columns=self._out_names)
+        elif self._out_names is not None:
+            result = pd.DataFrame(data=result, columns=self._out_names)
         return result
 
     def transform_schema(self, s_X):
