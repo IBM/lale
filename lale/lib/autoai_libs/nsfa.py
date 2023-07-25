@@ -39,9 +39,7 @@ _hyperparams_schema = {
             "description": "This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.",
             "type": "object",
             "additionalProperties": False,
-            "required": [
-                "significance"
-            ],
+            "required": ["significance"],
             "relevantToOptimizer": [],
             "properties": {
                 "significance": {
@@ -52,23 +50,23 @@ _hyperparams_schema = {
                         {
                             "enum": [None],
                             "description": "Passing None will result in some failure to eliminate insignificant data.",
-                        }
+                        },
                     ],
-                    "default": None
+                    "default": None,
                 },
                 "protected_cols": {
                     "description": "Array with indices of features that are protected by fairness definition.",
                     "anyOf": [
                         {"type": "array", "items": {"type": "integer", "minimum": 0}},
-                        {"enum": [None]}
+                        {"enum": [None]},
                     ],
-                    "default": None
+                    "default": None,
                 },
                 "analyzer": {
                     "description": "A tool used to analyse insignificant columns.",
                     "laleType": "Any",
-                    "default": None
-                }
+                    "default": None,
+                },
             },
         }
     ]
@@ -79,11 +77,8 @@ _input_fit_schema = {
     "required": ["X"],
     "additionalProperties": False,
     "properties": {
-        "X": {
-            "type": "array",
-            "items": {"type": "array", "items": {"laleType": "Any"}}
-        }
-    }
+        "X": {"type": "array", "items": {"type": "array", "items": {"laleType": "Any"}}}
+    },
 }
 
 _input_transform_schema = {
@@ -91,17 +86,14 @@ _input_transform_schema = {
     "required": ["X"],
     "additionalProperties": False,
     "properties": {
-        "X": {
-            "type": "array",
-            "items": {"type": "array", "items": {"laleType": "Any"}}
-        }
-    }
+        "X": {"type": "array", "items": {"type": "array", "items": {"laleType": "Any"}}}
+    },
 }
 
 _output_transform_schema = {
     "description": "Features; the outer array is over samples.",
     "type": "array",
-    "items": {"type": "array", "items": {"laleType": "Any"}}
+    "items": {"type": "array", "items": {"laleType": "Any"}},
 }
 
 _combined_schemas = {
@@ -118,7 +110,7 @@ _combined_schemas = {
         "input_fit": _input_fit_schema,
         "input_transform": _input_transform_schema,
         "output_transform": _output_transform_schema,
-    }
+    },
 }
 
 
