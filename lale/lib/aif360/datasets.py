@@ -17,7 +17,7 @@
 See the notebook `demo_fairness_datasets`_ for an example for using
 the functions, along with some tables and figures about them.
 Some of the fetcher methods have a `preprocess` argument that
- defaults to False.
+defaults to False.
 The notebook does not use that argument, instead demonstrating how
 to do any required preprocessing in the context of a Lale pipeline.
 Most of the datasets are from `OpenML`_, and most of the datasets
