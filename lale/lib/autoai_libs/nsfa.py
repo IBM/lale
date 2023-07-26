@@ -17,7 +17,6 @@ import autoai_libs.cognito.transforms.transform_utils
 import lale.docstrings
 import lale.operators
 
-
 _hyperparams_schema = {
     "allOf": [
         {
