@@ -12,6 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Fetcher methods to load fairness datasets and provide fairness_info for them.
+
+See the notebook `demo_fairness_datasets`_ for an example for using
+the functions, along with some tables and figures about them.
+Some of the fetcher methods have a `preprocess` argument that
+defaults to False.
+The notebook does not use that argument, instead demonstrating how
+to do any required preprocessing in the context of a Lale pipeline.
+Most of the datasets are from `OpenML`_, and most of the datasets
+have been used in various papers.
+The Lale library does not distribute the datasets themselves, it only
+provides methods for downloading them.
+
+.. _`demo_fairness_datasets`: https://github.com/IBM/lale/blob/master/examples/demo_fairness_datasets.ipynb
+.. _`OpenML`: https://www.openml.org/
+"""
+
 import logging
 import os
 import typing

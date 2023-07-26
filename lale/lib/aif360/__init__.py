@@ -150,7 +150,7 @@ zero or one to simplify the task for the mitigator.
 
 
 .. _`AdversarialDebiasing`: lale.lib.aif360.adversarial_debiasing.html#lale.lib.aif360.adversarial_debiasing.AdversarialDebiasing
-.. _`BaggingOrbisClassifier`: lale.lib.aif360.bagging_orbis.html#lale.lib.aif360.bagging_orbis_classifier.BaggingOrbisClassifier
+.. _`BaggingOrbisClassifier`: lale.lib.aif360.bagging_orbis_classifier.html#lale.lib.aif360.bagging_orbis_classifier.BaggingOrbisClassifier
 .. _`CalibratedEqOddsPostprocessing`: lale.lib.aif360.calibrated_eq_odds_postprocessing.html#lale.lib.aif360.calibrated_eq_odds_postprocessing.CalibratedEqOddsPostprocessing
 .. _`DisparateImpactRemover`: lale.lib.aif360.disparate_impact_remover.html#lale.lib.aif360.disparate_impact_remover.DisparateImpactRemover
 .. _`EqOddsPostprocessing`: lale.lib.aif360.eq_odds_postprocessing.html#lale.lib.aif360.eq_odds_postprocessing.EqOddsPostprocessing
