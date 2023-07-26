@@ -18,21 +18,6 @@ import lale.docstrings
 import lale.operators
 
 
-class _NSFAImpl:
-    def __init__(self, **hyperparams):
-        self._wrapped_model = autoai_libs.cognito.transforms.transform_utils.NSFA(
-            **hyperparams
-        )
-
-    def fit(self, X, **fit_params):
-        self._wrapped_model.fit(X, **fit_params)
-        return self
-
-    def transform(self, X):
-        result = self._wrapped_model.transform(X)
-        return result
-
-
 _hyperparams_schema = {
     "allOf": [
         {
@@ -46,7 +31,6 @@ _hyperparams_schema = {
                     "description": "Array with a feature significance values for each column.",
                     "anyOf": [
                         {"type": "array", "items": {"type": "number", "minimum": 0.0}},
-                        {"type": "array", "items": {"type": "integer", "minimum": 0}},
                         {
                             "enum": [None],
                             "description": "Passing None will result in some failure to eliminate insignificant data.",
@@ -77,7 +61,7 @@ _input_fit_schema = {
     "required": ["X"],
     "additionalProperties": False,
     "properties": {
-        "X": {"type": "array", "items": {"type": "array", "items": {"laleType": "Any"}}}
+        "X": {"type": "array", "items": {"type": "array", "items": {"type": "number"}}}
     },
 }
 
@@ -86,14 +70,14 @@ _input_transform_schema = {
     "required": ["X"],
     "additionalProperties": False,
     "properties": {
-        "X": {"type": "array", "items": {"type": "array", "items": {"laleType": "Any"}}}
+        "X": {"type": "array", "items": {"type": "array", "items": {"type": "number"}}}
     },
 }
 
 _output_transform_schema = {
     "description": "Features; the outer array is over samples.",
     "type": "array",
-    "items": {"type": "array", "items": {"laleType": "Any"}},
+    "items": {"type": "array", "items": {"type": "number"}},
 }
 
 _combined_schemas = {
@@ -114,6 +98,8 @@ _combined_schemas = {
 }
 
 
-NSFA = lale.operators.make_operator(_NSFAImpl, _combined_schemas)
+NSFA = lale.operators.make_operator(
+    autoai_libs.cognito.transforms.transform_utils.NSFA, _combined_schemas
+)
 
 lale.docstrings.set_docstrings(NSFA)
