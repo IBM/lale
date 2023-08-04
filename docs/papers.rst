@@ -23,7 +23,7 @@ https://proceedings.neurips.cc/paper/2021/file/a3b36cb25e2e0b93b5f334ffb4e4064e-
 
 "Searching for Fairer Machine Learning Ensembles,
 Michael Feffer, Martin Hirzel, Samuel C. Hoffman, Kiran Kate, Parikshit Ram, and Avraham Shinnar.
-Conference on Automated Machine Learning (AutoML), September 2023. 
+Conference on Automated Machine Learning (AutoML), September 2023.
 
 .. code:: BibTeX
 
@@ -37,7 +37,7 @@ Conference on Automated Machine Learning (AutoML), September 2023.
 
 "A Suite of Fairness Datasets for Tabular Classification",
 Martin Hirzel and Michael Feffer.
- arXiv:2308.00133 [cs.LG], July 2023.
+arXiv:2308.00133 [cs.LG], July 2023.
 https://arxiv.org/abs/2308.00133
 
 .. code:: BibTeX
@@ -100,7 +100,7 @@ http://hirzels.com/martin/papers/dataperf22-fair-ensembles.pdf
 
 "The Raise of Machine Learning Hyperparameter Constraints in Python Code".
 Ingkarat Rak-amnouykit, Ana Milanova, Guillaume Baudart, Martin Hirzel, and Julian Dolby.
-International Symposium on Software Testing and Analysis (ISSTA), pages 580-592, July 2022. 
+International Symposium on Software Testing and Analysis (ISSTA), pages 580-592, July 2022.
 https://doi.org/10.1145/3533767.3534400
 
 **Winner of a Distinguished Paper Award at ISSTA 2022.**
@@ -169,7 +169,7 @@ https://doi.org/10.1145/3460319.3464796
 
 "Engineering Fair Machine Learning Pipelines".
 Martin Hirzel, Kiran Kate, and Parikshit Ram.
-ICLR Workshop on Responsible AI (RAI@ICLR), May 2021. 
+ICLR Workshop on Responsible AI (RAI@ICLR), May 2021.
 http://hirzels.com/martin/papers/rai21-fairness.pdf
 
 .. code:: BibTeX
@@ -187,7 +187,7 @@ http://hirzels.com/martin/papers/rai21-fairness.pdf
 Ingkarat Rak-amnouykit, Ana Milanova, Guillaume Baudart,
 Martin Hirzel, and Julian Dolby.
 ICLR Workshop on Security and Safety in Machine Learning Systems (SecML@ICLR),
-May 2021. 
+May 2021.
 https://aisecure-workshop.github.io/aml-iclr2021/papers/18.pdf
 
 .. code:: BibTeX
