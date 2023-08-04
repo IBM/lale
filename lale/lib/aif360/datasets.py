@@ -22,7 +22,7 @@ defaults to False.
 The notebook does not use that argument, instead demonstrating how
 to do any required preprocessing in the context of a Lale pipeline.
 Most of the datasets are from `OpenML`_, a few are from `meps.ahrq`_ or
- `ProPublica`_, and most of the datasets have been used in various papers.
+`ProPublica`_, and most of the datasets have been used in various papers.
 The Lale library does not distribute the datasets themselves, it only
 provides methods for downloading them.
 
