@@ -16,17 +16,21 @@
 
 See the notebook `demo_fairness_datasets`_ for an example for using
 the functions, along with some tables and figures about them.
+There is also an `arxiv paper`_ about these datasets.
 Some of the fetcher methods have a `preprocess` argument that
 defaults to False.
 The notebook does not use that argument, instead demonstrating how
 to do any required preprocessing in the context of a Lale pipeline.
-Most of the datasets are from `OpenML`_, and most of the datasets
-have been used in various papers.
+Most of the datasets are from `OpenML`_, a few are from `meps.ahrq`_ or
+`ProPublica`_, and most of the datasets have been used in various papers.
 The Lale library does not distribute the datasets themselves, it only
 provides methods for downloading them.
 
 .. _`demo_fairness_datasets`: https://github.com/IBM/lale/blob/master/examples/demo_fairness_datasets.ipynb
+.. _`arXiv paper`: https://arxiv.org/abs/2308.00133
 .. _`OpenML`: https://www.openml.org/
+.. _`meps.ahrq`: https://meps.ahrq.gov/data_stats/data_use.jsp
+.. _`ProPublica`: https://github.com/propublica/compas-analysis
 """
 
 import logging

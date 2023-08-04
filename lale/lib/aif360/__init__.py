@@ -66,6 +66,8 @@ Post-Estimator Mitigation Operators:
 
 Datasets:
 =========
+`datasets module docstring`_
+
 * `fetch_adult_df`_
 * `fetch_bank_df`_
 * `fetch_compas_df`_
@@ -174,6 +176,7 @@ zero or one to simplify the task for the mitigator.
 .. _`equal_opportunity_difference`: lale.lib.aif360.util.html#lale.lib.aif360.util.equal_opportunity_difference
 .. _`f1_and_disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.f1_and_disparate_impact
 .. _`fair_stratified_train_test_split`: lale.lib.aif360.util.html#lale.lib.aif360.util.fair_stratified_train_test_split
+.. _`datasets module docstring`: https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.datasets.html
 .. _`fetch_adult_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_adult_df
 .. _`fetch_bank_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_bank_df
 .. _`fetch_compas_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_compas_df
