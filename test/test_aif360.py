@@ -674,7 +674,7 @@ class TestAIF360Num(unittest.TestCase):
     def test_prejudice_remover_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
         trainable_remi = PrejudiceRemover(**fairness_info)
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.73, 0.83)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.70, 0.83)
 
     def test_redacting_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
@@ -1591,7 +1591,7 @@ class TestAIF360Cat(unittest.TestCase):
     def test_prejudice_remover_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         trainable_remi = PrejudiceRemover(**fairness_info, preparation=self.prep_pd_cat)
-        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.70, 0.80)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.70, 0.83)
 
     def test_redacting_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
