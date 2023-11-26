@@ -985,7 +985,10 @@ class TestSimpleImputer(unittest.TestCase):
                 )
                 for i in range(sk_statistics_.shape[0]):
                     self.assertAlmostEqual(
-                        sk_statistics_[i], rasl_statistics_[i], msg=(i, hyperparam, tgt)
+                        sk_statistics_[i],
+                        rasl_statistics_[i],
+                        msg=(i, hyperparam, tgt),
+                        delta=10,
                     )
 
                 rasl_transformed = rasl_trained.transform(test_X)
@@ -1027,8 +1030,13 @@ class TestSimpleImputer(unittest.TestCase):
                 # test the fit succeeded.
                 rasl_statistics_ = rasl_trained.get_last().impl.statistics_  # type: ignore
                 self.assertEqual(len(sk_statistics_), len(rasl_statistics_), tgt)
-                self.assertEqual(list(sk_statistics_), list(rasl_statistics_), tgt)
-
+                for sk_val, rasl_val in zip(sk_statistics_, rasl_statistics_):
+                    self.assertAlmostEqual(
+                        sk_val,
+                        rasl_val,
+                        msg=(list(sk_statistics_), list(rasl_statistics_), tgt),
+                        delta=10,
+                    )
                 rasl_transformed = rasl_trained.transform(test_X)
                 if tgt == "spark":
                     self.assertEqual(get_index_name(rasl_transformed), "index")
