@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.8, 3.9, '3.10']
+        python-version: [3.8, 3.9, '3.10', '3.11']
 
     steps:
     - uses: actions/checkout@v4
@@ -115,6 +115,9 @@ jobs:
         - test-case: test/test_core_misc.py
           python-version: '3.10'
           setup-target: '.[full,test]'
+        - test-case: test/test_core_misc.py
+          python-version: '3.11'
+          setup-target: '.[full,test]'
         - test-case: test/test_autogen_lib.py
           python-version: 3.8
           setup-target: '.[test]'
@@ -195,7 +198,7 @@ jobs:
         - test/test_autogen_lib.py
         - test/test_relational.py
         - test/test_category_encoders.py
-        python-version: [3.8, 3.9, '3.10']
+        python-version: [3.8, 3.9, '3.10', '3.11']
         setup-target: ['.[full,test]']
         include:
         - test-case: test/test_autogen_lib.py
@@ -268,7 +271,7 @@ jobs:
         - test/test_core_classifiers.py
         - test/test_core_regressors.py
         - test/test_core_transformers.py
-        python-version: ['3.10']
+        python-version: ['3.10', '3.11']
         setup-target: ['.']
     steps:
     - uses: actions/checkout@v4
@@ -385,7 +388,7 @@ jobs:
         - demo_
         - docs_
         - talk_
-        python-version: [3.8, 3.9, '3.10']
+        python-version: [3.8, 3.9, '3.10', '3.11']
         setup-target: ['.[full,test]']
         test-case: ['test/test_notebooks.py']
         dir: ['examples']
@@ -408,6 +411,11 @@ jobs:
           # nbexcludes: '06_multobj.ipynb'
         - dir: 'examples/kdd22'
           python-version: '3.10'
+          setup-target: '.[tutorial,test]'
+          test-case: 'test/test_notebooks.py'
+          # nbexcludes: '06_multobj.ipynb'
+        - dir: 'examples/kdd22'
+          python-version: '3.11'
           setup-target: '.[tutorial,test]'
           test-case: 'test/test_notebooks.py'
           # nbexcludes: '06_multobj.ipynb'
