@@ -40,8 +40,8 @@ indicates that the reference group comprises male values in the
 
 See the following notebooks for more detailed examples:
 
-* https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_aif360.ipynb
-* https://nbviewer.jupyter.org/github/IBM/watson-machine-learning-samples/blob/master/cloud/notebooks/python_sdk/experiments/autoai/Use%20Lale%20AIF360%20scorers%20to%20calculate%20and%20mitigate%20bias%20for%20credit%20risk%20AutoAI%20model.ipynb
+* https://github.com/IBM/lale/blob/master/examples/demo_aif360.ipynb
+* https://github.com/IBM/watson-machine-learning-samples/blob/master/cloud/notebooks/python_sdk/experiments/autoai/Use%20Lale%20AIF360%20scorers%20to%20calculate%20and%20mitigate%20bias%20for%20credit%20risk%20AutoAI%20model.ipynb
 
 Pre-Estimator Mitigation Operators:
 ===================================
