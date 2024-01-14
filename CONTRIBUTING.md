@@ -11,7 +11,7 @@ In addition, we expect contributors to submit a
 [DCO1.1.txt](https://github.com/IBM/lale/blob/master/DCO1.1.txt).
 
 One suggested contribution is adding more
-[operators](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/docs_new_operators.ipynb).
+[operators](https://github.com/IBM/lale/blob/master/examples/docs_new_operators.ipynb).
 Furthermore, we recently gave a
 [webinar](https://www.youtube.com/watch?v=szXkof_IiGc) as part of the
 "Open Source Directions" series by Quansight. Among other things, the

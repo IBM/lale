@@ -1249,7 +1249,7 @@ def accuracy_and_disparate_impact(
     .. _`accuracy`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html
     .. _`symmetric disparate impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.symmetric_disparate_impact
     .. _`Hyperopt`: lale.lib.lale.hyperopt.html#lale.lib.lale.hyperopt.Hyperopt
-    .. _`demo`: https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_aif360.ipynb
+    .. _`demo`: https://github.com/IBM/lale/blob/master/examples/demo_aif360.ipynb
     """
     return _AccuracyAndDisparateImpact(
         favorable_labels, protected_attributes, unfavorable_labels, fairness_weight
@@ -1434,7 +1434,7 @@ def balanced_accuracy_and_disparate_impact(
     .. _`balanced accuracy`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.balanced_accuracy_score.html
     .. _`symmetric disparate impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.symmetric_disparate_impact
     .. _`Hyperopt`: lale.lib.lale.hyperopt.html#lale.lib.lale.hyperopt.Hyperopt
-    .. _`demo`: https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_aif360.ipynb
+    .. _`demo`: https://github.com/IBM/lale/blob/master/examples/demo_aif360.ipynb
     """
     return _BalancedAccuracyAndDisparateImpact(
         favorable_labels, protected_attributes, unfavorable_labels, fairness_weight
@@ -1686,7 +1686,7 @@ def f1_and_disparate_impact(
     .. _`f1`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.f1_score.html
     .. _`symmetric disparate impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.symmetric_disparate_impact
     .. _`Hyperopt`: lale.lib.lale.hyperopt.html#lale.lib.lale.hyperopt.Hyperopt
-    .. _`demo`: https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_aif360.ipynb
+    .. _`demo`: https://github.com/IBM/lale/blob/master/examples/demo_aif360.ipynb
     """
     return _F1AndDisparateImpact(
         favorable_labels, protected_attributes, unfavorable_labels, fairness_weight

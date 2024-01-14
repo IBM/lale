@@ -14,7 +14,7 @@ Frequently Asked Questions
     said, you can define your own scoring metrics for evaluation, and
     pass them to automation tools to guide their search. The following
     notebook includes an example ``disparate_impact_scorer``:    
-    https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_aif360.ipynb
+    https://github.com/IBM/lale/blob/master/examples/demo_aif360.ipynb
 
 - I get an error when I instantiate an operator imported from
   Lale. What's wrong?
@@ -35,7 +35,7 @@ Frequently Asked Questions
     using ``lale_op = lale.operators.make_operator(non_lale_op)``.  If
     you want to get full Lale support for your own operator, we have a
     separate guide for how to do that:
-    https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/docs_new_operators.ipynb
+    https://github.com/IBM/lale/blob/master/examples/docs_new_operators.ipynb
 
 - Can I use Lale for deep learning?
 

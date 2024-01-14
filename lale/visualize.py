@@ -125,15 +125,6 @@ def _indiv_op_tooltip(uid, jsn) -> str:
     return tooltip
 
 
-def _url_new_tab(jsn):
-    url = jsn["documentation_url"]
-    # note the missing double-quotes before the url and after the rel:
-    # we are pretending to only provide the URL itself, and abusing
-    # non-grammatical string concatenation to piggy-back more attributes
-    html = f'{url}" target="_blank" rel="noopener noreferrer'
-    return html
-
-
 def _json_to_graphviz_rec(uid, jsn, cluster2reps, is_root, dot_graph_attr):
     kind = lale.json_operator.json_op_kind(jsn)
     dot: graphviz.Digraph
@@ -182,7 +173,7 @@ def _json_to_graphviz_rec(uid, jsn, cluster2reps, is_root, dot_graph_attr):
                 tooltip=_indiv_op_tooltip(uid, jsn),
             )
             if "documentation_url" in jsn:
-                dot.attr("graph", URL=_url_new_tab(jsn))
+                dot.attr("graph", URL=jsn["documentation_url"])
             nodes = jsn["steps"]
             if jsn["class"] == _LALE_SKL_PIPELINE:
                 names = list(nodes.keys())
@@ -203,7 +194,7 @@ def _json_to_graphviz_rec(uid, jsn, cluster2reps, is_root, dot_graph_attr):
                 "tooltip": tooltip,
             }
             if "documentation_url" in step_jsn:
-                attrs["URL"] = _url_new_tab(step_jsn)
+                attrs["URL"] = step_jsn["documentation_url"]
             label0 = step_jsn.get("viz_label", step_jsn["label"])
             if "\n" in label0:
                 label3 = label0

@@ -410,7 +410,7 @@ without having to specify your own planned pipeline first. It is
 designed to be simple at the expense of not offering much control.
 For an example, see `demo_auto_pipeline.ipynb`_.
 
-.. _`demo_auto_pipeline.ipynb`: https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_auto_pipeline.ipynb
+.. _`demo_auto_pipeline.ipynb`: https://github.com/IBM/lale/blob/master/examples/demo_auto_pipeline.ipynb
 """,
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.auto_pipeline.html",
     "import_from": "lale.lib.lale",

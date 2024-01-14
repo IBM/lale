@@ -33,11 +33,11 @@ wie scikit-learn, XGBoost, PyTorch, usw.  Lale kann wie jedes andere
 Python-Paket installiert werden und kann mit üblichen
 Python-Werkzeugen, so wie Jupyter Notebooks, editiert werden.
 
-* [Einführungshandbuch](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/docs_guide_for_sklearn_users.ipynb) für scikit-learn Nutzer
+* [Einführungshandbuch](https://github.com/IBM/lale/blob/master/examples/docs_guide_for_sklearn_users.ipynb) für scikit-learn Nutzer
 * [Installationsanleitung](https://github.com/IBM/lale/blob/master/docs/installation.rst)
-* Technische Übersicht [Slides](https://github.com/IBM/lale/blob/master/talks/2019-1105-lale.pdf), [Notebook](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/talk_2019-1105-lale.ipynb), und [Video](https://www.youtube.com/watch?v=R51ZDJ64X18&list=PLGVZCDnMOq0pwoOqsaA87cAoNM4MWr51M&index=35&t=0s)
+* Technische Übersicht [Slides](https://github.com/IBM/lale/blob/master/talks/2019-1105-lale.pdf), [Notebook](https://github.com/IBM/lale/blob/master/examples/talk_2019-1105-lale.ipynb), und [Video](https://www.youtube.com/watch?v=R51ZDJ64X18&list=PLGVZCDnMOq0pwoOqsaA87cAoNM4MWr51M&index=35&t=0s)
 * IBM's [AutoAI SDK](http://wml-api-pyclient-v4.mybluemix.net/#autoai-beta-ibm-cloud-only) benutzt Lale, siehe [Demonstrationsnotebook](https://dataplatform.cloud.ibm.com/exchange/public/entry/view/a2d87b957b60c846267137bfae130dca)
-* Anleitung zur Einbeziehung [neuer Operatoren](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/docs_new_operators.ipynb)
+* Anleitung zur Einbeziehung [neuer Operatoren](https://github.com/IBM/lale/blob/master/examples/docs_new_operators.ipynb)
 * Leitfaden für [Beiträge](https://github.com/IBM/lale/blob/master/CONTRIBUTING.md) zu Lale
 * [Veröffentlichungen](https://github.com/IBM/lale/blob/master/docs/papers.rst)
 * [Häufig gestellte Fragen](https://github.com/IBM/lale/blob/master/docs/faq.rst)
