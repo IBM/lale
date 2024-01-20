@@ -437,33 +437,42 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        category:
+        - demo_
+        - docs_
+        - talk_
+        python-version: [3.7, 3.9, '3.10']
+        setup-target: ['.[full,test]']
+        test-case: ['test/test_notebooks.py']
+        dir: ['examples']
+        nbexcludes: ['']
         include:
         - dir: 'examples'
-          python-version: [3.7, 3.9, '3.10']
-          category:
-          - demo_
-          - docs_
-          - talk_
-          setup-target: '.[full,test]'
-          test-case: 'test/test_notebooks.py'
-        - dir: 'examples'
-          python-version: [3.8]
-          category:
-          - demo_
-          - docs_
-          - talk_
+          python-version: 3.8
           setup-target: '.[full,test]'
           test-case: 'test/test_notebooks.py'
           nbexcludes: 'demo_auto_pipeline.ipynb'
         - dir: 'examples/kdd22'
-          python-version: [3.7, 3.9, '3.10']
+          python-version: 3.7
           setup-target: '.[tutorial,test]'
           test-case: 'test/test_notebooks.py'
+          # nbexcludes: '06_multobj.ipynb'
         - dir: 'examples/kdd22'
           python-version: 3.8
           setup-target: '.[tutorial,test]'
           test-case: 'test/test_notebooks.py'
           nbexcludes: '02_total.ipynb'
+        - dir: 'examples/kdd22'
+          python-version: 3.9
+          setup-target: '.[tutorial,test]'
+          test-case: 'test/test_notebooks.py'
+          # nbexcludes: '06_multobj.ipynb'
+        - dir: 'examples/kdd22'
+          python-version: '3.10'
+          setup-target: '.[tutorial,test]'
+          test-case: 'test/test_notebooks.py'
+          # nbexcludes: '06_multobj.ipynb'
+
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
