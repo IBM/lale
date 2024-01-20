@@ -375,34 +375,14 @@ jobs:
         - demo_
         - docs_
         - talk_
-        python-version: [3.7, 3.9, '3.10']
+        python-version: [3.9]
         setup-target: ['.[full,test]']
         test-case: ['test/test_notebooks.py']
         dir: ['examples']
         nbexcludes: ['']
         include:
-        - dir: 'examples'
-          python-version: 3.8
-          setup-target: '.[full,test]'
-          test-case: 'test/test_notebooks.py'
-          nbexcludes: 'demo_auto_pipeline.ipynb'
-        - dir: 'examples/kdd22'
-          python-version: 3.7
-          setup-target: '.[tutorial,test]'
-          test-case: 'test/test_notebooks.py'
-          # nbexcludes: '06_multobj.ipynb'
-        - dir: 'examples/kdd22'
-          python-version: 3.8
-          setup-target: '.[tutorial,test]'
-          test-case: 'test/test_notebooks.py'
-          nbexcludes: '02_total.ipynb'
         - dir: 'examples/kdd22'
           python-version: 3.9
-          setup-target: '.[tutorial,test]'
-          test-case: 'test/test_notebooks.py'
-          # nbexcludes: '06_multobj.ipynb'
-        - dir: 'examples/kdd22'
-          python-version: '3.10'
           setup-target: '.[tutorial,test]'
           test-case: 'test/test_notebooks.py'
           # nbexcludes: '06_multobj.ipynb'
@@ -461,12 +441,17 @@ jobs:
         - demo_
         - docs_
         - talk_
-        python-version: [3.7, 3.8, 3.9, '3.10']
+        python-version: [3.7, 3.9, '3.10']
         setup-target: ['.[full,test]']
         test-case: ['test/test_notebooks.py']
         dir: ['examples']
         nbexcludes: ['']
         include:
+        - dir: 'examples'
+          python-version: 3.8
+          setup-target: '.[full,test]'
+          test-case: 'test/test_notebooks.py'
+          nbexcludes: 'demo_auto_pipeline.ipynb'
         - dir: 'examples/kdd22'
           python-version: 3.7
           setup-target: '.[tutorial,test]'
@@ -476,7 +461,7 @@ jobs:
           python-version: 3.8
           setup-target: '.[tutorial,test]'
           test-case: 'test/test_notebooks.py'
-          # nbexcludes: '06_multobj.ipynb'
+          nbexcludes: '02_total.ipynb'
         - dir: 'examples/kdd22'
           python-version: 3.9
           setup-target: '.[tutorial,test]'
