@@ -49,7 +49,7 @@ else:
         "jsonsubschema>=0.0.6",
         "scikit-learn>=1.0.0,<=1.2.0",
         "scipy<1.11.0",
-        "pandas<2.0.0",
+        "pandas",
         "packaging",
         "decorator",
         "astunparse",
@@ -67,7 +67,7 @@ else:
 extras_require = {
     "full": [
         "mystic",
-        "xgboost<=1.5.1",
+        "xgboost<2.1.0",
         "lightgbm<4.0.0",
         "snapml>=1.7.0rc3,<1.12.0",
         "liac-arff>=2.4.0",

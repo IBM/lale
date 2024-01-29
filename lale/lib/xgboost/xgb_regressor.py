@@ -833,5 +833,74 @@ if xgboost_version is not None and xgboost_version >= version.Version("1.6"):
         },
     )
 
+if xgboost_version is not None and xgboost_version >= version.Version("1.7"):
+    # https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn
+    XGBRegressor = XGBRegressor.customize_schema(
+        feature_types={
+            "description": "Used for specifying feature types without constructing a dataframe. See DMatrix for details.",
+            "laleType": "Any",
+        },
+        max_cat_threshold={
+            "description": """Maximum number of categories considered for each split.
+            Used only by partition-based splits for preventing over-fitting.
+            Also, enable_categorical needs to be set to have categorical feature support.
+            See Categorical Data and Parameters for Categorical Feature for details.""",
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "minimum": 0,
+                    "distribution": "uniform",
+                    "minimumForOptimizer": 1,
+                    "maximumForOptimizer": 10,
+                },
+                {"enum": [None]},
+            ],
+            "default": None,
+        },
+        set_as_available=True,
+    )
+
+if xgboost_version is not None and xgboost_version >= version.Version("2.0"):
+    # https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn
+    XGBRegressor = XGBRegressor.customize_schema(
+        n_estimators={
+            "description": "Number of trees to fit.",
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "default": 200,
+                    "minimumForOptimizer": 50,
+                    "maximumForOptimizer": 1000,
+                },
+                {"enum": [None]},
+            ],
+        },
+        device={
+            "description": """Device ordinal""",
+            "anyOf": [
+                {"enum": ["cpu", "cuda", "gpu"]},
+                {"enum": [None]},
+            ],
+            "default": None,
+        },
+        multi_strategy={
+            "description": """The strategy used for training multi-target models,
+             including multi-target regression and multi-class classification.
+             See Multiple Outputs for more information.""",
+            "anyOf": [
+                {
+                    "description": "One model for each target.",
+                    "enum": ["one_output_per_tree"],
+                },
+                {
+                    "description": "Use multi-target trees.",
+                    "enum": ["multi_output_tree"],
+                },
+                {"enum": [None]},
+            ],
+            "default": None,
+        },
+        set_as_available=True,
+    )
 
 lale.docstrings.set_docstrings(XGBRegressor)
