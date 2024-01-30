@@ -116,6 +116,7 @@ extras_require = {
         "aif360==0.5.0",
         "BlackBoxAuditing",
         "typing-extensions",
+        "pandas<2.0.0",
     ],
 }
 

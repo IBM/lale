@@ -2367,6 +2367,7 @@ class TestBatchedBaggingClassifier(unittest.TestCase):
 class TestXGBoost(unittest.TestCase):
     def test_partial_fit_xgb_classifier(self):
         X, y = sklearn.datasets.load_iris(return_X_y=True, as_frame=True)
+
         est = XGBClassifier(verbosity=0)
         for bX, by in mockup_data_loader(X, y, 3, "pandas"):
             est = est.partial_fit(bX, by)
