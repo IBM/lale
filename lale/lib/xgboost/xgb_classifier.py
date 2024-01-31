@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pandas as pd
 from packaging import version
+from sklearn.preprocessing import LabelEncoder
 
 import lale.docstrings
 import lale.helpers
@@ -86,7 +87,14 @@ class _XGBClassifierImpl:
             if fit_params.get("use_label_encoder", True):
                 warnings.filterwarnings("ignore", category=UserWarning)
             warnings.filterwarnings("ignore", category=FutureWarning)
-            self._wrapped_model.fit(renamed_X, y, **fit_params)
+
+            if "xgb_model" not in fit_params:
+                trainable_le = LabelEncoder()
+                trained_le = trainable_le.fit(y)
+                self._label_encoder = trained_le
+
+            numeric_y = self._label_encoder.transform(y)
+            self._wrapped_model.fit(renamed_X, numeric_y, **fit_params)
         return self
 
     def partial_fit(self, X, y, **fit_params):
@@ -100,7 +108,8 @@ class _XGBClassifierImpl:
         renamed_X = _rename_all_features(X)
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=FutureWarning)
-            result = self._wrapped_model.predict(renamed_X, **predict_params)
+            numeric_result = self._wrapped_model.predict(renamed_X, **predict_params)
+        result = self._label_encoder.inverse_transform(numeric_result)
         return result
 
     def predict_proba(self, X):
