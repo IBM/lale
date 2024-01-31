@@ -17,10 +17,9 @@ import pprint
 import typing
 from copy import deepcopy
 from io import StringIO
-from typing import Any, Dict, Optional, Union, overload
+from typing import Any, Dict, Literal, Optional, Union, overload
 
 import astunparse
-from typing_extensions import Literal
 
 AstLits = (ast.Num, ast.Str, ast.List, ast.Tuple, ast.Set, ast.Dict, ast.Constant)
 AstLit = Union[ast.Num, ast.Str, ast.List, ast.Tuple, ast.Set, ast.Dict, ast.Constant]

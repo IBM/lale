@@ -14,11 +14,11 @@
 
 import functools
 from abc import abstractmethod
-from typing import Dict, Iterable, Optional, Tuple, TypeVar, Union, cast
+from typing import Dict, Iterable, Optional, Protocol, Tuple, TypeVar, Union, cast
 
 import numpy as np
 import pandas as pd
-from typing_extensions import Protocol, TypeAlias
+from typing_extensions import TypeAlias
 
 from lale.expressions import astype, count, it
 from lale.expressions import sum as lale_sum

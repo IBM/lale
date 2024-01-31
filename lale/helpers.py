@@ -16,7 +16,6 @@ import ast
 import copy
 import importlib
 import logging
-import sys
 import time
 import traceback
 from importlib import util
@@ -26,6 +25,7 @@ from typing import (
     Dict,
     Iterable,
     List,
+    Literal,
     Mapping,
     Optional,
     Set,
@@ -45,11 +45,6 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.utils.metaestimators import _safe_split
 
 import lale.datasets.data_schemas
-
-if sys.version_info >= (3, 8):
-    from typing import Literal  # raises a mypy error for <3.8
-else:
-    from typing_extensions import Literal
 
 try:
     import torch

@@ -14,15 +14,9 @@
 
 import inspect
 import logging
-import sys
-from typing import List, Optional, Set
+from typing import Container, List, Optional, Set
 
 from lale.operators import Operator, clone_op, get_op_from_lale_lib
-
-if sys.version_info < (3, 9):
-    from typing import Container  # raises a mypy error for <3.8
-else:
-    from collections.abc import Container
 
 logger = logging.getLogger(__name__)
 

@@ -14,8 +14,7 @@
 
 import functools
 import logging
-import sys
-from typing import List, Optional, Tuple, Union, cast
+from typing import List, Literal, Optional, Tuple, Union, cast
 
 import aif360.algorithms.postprocessing
 import aif360.datasets
@@ -37,12 +36,6 @@ from lale.lib.rasl import Aggregate, ConcatFeatures, Map
 from lale.lib.rasl.metrics import MetricMonoid, MetricMonoidFactory
 from lale.operators import TrainablePipeline, TrainedOperator
 from lale.type_checking import JSON_TYPE, validate_schema_directly
-
-if sys.version_info >= (3, 8):
-    from typing import Literal  # raises a mypy error for <3.8
-else:
-    from typing_extensions import Literal
-
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)

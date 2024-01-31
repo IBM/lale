@@ -11,19 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import sys
-from typing import Any, Tuple, overload
+from typing import Any, Literal, Tuple, overload
 
 import numpy as np
 import pandas as pd
 from sklearn.utils import Bunch
 
 from lale.datasets.data_schemas import add_table_name, get_table_name
-
-if sys.version_info >= (3, 8):
-    from typing import Literal  # raises a mypy error for <3.8
-else:
-    from typing_extensions import Literal
 
 try:
     from pyspark.sql import SparkSession

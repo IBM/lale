@@ -13,10 +13,9 @@
 # limitations under the License.
 
 import datetime
-from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar
+from typing import Any, Callable, Dict, Generic, List, Optional, Protocol, TypeVar
 
 import numpy as np
-from typing_extensions import Protocol
 
 from lale.helpers import _is_pandas_df, _is_spark_df
 
