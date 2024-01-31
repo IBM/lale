@@ -16,21 +16,18 @@ import logging
 import typing
 
 from packaging import version
+from sklearn.utils.metaestimators import available_if
 
 import lale.docstrings
 import lale.helpers
 import lale.operators
 from lale.schemas import Bool
 
-try:
-    from sklearn.pipeline import if_delegate_has_method
-except ImportError as e:
-    if lale.operators.sklearn_version >= version.Version("1.0"):
-        from sklearn.utils.metaestimators import if_delegate_has_method
-    else:
-        raise e
-
 logger = logging.getLogger(__name__)
+
+
+def _pipeline_has(attr):
+    return lambda self: (hasattr(self._pipeline, attr))
 
 
 class _PipelineImpl:
@@ -61,17 +58,17 @@ class _PipelineImpl:
         self._final_estimator = self._pipeline.get_last()
         return self
 
-    @if_delegate_has_method(delegate="_final_estimator")
+    @available_if(_pipeline_has("predict"))
     def predict(self, X, **predict_params):
         result = self._pipeline.predict(X, **predict_params)
         return result
 
-    @if_delegate_has_method(delegate="_final_estimator")
+    @available_if(_pipeline_has("predict_proba"))
     def predict_proba(self, X):
         result = self._pipeline.predict_proba(X)
         return result
 
-    @if_delegate_has_method(delegate="_final_estimator")
+    @available_if(_pipeline_has("transform"))
     def transform(self, X, y=None):
         if y is None:
             result = self._pipeline.transform(X)
