@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.7, 3.8, 3.9, '3.10']
+        python-version: [3.8, 3.9, '3.10']
 
     steps:
     - uses: actions/checkout@v3
@@ -43,11 +43,7 @@ jobs:
         pip install pipdeptree
         pipdeptree -fl
     - name: pre-commit checks
-      if: ${{ matrix.python-version != '3.7' }}
       run: pre-commit run -a
-    - name: pre-commit checks (3.7; skip isort and flake8)
-      if: ${{ matrix.python-version == '3.7' }}
-      run: SKIP=isort,flake8 pre-commit run -a
   docs:
     name: Documentation build
     runs-on: ubuntu-latest
@@ -115,13 +111,13 @@ jobs:
         setup-target: ['.[full,test]']
         include:
         - test-case: test/test_autoai_libs.py
-          python-version: 3.7
+          python-version: 3.8
           setup-target: '.[full,test]'
         - test-case: test/test_autoai_libs.py
           python-version: 3.9
           setup-target: '.[full,test]'
         - test-case: test/test_core_misc.py
-          python-version: 3.7
+          python-version: 3.8
           setup-target: '.[full,test]'
         - test-case: test/test_core_misc.py
           python-version: 3.9
@@ -130,14 +126,11 @@ jobs:
           python-version: '3.10'
           setup-target: '.[full,test]'
         - test-case: test/test_autogen_lib.py
-          python-version: 3.7
+          python-version: 3.8
           setup-target: '.[test]'
         - test-case: test/test_halving_gridsearchcv.py
-          python-version: 3.7
+          python-version: 3.8
           setup-target: '.[test]'
-        - test-case: test/test_lale_lib_versions.py
-          python-version: 3.7
-          setup-target: '.[full,test]'
         - test-case: test/test_aif360.py
           python-version: 3.8
           setup-target: '.[full,test]'
@@ -177,9 +170,6 @@ jobs:
     - name: Install deps for test_autoai_output_consumption
       if: ${{ matrix.test-case == 'test/test_autoai_output_consumption.py' }}
       run: pip install 'scikit-learn==0.23.1' 'lightgbm==3.3.0' 'scipy==1.8.1'
-    - name: Install deps for test_lale_lib_versions
-      if: ${{ matrix.test-case == 'test/test_lale_lib_versions.py' }}
-      run: pip install 'scikit-learn==0.20.3' 'xgboost==0.90'
     - name: Install deps for test_halving_gridsearchcv
       if: ${{ matrix.test-case == 'test/test_halving_gridsearchcv.py' }}
       run: pip install 'scikit-learn==0.24.1'
@@ -228,26 +218,23 @@ jobs:
         - test/test_autogen_lib.py
         - test/test_relational.py
         - test/test_category_encoders.py
-        python-version: [3.7, 3.8, 3.9, '3.10']
+        python-version: [3.8, 3.9, '3.10']
         setup-target: ['.[full,test]']
         include:
         - test-case: test/test_autoai_libs.py
           python-version: 3.8
           setup-target: '.[test]'
         - test-case: test/test_autogen_lib.py
-          python-version: 3.7
+          python-version: 3.8
           setup-target: '.[test]'
         - test-case: test/test_halving_gridsearchcv.py
-          python-version: 3.7
+          python-version: 3.8
           setup-target: '.[test]'
-        - test-case: test/test_lale_lib_versions.py
-          python-version: 3.7
-          setup-target: '.[full,test]'
         - test-case: test/test_aif360.py
-          python-version: 3.7
+          python-version: 3.8
           setup-target: '.[full,test]'
         - test-case: test/test_relational_sklearn.py
-          python-version: 3.7
+          python-version: 3.8
           setup-target: '.[test]'
         - test-case: test/test_snapml.py
           python-version: 3.8
@@ -288,9 +275,6 @@ jobs:
     - name: Install deps for test_autoai_output_consumption
       if: ${{ matrix.test-case == 'test/test_autoai_output_consumption.py' }}
       run: pip install 'scikit-learn==0.23.1' 'lightgbm==3.3.0' 'scipy==1.8.1'
-    - name: Install deps for test_lale_lib_versions
-      if: ${{ matrix.test-case == 'test/test_lale_lib_versions.py' }}
-      run: pip install 'scikit-learn==0.20.3' 'xgboost==0.90'
     - name: Install deps for test_halving_gridsearchcv
       if: ${{ matrix.test-case == 'test/test_halving_gridsearchcv.py' }}
       run: pip install 'scikit-learn==0.24.1'
@@ -445,7 +429,7 @@ jobs:
         - demo_
         - docs_
         - talk_
-        python-version: [3.7, 3.9, '3.10']
+        python-version: [3.8, 3.9, '3.10']
         setup-target: ['.[full,test]']
         test-case: ['test/test_notebooks.py']
         dir: ['examples']
@@ -456,11 +440,6 @@ jobs:
           setup-target: '.[full,test]'
           test-case: 'test/test_notebooks.py'
           nbexcludes: 'demo_auto_pipeline.ipynb'
-        - dir: 'examples/kdd22'
-          python-version: 3.7
-          setup-target: '.[tutorial,test]'
-          test-case: 'test/test_notebooks.py'
-          # nbexcludes: '06_multobj.ipynb'
         - dir: 'examples/kdd22'
           python-version: 3.8
           setup-target: '.[tutorial,test]'
@@ -564,7 +543,7 @@ jobs:
     needs: [static, test_matrix_master, test_newer, test_fairness, test_notebooks_master, docs]
     strategy:
       matrix:
-        python-version: [3.7]
+        python-version: [3.8]
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
