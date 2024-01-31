@@ -12,11 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# A shim for compatibility across 3.7.
-# pre 3.7, we need to inherit from the GenericMeta class (which inherits from ABCmeta)
-# to use Generic (which we want to do)
-# post 3.7, GenericMeta no longer exists
-import sys
 from abc import ABCMeta
 
 
@@ -53,14 +48,7 @@ class VisitorMeta(type):
         setattr(cls, "_accept", ll["_accept"])
 
 
-if sys.version_info < (3, 7, 0):
-    from typing import GenericMeta  # type: ignore
-else:
-    global GenericMeta  # pylint:disable=global-at-module-level
-    GenericMeta = ABCMeta  # type: ignore
-
-
-class AbstractVisitorMeta(VisitorMeta, GenericMeta):
+class AbstractVisitorMeta(VisitorMeta, ABCMeta):
     """This meta class adds an _accept method that calls visitCLASSNAME on the visitor.
     It does not currently support inheritance: you need to define the visitC method for subclasses
     explicitly.

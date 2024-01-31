@@ -153,7 +153,6 @@ import inspect
 import itertools
 import logging
 import os
-import sys
 import warnings
 from abc import abstractmethod
 from types import MappingProxyType
@@ -164,6 +163,7 @@ from typing import (
     Generic,
     Iterable,
     List,
+    Literal,
     Mapping,
     Optional,
     Set,
@@ -229,11 +229,6 @@ from lale.type_checking import (
 from lale.util.VisitorMeta import AbstractVisitorMeta
 
 sklearn_version = version.parse(getattr(sklearn, "__version__"))
-
-if sys.version_info >= (3, 8):
-    from typing import Literal  # raises a mypy error for <3.8
-else:
-    from typing_extensions import Literal
 
 try:
     from sklearn.pipeline import (  # pylint:disable=ungrouped-imports

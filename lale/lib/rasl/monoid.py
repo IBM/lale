@@ -13,9 +13,7 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
-from typing import Any, Generic, Optional, TypeVar
-
-from typing_extensions import Protocol, runtime_checkable
+from typing import Any, Generic, Optional, Protocol, TypeVar, runtime_checkable
 
 _InputType_contra = TypeVar("_InputType_contra", contravariant=True)
 _OutputType_co = TypeVar("_OutputType_co", covariant=True)
