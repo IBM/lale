@@ -2369,7 +2369,7 @@ class TestXGBoost(unittest.TestCase):
         X, y = sklearn.datasets.load_iris(return_X_y=True, as_frame=True)
 
         est = XGBClassifier(verbosity=0)
-        for bX, by in mockup_data_loader(X, y, 3, "pandas"):
+        for bX, by in mockup_data_loader(X, y, 3, "pandas", shuffle=True):
             est = est.partial_fit(bX, by)
             _ = est.predict(bX)
 

@@ -95,20 +95,32 @@ def csv_data_loader(
 
 @overload
 def mockup_data_loader(
-    X: pd.DataFrame, y: pd.Series, n_batches: int, astype: Literal["pandas"]
+    X: pd.DataFrame,
+    y: pd.Series,
+    n_batches: int,
+    astype: Literal["pandas"],
+    shuffle: bool = False,
 ) -> Iterable[_PandasBatch]:
     ...
 
 
 @overload
 def mockup_data_loader(
-    X: pd.DataFrame, y: pd.Series, n_batches: int, astype: datatype_param_type
+    X: pd.DataFrame,
+    y: pd.Series,
+    n_batches: int,
+    astype: datatype_param_type,
+    shuffle: bool = False,
 ) -> Iterable[_PandasOrSparkBatch]:
     ...
 
 
 def mockup_data_loader(
-    X: pd.DataFrame, y: pd.Series, n_batches: int, astype: datatype_param_type
+    X: pd.DataFrame,
+    y: pd.Series,
+    n_batches: int,
+    astype: datatype_param_type,
+    shuffle: bool = False,
 ) -> Iterable[_PandasOrSparkBatch]:
     """Split (X, y) into batches to emulate loading them incrementally.
 
@@ -119,7 +131,7 @@ def mockup_data_loader(
     if n_batches == 1:
         pandas_gen = [(X, y)]
     else:
-        cv = sklearn.model_selection.KFold(n_batches)
+        cv = sklearn.model_selection.KFold(n_batches, shuffle=shuffle)
         estimator = sklearn.tree.DecisionTreeClassifier()
         pandas_gen = (
             lale.helpers.split_with_schemas(estimator, X, y, test, train)
