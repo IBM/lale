@@ -30,10 +30,6 @@ jobs:
           ${{ runner.os }}-new3
     - name: Install numpy
       run: pip install -U 'numpy<1.24'
-    - name: Install autoai-libs from pypi
-      run: |
-        pip install "pip==23.0"
-        pip install "autoai-libs>=1.12.6"
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager .[full,test,dev]
     - name: pip list packages
@@ -110,12 +106,6 @@ jobs:
         python-version: [3.9]
         setup-target: ['.[full,test]']
         include:
-        - test-case: test/test_autoai_libs.py
-          python-version: 3.8
-          setup-target: '.[full,test]'
-        - test-case: test/test_autoai_libs.py
-          python-version: 3.9
-          setup-target: '.[full,test]'
         - test-case: test/test_core_misc.py
           python-version: 3.8
           setup-target: '.[full,test]'
@@ -158,10 +148,6 @@ jobs:
           ${{ runner.os }}-new3
     - name: Install numpy
       run: pip install -U 'numpy<1.24'
-    - name: Install autoai-libs from pypi
-      run: |
-        pip install "pip==23.0"
-        pip install "autoai-libs>=1.12.6"
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Install deps for test_relational_sklearn
@@ -212,9 +198,6 @@ jobs:
         python-version: [3.8, 3.9, '3.10']
         setup-target: ['.[full,test]']
         include:
-        - test-case: test/test_autoai_libs.py
-          python-version: 3.8
-          setup-target: '.[test]'
         - test-case: test/test_autogen_lib.py
           python-version: 3.8
           setup-target: '.[test]'
@@ -254,10 +237,6 @@ jobs:
           ${{ runner.os }}-new3
     - name: Install numpy
       run: pip install -U 'numpy<1.24'
-    - name: Install autoai-libs from pypi
-      run: |
-        pip install "pip==23.0"
-        pip install "autoai-libs>=1.12.6"
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Install deps for test_relational_sklearn
@@ -373,11 +352,6 @@ jobs:
       run: sudo apt-get install graphviz swig
     - name: Install numpy
       run: pip install -U 'numpy<1.24'
-    - name: Install autoai-libs from pypi
-      if: ${{ matrix.category == 'demo_' }}
-      run: |
-        pip install "pip==23.0"
-        pip install "autoai-libs>=1.12.6"
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Fix tutorial dependencies
@@ -458,11 +432,6 @@ jobs:
       run: sudo apt-get install graphviz swig
     - name: Install numpy
       run: pip install -U 'numpy<1.24'
-    - name: Install autoai-libs from pypi
-      if: ${{ matrix.category == 'demo_' }}
-      run: |
-        pip install "pip==23.0"
-        pip install "autoai-libs>=1.12.6"
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Fix tutorial dependencies
