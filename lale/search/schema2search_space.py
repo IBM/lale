@@ -460,9 +460,11 @@ class SearchSpaceOperatorVisitor(Visitor):
                     return None
 
                 sub_schemas: List[SearchSpace] = [
-                    accept(op, self)
-                    if isinstance(op, Operator)
-                    else SearchSpaceConstant(op)
+                    (
+                        accept(op, self)
+                        if isinstance(op, Operator)
+                        else SearchSpaceConstant(op)
+                    )
                     for op in vals
                 ]
                 combined_sub_schema: SearchSpace

@@ -149,8 +149,8 @@ class _MinMaxScalerImpl(MonoidableOperator[_MinMaxScalerMonoid]):
         if _is_spark_df(X):
             data_min_max = data_min_max.toPandas()
         n = len(X_cols)
-        data_min_ = np.zeros(shape=(n))
-        data_max_ = np.zeros(shape=(n))
+        data_min_ = np.zeros(shape=n)
+        data_max_ = np.zeros(shape=n)
         for i, c in enumerate(X_cols):
             data_min_[i] = data_min_max[f"{c}_min"]
             data_max_[i] = data_min_max[f"{c}_max"]

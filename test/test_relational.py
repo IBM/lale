@@ -434,7 +434,7 @@ class TestScan(unittest.TestCase):
 
     def test_error3(self):
         with self.assertRaisesRegex(ValueError, "expected `it.table_name` or"):
-            _ = Scan(table=(it.go_products == 42))
+            _ = Scan(table=it.go_products == 42)
 
 
 # Testing alias operator for pandas and spark dataframes

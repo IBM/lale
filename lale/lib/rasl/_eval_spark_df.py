@@ -182,9 +182,9 @@ def replace(call: ast.Call):
             if hasattr(key, "id") and key.id == "nan":
                 mapping_dict["nan"] = ast.literal_eval(mapping_dict_ast.values[i])
             else:
-                mapping_dict[
-                    ast.literal_eval(mapping_dict_ast.keys[i])
-                ] = ast.literal_eval(mapping_dict_ast.values[i])
+                mapping_dict[ast.literal_eval(mapping_dict_ast.keys[i])] = (
+                    ast.literal_eval(mapping_dict_ast.values[i])
+                )
 
     handle_unknown = ast.literal_eval(call.args[2])
     chain_of_whens = None

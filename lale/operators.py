@@ -417,8 +417,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         customize_schema: bool = False,  # pylint:disable=redefined-outer-name
         astype: astype_type = "lale",
         ipython_display: Literal[False] = False,
-    ) -> str:
-        ...
+    ) -> str: ...
 
     @overload
     def pretty_print(
@@ -430,8 +429,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         customize_schema: bool = False,  # pylint:disable=redefined-outer-name
         astype: astype_type = "lale",
         ipython_display: Union[bool, Literal["input"]] = False,
-    ) -> Optional[str]:
-        ...
+    ) -> Optional[str]: ...
 
     def pretty_print(
         self,
@@ -525,8 +523,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         show_imports: bool = True,
         customize_schema: bool = False,  # pylint:disable=redefined-outer-name
         ipython_display: Literal[False] = False,
-    ) -> str:
-        ...
+    ) -> str: ...
 
     @overload
     def diff(
@@ -535,8 +532,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         show_imports: bool = True,
         customize_schema: bool = False,  # pylint:disable=redefined-outer-name
         ipython_display: bool = False,
-    ) -> Optional[str]:
-        ...
+    ) -> Optional[str]: ...
 
     def diff(
         self,
@@ -749,20 +745,17 @@ class Operator(metaclass=AbstractVisitorMeta):
         @overload
         def _replace(
             subject: "Operator", original_op: "Operator", replacement_op: "Operator"
-        ) -> "Operator":
-            ...
+        ) -> "Operator": ...
 
         @overload
         def _replace(
             subject: list, original_op: "Operator", replacement_op: "Operator"
-        ) -> list:
-            ...
+        ) -> list: ...
 
         @overload
         def _replace(
             subject: dict, original_op: "Operator", replacement_op: "Operator"
-        ) -> dict:
-            ...
+        ) -> dict: ...
 
         def _replace(subject, original_op: "Operator", replacement_op: "Operator"):
             # if operator has steps, recursively iterate through steps and recombine
@@ -1060,31 +1053,25 @@ class TrainableOperator(PlannedOperator):
     """Abstract class for Lale operators in the trainable lifecycle state."""
 
     @overload
-    def __and__(self, other: "TrainedOperator") -> "TrainablePipeline":
-        ...
+    def __and__(self, other: "TrainedOperator") -> "TrainablePipeline": ...
 
     @overload
-    def __and__(self, other: "TrainableOperator") -> "TrainablePipeline":
-        ...
+    def __and__(self, other: "TrainableOperator") -> "TrainablePipeline": ...
 
     @overload
-    def __and__(self, other: Union[Any, "Operator"]) -> "PlannedPipeline":
-        ...
+    def __and__(self, other: Union[Any, "Operator"]) -> "PlannedPipeline": ...
 
     def __and__(self, other):  # type: ignore
         return make_union_no_concat(self, other)
 
     @overload
-    def __rshift__(self, other: "TrainedOperator") -> "TrainablePipeline":
-        ...
+    def __rshift__(self, other: "TrainedOperator") -> "TrainablePipeline": ...
 
     @overload
-    def __rshift__(self, other: "TrainableOperator") -> "TrainablePipeline":
-        ...
+    def __rshift__(self, other: "TrainableOperator") -> "TrainablePipeline": ...
 
     @overload
-    def __rshift__(self, other: Union[Any, "Operator"]) -> "PlannedPipeline":
-        ...
+    def __rshift__(self, other: Union[Any, "Operator"]) -> "PlannedPipeline": ...
 
     def __rshift__(self, other):  # type: ignore
         return make_pipeline(self, other)
@@ -1165,31 +1152,25 @@ class TrainedOperator(TrainableOperator):
     """Abstract class for Lale operators in the trained lifecycle state."""
 
     @overload
-    def __and__(self, other: "TrainedOperator") -> "TrainedPipeline":
-        ...
+    def __and__(self, other: "TrainedOperator") -> "TrainedPipeline": ...
 
     @overload
-    def __and__(self, other: "TrainableOperator") -> "TrainablePipeline":
-        ...
+    def __and__(self, other: "TrainableOperator") -> "TrainablePipeline": ...
 
     @overload
-    def __and__(self, other: Union[Any, "Operator"]) -> "PlannedPipeline":
-        ...
+    def __and__(self, other: Union[Any, "Operator"]) -> "PlannedPipeline": ...
 
     def __and__(self, other):  # type: ignore
         return make_union_no_concat(self, other)
 
     @overload
-    def __rshift__(self, other: "TrainedOperator") -> "TrainedPipeline":
-        ...
+    def __rshift__(self, other: "TrainedOperator") -> "TrainedPipeline": ...
 
     @overload
-    def __rshift__(self, other: "TrainableOperator") -> "TrainablePipeline":
-        ...
+    def __rshift__(self, other: "TrainableOperator") -> "TrainablePipeline": ...
 
     @overload
-    def __rshift__(self, other: Union[Any, "Operator"]) -> "PlannedPipeline":
-        ...
+    def __rshift__(self, other: Union[Any, "Operator"]) -> "PlannedPipeline": ...
 
     def __rshift__(self, other):  # type: ignore
         return make_pipeline(self, other)
@@ -3430,14 +3411,12 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
     @overload
     def get_pipeline(
         self, pipeline_name: None = None, astype: astype_type = "lale"
-    ) -> Optional[TrainedOperator]:
-        ...
+    ) -> Optional[TrainedOperator]: ...
 
     @overload
     def get_pipeline(  # pylint:disable=signature-differs
         self, pipeline_name: str, astype: astype_type = "lale"
-    ) -> Optional[TrainableOperator]:
-        ...
+    ) -> Optional[TrainableOperator]: ...
 
     @available_if(_impl_has("get_pipeline"))
     def get_pipeline(self, pipeline_name=None, astype: astype_type = "lale"):
@@ -4150,9 +4129,11 @@ class BasePipeline(Operator, Generic[OpType_co]):
                     list_of_transformers.append(
                         (
                             pred.name() + "_" + str(id(pred)),
-                            sklearn_make_pipeline(*pred_transformer)
-                            if isinstance(pred_transformer, list)
-                            else pred_transformer,
+                            (
+                                sklearn_make_pipeline(*pred_transformer)
+                                if isinstance(pred_transformer, list)
+                                else pred_transformer
+                            ),
                         )
                     )
                 return FeatureUnion(list_of_transformers)
@@ -4885,9 +4866,11 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
                     inputs = batch_X
                 else:
                     inputs = [
-                        outputs[pred][0]
-                        if isinstance(outputs[pred], tuple)
-                        else outputs[pred]
+                        (
+                            outputs[pred][0]
+                            if isinstance(outputs[pred], tuple)
+                            else outputs[pred]
+                        )
                         for pred in preds
                     ]
                 if len(inputs) == 1:
@@ -5253,8 +5236,7 @@ def make_pipeline_graph(
     steps: List[TrainedOperator],
     edges: List[Tuple[Operator, Operator]],
     ordered: bool = False,
-) -> TrainedPipeline:
-    ...
+) -> TrainedPipeline: ...
 
 
 @overload
@@ -5262,8 +5244,7 @@ def make_pipeline_graph(
     steps: List[TrainableOperator],
     edges: List[Tuple[Operator, Operator]],
     ordered: bool = False,
-) -> TrainablePipeline:
-    ...
+) -> TrainablePipeline: ...
 
 
 @overload
@@ -5271,8 +5252,7 @@ def make_pipeline_graph(
     steps: List[Operator],
     edges: List[Tuple[Operator, Operator]],
     ordered: bool = False,
-) -> PlannedPipeline:
-    ...
+) -> PlannedPipeline: ...
 
 
 def make_pipeline_graph(steps, edges, ordered=False) -> PlannedPipeline:
@@ -5291,18 +5271,15 @@ def make_pipeline_graph(steps, edges, ordered=False) -> PlannedPipeline:
 
 
 @overload
-def make_pipeline(*orig_steps: TrainedOperator) -> TrainedPipeline:
-    ...
+def make_pipeline(*orig_steps: TrainedOperator) -> TrainedPipeline: ...
 
 
 @overload
-def make_pipeline(*orig_steps: TrainableOperator) -> TrainablePipeline:
-    ...
+def make_pipeline(*orig_steps: TrainableOperator) -> TrainablePipeline: ...
 
 
 @overload
-def make_pipeline(*orig_steps: Union[Operator, Any]) -> PlannedPipeline:
-    ...
+def make_pipeline(*orig_steps: Union[Operator, Any]) -> PlannedPipeline: ...
 
 
 def make_pipeline(*orig_steps):
@@ -5329,18 +5306,15 @@ def make_pipeline(*orig_steps):
 
 
 @overload
-def make_union_no_concat(*orig_steps: TrainedOperator) -> TrainedPipeline:
-    ...
+def make_union_no_concat(*orig_steps: TrainedOperator) -> TrainedPipeline: ...
 
 
 @overload
-def make_union_no_concat(*orig_steps: TrainableOperator) -> TrainablePipeline:
-    ...
+def make_union_no_concat(*orig_steps: TrainableOperator) -> TrainablePipeline: ...
 
 
 @overload
-def make_union_no_concat(*orig_steps: Union[Operator, Any]) -> PlannedPipeline:
-    ...
+def make_union_no_concat(*orig_steps: Union[Operator, Any]) -> PlannedPipeline: ...
 
 
 def make_union_no_concat(*orig_steps):  # type: ignore
@@ -5357,18 +5331,15 @@ def make_union_no_concat(*orig_steps):  # type: ignore
 
 
 @overload
-def make_union(*orig_steps: TrainedOperator) -> TrainedPipeline:
-    ...
+def make_union(*orig_steps: TrainedOperator) -> TrainedPipeline: ...
 
 
 @overload
-def make_union(*orig_steps: TrainableOperator) -> TrainablePipeline:
-    ...
+def make_union(*orig_steps: TrainableOperator) -> TrainablePipeline: ...
 
 
 @overload
-def make_union(*orig_steps: Union[Operator, Any]) -> PlannedPipeline:
-    ...
+def make_union(*orig_steps: Union[Operator, Any]) -> PlannedPipeline: ...
 
 
 def make_union(*orig_steps):  # type: ignore

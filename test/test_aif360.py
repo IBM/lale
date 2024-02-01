@@ -1211,20 +1211,20 @@ class TestAIF360Cat(unittest.TestCase):
             cand_row = cand_X.loc[i]
             cand_name = list(cand_X.columns)[0]
             self.assertEqual(
-                1
-                if orig_row["personal_status"].startswith("male")
-                else 0
-                if orig_row["personal_status"].startswith("female")
-                else 0.5,
+                (
+                    1
+                    if orig_row["personal_status"].startswith("male")
+                    else 0 if orig_row["personal_status"].startswith("female") else 0.5
+                ),
                 csep_row["personal_status"],
                 f"personal_status {orig_row['personal_status']}",
             )
             self.assertEqual(
-                1
-                if 26 <= orig_row["age"] <= 1000
-                else 0
-                if 1 <= orig_row["age"] <= 23
-                else 0.5,
+                (
+                    1
+                    if 26 <= orig_row["age"] <= 1000
+                    else 0 if 1 <= orig_row["age"] <= 23 else 0.5
+                ),
                 csep_row["age"],
                 f"age {orig_row['age']}",
             )

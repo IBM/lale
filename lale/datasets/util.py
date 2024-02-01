@@ -52,13 +52,11 @@ def pandas2spark(pandas_df):
 
 
 @overload
-def load_boston(return_X_y: Literal[True]) -> Tuple[Any, Any]:
-    ...
+def load_boston(return_X_y: Literal[True]) -> Tuple[Any, Any]: ...
 
 
 @overload
-def load_boston(return_X_y: Literal[False] = False) -> Bunch:
-    ...
+def load_boston(return_X_y: Literal[False] = False) -> Bunch: ...
 
 
 def load_boston(return_X_y: bool = False):

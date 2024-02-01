@@ -100,8 +100,7 @@ def mockup_data_loader(
     n_batches: int,
     astype: Literal["pandas"],
     shuffle: bool = False,
-) -> Iterable[_PandasBatch]:
-    ...
+) -> Iterable[_PandasBatch]: ...
 
 
 @overload
@@ -111,8 +110,7 @@ def mockup_data_loader(
     n_batches: int,
     astype: datatype_param_type,
     shuffle: bool = False,
-) -> Iterable[_PandasOrSparkBatch]:
-    ...
+) -> Iterable[_PandasOrSparkBatch]: ...
 
 
 def mockup_data_loader(

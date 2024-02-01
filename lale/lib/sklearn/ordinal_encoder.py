@@ -86,9 +86,9 @@ class _OrdinalEncoderImpl:
                             transformed_X[:, i][~X_mask[:, i]] = len(
                                 self._wrapped_model.categories_[i]
                             )
-                            dict_categories[
-                                len(self._wrapped_model.categories_[i])
-                            ] = None
+                            dict_categories[len(self._wrapped_model.categories_[i])] = (
+                                None
+                            )
                         else:
                             transformed_X[:, i][
                                 ~X_mask[:, i]

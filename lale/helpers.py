@@ -598,12 +598,10 @@ def _import_from_sklearn_inplace_helper(
     @overload
     def import_nested_params(
         orig_hyperparams: dict, partial_dict: bool
-    ) -> Optional[dict]:
-        ...
+    ) -> Optional[dict]: ...
 
     @overload
-    def import_nested_params(orig_hyperparams: Any, partial_dict: bool) -> Any:
-        ...
+    def import_nested_params(orig_hyperparams: Any, partial_dict: bool) -> Any: ...
 
     def import_nested_params(orig_hyperparams: Any, partial_dict: bool = False):
         """
@@ -1017,9 +1015,9 @@ def write_batch_output_to_file(
                 name="y", shape=h5_labels_shape, chunks=True, compression="gzip"
             )
     dataset = file_obj["X"]
-    dataset[
-        batch_idx * len(batch_out_X) : (batch_idx + 1) * len(batch_out_X)
-    ] = batch_out_X
+    dataset[batch_idx * len(batch_out_X) : (batch_idx + 1) * len(batch_out_X)] = (
+        batch_out_X
+    )
     if batch_out_y is not None or batch_y is not None:
         labels = file_obj["y"]
         if batch_out_y is not None:
