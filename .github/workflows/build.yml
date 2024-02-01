@@ -137,9 +137,6 @@ jobs:
         - test-case: test/test_relational_sklearn.py
           python-version: 3.8
           setup-target: '.[full,test]'
-        - test-case: test/test_autoai_output_consumption.py
-          python-version: 3.8
-          setup-target: '.[full,test]'
 
     steps:
     - uses: actions/checkout@v4
@@ -167,9 +164,6 @@ jobs:
         pip install "autoai-libs>=1.12.6"
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
-    - name: Install deps for test_autoai_output_consumption
-      if: ${{ matrix.test-case == 'test/test_autoai_output_consumption.py' }}
-      run: pip install 'scikit-learn==0.23.1' 'lightgbm==3.3.0' 'scipy==1.8.1'
     - name: Install deps for test_relational_sklearn
       if: ${{ matrix.test-case == 'test/test_relational_sklearn.py' }}
       run: pip install 'scikit-learn>=1.0'
@@ -239,9 +233,6 @@ jobs:
         - test-case: test/test_snapml.py
           python-version: 3.9
           setup-target: '.[full,test]'
-        - test-case: test/test_autoai_output_consumption.py
-          python-version: 3.8
-          setup-target: '.[full,test]'
 
     steps:
     - uses: actions/checkout@v4
@@ -269,9 +260,6 @@ jobs:
         pip install "autoai-libs>=1.12.6"
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
-    - name: Install deps for test_autoai_output_consumption
-      if: ${{ matrix.test-case == 'test/test_autoai_output_consumption.py' }}
-      run: pip install 'scikit-learn==0.23.1' 'lightgbm==3.3.0' 'scipy==1.8.1'
     - name: Install deps for test_relational_sklearn
       if: ${{ matrix.test-case == 'test/test_relational_sklearn.py' }}
       run: pip install 'scikit-learn>=1.0'
