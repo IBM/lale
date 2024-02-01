@@ -47,7 +47,7 @@ else:
         "jsonschema<=4.20.0",
         "jsonsubschema>=0.0.6",
         "scikit-learn>=1.0.0,<=1.2.0",
-        "scipy<1.11.0",
+        "scipy",
         "pandas",
         "packaging",
         "decorator",
