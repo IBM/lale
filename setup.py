@@ -44,7 +44,7 @@ else:
         "black>=22.1.0",
         "graphviz",
         "hyperopt>=0.2,<=0.2.5",
-        "jsonschema<=4.20.0",
+        "jsonschema",
         "jsonsubschema>=0.0.6",
         "scikit-learn>=1.0.0,<=1.2.0",
         "scipy<1.11.0",
