@@ -167,7 +167,6 @@ from typing import (
     Mapping,
     Optional,
     Set,
-    Text,
     Tuple,
     Type,
     TypeVar,
@@ -4840,7 +4839,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
             [description]
         """
         outputs: Dict[TrainedOpType_co, tuple] = {}
-        serialization_out_dir: Text = ""
+        serialization_out_dir: str = ""
         if serialize:
             serialization_out_dir = os.path.join(
                 os.path.dirname(__file__), "temp_serialized"
