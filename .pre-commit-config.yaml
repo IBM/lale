@@ -47,7 +47,7 @@ repos:
         entry: pylint
         language: python
         types: [python]
-        additional_dependencies: ['pylint==2.15.5']
+        additional_dependencies: ['pylint==2.17.7']
         args:
           [
             "-rn", # Only display messages

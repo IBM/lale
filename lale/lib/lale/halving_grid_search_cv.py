@@ -176,7 +176,7 @@ class _HalvingGridSearchCVImpl:
                                 self._hyperparams["max_opt_time"], self.grid.fit, (X, y)
                             )
                         except FunctionTimedOut as exc:
-                            raise BaseException(
+                            raise BaseException(  # pylint:disable=broad-exception-raised
                                 "HalvingGridSearchCV timed out."
                             ) from exc
                     else:
