@@ -362,4 +362,25 @@ if snapml_version is not None and snapml_version >= version.Version("1.12"):
         }
     )
 
+if snapml_version is not None and snapml_version >= version.Version("1.14"):
+    SnapBoostingMachineRegressor = SnapBoostingMachineRegressor.customize_schema(
+        alpha={
+            "type": "number",
+            "minimum": 0.0,
+            "exclusiveMinimum": True,
+            "minimumForOptimizer": 1e-10,
+            "maximumForOptimizer": 1.0,
+            "default": 0.5,
+            "description": "Quantile used when 'objective = quantile'.",
+        },
+        min_h_quantile={
+            "type": "number",
+            "minimumForOptimizer": 0.0,
+            "maximumForOptimizer": 1.0,
+            "default": 0.0,
+            "description": "Regularization term for quantile regression.",
+        },
+        set_as_available=True,
+    )
+
 lale.docstrings.set_docstrings(SnapBoostingMachineRegressor)
