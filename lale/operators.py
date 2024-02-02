@@ -2358,8 +2358,9 @@ class IndividualOp(Operator):
                     k for k in hp_explicit.keys() if k not in extra_keys
                 }
                 remove_recommendation = (
-                    "unknown key "
+                    "unknown key"
                     + ("s" if len(extra_keys) > 1 else "")
+                    + " "
                     + ", ".join(("'" + k + "'" for k in extra_keys))
                 )
 
