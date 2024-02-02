@@ -15,7 +15,7 @@ typing-extensions
 # subset of setup.py -> extras_require -> full
 mystic
 xgboost
-lightgbm<4.0.0
+lightgbm<4.4.0
 liac-arff>=2.4.0
 numba==0.49.0
 aif360>=0.4.0

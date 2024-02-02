@@ -529,4 +529,26 @@ if lightgbm_installed:
             set_as_available=True,
         )
 
+    if lightgbm_version >= version.Version("4.0.0"):
+        # https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMClassifier.html#lightgbm.LGBMClassifier
+        LGBMClassifier = LGBMClassifier.customize_schema(
+            n_job={
+                "description": """Number of parallel threads to use for training (can be changed at prediction time by passing it as an extra keyword argument).
+For better performance, it is recommended to set this to the number of physical cores in the CPU.
+Negative integers are interpreted as following joblib’s formula (n_cpus + 1 + n_jobs), just like scikit-learn (so e.g. -1 means using all threads). A value of zero corresponds the default number of threads configured for OpenMP in the system. """,
+                "anyOf": [
+                    {
+                        "type": "integer",
+                        "description": "Number of parallel threads.",
+                    },
+                    {
+                        "description": "Use the number of physical cores in the system (its correct detection requires either the joblib or the psutil util libraries to be installed).",
+                        "enum": [None],
+                    },
+                ],
+                "default": None,
+            },
+            set_as_available=True,
+        )
+
 lale.docstrings.set_docstrings(LGBMClassifier)
