@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 import tempfile
 import unittest
 import warnings
@@ -86,6 +87,10 @@ def iris_fmin_tae(op, num_folds=5):
     return lale_op_smac_tae(op, iris_f_min_for_folds(num_folds=num_folds))
 
 
+@unittest.skipIf(
+    sys.version_info >= (3, 11),
+    "SMAC interface is not currently supported with newer version of Python",
+)
 class TestSMAC(unittest.TestCase):
     def setUp(self):
         X, y = load_iris(return_X_y=True)
@@ -684,6 +689,10 @@ class TestAutoConfigureClassification(unittest.TestCase):
         _ = best_pipeline.predict(self.X_test)
         assert best_pipeline is not None
 
+    @unittest.skipIf(
+        sys.version_info >= (3, 11),
+        "SMAC interface is not currently supported with newer version of Python",
+    )
     def test_with_smaccv(self):
         planned_pipeline = (PCA | NoOp) >> LogisticRegression
         best_pipeline = planned_pipeline.auto_configure(
@@ -1059,6 +1068,10 @@ class TestKNeighborsClassifier(unittest.TestCase):
             )
         _ = trained.predict(self.test_X)
 
+    @unittest.skipIf(
+        sys.version_info >= (3, 11),
+        "SMAC interface is not currently supported with newer version of Python",
+    )
     def test_smac(self):
         planned = KNeighborsClassifier
         trained = planned.auto_configure(
@@ -1108,6 +1121,10 @@ class TestKNeighborsRegressor(unittest.TestCase):
             )
         _ = trained.predict(self.test_X)
 
+    @unittest.skipIf(
+        sys.version_info >= (3, 11),
+        "SMAC interface is not currently supported with newer version of Python",
+    )
     def test_smac(self):
         planned = KNeighborsRegressor
         trained = planned.auto_configure(
