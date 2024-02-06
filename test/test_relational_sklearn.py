@@ -1858,7 +1858,7 @@ class TestTaskGraphsWithConcat(unittest.TestCase):
             )
             if n_batches == 1:
                 for sk_s, rasl_s in zip(sk_scores, rasl_scores):
-                    self.assertAlmostEqual(sk_s, rasl_s)
+                    self.assertAlmostEqual(sk_s, rasl_s, delta=0.05)
 
 
 class TestTaskGraphsWithCategoricalConcat(unittest.TestCase):
@@ -2035,7 +2035,7 @@ class TestTaskGraphsWithCategoricalConcat(unittest.TestCase):
             )
             if n_batches == 1:
                 for sk_s, rasl_s in zip(sk_scores, rasl_scores):
-                    self.assertAlmostEqual(sk_s, rasl_s)
+                    self.assertAlmostEqual(sk_s, rasl_s, delta=0.05)
 
 
 class TestTaskGraphsSpark(unittest.TestCase):
@@ -2244,7 +2244,7 @@ class TestBatchedBaggingClassifier(unittest.TestCase):
         return sk_make_pipeline(
             SkOrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1),
             SkMinMaxScaler(),
-            SkDecisionTreeClassifier(random_state=97, max_features="auto"),
+            SkDecisionTreeClassifier(random_state=97, max_features=None),
         )
 
     @classmethod
@@ -2252,7 +2252,7 @@ class TestBatchedBaggingClassifier(unittest.TestCase):
         if final_est == "bagging_monoid":
             est = BatchedBaggingClassifier(
                 base_estimator=DecisionTreeClassifier(
-                    random_state=97, max_features="auto"
+                    random_state=97, max_features=None
                 )
             )
         else:

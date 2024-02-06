@@ -23,7 +23,7 @@ from packaging import version
 
 import lale.docstrings
 import lale.operators
-from lale.schemas import AnyOf, Enum, Int, Null
+from lale.schemas import AnyOf, Enum, Float, Int, Null
 
 
 class _OrdinalEncoderImpl:
@@ -315,6 +315,35 @@ if lale.operators.sklearn_version >= version.Version("1.1"):
             desc="Encoded value of missing categories. If set to ``np.nan``, then the ``dtype`` parameter must be a float dtype.",
             default=np.nan,
             types=[Int(), Enum(values=[np.nan]), Null()],
+        ),
+        set_as_available=True,
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.3"):
+    OrdinalEncoder = OrdinalEncoder.customize_schema(
+        max_categories=AnyOf(
+            desc="""Specifies an upper limit to the number of output categories for each input feature when considering infrequent categories. If there are infrequent categories, max_categories includes the category representing the infrequent categories along with the frequent categories. If None, there is no limit to the number of output features.
+
+max_categories do not take into account missing or unknown categories. Setting unknown_value or encoded_missing_value to an integer will increase the number of unique integer codes by one each. This can result in up to max_categories + 2 integer codes.
+""",
+            default=None,
+            types=[Int(minimum=1, exclusiveMinimum=True), Null()],
+        ),
+        min_frequency=AnyOf(
+            desc="Specifies the minimum frequency below which a category will be considered infrequent.",
+            default=None,
+            types=[
+                Int(
+                    desc="Categories with a smaller cardinality will be considered infrequent.",
+                    minimum=1,
+                ),
+                Float(
+                    desc="Categories with a smaller cardinality than min_frequency * n_samples will be considered infrequent.",
+                    minimum=0.0,
+                    maximum=1.0,
+                ),
+                Null(),
+            ],
         ),
         set_as_available=True,
     )

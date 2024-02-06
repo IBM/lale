@@ -307,5 +307,24 @@ if lale.operators.sklearn_version >= version.Version("1.2"):
         set_as_available=True,
     )
 
+if lale.operators.sklearn_version >= version.Version("1.3"):
+    AdaBoostClassifier = AdaBoostClassifier.customize_schema(
+        base_estimator={
+            "anyOf": [
+                {"laleType": "operator"},
+                {"enum": ["deprecated", None]},
+            ],
+            "default": "deprecated",
+            "description": "Deprecated. Use `estimator` instead.",
+        },
+        set_as_available=True,
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.5"):
+    AdaBoostClassifier = AdaBoostClassifier.customize_schema(
+        base_estimator=None,
+        set_as_available=True,
+    )
+
 
 lale.docstrings.set_docstrings(AdaBoostClassifier)

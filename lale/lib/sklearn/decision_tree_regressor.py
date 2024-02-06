@@ -351,4 +351,33 @@ if lale.operators.sklearn_version >= version.Version("1.0"):
         set_as_available=True,
     )
 
+if lale.operators.sklearn_version >= version.Version("1.3"):
+    DecisionTreeRegressor = DecisionTreeRegressor.customize_schema(
+        max_features={
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "minimum": 2,
+                    "laleMaximum": "X/items/maxItems",  # number of columns
+                    "forOptimizer": False,
+                    "description": "Consider max_features features at each split.",
+                },
+                {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "exclusiveMinimum": True,
+                    "maximum": 1.0,
+                    "minimumForOptimizer": 0.01,
+                    "default": 0.5,
+                    "distribution": "uniform",
+                    "description": "max_features is a fraction and int(max_features * n_features) features are considered at each split.",
+                },
+                {"enum": ["sqrt", "log2", None]},
+            ],
+            "default": None,
+            "description": "The number of features to consider when looking for the best split.",
+        },
+        set_as_available=True,
+    )
+
 lale.docstrings.set_docstrings(DecisionTreeRegressor)

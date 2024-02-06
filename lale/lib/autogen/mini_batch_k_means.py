@@ -1,8 +1,8 @@
-from numpy import inf, nan
+from packaging import version
 from sklearn.cluster import MiniBatchKMeans as Op
 
 from lale.docstrings import set_docstrings
-from lale.operators import make_operator
+from lale.operators import make_operator, sklearn_version
 
 
 class _MiniBatchKMeansImpl:
@@ -181,6 +181,20 @@ _input_fit_schema = {
         },
     },
 }
+
+if sklearn_version >= version.Version("1.3"):
+    _input_fit_schema["properties"]["sample_weight"] = {  # type:ignore
+        "anyOf": [
+            {"type": "array", "items": {"type": "number"}},
+            {"enum": [None, "deprecated"]},
+        ],
+        "default": "deprecated",
+        "description": "The parameter `sample_weight` is deprecated in version 1.3 and will be removed in 1.5.",
+    }
+
+if sklearn_version >= version.Version("1.5"):
+    del _input_fit_schema["properties"]["sample_weight"]  # type:ignore
+
 _input_transform_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Transform X to a cluster-distance space.",

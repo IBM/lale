@@ -110,7 +110,7 @@ _input_fit_transform_schema = {
         "y": {
             "type": "array",
             "items": {"type": "number"},
-            "default": "None",
+            "default": None,
             "description": "Target values. (None for unsupervised transformations.)",
         },
     },

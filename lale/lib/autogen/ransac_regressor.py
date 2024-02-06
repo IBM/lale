@@ -233,6 +233,24 @@ _combined_schemas = {
 }
 RANSACRegressor = make_operator(_RANSACRegressorImpl, _combined_schemas)
 
+if sklearn_version >= version.Version("1.1"):
+    RANSACRegressor = RANSACRegressor.customize_schema(
+        base_estimator={
+            "anyOf": [
+                {"laleType": "operator"},
+                {"enum": ["deprecated", None]},
+            ],
+            "default": "deprecated",
+            "description": "Deprecated. Use `estimator` instead.",
+        },
+        estimator={
+            "anyOf": [{"type": "object"}, {"enum": [None]}],
+            "default": None,
+            "description": "Base estimator object which implements the following methods:   * `fit(X, y)`: Fit model to given training data and target values",
+        },
+        set_as_available=True,
+    )
+
 if sklearn_version >= version.Version("1.2"):
     # new: "https://scikit-learn.org/1.2/modules/generated/sklearn.linear_model.RANSACRegressor#sklearn-linear_model-ransacregressor"
 
@@ -267,6 +285,11 @@ if sklearn_version >= version.Version("1.2"):
             "description": "Stop iteration if at least this number of inliers are found.",
         },
         set_as_available=True,
+    )
+
+if sklearn_version >= version.Version("1.3"):
+    RANSACRegressor = RANSACRegressor.customize_schema(
+        base_estimator=None, set_as_available=True
     )
 
 set_docstrings(RANSACRegressor)

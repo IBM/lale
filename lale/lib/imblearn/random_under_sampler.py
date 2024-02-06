@@ -74,6 +74,7 @@ _combined_schemas = {
             "transformer",
             "estimator",
             "resampler",
+            "classifier",
         ],  # transformer and estimator both as a higher-order operator
         "post": [],
     },

@@ -213,7 +213,13 @@ if lale.operators.sklearn_version >= version.Version("1.2"):
             "description": """If True, features that consist exclusively of missing values when fit is called
 are returned in results when transform is called. The imputed value is always 0 except when strategy="constant"
 in which case fill_value will be used instead.""",
-        }
+        },
+        set_as_available=True,
     )
+
+if lale.operators.sklearn_version >= version.Version("1.3"):
+    # old: https://scikit-learn.org/1.0/modules/generated/sklearn.impute.SimpleImputer.html#sklearn.impute.SimpleImputer
+    # new: https://scikit-learn.org/1.1/modules/generated/sklearn.impute.SimpleImputer.html#sklearn.impute.SimpleImputer
+    SimpleImputer = SimpleImputer.customize_schema(verbose=None, set_as_available=True)
 
 lale.docstrings.set_docstrings(SimpleImputer)

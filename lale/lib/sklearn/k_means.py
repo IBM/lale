@@ -179,6 +179,20 @@ _input_fit_schema = {
         },
     },
 }
+
+if sklearn_version >= version.Version("1.3"):
+    _input_fit_schema["properties"]["sample_weight"] = {  # type:ignore
+        "anyOf": [
+            {"type": "array", "items": {"type": "number"}},
+            {"enum": [None, "deprecated"]},
+        ],
+        "default": "deprecated",
+        "description": "The parameter `sample_weight` is deprecated in version 1.3 and will be removed in 1.5.",
+    }
+
+if sklearn_version >= version.Version("1.5"):
+    del _input_fit_schema["properties"]["sample_weight"]  # type:ignore
+
 _input_transform_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Transform X to a cluster-distance space.",
@@ -267,27 +281,39 @@ For now “auto” (kept for backward compatibiliy) chooses “elkan” but it m
         set_as_available=True,
     )
 
-    if sklearn_version >= version.Version("1.2"):
-        # old: https://scikit-learn.org/1.1/modules/generated/sklearn.cluster.KMeans.html
-        # new: https://scikit-learn.org/1.2/modules/generated/sklearn.cluster.KMeans.html
-        KMeans = KMeans.customize_schema(
-            n_init={
-                "anyOf": [
-                    {
-                        "type": "integer",
-                        "minimumForOptimizer": 3,
-                        "maximumForOptimizer": 10,
-                        "distribution": "uniform",
-                    },
-                    {
-                        "enum": ["auto"],
-                    },
-                ],
-                "default": 10,
-                "description": """Number of time the k-means algorithm will be run with different centroid seeds.
+if sklearn_version >= version.Version("1.2"):
+    # old: https://scikit-learn.org/1.1/modules/generated/sklearn.cluster.KMeans.html
+    # new: https://scikit-learn.org/1.2/modules/generated/sklearn.cluster.KMeans.html
+    KMeans = KMeans.customize_schema(
+        n_init={
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "minimumForOptimizer": 3,
+                    "maximumForOptimizer": 10,
+                    "distribution": "uniform",
+                },
+                {
+                    "enum": ["auto"],
+                },
+            ],
+            "default": 10,
+            "description": """Number of time the k-means algorithm will be run with different centroid seeds.
 The final results will be the best output of n_init consecutive runs in terms of inertia.
 When n_init='auto', the number of runs will be 10 if using init='random', and 1 if using init='kmeans++'.""",
-            }
-        )
+        }
+    )
+
+if sklearn_version >= version.Version("1.3"):
+    KMeans = KMeans.customize_schema(
+        algorithm={
+            "description": """K-means algorithm to use.
+The classical EM-style algorithm is “lloyd”. The “elkan” variation is more efficient on data with well-defined clusters, by using the triangle inequality.
+However it’s more memory intensive due to the allocation of an extra array of shape (n_samples, n_clusters).""",
+            "enum": ["lloyd", "elkan"],
+            "default": "lloyd",
+        },
+        set_as_available=True,
+    )
 
 set_docstrings(KMeans)

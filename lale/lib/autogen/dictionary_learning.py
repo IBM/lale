@@ -1,8 +1,8 @@
-from numpy import inf, nan
+from packaging import version
 from sklearn.decomposition import DictionaryLearning as Op
 
 from lale.docstrings import set_docstrings
-from lale.operators import make_operator
+from lale.operators import make_operator, sklearn_version
 
 
 class _DictionaryLearningImpl:
@@ -223,5 +223,19 @@ _combined_schemas = {
     },
 }
 DictionaryLearning = make_operator(_DictionaryLearningImpl, _combined_schemas)
+
+if sklearn_version >= version.Version("1.3"):
+    # new: https://scikit-learn.org/1.3/modules/generated/sklearn.cluster.FeatureAgglomeration.html
+    DictionaryLearning = DictionaryLearning.customize_schema(
+        callback={
+            "anyOf": [
+                {"laleType": "callable", "forOptimizer": False},
+                {"enum": [None]},
+            ],
+            "default": None,
+            "description": "Callable that gets invoked every five iterations.",
+        },
+        set_as_available=True,
+    )
 
 set_docstrings(DictionaryLearning)

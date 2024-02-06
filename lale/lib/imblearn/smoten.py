@@ -78,6 +78,7 @@ Expects that the data to resample are only made of categorical features.""",
             "transformer",
             "estimator",
             "resampler",
+            "classifier",
         ],  # transformer and estimator both as a higher-order operator
         "post": [],
     },

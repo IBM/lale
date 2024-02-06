@@ -249,4 +249,37 @@ if sklearn_version >= version.Version("0.22"):
         set_as_available=True,
     )
 
+if sklearn_version >= version.Version("1.1"):
+    MiniBatchDictionaryLearning = MiniBatchDictionaryLearning.customize_schema(
+        max_iter={
+            "type": "integer",
+            "minimumForOptimizer": 5,
+            "maximumForOptimizer": 1000,
+            "distribution": "uniform",
+            "default": 1000,
+            "description": "total number of iterations to perform",
+        },
+        n_iter={
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "minimumForOptimizer": 5,
+                    "maximumForOptimizer": 1000,
+                    "distribution": "uniform",
+                    "default": 1000,
+                },
+                {"enum": ["deprecated"]},
+            ],
+            "description": "total number of iterations to perform",
+            "default": "deprecated",
+        },
+        set_as_available=True,
+    )
+
+if sklearn_version >= version.Version("1.3"):
+    MiniBatchDictionaryLearning = MiniBatchDictionaryLearning.customize_schema(
+        n_iter=None,
+        set_as_available=True,
+    )
+
 set_docstrings(MiniBatchDictionaryLearning)
