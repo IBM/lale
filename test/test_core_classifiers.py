@@ -89,7 +89,7 @@ def create_function_test_classifier(clf_name):
             from lale import schemas
 
             clf = clf.customize_schema(
-                loss=schemas.Enum(default="deviance", values=["deviance"])
+                loss=schemas.Enum(default="log_loss", values=["log_loss"])
             )
 
         # test_with_hyperopt

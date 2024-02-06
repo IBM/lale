@@ -87,6 +87,7 @@ Borderline samples will be detected and used to generate new synthetic samples."
             "transformer",
             "estimator",
             "resampler",
+            "classifier",
         ],  # transformer and estimator both as a higher-order operator
         "post": [],
     },

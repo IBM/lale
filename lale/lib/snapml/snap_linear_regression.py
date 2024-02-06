@@ -290,7 +290,7 @@ _combined_schemas = {
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.snap_linear_regression.html",
     "import_from": "snapml",
     "type": "object",
-    "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
+    "tags": {"pre": [], "op": ["estimator", "regressor"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,

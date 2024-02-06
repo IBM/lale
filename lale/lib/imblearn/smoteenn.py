@@ -81,6 +81,7 @@ Combine over- and under-sampling using SMOTE and Edited Nearest Neighbours.""",
             "transformer",
             "estimator",
             "resampler",
+            "classifier",
         ],  # transformer and estimator both as a higher-order operator
         "post": [],
     },

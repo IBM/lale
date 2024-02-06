@@ -291,4 +291,26 @@ if sklearn_version >= version.Version("1.2"):
         ),
     )
 
+if sklearn_version >= version.Version("1.3"):
+    # new: https://scikit-learn.org/1.3/modules/generated/sklearn.preprocessing.OneHotEncoder.html
+    OneHotEncoder = OneHotEncoder.customize_schema(
+        feature_name_combiner={
+            "anyOf": [
+                {
+                    "enum": ["concat"],
+                    "description": 'concatenates encoded feature name and category with feature + "_" + str(category).E.g. feature X with values 1, 6, 7 create feature names X_1, X_6, X_7.',
+                },
+                {
+                    "laleType": "callable",
+                    "forOptimizer": False,
+                    "description": "Callable with signature def callable(input_feature, category) that returns a string",
+                },
+            ],
+            "default": "concat",
+            "description": "Used to create feature names to be returned by get_feature_names_out.",
+        },
+        set_as_available=True,
+    )
+
+
 lale.docstrings.set_docstrings(OneHotEncoder)

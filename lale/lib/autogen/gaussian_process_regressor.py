@@ -1,8 +1,8 @@
-from numpy import inf, nan
+from packaging import version
 from sklearn.gaussian_process import GaussianProcessRegressor as Op
 
 from lale.docstrings import set_docstrings
-from lale.operators import make_operator
+from lale.operators import make_operator, sklearn_version
 
 
 class _GaussianProcessRegressorImpl:
@@ -170,5 +170,23 @@ _combined_schemas = {
 GaussianProcessRegressor = make_operator(
     _GaussianProcessRegressorImpl, _combined_schemas
 )
+
+if sklearn_version >= version.Version("1.3"):
+
+    GaussianProcessRegressor = GaussianProcessRegressor.customize_schema(
+        n_targets={
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "minimum": 0,
+                    "distribution": "uniform",
+                },
+                {"enum": [None]},
+            ],
+            "default": None,
+            "description": "The number of dimensions of the target values. Used to decide the number of outputs when sampling from the prior distributions (i.e. calling sample_y before fit). This parameter is ignored once fit has been called.",
+        },
+        set_as_available=True,
+    )
 
 set_docstrings(GaussianProcessRegressor)

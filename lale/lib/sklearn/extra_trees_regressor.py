@@ -382,5 +382,45 @@ if lale.operators.sklearn_version >= version.Version("1.1"):
         set_as_available=True,
     )
 
+if lale.operators.sklearn_version >= version.Version("1.3"):
+    ExtraTreesRegressor = ExtraTreesRegressor.customize_schema(
+        max_features={
+            "anyOf": [
+                {"type": "integer", "forOptimizer": False},
+                {
+                    "type": "number",
+                    "minimum": 0.0,
+                    "exclusiveMinimum": True,
+                    "minimumForOptimizer": 0.01,
+                    "maximumForOptimizer": 1.0,
+                    "default": 0.5,
+                    "distribution": "uniform",
+                },
+                {"enum": ["sqrt", "log2", None]},
+            ],
+            "default": None,
+            "description": "The number of features to consider when looking for the best split.",
+        },
+        set_as_available=True,
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.3"):
+    ExtraTreesRegressor = ExtraTreesRegressor.customize_schema(
+        oob_score={
+            "anyOf": [
+                {
+                    "laleType": "callable",
+                    "forOptimizer": False,
+                    "description": "A callable with signature metric(y_true, y_pred).",
+                },
+                {
+                    "type": "boolean",
+                },
+            ],
+            "description": "Whether to use out-of-bag samples to estimate the generalization accuracy.",
+            "default": False,
+        },
+        set_as_available=True,
+    )
 
 lale.docstrings.set_docstrings(ExtraTreesRegressor)

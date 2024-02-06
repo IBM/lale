@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import sklearn.svm
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -296,5 +297,43 @@ _combined_schemas = {
 
 
 LinearSVC = lale.operators.make_operator(sklearn.svm.LinearSVC, _combined_schemas)
+
+if lale.operators.sklearn_version >= version.Version("1.3"):
+    LinearSVC = LinearSVC.customize_schema(
+        dual={
+            "anyOf": [
+                {
+                    "type": "boolean",
+                    "description": "Prefer dual=False when n_samples > n_features. ",
+                },
+                {
+                    "enum": ["auto"],
+                    "description": "Choose the value of the parameter automatically, based on the values of n_samples, n_features, loss, multi_class and penalty. If n_samples < n_features and optimizer supports chosen loss, multi_class and penalty, then dual will be set to True, otherwise it will be set to False.",
+                },
+            ],
+            "description": "Select the algorithm to either solve the dual or primal optimization problem.",
+            "default": True,
+        },
+        set_as_available=True,
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.5"):
+    LinearSVC = LinearSVC.customize_schema(
+        dual={
+            "anyOf": [
+                {
+                    "type": "boolean",
+                    "description": "Prefer dual=False when n_samples > n_features. ",
+                },
+                {
+                    "enum": ["auto"],
+                    "description": "Choose the value of the parameter automatically, based on the values of n_samples, n_features, loss, multi_class and penalty. If n_samples < n_features and optimizer supports chosen loss, multi_class and penalty, then dual will be set to True, otherwise it will be set to False.",
+                },
+            ],
+            "description": "Select the algorithm to either solve the dual or primal optimization problem.",
+            "default": "auto",
+        },
+        set_as_available=True,
+    )
 
 lale.docstrings.set_docstrings(LinearSVC)

@@ -186,4 +186,45 @@ if sklearn_version >= version.Version("1.2"):
         set_as_available=True,
     )
 
+if sklearn_version >= version.Version("1.3"):
+
+    BayesianRidge = BayesianRidge.customize_schema(
+        n_iter={
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "minimumForOptimizer": 5,
+                    "maximumForOptimizer": 1000,
+                    "distribution": "uniform",
+                    "default": 300,
+                    "description": "Maximum number of iterations",
+                },
+                {"enum": ["deprecated"]},
+            ],
+            "default": "deprecated",
+            "description": "Deprecated. Use `max_iter` instead.",
+        },
+        max_iter={
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "minimumForOptimizer": 5,
+                    "maximumForOptimizer": 1000,
+                    "distribution": "uniform",
+                },
+                {"enum": [None], "description": "Corresponds to 300"},
+            ],
+            "description": "Maximum number of iterations",
+            "default": None,
+        },
+        set_as_available=True,
+    )
+
+if sklearn_version >= version.Version("1.5"):
+
+    BayesianRidge = BayesianRidge.customize_schema(
+        n_iter=None,
+        set_as_available=True,
+    )
+
 set_docstrings(BayesianRidge)
