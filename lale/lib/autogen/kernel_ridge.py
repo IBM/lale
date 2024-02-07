@@ -170,4 +170,23 @@ if sklearn_version >= version.Version("1.2"):
         set_as_available=True,
     )
 
+if sklearn_version >= version.Version("1.4"):
+
+    KernelRidge = KernelRidge.customize_schema(
+        degree={
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "minimumForOptimizer": 0,
+                    "maximumForOptimizer": 100,
+                    "distribution": "uniform",
+                },
+                {"type": "number", "forOptimizer": False},
+            ],
+            "default": 3,
+            "description": "Degree of the polynomial kernel",
+        },
+        set_as_available=True,
+    )
+
 set_docstrings(KernelRidge)

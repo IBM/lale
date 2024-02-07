@@ -22,6 +22,7 @@ try:
 except ImportError:
     tensorflow_installed = False
 
+from lale.helpers import with_fixed_estimator_name
 from lale.lib.aif360 import (
     CalibratedEqOddsPostprocessing,
     DisparateImpactRemover,
@@ -62,75 +63,95 @@ class TestEnsemblesWithAIF360(unittest.TestCase):
 
     def test_bagging_pre_estimator_mitigation_ensemble(self):
         model = DisparateImpactRemover(**self.fairness_info) >> BaggingClassifier(
-            base_estimator=DecisionTreeClassifier()
+            **with_fixed_estimator_name(estimator=DecisionTreeClassifier())
         )
         self._attempt_fit_predict(model)
 
     def test_bagging_post_estimator_mitigation_ensemble(self):
         model = CalibratedEqOddsPostprocessing(
             **self.fairness_info,
-            estimator=BaggingClassifier(base_estimator=DecisionTreeClassifier())
+            estimator=BaggingClassifier(
+                **with_fixed_estimator_name(estimator=DecisionTreeClassifier())
+            )
         )
         self._attempt_fit_predict(model)
 
     def test_bagging_pre_estimator_mitigation_base(self):
         model = BaggingClassifier(
-            base_estimator=DisparateImpactRemover(**self.fairness_info)
-            >> DecisionTreeClassifier()
+            **with_fixed_estimator_name(
+                estimator=DisparateImpactRemover(**self.fairness_info)
+                >> DecisionTreeClassifier()
+            )
         )
         self._attempt_fit_predict(model)
 
     def test_bagging_in_estimator_mitigation_base(self):
-        model = BaggingClassifier(base_estimator=PrejudiceRemover(**self.fairness_info))
+        model = BaggingClassifier(
+            **with_fixed_estimator_name(
+                estimator=PrejudiceRemover(**self.fairness_info)
+            )
+        )
         self._attempt_fit_predict(model)
 
     def test_bagging_in_estimator_mitigation_base_1(self):
         if tensorflow_installed:
             tf.compat.v1.disable_eager_execution()
             model = BaggingClassifier(
-                base_estimator=AdversarialDebiasing(**self.fairness_info),
-                n_estimators=2,
+                **with_fixed_estimator_name(
+                    estimator=AdversarialDebiasing(**self.fairness_info),
+                    n_estimators=2,
+                )
             )
             self._attempt_fit_predict(model)
 
     def test_bagging_post_estimator_mitigation_base(self):
         model = BaggingClassifier(
-            base_estimator=CalibratedEqOddsPostprocessing(
-                **self.fairness_info, estimator=DecisionTreeClassifier()
+            **with_fixed_estimator_name(
+                estimator=CalibratedEqOddsPostprocessing(
+                    **self.fairness_info, estimator=DecisionTreeClassifier()
+                )
             )
         )
         self._attempt_fit_predict(model)
 
     def test_adaboost_pre_estimator_mitigation_ensemble(self):
         model = DisparateImpactRemover(**self.fairness_info) >> AdaBoostClassifier(
-            base_estimator=DecisionTreeClassifier()
+            **with_fixed_estimator_name(estimator=DecisionTreeClassifier())
         )
         self._attempt_fit_predict(model)
 
     def test_adaboost_post_estimator_mitigation_ensemble(self):
         model = CalibratedEqOddsPostprocessing(
             **self.fairness_info,
-            estimator=AdaBoostClassifier(base_estimator=DecisionTreeClassifier())
+            estimator=AdaBoostClassifier(
+                **with_fixed_estimator_name(estimator=DecisionTreeClassifier())
+            )
         )
         self._attempt_fit_predict(model)
 
     def test_adaboost_pre_estimator_mitigation_base(self):
         model = AdaBoostClassifier(
-            base_estimator=DisparateImpactRemover(**self.fairness_info)
-            >> DecisionTreeClassifier()
+            **with_fixed_estimator_name(
+                estimator=DisparateImpactRemover(**self.fairness_info)
+                >> DecisionTreeClassifier()
+            )
         )
         self._attempt_fit_predict(model)
 
     def test_adaboost_in_estimator_mitigation_base(self):
         model = AdaBoostClassifier(
-            base_estimator=PrejudiceRemover(**self.fairness_info)
+            **with_fixed_estimator_name(
+                estimator=PrejudiceRemover(**self.fairness_info)
+            )
         )
         self._attempt_fit_predict(model)
 
     def test_adaboost_post_estimator_mitigation_base(self):
         model = AdaBoostClassifier(
-            base_estimator=CalibratedEqOddsPostprocessing(
-                **self.fairness_info, estimator=DecisionTreeClassifier()
+            **with_fixed_estimator_name(
+                estimator=CalibratedEqOddsPostprocessing(
+                    **self.fairness_info, estimator=DecisionTreeClassifier()
+                )
             )
         )
         self._attempt_fit_predict(model)

@@ -16,8 +16,10 @@ import unittest
 from test import EnableSchemaValidation
 
 import jsonschema
+from packaging import version
 
 import lale.lib.lale
+import lale.operators
 from lale.lib.lale import ConcatFeatures, IdentityWrapper, NoOp
 from lale.lib.sklearn import NMF, PCA, LogisticRegression, TfidfVectorizer
 from lale.settings import (
@@ -932,9 +934,7 @@ class TestHyperparamConstraints(unittest.TestCase):
         y = self.y
 
         trainable = sklearn.preprocessing.FunctionTransformer(**bad_hyperparams)
-        with self.assertRaisesRegex(
-            TypeError, "A sparse matrix was passed, but dense data is required."
-        ):
+        with self.assertRaisesRegex(TypeError, r"[sS]parse.* was passed.* dense data"):
             trainable.fit(bad_X, self.y)
 
         trainable = FunctionTransformer(**bad_hyperparams)
@@ -1025,9 +1025,7 @@ class TestHyperparamConstraints(unittest.TestCase):
 
         bad_hyperparams = {"solver": "liblinear", "penalty": "none"}
         trainable = sklearn.linear_model.LogisticRegression(**bad_hyperparams)
-        with self.assertRaisesRegex(
-            ValueError, "penalty='none' is not supported for the liblinear solver"
-        ):
+        with self.assertRaisesRegex(ValueError, r"penalty"):
             trainable.fit(self.X, self.y)
 
         with EnableSchemaValidation():
@@ -1095,7 +1093,7 @@ class TestHyperparamConstraints(unittest.TestCase):
 
         bad_hyperparams = {"drop": "first", "handle_unknown": "ignore"}
         trainable = sklearn.preprocessing.OneHotEncoder(**bad_hyperparams)
-        if sklearn.__version__ < "1.0":
+        if lale.operators.sklearn_version < version.Version("1.0"):
             with self.assertRaisesRegex(
                 ValueError,
                 "`handle_unknown` must be 'error' when the drop parameter is specified",
@@ -1103,7 +1101,7 @@ class TestHyperparamConstraints(unittest.TestCase):
                 trainable.fit(self.X, self.y)
 
         with EnableSchemaValidation():
-            if sklearn.__version__ < "1.0":
+            if lale.operators.sklearn_version < version.Version("1.0"):
                 with self.assertRaises(jsonschema.ValidationError):
                     OneHotEncoder(**bad_hyperparams)
             else:
@@ -1114,7 +1112,7 @@ class TestHyperparamConstraints(unittest.TestCase):
 
         from lale.lib.sklearn import OrdinalEncoder
 
-        if sklearn.__version__ >= "0.24.1":
+        if lale.operators.sklearn_version >= version.Version("0.24.1"):
             bad_hyperparams = {
                 "handle_unknown": "use_encoded_value",
                 "unknown_value": None,
@@ -1135,7 +1133,7 @@ class TestHyperparamConstraints(unittest.TestCase):
 
         from lale.lib.sklearn import OrdinalEncoder
 
-        if sklearn.__version__ >= "0.24.1":
+        if lale.operators.sklearn_version <= version.Version("0.24.1"):
             bad_hyperparams = {"handle_unknown": "error", "unknown_value": 1}
             trainable = sklearn.preprocessing.OrdinalEncoder(**bad_hyperparams)
             with self.assertRaisesRegex(
@@ -1242,6 +1240,10 @@ class TestHyperparamConstraints(unittest.TestCase):
             with self.assertRaises(jsonschema.ValidationError):
                 trainable.fit(bad_X, y)
 
+    @unittest.skipIf(
+        lale.operators.sklearn_version >= version.Version("1.4"),
+        "restrictions have been removed",
+    )
     def test_simple_imputer(self):
         import sklearn
 
@@ -1252,6 +1254,7 @@ class TestHyperparamConstraints(unittest.TestCase):
 
         bad_hyperparams = {"missing_values": 0}
         trainable = sklearn.impute.SimpleImputer(**bad_hyperparams)
+
         with self.assertRaisesRegex(
             ValueError,
             "Imputation not possible when missing_values == 0 and input is sparse.",

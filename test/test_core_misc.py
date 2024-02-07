@@ -32,7 +32,11 @@ import lale.operators as Ops
 import lale.type_checking
 
 # from lale.helpers import get_sklearn_estimator_name
-from lale.helpers import nest_HPparams
+from lale.helpers import (
+    get_sklearn_estimator_name,
+    nest_HPparams,
+    with_fixed_estimator_name,
+)
 from lale.lib.lale import ConcatFeatures, Hyperopt, NoOp
 from lale.lib.rasl import categorical
 from lale.lib.sklearn import (
@@ -626,7 +630,9 @@ class TestGetParams(unittest.TestCase):
     def test_shallow_planned_nested_indiv_operator(self):
         from lale.lib.sklearn import BaggingClassifier, DecisionTreeClassifier
 
-        clf = BaggingClassifier(base_estimator=DecisionTreeClassifier())
+        clf = BaggingClassifier(
+            **with_fixed_estimator_name(estimator=DecisionTreeClassifier())
+        )
         params = clf.get_params(deep=False)
         filtered_params = self.remove_lale_params(params)
         assert filtered_params["bootstrap"]
@@ -670,10 +676,10 @@ class TestGetParams(unittest.TestCase):
     def test_deep_planned_nested_indiv_operator(self):
         from lale.lib.sklearn import BaggingClassifier, DecisionTreeClassifier
 
-        est_name = "base_estimator"
+        est_name = get_sklearn_estimator_name()
 
         dtc = DecisionTreeClassifier()
-        clf = BaggingClassifier(base_estimator=dtc)
+        clf = BaggingClassifier(**with_fixed_estimator_name(estimator=dtc))
         params = clf.get_params(deep=True)
         filtered_params = self.remove_lale_params(params)
 
@@ -700,7 +706,7 @@ class TestGetParams(unittest.TestCase):
         from lale.lib.sklearn import StandardScaler as Scaler
 
         dtc = DecisionTreeClassifier()
-        clf = BaggingClassifier(base_estimator=dtc)
+        clf = BaggingClassifier(**with_fixed_estimator_name(estimator=dtc))
         params = clf.get_params(deep=True)
         filtered_params = self.remove_lale_params(params)
 

@@ -116,17 +116,7 @@ _hyperparams_schema = {
                     "description": "If True, a MissingIndicator transform will stack onto output of the imputer’s transform.",
                 },
             },
-        },
-        {
-            "description": "Imputation not possible when missing_values == 0 and input is sparse. Provide a dense array instead.",
-            "anyOf": [
-                {"type": "object", "laleNot": "X/isSparse"},
-                {
-                    "type": "object",
-                    "properties": {"missing_values": {"not": {"enum": [0]}}},
-                },
-            ],
-        },
+        }
     ],
 }
 
@@ -189,8 +179,23 @@ _combined_schemas = {
     },
 }
 
-
 SimpleImputer = lale.operators.make_operator(_SimpleImputerImpl, _combined_schemas)
+
+if lale.operators.sklearn_version < version.Version("1.4"):
+    # this constraint is removed in scikit-learn version 1.4
+    SimpleImputer = SimpleImputer.customize_schema(
+        constraint={
+            "description": "Imputation not possible when missing_values == 0 and input is sparse. Provide a dense array instead.",
+            "anyOf": [
+                {"type": "object", "laleNot": "X/isSparse"},
+                {
+                    "type": "object",
+                    "properties": {"missing_values": {"not": {"enum": [0]}}},
+                },
+            ],
+        },
+        set_as_available=True,
+    )
 
 if lale.operators.sklearn_version >= version.Version("1.1"):
     # old: https://scikit-learn.org/1.0/modules/generated/sklearn.impute.SimpleImputer.html#sklearn.impute.SimpleImputer

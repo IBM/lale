@@ -22,6 +22,7 @@ import lale.lib.sklearn
 import lale.operators
 from lale.lib.imblearn._common_schemas import _hparam_n_jobs, _hparam_random_state
 
+from ...helpers import with_fixed_estimator_name
 from .orbis import Orbis
 from .orbis import _hyperparams_schema as orbis_hyperparams_schema
 from .util import (
@@ -115,10 +116,12 @@ class _BaggingOrbisClassifierImpl:
 
         repair_dtypes = lale.lib.sklearn.FunctionTransformer(func=_repair_dtypes)
         trainable_ensemble = lale.lib.sklearn.BaggingClassifier(
-            base_estimator=repair_dtypes >> orbis,
-            n_estimators=self.n_estimators,
-            n_jobs=self.sampler_hparams["n_jobs"],
-            random_state=self.sampler_hparams["random_state"],
+            **with_fixed_estimator_name(
+                estimator=repair_dtypes >> orbis,
+                n_estimators=self.n_estimators,
+                n_jobs=self.sampler_hparams["n_jobs"],
+                random_state=self.sampler_hparams["random_state"],
+            )
         )
         encoded_y = pd.Series(self.lab_enc.transform(y), index=y.index)
         self.trained_ensemble = trainable_ensemble.fit(X, encoded_y)

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import sklearn.neighbors
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -189,5 +190,41 @@ _combined_schemas = {
 KNeighborsRegressor = lale.operators.make_operator(
     sklearn.neighbors.KNeighborsRegressor, _combined_schemas
 )
+
+if lale.operators.sklearn_version >= version.Version("1.4"):
+
+    KNeighborsRegressor = KNeighborsRegressor.customize_schema(
+        metric={
+            "anyOf": [
+                {
+                    "enum": [
+                        "cityblock",
+                        "cosine",
+                        "euclidean",
+                        "haversine",
+                        "l1",
+                        "l2",
+                        "manhattan",
+                        "nan_euclidean",
+                        "precomputed",
+                    ],
+                },
+                {
+                    "laleType": "callable",
+                    "description": "It takes two arrays representing 1D vectors as inputs and must return one value indicating the distance between those vectors. This works for Scipy’s metrics, but is less efficient than passing the metric name as a string.",
+                    "forOptimizer": False,
+                },
+                {
+                    "laleType": "Any",
+                    "description": "It will be passed directly to the underlying computation routines.",
+                    "forOptimizer": False,
+                },
+            ],
+            "description": "The distance metric to use for the tree.",
+            "default": "minkowski",
+        },
+        set_as_available=True,
+    )
+
 
 lale.docstrings.set_docstrings(KNeighborsRegressor)

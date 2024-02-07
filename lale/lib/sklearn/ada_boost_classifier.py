@@ -326,5 +326,31 @@ if lale.operators.sklearn_version >= version.Version("1.4"):
         set_as_available=True,
     )
 
+if lale.operators.sklearn_version >= version.Version("1.4"):
+    AdaBoostClassifier = AdaBoostClassifier.customize_schema(
+        algorithm={
+            "anyOf": [
+                {
+                    "enum": ["SAMME"],
+                    "description": "Use the SAMME discrete boosting algorithm.",
+                },
+                {"enum": ["SAMME.R"], "description": "deprecated"},
+            ],
+            "default": "SAMME.R",
+            "description": "The boosting algorithm to use",
+        },
+        set_as_available=True,
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.6"):
+    AdaBoostClassifier = AdaBoostClassifier.customize_schema(
+        algorithm={
+            "enum": ["SAMME"],
+            "default": "SAMME",
+            "description": "Use the SAMME discrete boosting algorithm.",
+        },
+        set_as_available=True,
+    )
+
 
 lale.docstrings.set_docstrings(AdaBoostClassifier)

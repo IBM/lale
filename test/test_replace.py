@@ -14,6 +14,7 @@
 
 import unittest
 
+from lale.helpers import with_fixed_estimator_name
 from lale.lib.lale import NoOp
 from lale.lib.sklearn import (
     PCA,
@@ -127,26 +128,34 @@ class TestReplace(unittest.TestCase):
     def test_hyperparam_estimator(self):
         lr = LogisticRegression()
         linear_reg = LinearRegression()
-        ada = AdaBoostRegressor(base_estimator=lr)
+        ada = AdaBoostRegressor(**with_fixed_estimator_name(estimator=lr))
 
         replaced_ada = ada.replace(lr, linear_reg)
-        expected_ada = AdaBoostRegressor(base_estimator=linear_reg)
+        expected_ada = AdaBoostRegressor(
+            **with_fixed_estimator_name(estimator=linear_reg)
+        )
         self.assertEqual(replaced_ada.to_json(), expected_ada.to_json())
 
         replaced_ada = ada.replace(LogisticRegression, linear_reg)
-        expected_ada = AdaBoostRegressor(base_estimator=linear_reg)
+        expected_ada = AdaBoostRegressor(
+            **with_fixed_estimator_name(estimator=linear_reg)
+        )
         self.assertEqual(replaced_ada.to_json(), expected_ada.to_json())
 
         ada_pipeline = PCA >> SimpleImputer >> ada
         replaced_pipeline = ada_pipeline.replace(lr, linear_reg)
         expected_pipeline = (
-            PCA >> SimpleImputer >> AdaBoostRegressor(base_estimator=linear_reg)
+            PCA
+            >> SimpleImputer
+            >> AdaBoostRegressor(**with_fixed_estimator_name(estimator=linear_reg))
         )
         self.assertEqual(replaced_pipeline.to_json(), expected_pipeline.to_json())
 
         ada_choice = PCA | ada
         replaced_choice = ada_choice.replace(lr, linear_reg)
-        expected_choice = PCA | AdaBoostRegressor(base_estimator=linear_reg)
+        expected_choice = PCA | AdaBoostRegressor(
+            **with_fixed_estimator_name(estimator=linear_reg)
+        )
         self.assertEqual(replaced_choice.to_json(), expected_choice.to_json())
 
         rfe = RFE(estimator=lr)

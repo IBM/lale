@@ -1,8 +1,8 @@
-from numpy import inf, nan
+from packaging import version
 from sklearn.linear_model import OrthogonalMatchingPursuit as Op
 
 from lale.docstrings import set_docstrings
-from lale.operators import make_operator
+from lale.operators import make_operator, sklearn_version
 
 
 class _OrthogonalMatchingPursuitImpl:
@@ -155,5 +155,26 @@ _combined_schemas = {
 OrthogonalMatchingPursuit = make_operator(
     _OrthogonalMatchingPursuitImpl, _combined_schemas
 )
+
+if sklearn_version >= version.Version("1.2"):
+    OrthogonalMatchingPursuit = OrthogonalMatchingPursuit.customize_schema(
+        normalize={
+            "anyOf": [
+                {
+                    "type": "boolean",
+                    "description": "This parameter is ignored when ``fit_intercept`` is set to False",
+                },
+                {"enum": ["deprecated"]},
+            ],
+            "default": "deprecated",
+            "description": "Deprecated",
+        },
+        set_as_available=True,
+    )
+
+if sklearn_version >= version.Version("1.4"):
+    OrthogonalMatchingPursuit = OrthogonalMatchingPursuit.customize_schema(
+        normalize=None, set_as_available=True
+    )
 
 set_docstrings(OrthogonalMatchingPursuit)

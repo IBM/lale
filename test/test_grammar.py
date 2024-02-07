@@ -2,6 +2,7 @@ import unittest
 
 import lale.datasets
 from lale.grammar import Grammar
+from lale.helpers import with_fixed_estimator_name
 from lale.lib.lale import ConcatFeatures as Concat
 from lale.lib.lale import Hyperopt, NoOp
 from lale.lib.sklearn import PCA
@@ -61,7 +62,7 @@ class TestGrammar(unittest.TestCase):
         g.start = g.estimator
         g.estimator = g.term_est | g.transformer >> g.term_est
         g.term_est = g.prim_est | g.ensemble
-        g.ensemble = Boost(base_estimator=LR)
+        g.ensemble = Boost(**with_fixed_estimator_name(estimator=LR))
         g.transformer = g.union_tfm | g.union_tfm >> g.transformer
         g.union_tfm = g.prim_tfm | g.union_body >> Concat
         g.union_body = g.transformer | g.transformer & g.union_body

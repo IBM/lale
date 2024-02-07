@@ -28,6 +28,7 @@ import pandas as pd
 import sklearn
 import sklearn.datasets
 from category_encoders import HashingEncoder as SkHashingEncoder
+from packaging import version
 from sklearn.feature_selection import SelectKBest as SkSelectKBest
 from sklearn.impute import SimpleImputer as SkSimpleImputer
 from sklearn.metrics import accuracy_score as sk_accuracy_score
@@ -93,7 +94,7 @@ from lale.lib.sklearn import (
     SGDClassifier,
 )
 from lale.lib.xgboost import XGBClassifier, XGBRegressor
-from lale.operators import TrainedPipeline
+from lale.operators import TrainedPipeline, sklearn_version
 
 assert sklearn.__version__ >= "1.0", sklearn.__version__
 
@@ -610,7 +611,12 @@ class TestOneHotEncoder(unittest.TestCase):
         cat_columns = categorical()(train_X_pd)
         prefix = Map(columns={c: it[c] for c in cat_columns})
         rasl_trainable = prefix >> RaslOneHotEncoder(sparse=False)
-        sk_trainable = prefix >> SkOneHotEncoder(sparse=False)
+        if sklearn_version >= version.Version("1.2"):
+            sk_ohe = SkOneHotEncoder(sparse_output=False)
+        else:
+            sk_ohe = SkOneHotEncoder(sparse=False)
+
+        sk_trainable = prefix >> sk_ohe
         sk_trained = sk_trainable.fit(train_X_pd)
         sk_transformed = sk_trained.transform(test_X_pd)
         for tgt, dataset in self.tgt2creditg.items():
@@ -636,7 +642,12 @@ class TestOneHotEncoder(unittest.TestCase):
         prefix = Map(columns={c: it[c] for c in cat_columns})
         to_pd = Convert(astype="pandas")
         lr = LogisticRegression()
-        sk_trainable = prefix >> SkOneHotEncoder(sparse=False) >> lr
+        if sklearn_version >= version.Version("1.2"):
+            sk_ohe = SkOneHotEncoder(sparse_output=False)
+        else:
+            sk_ohe = SkOneHotEncoder(sparse=False)
+
+        sk_trainable = prefix >> sk_ohe >> lr
         sk_trained = sk_trainable.fit(train_X_pd, train_y_pd)
         sk_predicted = sk_trained.predict(test_X_pd)
         rasl_trainable = prefix >> RaslOneHotEncoder(sparse=False) >> to_pd >> lr
