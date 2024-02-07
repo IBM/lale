@@ -185,5 +185,31 @@ if sklearn_version >= version.Version("0.24"):
         set_as_available=True,
     )
 
+if sklearn_version >= version.Version("1.2"):
+    CalibratedClassifierCV = CalibratedClassifierCV.customize_schema(
+        base_estimator={
+            "anyOf": [
+                {"laleType": "operator"},
+                {"enum": ["deprecated"]},
+            ],
+            "default": "deprecated",
+            "description": "Deprecated. Use `estimator` instead.",
+        },
+        estimator={
+            "anyOf": [
+                {"laleType": "operator"},
+                {"enum": [None], "description": "LinearSVC"},
+            ],
+            "default": None,
+            "description": "The base estimator to fit on random subsets of the dataset.",
+        },
+        set_as_available=True,
+    )
+
+if sklearn_version >= version.Version("1.4"):
+    CalibratedClassifierCV = CalibratedClassifierCV.customize_schema(
+        base_estimator=None, set_as_available=True
+    )
+
 
 set_docstrings(CalibratedClassifierCV)

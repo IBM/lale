@@ -1,8 +1,9 @@
 from numpy import inf, nan
+from packaging import version
 from sklearn.decomposition import MiniBatchSparsePCA as Op
 
 from lale.docstrings import set_docstrings
-from lale.operators import make_operator
+from lale.operators import make_operator, sklearn_version
 
 
 class _MiniBatchSparsePCAImpl:
@@ -188,5 +189,96 @@ _combined_schemas = {
     },
 }
 MiniBatchSparsePCA = make_operator(_MiniBatchSparsePCAImpl, _combined_schemas)
+
+if sklearn_version >= version.Version("1.1"):
+    MiniBatchSparsePCA = MiniBatchSparsePCA.customize_schema(
+        max_no_improvement={
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "minimum": 1,
+                },
+                {
+                    "enum": [None],
+                    "description": "Disable convergence detection based on cost function.",
+                },
+            ],
+            "default": 10,
+            "description": "Control early stopping based on the consecutive number of mini batches that does not yield an improvement on the smoothed cost function.",
+        },
+        tol={
+            "type": "number",
+            "default": 0.001,
+            "description": """Control early stopping based on the norm of the differences in the dictionary between 2 steps.
+
+To disable early stopping based on changes in the dictionary, set tol to 0.0.""",
+        },
+        set_as_available=True,
+    )
+
+if sklearn_version >= version.Version("1.2"):
+    MiniBatchSparsePCA = MiniBatchSparsePCA.customize_schema(
+        max_iter={
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "minimumForOptimizer": 5,
+                    "maximumForOptimizer": 1000,
+                    "distribution": "uniform",
+                    "default": 1000,
+                },
+                {"enum": [None]},
+            ],
+            "description": "Maximum number of iterations over the complete dataset before stopping independently of any early stopping criterion heuristics. If max_iter is not None, n_iter is ignored.",
+            "default": None,
+        },
+        n_iter={
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "minimumForOptimizer": 5,
+                    "maximumForOptimizer": 1000,
+                    "distribution": "uniform",
+                    "default": 1000,
+                },
+                {"enum": ["deprecated"]},
+            ],
+            "description": "total number of iterations to perform",
+            "default": "deprecated",
+        },
+        set_as_available=True,
+    )
+
+if sklearn_version >= version.Version("1.4"):
+    MiniBatchSparsePCA = MiniBatchSparsePCA.customize_schema(
+        max_iter={
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "minimumForOptimizer": 5,
+                    "maximumForOptimizer": 1000,
+                    "distribution": "uniform",
+                },
+                {"enum": [None], "description": "deprecated"},
+            ],
+            "description": "Maximum number of iterations over the complete dataset before stopping independently of any early stopping criterion heuristics.",
+            "default": 1000,
+        },
+        n_iter=None,
+        set_as_available=True,
+    )
+
+if sklearn_version >= version.Version("1.6"):
+    MiniBatchSparsePCA = MiniBatchSparsePCA.customize_schema(
+        max_iter={
+            "type": "integer",
+            "minimumForOptimizer": 5,
+            "maximumForOptimizer": 1000,
+            "distribution": "uniform",
+            "default": 1000,
+            "description": "Maximum number of iterations over the complete dataset before stopping independently of any early stopping criterion heuristics.",
+        },
+        set_as_available=True,
+    )
 
 set_docstrings(MiniBatchSparsePCA)

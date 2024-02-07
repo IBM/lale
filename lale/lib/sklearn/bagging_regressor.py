@@ -339,4 +339,9 @@ if lale.operators.sklearn_version >= version.Version("1.2"):
         set_as_available=True,
     )
 
+if lale.operators.sklearn_version >= version.Version("1.4"):
+    BaggingRegressor = BaggingRegressor.customize_schema(
+        base_estimator=None, set_as_available=True
+    )
+
 lale.docstrings.set_docstrings(BaggingRegressor)
