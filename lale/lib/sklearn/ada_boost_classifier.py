@@ -320,7 +320,7 @@ if lale.operators.sklearn_version >= version.Version("1.3"):
         set_as_available=True,
     )
 
-if lale.operators.sklearn_version >= version.Version("1.5"):
+if lale.operators.sklearn_version >= version.Version("1.4"):
     AdaBoostClassifier = AdaBoostClassifier.customize_schema(
         base_estimator=None,
         set_as_available=True,

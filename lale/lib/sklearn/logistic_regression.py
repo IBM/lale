@@ -549,4 +549,19 @@ For multiclass problems, only ‘newton-cg’, ‘sag’, ‘saga’ and ‘lbfg
         ),
     )
 
+if lale.operators.sklearn_version >= version.Version("1.4"):
+    # old: https://scikit-learn.org/1.1/modules/generated/sklearn.linear_model.LogisticRegression.html
+    # new: https://scikit-learn.org/1.2/modules/generated/sklearn.linear_model.LogisticRegression.html
+    LogisticRegression = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        LogisticRegression.customize_schema(
+            penalty=Enum(
+                values=["l1", "l2", "elasticnet", None],
+                desc="Norm used in the penalization.",
+                default="l2",
+            ),
+            set_as_available=True,
+        ),
+    )
+
 lale.docstrings.set_docstrings(LogisticRegression)

@@ -312,5 +312,9 @@ if sklearn_version >= version.Version("1.3"):
         set_as_available=True,
     )
 
+if sklearn_version >= version.Version("1.4"):
+    # new: https://scikit-learn.org/1.2/modules/generated/sklearn.preprocessing.OneHotEncoder.html
+    OneHotEncoder = OneHotEncoder.customize_schema(sparse=None, set_as_available=True)
+
 
 lale.docstrings.set_docstrings(OneHotEncoder)
