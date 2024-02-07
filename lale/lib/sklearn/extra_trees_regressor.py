@@ -18,6 +18,7 @@ from packaging import version
 
 import lale.docstrings
 import lale.operators
+from lale.lib.sklearn._common_schemas import schema_monotonic_cst_regressor
 
 _hyperparams_schema = {
     "description": "An extra-trees regressor.",
@@ -421,6 +422,11 @@ if lale.operators.sklearn_version >= version.Version("1.3"):
             "default": False,
         },
         set_as_available=True,
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.4"):
+    ExtraTreesRegressor = ExtraTreesRegressor.customize_schema(
+        monotonic_cst=schema_monotonic_cst_regressor, set_as_available=True
     )
 
 lale.docstrings.set_docstrings(ExtraTreesRegressor)

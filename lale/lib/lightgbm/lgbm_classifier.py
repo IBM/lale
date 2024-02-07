@@ -532,6 +532,13 @@ if lightgbm_installed:
     if lightgbm_version >= version.Version("4.0.0"):
         # https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMClassifier.html#lightgbm.LGBMClassifier
         LGBMClassifier = LGBMClassifier.customize_schema(
+            silent=None,
+            set_as_available=True,
+        )
+
+    if lightgbm_version >= version.Version("4.0.0"):
+        # https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMClassifier.html#lightgbm.LGBMClassifier
+        LGBMClassifier = LGBMClassifier.customize_schema(
             n_job={
                 "description": """Number of parallel threads to use for training (can be changed at prediction time by passing it as an extra keyword argument).
 For better performance, it is recommended to set this to the number of physical cores in the CPU.

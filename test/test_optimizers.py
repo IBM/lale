@@ -21,11 +21,13 @@ from test import EnableSchemaValidation
 import jsonschema
 import numpy as np
 import pandas as pd
+from packaging import version
 from sklearn.datasets import load_iris
 from sklearn.metrics import accuracy_score, make_scorer
 from sklearn.model_selection import train_test_split
 
 from lale import schemas
+from lale.helpers import get_sklearn_estimator_name, with_fixed_estimator_name
 from lale.lib.lale import (
     SMAC,
     ConcatFeatures,
@@ -53,7 +55,7 @@ from lale.lib.sklearn import (
     StandardScaler,
     TfidfVectorizer,
 )
-from lale.operators import TrainedIndividualOp, TrainedPipeline
+from lale.operators import TrainedIndividualOp, TrainedPipeline, sklearn_version
 from lale.search.lale_smac import get_smac_space, lale_op_smac_tae
 from lale.search.op2hp import hyperopt_search_space
 
@@ -140,10 +142,13 @@ class TestSMAC(unittest.TestCase):
         # Import SMAC-utilities
 
         tfm = PCA() | Nystroem() | NoOp()
+        if sklearn_version >= version.Version("1.2"):
+            ohe = OneHotEncoder(handle_unknown="ignore", sparse_output=False)
+        else:
+            ohe = OneHotEncoder(handle_unknown="ignore", sparse=False)
+
         planned_pipeline1 = (
-            (OneHotEncoder(handle_unknown="ignore", sparse=False) | NoOp())
-            >> tfm
-            >> (LogisticRegression() | KNeighborsClassifier())
+            (ohe | NoOp()) >> tfm >> (LogisticRegression() | KNeighborsClassifier())
         )
 
         cs: ConfigurationSpace = get_smac_space(planned_pipeline1, lale_num_grids=1)
@@ -515,9 +520,12 @@ class TestHyperopt(unittest.TestCase):
         )
 
         prep_num = Project(columns={"type": "number"}) >> Normalizer
-        prep_cat = Project(columns={"not": {"type": "number"}}) >> OneHotEncoder(
-            sparse=False
-        )
+        if sklearn_version >= version.Version("1.2"):
+            ohe = OneHotEncoder(sparse_output=False)
+        else:
+            ohe = OneHotEncoder(sparse=False)
+
+        prep_cat = Project(columns={"not": {"type": "number"}}) >> ohe
         planned = (prep_num & prep_cat) >> ConcatFeatures >> RandomForestClassifier
 
         hyperopt_classifier = Hyperopt(estimator=planned, max_evals=1)
@@ -900,25 +908,35 @@ class TestHigherOrderOperators(unittest.TestCase):
     def test_ada_boost(self):
         from lale.lib.sklearn import AdaBoostClassifier, DecisionTreeClassifier
 
-        clf = AdaBoostClassifier(base_estimator=DecisionTreeClassifier())
+        clf = AdaBoostClassifier(
+            **with_fixed_estimator_name(estimator=DecisionTreeClassifier())
+        )
         trained = clf.auto_configure(
             self.X_train, self.y_train, optimizer=Hyperopt, max_evals=1
         )
+
+        est_name = get_sklearn_estimator_name()
+
         # Checking that the inner decision tree does not get the default value for min_samples_leaf, not sure if this will always pass
         self.assertNotEqual(
-            trained.hyperparams()["base_estimator"].hyperparams()["min_samples_leaf"], 1
+            trained.hyperparams()[est_name].hyperparams()["min_samples_leaf"], 1
         )
 
     def test_ada_boost_pipe(self):
         from lale.lib.sklearn import AdaBoostClassifier, DecisionTreeClassifier
 
-        clf = AdaBoostClassifier(base_estimator=NoOp >> DecisionTreeClassifier())
+        clf = AdaBoostClassifier(
+            **with_fixed_estimator_name(estimator=NoOp >> DecisionTreeClassifier())
+        )
         trained = clf.auto_configure(
             self.X_train, self.y_train, optimizer=Hyperopt, max_evals=1
         )
+
+        est_name = get_sklearn_estimator_name()
+
         # Checking that the inner decision tree does not get the default value for min_samples_leaf, not sure if this will always pass
         self.assertNotEqual(
-            trained.hyperparams()["base_estimator"]
+            trained.hyperparams()[est_name]
             .steps_list()[1]
             .hyperparams()["min_samples_leaf"],
             1,
@@ -929,7 +947,9 @@ class TestHigherOrderOperators(unittest.TestCase):
 
         from lale.lib.sklearn import AdaBoostClassifier
 
-        clf = AdaBoostClassifier(base_estimator=DecisionTreeClassifier())
+        clf = AdaBoostClassifier(
+            **with_fixed_estimator_name(estimator=DecisionTreeClassifier())
+        )
         clf.fit(self.X_train, self.y_train)
 
     def test_ada_boost_regressor(self):
@@ -939,13 +959,18 @@ class TestHigherOrderOperators(unittest.TestCase):
         X_train, _X_test, y_train, _y_test = train_test_split(X, y)
         from lale.lib.sklearn import AdaBoostRegressor, DecisionTreeRegressor
 
-        reg = AdaBoostRegressor(base_estimator=DecisionTreeRegressor())
+        reg = AdaBoostRegressor(
+            **with_fixed_estimator_name(estimator=DecisionTreeRegressor())
+        )
         trained = reg.auto_configure(
             X_train, y_train, optimizer=Hyperopt, max_evals=1, scoring="r2"
         )
+
+        est_name = get_sklearn_estimator_name()
+
         # Checking that the inner decision tree does not get the default value for min_samples_leaf, not sure if this will always pass
         self.assertNotEqual(
-            trained.hyperparams()["base_estimator"].hyperparams()["min_samples_leaf"], 1
+            trained.hyperparams()[est_name].hyperparams()["min_samples_leaf"], 1
         )
 
     def test_ada_boost_regressor_pipe(self):
@@ -955,13 +980,18 @@ class TestHigherOrderOperators(unittest.TestCase):
         X_train, _X_test, y_train, _y_test = train_test_split(X, y)
         from lale.lib.sklearn import AdaBoostRegressor, DecisionTreeRegressor
 
-        reg = AdaBoostRegressor(base_estimator=NoOp >> DecisionTreeRegressor())
+        reg = AdaBoostRegressor(
+            **with_fixed_estimator_name(estimator=NoOp >> DecisionTreeRegressor())
+        )
         trained = reg.auto_configure(
             X_train, y_train, optimizer=Hyperopt, max_evals=1, scoring="r2"
         )
+
+        est_name = get_sklearn_estimator_name()
+
         # Checking that the inner decision tree does not get the default value for min_samples_leaf, not sure if this will always pass
         self.assertNotEqual(
-            trained.hyperparams()["base_estimator"]
+            trained.hyperparams()[est_name]
             .steps_list()[1]
             .hyperparams()["min_samples_leaf"],
             1,

@@ -1308,6 +1308,30 @@ def get_sklearn_estimator_name() -> str:
         return "estimator"
 
 
+def with_fixed_estimator_name(**kwargs):
+    """Some higher order sklearn operators changed the name of the nested estimator in later versions.
+    This fixes up the arguments, renaming estimator and base_estimator appropriately.
+    """
+
+    if "base_estimator" in kwargs or "estimator" in kwargs:
+        from packaging import version
+
+        import lale.operators
+
+        if lale.operators.sklearn_version < version.Version("1.2"):
+            return {
+                "base_estimator" if k == "estimator" else k: v
+                for k, v in kwargs.items()
+            }
+        else:
+            return {
+                "estimator" if k == "base_estimator" else k: v
+                for k, v in kwargs.items()
+            }
+
+    return kwargs
+
+
 def get_estimator_param_name_from_hyperparams(hyperparams):
     be = hyperparams.get("base_estimator", "deprecated")
     if be == "deprecated" or (be is None and "estimator" in hyperparams):

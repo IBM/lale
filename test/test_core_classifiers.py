@@ -21,6 +21,7 @@ from sklearn.datasets import load_iris
 
 import lale.lib.lale
 import lale.type_checking
+from lale.helpers import with_fixed_estimator_name
 from lale.lib.lale import NoOp
 from lale.lib.sklearn import (
     PCA,
@@ -281,14 +282,18 @@ class TestBaggingClassifier(unittest.TestCase):
     def test_with_lale_classifiers(self):
         from lale.lib.sklearn import BaggingClassifier
 
-        clf = BaggingClassifier(base_estimator=LogisticRegression())
+        clf = BaggingClassifier(
+            **with_fixed_estimator_name(estimator=LogisticRegression())
+        )
         trained = clf.fit(self.X_train, self.y_train)
         trained.predict(self.X_test)
 
     def test_with_lale_pipeline(self):
         from lale.lib.sklearn import BaggingClassifier
 
-        clf = BaggingClassifier(base_estimator=PCA() >> LogisticRegression())
+        clf = BaggingClassifier(
+            **with_fixed_estimator_name(estimator=PCA() >> LogisticRegression())
+        )
         trained = clf.fit(self.X_train, self.y_train)
         trained.predict(self.X_test)
 
@@ -296,7 +301,9 @@ class TestBaggingClassifier(unittest.TestCase):
         from lale.lib.lale import Hyperopt
         from lale.lib.sklearn import BaggingClassifier
 
-        clf = BaggingClassifier(base_estimator=LogisticRegression())
+        clf = BaggingClassifier(
+            **with_fixed_estimator_name(estimator=LogisticRegression())
+        )
         trained = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
         print(trained.to_json())
 
@@ -304,7 +311,9 @@ class TestBaggingClassifier(unittest.TestCase):
         from lale.lib.lale import Hyperopt
         from lale.lib.sklearn import BaggingClassifier
 
-        clf = BaggingClassifier(base_estimator=PCA() >> LogisticRegression())
+        clf = BaggingClassifier(
+            **with_fixed_estimator_name(estimator=PCA() >> LogisticRegression())
+        )
         _ = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
 
     def test_pipeline_choice_with_hyperopt(self):
@@ -312,14 +321,18 @@ class TestBaggingClassifier(unittest.TestCase):
         from lale.lib.sklearn import BaggingClassifier
 
         clf = BaggingClassifier(
-            base_estimator=PCA() >> (LogisticRegression() | KNeighborsClassifier())
+            **with_fixed_estimator_name(
+                estimator=PCA() >> (LogisticRegression() | KNeighborsClassifier())
+            )
         )
         _ = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
 
     def test_predict_log_proba(self):
         from lale.lib.sklearn import BaggingClassifier
 
-        clf = BaggingClassifier(base_estimator=PCA() >> LogisticRegression())
+        clf = BaggingClassifier(
+            **with_fixed_estimator_name(estimator=PCA() >> LogisticRegression())
+        )
         trained = clf.fit(self.X_train, self.y_train)
         trained.predict_log_proba(self.X_test)
 
@@ -334,7 +347,9 @@ class TestBaggingClassifier(unittest.TestCase):
     def test_predict_log_proba_trainable(self):
         from lale.lib.sklearn import BaggingClassifier
 
-        clf = BaggingClassifier(base_estimator=PCA() >> LogisticRegression())
+        clf = BaggingClassifier(
+            **with_fixed_estimator_name(estimator=PCA() >> LogisticRegression())
+        )
         with self.assertRaises(ValueError):
             clf.predict_log_proba(self.X_test)
 

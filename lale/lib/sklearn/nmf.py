@@ -285,4 +285,33 @@ if lale.operators.sklearn_version >= version.Version("1.2"):
 
     NMF = NMF.customize_schema(alpha=None, regularization=None, set_as_available=True)
 
+if lale.operators.sklearn_version >= version.Version("1.4"):
+    # new: https://scikit-learn.org/1.4/modules/generated/sklearn.decomposition.NMF.html
+
+    NMF = NMF.customize_schema(
+        n_components={
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "minimum": 1,
+                    "laleMaximum": "X/items/maxItems",  # number of columns
+                    "minimumForOptimizer": 2,
+                    "maximumForOptimizer": 256,
+                    "distribution": "uniform",
+                },
+                {
+                    "description": "The number of components is automatically inferred from W or H shapes.",
+                    "enum": ["auto"],
+                },
+                {
+                    "description": "If not set, keep all components.",
+                    "enum": [None],
+                },
+            ],
+            "default": None,
+            "description": "Number of components.",
+        },
+        set_as_available=True,
+    )
+
 lale.docstrings.set_docstrings(NMF)

@@ -61,3 +61,36 @@ schema_sample_weight = {
     "default": None,
     "description": "Weights applied to individual samples.",
 }
+
+
+def schema_monotonic_cst(desc_add):
+    return {
+        "anyOf": [
+            {
+                "type": "array",
+                "description": "array-like of int of shape (n_features)",
+                "items": {"enum": [-1, 0, 1]},
+            },
+            {"enum": [None], "description": "No constraints are applied."},
+        ],
+        "default": None,
+        "description": "Indicates the monotonicity constraint to enforce on each feature."
+        + desc_add,
+    }
+
+
+schema_monotonic_cst_regressor = schema_monotonic_cst(
+    """
+Monotonicity constraints are not supported for:
+multioutput regressions (i.e. when n_outputs_ > 1),
+
+regressions trained on data with missing values."""
+)
+
+schema_monotonic_cst_classifier = schema_monotonic_cst(
+    """
+Monotonicity constraints are not supported for:
+multioutput regressions (i.e. when n_outputs_ > 1),
+
+regressions trained on data with missing values."""
+)

@@ -733,8 +733,12 @@ def fetch(
         ]
         txm1 = ColumnTransformer(transformers1, sparse_threshold=0.0)
 
+        if sklearn_version >= version.Version("1.2"):
+            ohe2 = OneHotEncoder(sparse_output=False)
+        else:
+            ohe2 = OneHotEncoder(sparse=False)
         transformers2 = [
-            ("ohe", OneHotEncoder(sparse=False), list(range(len(categorical_cols)))),
+            ("ohe", ohe2, list(range(len(categorical_cols)))),
             (
                 "no_op",
                 "passthrough",
