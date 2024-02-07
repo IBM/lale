@@ -5,7 +5,7 @@ graphviz
 hyperopt
 jsonschema
 jsonsubschema
-scikit-learn>=1.0.0,<=1.2.0
+scikit-learn>=1.0.0,<1.4
 scipy
 pandas
 decorator

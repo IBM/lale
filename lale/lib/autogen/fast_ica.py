@@ -1,8 +1,8 @@
-from numpy import inf, nan
+from packaging import version
 from sklearn.decomposition import FastICA as Op
 
 from lale.docstrings import set_docstrings
-from lale.operators import make_operator
+from lale.operators import make_operator, sklearn_version
 
 
 class _FastICAImpl:
@@ -172,5 +172,74 @@ _combined_schemas = {
     },
 }
 FastICA = make_operator(_FastICAImpl, _combined_schemas)
+
+if sklearn_version >= version.Version("1.1"):
+    FastICA = FastICA.customize_schema(
+        whiten={
+            "anyOf": [
+                {
+                    "enum": [False],
+                    "description": "The data is already considered to be whitened, and no whitening is performed.",
+                },
+                {
+                    "enum": ["arbitrary-variance"],
+                    "description": "(default) A whitening with variance arbitrary is used",
+                },
+                {
+                    "enum": ["unit-variance"],
+                    "description": "The whitening matrix is rescaled to ensure that each recovered source has unit variance.",
+                },
+                {
+                    "enum": [True, "warn"],
+                    "description": "deprecated.  Use 'arbitrary-variance' instead",
+                },
+            ],
+            "description": "Specify the whitening strategy to use.",
+            "default": "warn",
+        },
+        set_as_available=True,
+    )
+
+if sklearn_version >= version.Version("1.1"):
+    FastICA = FastICA.customize_schema(
+        whiten_solver={
+            "anyOf": [
+                {
+                    "enum": ["eigh"],
+                    "description": "Generally more memory efficient when n_samples >= n_features, and can be faster when n_samples >= 50 * n_features.",
+                },
+                {
+                    "enum": ["svd"],
+                    "description": "More stable numerically if the problem is degenerate, and often faster when n_samples <= n_features.",
+                },
+            ],
+            "description": "The solver to use for whitening.",
+            "default": "svd",
+        },
+        set_as_available=True,
+    )
+
+if sklearn_version >= version.Version("1.3"):
+    FastICA = FastICA.customize_schema(
+        whiten={
+            "anyOf": [
+                {
+                    "enum": [False],
+                    "description": "The data is already considered to be whitened, and no whitening is performed.",
+                },
+                {
+                    "enum": ["arbitrary-variance"],
+                    "description": "A whitening with variance arbitrary is used",
+                },
+                {
+                    "enum": ["unit-variance"],
+                    "description": "The whitening matrix is rescaled to ensure that each recovered source has unit variance.",
+                },
+            ],
+            "description": "Specify the whitening strategy to use.",
+            "default": "arbitrary-variance",
+        },
+        set_as_available=True,
+    )
 
 set_docstrings(FastICA)

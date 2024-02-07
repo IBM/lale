@@ -18,6 +18,7 @@ from typing import Any
 
 import jsonschema
 import pandas as pd
+from packaging import version
 
 import lale.lib.lale
 import lale.lib.sklearn
@@ -34,8 +35,10 @@ from lale.lib.sklearn import (
     LogisticRegression,
     MissingIndicator,
     Nystroem,
-    TfidfVectorizer,
 )
+from lale.lib.sklearn import TargetEncoder as SkTargetEncoder
+from lale.lib.sklearn import TfidfVectorizer
+from lale.operators import sklearn_version
 
 
 class TestFeaturePreprocessing(unittest.TestCase):
@@ -300,6 +303,23 @@ class TestOrdinalEncoder(unittest.TestCase):
         self.assertTrue(1000 in transformed_X)
         # Testing that inverse_transform works even for encode_unknown_with=1000
         _ = trained_oe._impl.inverse_transform(transformed_X)
+
+
+class TestTargetEncoder(unittest.TestCase):
+    def test_sklearn_target_encoder(self):
+        import numpy as np
+
+        X = np.array([["dog"] * 20 + ["cat"] * 30 + ["snake"] * 38], dtype=object).T
+        y = [90.3] * 5 + [80.1] * 15 + [20.4] * 5 + [20.1] * 25 + [21.2] * 8 + [49] * 30
+
+        if sklearn_version < version.Version("1.3"):
+            with self.assertRaises(NotImplementedError):
+                enc_auto = SkTargetEncoder(smooth="auto")
+                _ = enc_auto.fit_transform(X, y)
+        else:
+            # example from the TargetEncoder documentation
+            enc_auto = SkTargetEncoder(smooth="auto")
+            _ = enc_auto.fit_transform(X, y)
 
 
 class TestConcatFeatures(unittest.TestCase):
