@@ -85,6 +85,7 @@ Transformers:
 * lale.lib.sklearn. `SelectKBest`_
 * lale.lib.sklearn. `SimpleImputer`_
 * lale.lib.sklearn. `StandardScaler`_
+* lale.lib.sklearn. `TargetEncoder`_
 * lale.lib.sklearn. `TfidfVectorizer`_
 * lale.lib.sklearn. `VarianceThreshold`_
 
@@ -130,6 +131,7 @@ Clustering:
 .. _`Nystroem`: lale.lib.sklearn.nystroem.html
 .. _`OneHotEncoder`: lale.lib.sklearn.one_hot_encoder.html
 .. _`OrdinalEncoder`: lale.lib.sklearn.ordinal_encoder.html
+.. _`TargetEncoder`: lale.lib.sklearn.target_encoder.html
 .. _`PassiveAggressiveClassifier`: lale.lib.sklearn.passive_aggressive_classifier.html
 .. _`PCA`: lale.lib.sklearn.pca.html
 .. _`Perceptron`: lale.lib.sklearn.perceptron.html
@@ -231,6 +233,7 @@ from .simple_imputer import SimpleImputer as SimpleImputer
 from .standard_scaler import StandardScaler as StandardScaler
 from .svc import SVC as SVC
 from .svr import SVR as SVR
+from .target_encoder import TargetEncoder as TargetEncoder
 from .tfidf_vectorizer import TfidfVectorizer as TfidfVectorizer
 from .variance_threshold import VarianceThreshold as VarianceThreshold
 from .voting_classifier import VotingClassifier as VotingClassifier

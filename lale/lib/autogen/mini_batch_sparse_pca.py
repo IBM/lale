@@ -1,6 +1,7 @@
 from numpy import inf, nan
 from packaging import version
 from sklearn.decomposition import MiniBatchSparsePCA as Op
+from sklearn.utils._available_if import available_if
 
 from lale.docstrings import set_docstrings
 from lale.operators import make_operator, sklearn_version
@@ -20,6 +21,10 @@ class _MiniBatchSparsePCAImpl:
 
     def transform(self, X):
         return self._wrapped_model.transform(X)
+
+    @available_if(lambda self: (hasattr(self._wrapped_model, "inverse_transform")))
+    def inverse_transform(self, X):
+        return self._wrapped_model.inverse_transform(X)
 
 
 _hyperparams_schema = {
