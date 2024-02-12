@@ -40,7 +40,6 @@ Operator libraries
 * `lale.lib.sklearn`_ based on `scikit-learn`_
 * `lale.lib.lale`_ containing Lale-specific operators
 * `lale.lib.aif360`_ based on `AI Fairness 360`_
-* `lale.lib.autoai_libs`_ based on `autoai-libs`_
 * `lale.lib.autogen`_ auto-generated based on `scikit-learn`_
 * `lale.lib.category_encoders`_ based on `category_encoders`_
 * `lale.lib.imblearn`_ based on `imbalanced-learn`_
@@ -54,9 +53,6 @@ Operator libraries
 .. _`lale.lib.lale`: modules/lale.lib.lale.html#module-lale.lib.lale
 .. _`lale.lib.aif360`: modules/lale.lib.aif360.html#module-lale.lib.aif360
 .. _`AI Fairness 360`: https://github.com/IBM/AIF360
-.. _`lale.lib.autoai_libs`: modules/lale.lib.autoai_libs.html#module-lale.lib.autoai_libs
-.. _`autoai-libs`: https://pypi.org/project/autoai-libs/
-.. _`autoai-ts-libs`: https://pypi.org/project/autoai-ts-libs/
 .. _`lale.lib.autogen`: modules/lale.lib.autogen.html#module-lale.lib.autogen
 .. _`lale.lib.category_encoders`: modules/lale.lib.category_encoders.html#module-lale.lib.category_encoders
 .. _`category_encoders`: https://contrib.scikit-learn.org/category_encoders/
