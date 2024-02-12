@@ -14,6 +14,8 @@
 
 import warnings
 
+from sklearn.utils._available_if import available_if
+
 
 class _BaseResamplerImpl:
     def __init__(self, operator=None, resampler=None):
@@ -34,14 +36,18 @@ class _BaseResamplerImpl:
             self.classes_ = self.trained_operator.classes_
         return self
 
+    @available_if(lambda self: (hasattr(self.operator, "transform")))
     def transform(self, X, y=None):
         return self.trained_operator.transform(X, y)
 
+    @available_if(lambda self: (hasattr(self.operator, "predict")))
     def predict(self, X, **predict_params):
         return self.trained_operator.predict(X, **predict_params)
 
+    @available_if(lambda self: (hasattr(self.operator, "predict_proba")))
     def predict_proba(self, X):
         return self.trained_operator.predict_proba(X)
 
+    @available_if(lambda self: (hasattr(self.operator, "decision_function")))
     def decision_function(self, X):
         return self.trained_operator.decision_function(X)
