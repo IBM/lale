@@ -239,6 +239,38 @@ def _impl_has(attr):
     return lambda self: (hasattr(self._impl, attr))
 
 
+def _trained_impl_has(attr):
+    def f(self):
+        op = getattr(self, "_trained", self)
+        if op is None:
+            return False
+        return _impl_has(attr)(op)
+
+    return f
+
+
+def _final_impl_has(attr):
+    def f(self):
+        estimator = self._final_individual_op
+        if estimator is not None:
+            return _impl_has(attr)(estimator)
+        else:
+            return False
+
+    return f
+
+
+def _final_trained_impl_has(attr):
+    def f(self):
+        estimator = self._final_individual_op
+        if estimator is not None:
+            return _trained_impl_has(attr)(estimator)
+        else:
+            return False
+
+    return f
+
+
 _combinators_docstrings = """
     Methods
     -------
@@ -4371,6 +4403,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType_co], TrainableOperator):
         self._trained = result
         return result
 
+    @available_if(_final_trained_impl_has("transform"))
     def transform(self, X: Any, y=None) -> Any:
         """
         .. deprecated:: 0.0.0
@@ -4386,6 +4419,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType_co], TrainableOperator):
         except AttributeError as exc:
             raise ValueError("Must call `fit` before `transform`.") from exc
 
+    @available_if(_final_trained_impl_has("predict"))
     def predict(self, X, **predict_params) -> Any:
         """
         .. deprecated:: 0.0.0
@@ -4401,6 +4435,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType_co], TrainableOperator):
         except AttributeError as exc:
             raise ValueError("Must call `fit` before `predict`.") from exc
 
+    @available_if(_final_trained_impl_has("predict_proba"))
     def predict_proba(self, X):
         """
         .. deprecated:: 0.0.0
@@ -4416,6 +4451,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType_co], TrainableOperator):
         except AttributeError as exc:
             raise ValueError("Must call `fit` before `predict_proba`.") from exc
 
+    @available_if(_final_trained_impl_has("decision_function"))
     def decision_function(self, X):
         """
         .. deprecated:: 0.0.0
@@ -4431,6 +4467,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType_co], TrainableOperator):
         except AttributeError as exc:
             raise ValueError("Must call `fit` before `decision_function`.") from exc
 
+    @available_if(_final_trained_impl_has("score"))
     def score(self, X, y, **score_params):
         """
         .. deprecated:: 0.0.0
@@ -4446,6 +4483,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType_co], TrainableOperator):
         except AttributeError as exc:
             raise ValueError("Must call `fit` before `score`.") from exc
 
+    @available_if(_final_trained_impl_has("score_samples"))
     def score_samples(self, X=None):
         """
         .. deprecated:: 0.0.0
@@ -4461,6 +4499,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType_co], TrainableOperator):
         except AttributeError as exc:
             raise ValueError("Must call `fit` before `score_samples`.") from exc
 
+    @available_if(_final_trained_impl_has("predict_log_proba"))
     def predict_log_proba(self, X):
         """
         .. deprecated:: 0.0.0
@@ -4649,6 +4688,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
             return strip_schema(result)  # otherwise scorers return zero-dim array
         return result
 
+    @available_if(_final_impl_has("transform"))
     def transform(self, X: Any, y: Any = None) -> Any:
         # TODO: What does a transform on a pipeline mean, if the last step is not a transformer
         # can it be just the output of predict of the last step?
@@ -4656,6 +4696,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
         # self.is_transformer is kept in sync with the new assumptions.
         return self._predict_based_on_type("transform", "transform", X, y)
 
+    @available_if(_final_impl_has("transform_X_y"))
     def transform_X_y(self, X: Any, y: Any = None) -> Any:
         return self._predict_based_on_type("transform_X_y", "transform_X_y", X, y)
 
@@ -4743,6 +4784,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
             return result_X, result_y
         return result_X
 
+    @available_if(_final_impl_has("predict_proba"))
     def predict_proba(self, X: Any):
         """Probability estimates for all classes.
 
@@ -4758,6 +4800,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
         """
         return self._predict_based_on_type("predict_proba", "predict_proba", X)
 
+    @available_if(_final_impl_has("decision_function"))
     def decision_function(self, X: Any):
         """Confidence scores for all classes.
 
@@ -4773,6 +4816,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
         """
         return self._predict_based_on_type("decision_function", "decision_function", X)
 
+    @available_if(_final_impl_has("score"))
     def score(self, X: Any, y: Any, **score_params):
         """Performance evaluation with a default metric based on the final estimator.
 
@@ -4792,6 +4836,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
         """
         return self._predict_based_on_type("score", "score", X, y)
 
+    @available_if(_final_impl_has("score_samples"))
     def score_samples(self, X: Any = None):
         """Scores for each sample in X. There type of scores is based on the last operator in the pipeline.
 
@@ -4807,6 +4852,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
         """
         return self._predict_based_on_type("score_samples", "score_samples", X)
 
+    @available_if(_final_impl_has("predict_log_proba"))
     def predict_log_proba(self, X: Any):
         """Predicted class log-probabilities for X.
 
