@@ -25,7 +25,7 @@ import lale.operators
 import lale.pretty_print
 from lale.datasets.data_schemas import add_table_name, get_index_names, get_table_name
 from lale.expressions import it
-from lale.helpers import _is_spark_df
+from lale.helpers import _is_spark_df, _is_torch_tensor
 from lale.json_operator import JSON_TYPE
 from lale.lib.rasl.alias import Alias
 from lale.lib.rasl.join import Join
@@ -33,14 +33,6 @@ from lale.type_checking import is_subschema, join_schemas, validate_is_schema
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
-
-
-try:
-    import torch
-
-    torch_installed = True
-except ImportError:
-    torch_installed = False
 
 
 def _is_pandas_df(d):
@@ -122,7 +114,7 @@ class _ConcatFeaturesImpl:
                     np_dataset = dataset.toPandas().values
                 elif isinstance(dataset, scipy.sparse.csr_matrix):
                     np_dataset = dataset.toarray()
-                elif torch_installed and isinstance(dataset, torch.Tensor):
+                elif _is_torch_tensor(dataset):
                     np_dataset = dataset.detach().cpu().numpy()
                 else:
                     np_dataset = dataset

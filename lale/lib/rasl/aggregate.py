@@ -80,11 +80,12 @@ class _AggregateImpl:
         return named_aggregated_df
 
     def _transform_pandas(self, X, agg_info):
-        is_grouped = isinstance(X, pd.core.groupby.generic.DataFrameGroupBy)
-        if is_grouped:
-            _, first_group = next(iter(X))  # TODO: what if zero groups?
+        if isinstance(X, pd.core.groupby.generic.DataFrameGroupBy):
+            is_grouped = True
+            _, first_group = next(iter(X))  # TODO: what if zero groups?  # type: ignore
             value_columns = first_group.columns
         else:
+            is_grouped = False
             value_columns = X.columns
 
         def eval_agg_pandas(old_col_name, agg_func_name):

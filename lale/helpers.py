@@ -50,14 +50,38 @@ try:
     import torch
 
     torch_installed = True
+
+    def _is_torch_tensor_inst(df):
+        return isinstance(df, torch.Tensor)
+
+    _is_torch_tensor = _is_torch_tensor_inst
+
 except ImportError:
     torch_installed = False
 
+    def _is_torch_tensor_ninst(df):
+        return False
+
+    _is_torch_tensor = _is_torch_tensor_ninst
 
 spark_loader = util.find_spec("pyspark")
 spark_installed = spark_loader is not None
+
+
 if spark_installed:
     from pyspark.sql.dataframe import DataFrame as spark_df
+
+    def _is_spark_dataframe_inst(df):
+        return isinstance(df, spark_df)
+
+    _is_spark_dataframe = _is_spark_dataframe_inst
+
+else:
+
+    def _is_spark_dataframe_ninst(df):
+        return False
+
+    _is_spark_dataframe = _is_spark_dataframe_ninst
 
 logger = logging.getLogger(__name__)
 
@@ -127,7 +151,7 @@ def data_to_json(data, subsample_array: bool = True) -> Union[list, dict, int, f
     elif isinstance(data, (pd.DataFrame, pd.Series)):
         np_array = data.values
         return ndarray_to_json(np_array, subsample_array)
-    elif torch_installed and isinstance(data, torch.Tensor):
+    elif _is_torch_tensor(data):
         np_array = data.detach().numpy()
         return ndarray_to_json(np_array, subsample_array)
     elif isinstance(data, (np.int64, np.int32, np.int16)):  # type: ignore
@@ -841,9 +865,9 @@ def append_batch(data, batch_data):
             X = append_batch(X, batch_X)
             y = append_batch(y, batch_y)
             return X, y
-    elif torch_installed and isinstance(data, torch.Tensor):
-        if isinstance(batch_data, torch.Tensor):
-            return torch.cat((data, batch_data))
+    elif _is_torch_tensor(data):
+        if _is_torch_tensor(batch_data):
+            return torch.cat((data, batch_data))  # type: ignore
     elif isinstance(data, (pd.Series, pd.DataFrame)):
         return pd.concat([data, batch_data], axis=0)
     try:
@@ -945,11 +969,11 @@ def create_data_loader(
             worker_init_fn = getattr(dataset, "worker_init_fn", None)
         else:
             return [X]
-    elif isinstance(X, torch.Tensor) and y is not None:
+    elif _is_torch_tensor(X) and y is not None:
         if isinstance(y, np.ndarray):
-            y = torch.from_numpy(y)
+            y = torch.from_numpy(y)  # type: ignore
         dataset = TensorDataset(X, y)
-    elif isinstance(X, torch.Tensor):
+    elif _is_torch_tensor(X):
         dataset = TensorDataset(X)
     else:
         raise TypeError(
@@ -1255,10 +1279,7 @@ def _is_spark_df(df):
 
 
 def _is_spark_df_without_index(df):
-    if spark_installed:
-        return isinstance(df, spark_df) and not _is_spark_df(df)
-    else:
-        return False
+    return _is_spark_dataframe(df) and not _is_spark_df(df)
 
 
 def _ensure_pandas(df) -> pd.DataFrame:

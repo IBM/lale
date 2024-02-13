@@ -162,7 +162,7 @@ def construct_ci_penalty(A, C, n_ci, i):
             / np.sum(ndx[(slice(None),) * A + (i + 1,)])
         ) - n_ci[i, 0]
 
-    @quadratic_equality(condition, k=1e6, h=10)
+    @quadratic_equality(condition, k=1e6, h=10)  # type: ignore
     def penalty(x):
         return 0
 
