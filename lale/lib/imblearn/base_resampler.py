@@ -14,7 +14,7 @@
 
 import warnings
 
-from sklearn.utils._available_if import available_if
+from sklearn.utils.metaestimators import available_if
 
 
 class _BaseResamplerImpl:
