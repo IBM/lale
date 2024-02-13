@@ -82,7 +82,7 @@ def schema_monotonic_cst(desc_add):
 schema_monotonic_cst_regressor = schema_monotonic_cst(
     """
 Monotonicity constraints are not supported for:
-multioutput regressions (i.e. when n_outputs_ > 1),
+multioutput regressions (i.e. when n_outputs > 1),
 
 regressions trained on data with missing values."""
 )
@@ -90,7 +90,7 @@ regressions trained on data with missing values."""
 schema_monotonic_cst_classifier = schema_monotonic_cst(
     """
 Monotonicity constraints are not supported for:
-multioutput regressions (i.e. when n_outputs_ > 1),
+multioutput regressions (i.e. when n_outputs > 1),
 
 regressions trained on data with missing values."""
 )
