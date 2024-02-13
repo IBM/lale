@@ -1,7 +1,7 @@
 from numpy import inf, nan
 from packaging import version
 from sklearn.decomposition import MiniBatchSparsePCA as Op
-from sklearn.utils._available_if import available_if
+from sklearn.utils.metaestimators import available_if
 
 from lale.docstrings import set_docstrings
 from lale.operators import make_operator, sklearn_version
