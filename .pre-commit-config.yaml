@@ -21,12 +21,12 @@ repos:
         args: [--filter-files]
   # Format the python code with black
   - repo: https://github.com/psf/black
-    rev: 24.1.1
+    rev: 24.2.0
     hooks:
       - id: black
   # Lint the yaml files
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.33.0
+    rev: v1.34.0
     hooks:
       - id: yamllint
   # Lint the python code with flake
@@ -67,4 +67,4 @@ repos:
         language: node
         pass_filenames: false
         types: [python]
-        additional_dependencies: ['pyright@1.1.291']
+        additional_dependencies: ['pyright@1.1.310']

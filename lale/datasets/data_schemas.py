@@ -21,7 +21,7 @@ from pandas.core.groupby import DataFrameGroupBy, SeriesGroupBy
 from scipy.sparse import csr_matrix
 
 import lale.type_checking
-from lale.helpers import _is_spark_df
+from lale.helpers import _is_spark_dataframe, _is_spark_df
 from lale.type_checking import JSON_TYPE
 
 try:
@@ -38,6 +38,7 @@ try:
     from pyspark.sql import GroupedData as SparkGroupedData
 
     spark_installed = True
+
 except ImportError:
     spark_installed = False
 
@@ -220,7 +221,7 @@ def add_table_name(obj, name) -> Any:
         return None
     if name is None:
         return obj
-    if spark_installed and isinstance(obj, SparkDataFrame):
+    if _is_spark_dataframe(obj):
         # alias method documentation: https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.sql.DataFrame.alias.html
         # Python class DataFrame with method alias(self, alias): https://github.com/apache/spark/blob/master/python/pyspark/sql/dataframe.py
         # Scala type DataFrame: https://github.com/apache/spark/blob/master/sql/core/src/main/scala/org/apache/spark/sql/package.scala
@@ -254,7 +255,7 @@ def add_table_name(obj, name) -> Any:
         result = obj.view(NDArrayWithSchema)
     elif isinstance(obj, (DataFrameGroupBy, SeriesGroupBy)):
         result = obj
-    elif spark_installed and isinstance(obj, SparkGroupedData):
+    elif spark_installed and isinstance(obj, SparkGroupedData):  # type: ignore
         result = obj
     else:
         raise ValueError(f"unexpected type(obj) {type(obj)}")
@@ -263,7 +264,7 @@ def add_table_name(obj, name) -> Any:
 
 
 def get_table_name(obj):
-    if spark_installed and isinstance(obj, SparkDataFrame):
+    if _is_spark_dataframe(obj):
         # Python class DataFrame with field self._jdf: https://github.com/apache/spark/blob/master/python/pyspark/sql/dataframe.py
         # Scala type DataFrame: https://github.com/apache/spark/blob/master/sql/core/src/main/scala/org/apache/spark/sql/package.scala
         # Scala class DataSet with field queryExecution: https://github.com/apache/spark/blob/master/sql/core/src/main/scala/org/apache/spark/sql/Dataset.scala
@@ -277,7 +278,7 @@ def get_table_name(obj):
             # Scala class SuqueryAlias with field identifier: https://github.com/apache/spark/blob/master/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/plans/logical/basicLogicalOperators.scala
             # str(..) converts the Java string into a Python string
             result = str(spark_query.identifier())
-        except py4j.protocol.Py4JError:
+        except py4j.protocol.Py4JError:  # type: ignore
             result = None
         return result
     if isinstance(
@@ -533,14 +534,14 @@ def _torch_tensor_to_schema(tensor) -> JSON_TYPE:
     pip install torch
 or with
     pip install 'lale[full]'"""
-    assert isinstance(tensor, Tensor)
+    assert isinstance(tensor, Tensor)  # type: ignore
     result: JSON_TYPE
     # https://pytorch.org/docs/stable/tensor_attributes.html#torch-dtype
-    if tensor.dtype == torch.bool:
+    if tensor.dtype == torch.bool:  # type: ignore
         result = {"type": "boolean"}
-    elif tensor.dtype == torch.uint8:
+    elif tensor.dtype == torch.uint8:  # type: ignore
         result = {"type": "integer", "minimum": 0, "maximum": 255}
-    elif torch.is_floating_point(tensor):
+    elif torch.is_floating_point(tensor):  # type: ignore
         result = {"type": "number"}
     else:
         result = {"type": "integer"}
