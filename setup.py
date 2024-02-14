@@ -70,7 +70,7 @@ extras_require = {
         "lightgbm<4.4.0",
         "snapml>=1.7.0rc3,<1.16.0",
         "liac-arff>=2.4.0",
-        "tensorflow>=2.4.0,<=2.13.0",
+        "tensorflow>=2.4.0,<2.16.0",
         "smac<=0.10.0",
         "numba",
         "aif360>=0.4.0",
