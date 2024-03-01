@@ -153,9 +153,6 @@ jobs:
       run: pip install -U numpy
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
-    - name: Install numpy for aif360
-      if: ${{ matrix.test-case == 'test/test_aif360.py' }}
-      run: pip install -U 'numpy<1.24'
     - name: Install deps for test_relational_sklearn
       if: ${{ matrix.test-case == 'test/test_relational_sklearn.py' }}
       run: pip install 'scikit-learn>=1.0'
@@ -242,9 +239,6 @@ jobs:
       run: pip install -U numpy
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
-    - name: Install numpy for aif360
-      if: ${{ matrix.test-case == 'test/test_aif360.py' }}
-      run: pip install -U 'numpy<1.24'
     - name: Install deps for test_relational_sklearn
       if: ${{ matrix.test-case == 'test/test_relational_sklearn.py' }}
       run: pip install 'scikit-learn>=1.0'
@@ -482,14 +476,10 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install system packages
       run: sudo apt-get install graphviz swig
-    - name: Install numpy for aif360
-      run: pip install -U 'numpy<1.24'
     - name: Install pytest
       run: pip install pytest
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
-    - name: Install numpy for aif360
-      run: pip install -U 'numpy<1.24'
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
