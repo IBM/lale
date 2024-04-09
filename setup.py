@@ -87,6 +87,7 @@ extras_require = {
         "joblib",
         "ipython<8.8.0",
         "jupyter",
+        "lxml<5.2.1",
         "sphinx>=5.0.0",
         "sphinx_rtd_theme>=0.5.2",
         "docutils<0.17",
