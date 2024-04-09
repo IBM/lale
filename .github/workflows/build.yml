@@ -480,6 +480,8 @@ jobs:
       run: pip install pytest
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
+    - name: Install latest AIF360
+      run: pip install 'aif360>=0.6.1'
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
