@@ -173,7 +173,7 @@ def _json_to_graphviz_rec(uid, jsn, cluster2reps, is_root, dot_graph_attr):
                 tooltip=_indiv_op_tooltip(uid, jsn),
             )
             if "documentation_url" in jsn:
-                dot.attr("graph", URL=jsn["documentation_url"])
+                dot.attr("graph", URL=jsn["documentation_url"], target="_blank")
             nodes = jsn["steps"]
             if jsn["class"] == _LALE_SKL_PIPELINE:
                 names = list(nodes.keys())
@@ -192,6 +192,7 @@ def _json_to_graphviz_rec(uid, jsn, cluster2reps, is_root, dot_graph_attr):
                 "style": "filled",
                 "fillcolor": _STATE2COLOR[step_jsn["state"]],
                 "tooltip": tooltip,
+                "target": "_blank",
             }
             if "documentation_url" in step_jsn:
                 attrs["URL"] = step_jsn["documentation_url"]
