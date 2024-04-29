@@ -36,6 +36,16 @@ class TestToGraphviz(unittest.TestCase):
         optimizable = kernel_tfm_or_not >> tfm >> clf
         optimizable.visualize(ipython_display=False)
 
+    def test_url_generation(self):
+        from lale.lib.lale import NoOp
+        from lale.lib.sklearn import PCA, LogisticRegression
+
+        sample = NoOp >> PCA >> LogisticRegression
+        result = sample.visualize(ipython_display=False)
+        for i in result.body:
+            if "URL" in i:
+                assert "target=_blank" in i
+
     def test_invalid_input(self):
         from sklearn.linear_model import LogisticRegression as SklearnLR
 
