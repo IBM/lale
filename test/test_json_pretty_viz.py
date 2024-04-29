@@ -38,6 +38,7 @@ class TestToGraphviz(unittest.TestCase):
 
     def test_url_generation(self):
         from graphviz import Source
+
         from lale.lib.lale import NoOp
         from lale.lib.sklearn import PCA, LogisticRegression
 
