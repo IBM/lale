@@ -73,6 +73,7 @@ class _XGBClassifierImpl:
     def __init__(self, **hyperparams):
         self.validate_hyperparams(**hyperparams)
         self._wrapped_model = xgboost.XGBClassifier(**hyperparams)
+        self._label_encoder = None
 
     def fit(self, X, y, **fit_params):
         renamed_X = _rename_all_features(X)
@@ -93,7 +94,10 @@ class _XGBClassifierImpl:
                 trained_le = trainable_le.fit(y)
                 self._label_encoder = trained_le
 
-            numeric_y = self._label_encoder.transform(y)
+            if self._label_encoder is not None:
+                numeric_y = self._label_encoder.transform(y)
+            else:
+                numeric_y = y
             self._wrapped_model.fit(renamed_X, numeric_y, **fit_params)
         return self
 
@@ -109,8 +113,10 @@ class _XGBClassifierImpl:
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=FutureWarning)
             numeric_result = self._wrapped_model.predict(renamed_X, **predict_params)
-        result = self._label_encoder.inverse_transform(numeric_result)
-        return result
+        if self._label_encoder is not None:
+            return self._label_encoder.inverse_transform(numeric_result)
+        else:
+            return numeric_result
 
     def predict_proba(self, X):
         return self._wrapped_model.predict_proba(X)
