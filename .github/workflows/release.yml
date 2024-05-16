@@ -21,7 +21,7 @@ jobs:
       run: pip install wheel twine
     - name: Build distribution
       run: python setup.py sdist bdist_wheel
-    - name: Publish package to TestPyPI
-      run: twine upload -u "__token__" -p "${{ secrets.test_pypi_password }}" -r testpypi dist/*
     - name: Publish package to (not-test) PyPi
       run: twine upload -u "__token__" -p "${{ secrets.pypi_password }}" dist/*
+    - name: Publish package to TestPyPI
+      run: twine upload -u "__token__" -p "${{ secrets.test_pypi_password }}" -r testpypi dist/*
