@@ -226,12 +226,22 @@ def _json_to_graphviz_rec(uid, jsn, cluster2reps, is_root, dot_graph_attr):
     return dot
 
 
+class _HTML4Jupyter:
+    def __init__(self, html):
+        self.html = html
+
+    def _repr_html_(self):
+        return self.html
+
+
 def json_to_graphviz(jsn, ipython_display, dot_graph_attr):
     cluster2reps = _get_cluster2reps(jsn)
     dot = _json_to_graphviz_rec("(root)", jsn, cluster2reps, True, dot_graph_attr)
     if ipython_display:
         import IPython.display
 
-        IPython.display.display(dot)
+        svg = dot.pipe(format="svg", encoding="utf-8")
+        for_jupyter = _HTML4Jupyter(svg)
+        IPython.display.display(for_jupyter)
         return None
     return dot
