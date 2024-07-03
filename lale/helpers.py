@@ -394,7 +394,6 @@ def to_graphviz(
     lale_operator: "lale.operators.Operator",
     ipython_display: bool = True,
     call_depth: int = 1,
-    **dot_graph_attr,
 ):
     import lale.json_operator
     import lale.operators
@@ -403,7 +402,7 @@ def to_graphviz(
     if not isinstance(lale_operator, lale.operators.Operator):
         raise TypeError("The input to to_graphviz needs to be a valid LALE operator.")
     jsn = lale.json_operator.to_json(lale_operator, call_depth=call_depth + 1)
-    dot = lale.visualize.json_to_graphviz(jsn, ipython_display, dot_graph_attr)
+    dot = lale.visualize.json_to_graphviz(jsn, ipython_display)
     return dot
 
 

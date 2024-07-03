@@ -125,7 +125,7 @@ def _indiv_op_tooltip(uid, jsn) -> str:
     return tooltip
 
 
-def _json_to_graphviz_rec(uid, jsn, cluster2reps, is_root, dot_graph_attr):
+def _json_to_graphviz_rec(uid, jsn, cluster2reps, is_root):
     kind = lale.json_operator.json_op_kind(jsn)
     dot: graphviz.Digraph
     if kind in ["Pipeline", "OperatorChoice"] or "steps" in jsn:
@@ -135,7 +135,9 @@ def _json_to_graphviz_rec(uid, jsn, cluster2reps, is_root, dot_graph_attr):
     if is_root:
         dot.attr(
             "graph",
-            {**dot_graph_attr, "rankdir": "LR", "compound": "true", "nodesep": "0.1"},
+            rankdir="LR",
+            compound="true",
+            nodesep="0.1",
         )
         dot.attr("node", fontsize="11", margin="0.06,0.03")
     if kind == "Pipeline":
@@ -183,7 +185,7 @@ def _json_to_graphviz_rec(uid, jsn, cluster2reps, is_root, dot_graph_attr):
     for step_uid, step_jsn in nodes.items():
         node_kind = lale.json_operator.json_op_kind(step_jsn)
         if node_kind in ["Pipeline", "OperatorChoice"] or "steps" in step_jsn:
-            sub_dot = _json_to_graphviz_rec(step_uid, step_jsn, cluster2reps, False, {})
+            sub_dot = _json_to_graphviz_rec(step_uid, step_jsn, cluster2reps, False)
             dot.subgraph(sub_dot)
         else:
             assert node_kind == "IndividualOp"
@@ -234,9 +236,9 @@ class _HTML4Jupyter:
         return self.html
 
 
-def json_to_graphviz(jsn, ipython_display, dot_graph_attr):
+def json_to_graphviz(jsn, ipython_display):
     cluster2reps = _get_cluster2reps(jsn)
-    dot = _json_to_graphviz_rec("(root)", jsn, cluster2reps, True, dot_graph_attr)
+    dot = _json_to_graphviz_rec("(root)", jsn, cluster2reps, True)
     if ipython_display:
         import IPython.display
 
