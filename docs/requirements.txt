@@ -1,5 +1,5 @@
 # all of setup.py -> install_requires
-numpy
+numpy<2.0.0
 black==19.10b0
 graphviz
 hyperopt
