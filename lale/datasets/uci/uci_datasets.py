@@ -107,7 +107,7 @@ def fetch_drugscom():
                 {"description": "drugName", "type": "string"},
                 {
                     "description": "condition",
-                    "anyOf": [{"type": "string"}, {"enum": [np.NaN]}],
+                    "anyOf": [{"type": "string"}, {"enum": [np.nan]}],
                 },
                 {"description": "review", "type": "string"},
                 {

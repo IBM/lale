@@ -714,10 +714,10 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
                     "type": "number",
                 },
                 {
-                    "enum": [None, np.NaN],
+                    "enum": [None, np.nan],
                 },
             ],
-            "default": np.NaN,
+            "default": np.nan,
             "description": "Value in the data which needs to be present as a missing value. If"
             " If None, defaults to np.nan.",
         },
