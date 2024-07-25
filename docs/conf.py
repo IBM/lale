@@ -94,9 +94,9 @@ autoclass_content = "both"
 # Mock requirements to save resources during doc build machine setup
 autodoc_mock_imports = [
     "aif360",
+    "ConfigSpace",
     "fairlearn",
     "pytorch",
-    "smac",
     "tensorflow",
     "torch",
     "numba",
