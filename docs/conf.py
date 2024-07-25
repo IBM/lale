@@ -96,6 +96,7 @@ autodoc_mock_imports = [
     "aif360",
     "fairlearn",
     "pytorch",
+    "smac",
     "tensorflow",
     "torch",
     "numba",
