@@ -1,5 +1,6 @@
 # all of setup.py -> install_requires
-numpy<2.0.0
+numpy
+# aif360>=0.5.0
 black==19.10b0
 graphviz
 hyperopt
@@ -13,7 +14,7 @@ h5py
 astunparse
 typing-extensions
 # subset of setup.py -> extras_require -> full
-mystic
+# mystic
 xgboost
 lightgbm<4.4.0
 liac-arff>=2.4.0
