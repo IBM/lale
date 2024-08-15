@@ -245,7 +245,7 @@ class _HyperoptImpl:
                     algo=algo.suggest,
                     max_evals=self.evals_with_defaults,
                     trials=self._default_trials,
-                    rstate=np.random.RandomState(SEED),
+                    rstate=np.random.default_rng(SEED),
                     show_progressbar=self.show_progressbar,
                 )
             except SystemExit:
@@ -266,7 +266,7 @@ class _HyperoptImpl:
                 algo=algo.suggest,
                 max_evals=self.max_evals - self.evals_with_defaults,
                 trials=self._trials,
-                rstate=np.random.RandomState(SEED),
+                rstate=np.random.default_rng(SEED),
                 show_progressbar=self.show_progressbar,
             )
         except SystemExit:

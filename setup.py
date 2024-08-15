@@ -43,7 +43,7 @@ else:
         "numpy",
         "black>=22.1.0",
         "graphviz",
-        "hyperopt>=0.2,<=0.2.5",
+        "hyperopt>=0.2,<=0.2.7",
         "jsonschema<=4.20.0",
         "jsonsubschema>=0.0.6",
         "scikit-learn>=1.0.0,<1.5.0",

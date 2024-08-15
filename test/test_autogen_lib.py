@@ -96,7 +96,7 @@ regressors = [
     "Lasso",
     "LassoCV",
     "LassoLars",
-    "LassoLarsCV",
+    #    "LassoLarsCV",
     "LassoLarsIC",
     "LGBMRegressor",
     "NuSVR",
