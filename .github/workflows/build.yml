@@ -119,7 +119,7 @@ jobs:
           python-version: '3.11'
           setup-target: '.[full,test]'
         - test-case: test/test_autogen_lib.py
-          python-version: 3.11
+          python-version: '3.11'
           setup-target: '.[test]'
         - test-case: test/test_halving_gridsearchcv.py
           python-version: 3.8
@@ -203,10 +203,10 @@ jobs:
           python-version: 3.10
           setup-target: '.[full,test]'
         - test-case: test/test_core_transformers.py
-          python-version: 3.11
+          python-version: '3.11'
           setup-target: '.[full,test]'
         - test-case: test/test_autogen_lib.py
-          python-version: 3.11
+          python-version: '3.11'
           setup-target: '.[test]'
         - test-case: test/test_halving_gridsearchcv.py
           python-version: 3.8
