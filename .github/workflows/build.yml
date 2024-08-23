@@ -119,7 +119,7 @@ jobs:
           python-version: '3.11'
           setup-target: '.[full,test]'
         - test-case: test/test_autogen_lib.py
-          python-version: 3.8
+          python-version: 3.11
           setup-target: '.[test]'
         - test-case: test/test_halving_gridsearchcv.py
           python-version: 3.8
@@ -182,7 +182,6 @@ jobs:
         test-case:
         - test/test_core_classifiers.py
         - test/test_core_regressors.py
-        - test/test_core_transformers.py
         - test/test_core_misc.py
         - test/test_core_pipeline.py
         - test/test_custom_schemas.py
@@ -192,14 +191,22 @@ jobs:
         - test/test_interoperability.py
         - test/test_optimizers.py
         - test/test_pipeline.py
-        - test/test_autogen_lib.py
         - test/test_relational.py
         - test/test_category_encoders.py
         python-version: [3.8, 3.9, '3.10', '3.11']
         setup-target: ['.[full,test]']
         include:
+        - test-case: test/test_core_transformers.py
+          python-version: 3.9
+          setup-target: '.[full,test]'
+        - test-case: test/test_core_transformers.py
+          python-version: 3.10
+          setup-target: '.[full,test]'
+        - test-case: test/test_core_transformers.py
+          python-version: 3.11
+          setup-target: '.[full,test]'
         - test-case: test/test_autogen_lib.py
-          python-version: 3.8
+          python-version: 3.11
           setup-target: '.[test]'
         - test-case: test/test_halving_gridsearchcv.py
           python-version: 3.8
