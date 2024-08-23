@@ -200,7 +200,7 @@ jobs:
           python-version: 3.9
           setup-target: '.[full,test]'
         - test-case: test/test_core_transformers.py
-          python-version: 3.10
+          python-version: '3.10'
           setup-target: '.[full,test]'
         - test-case: test/test_core_transformers.py
           python-version: '3.11'
