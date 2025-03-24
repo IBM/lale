@@ -51,8 +51,8 @@ def download(dataset_id, zip_name, contents_files):
     return full_file_names
 
 
-def tsv_to_Xy(file_name, target_col, schema_orig):
-    data_all = pd.read_csv(file_name, sep="\t")
+def tsv_to_Xy(file_name, target_col, schema_orig, index_col=None):
+    data_all = pd.read_csv(file_name, sep="\t", index_col=index_col)
     row_schema_X = [
         col_schema
         for col_schema in schema_orig["items"]["items"]
@@ -89,11 +89,11 @@ def tsv_to_Xy(file_name, target_col, schema_orig):
     return data_X, data_y
 
 
-def fetch_drugscom():
+def fetch_drugslib():
     files = download(
-        "462",
-        "drug+review+dataset+drugs+com.zip",
-        ["drugsComTest_raw.tsv", "drugsComTrain_raw.tsv"],
+        "461",
+        "drug+review+dataset+druglib+com.zip",
+        ["drugLibTest_raw.tsv", "drugLibTrain_raw.tsv"],
     )
     target_col = "rating"
     json_schema = {
@@ -101,26 +101,45 @@ def fetch_drugscom():
         "type": "array",
         "items": {
             "type": "array",
-            "minItems": 6,
-            "maxItems": 6,
+            "minItems": 8,
+            "maxItems": 8,
             "items": [
-                {"description": "drugName", "type": "string"},
+                # index: {"description": "reviewID", "type": "integer", "minimum": 0},
+                {"description": "urlDrugName", "type": "string"},
+                {
+                    "description": "rating",
+                    "type": "integer",
+                    "enum": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                },
+                {
+                    "description": "effectiveness",
+                    "anyOf": [{"type": "string"}, {"enum": [np.nan]}],
+                },
+                {
+                    "description": "sideEffects",
+                    "anyOf": [{"type": "string"}, {"enum": [np.nan]}],
+                },
                 {
                     "description": "condition",
                     "anyOf": [{"type": "string"}, {"enum": [np.nan]}],
                 },
-                {"description": "review", "type": "string"},
                 {
-                    "description": "rating",
-                    "enum": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0],
+                    "description": "benefitsReview",
+                    "anyOf": [{"type": "string"}, {"enum": [np.nan]}],
                 },
-                {"description": "date", "type": "string"},
-                {"description": "usefulCount", "type": "integer", "minimum": 0},
+                {
+                    "description": "sideEffectsReview",
+                    "anyOf": [{"type": "string"}, {"enum": [np.nan]}],
+                },
+                {
+                    "description": "commentsReview",
+                    "anyOf": [{"type": "string"}, {"enum": [np.nan]}],
+                },
             ],
         },
     }
-    test_X, test_y = tsv_to_Xy(files[0], target_col, json_schema)
-    train_X, train_y = tsv_to_Xy(files[1], target_col, json_schema)
+    test_X, test_y = tsv_to_Xy(files[0], target_col, json_schema, index_col=[0])
+    train_X, train_y = tsv_to_Xy(files[1], target_col, json_schema, index_col=[0])
     return train_X, train_y, test_X, test_y
 
 

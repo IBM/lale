@@ -38,6 +38,7 @@ from lale.lib.lale import (
     Project,
     TopKVotingClassifier,
 )
+from lale.lib.rasl.ordinal_encoder import OrdinalEncoder
 from lale.lib.sklearn import (
     PCA,
     SVC,
@@ -532,16 +533,18 @@ class TestHyperopt(unittest.TestCase):
         _ = hyperopt_classifier.fit(train_X, train_y)
 
     def test_text_and_structured(self):
-        from lale.datasets.uci.uci_datasets import fetch_drugscom
+        from lale.datasets.uci.uci_datasets import fetch_drugslib
 
-        train_X_all, train_y_all, _test_X, _test_y = fetch_drugscom()
+        train_X_all, train_y_all, _test_X, _test_y = fetch_drugslib()
         # subset to speed up debugging
         train_X, _train_X, train_y, _train_y = train_test_split(
             train_X_all, train_y_all, train_size=0.01, random_state=42
         )
 
-        prep_text = Project(columns=["review"]) >> TfidfVectorizer(max_features=100)
-        prep_nums = Project(columns={"type": "number"})
+        prep_text = Project(columns=["benefitsReview"]) >> TfidfVectorizer(
+            max_features=100
+        )
+        prep_nums = Project(columns=["effectiveness"]) >> OrdinalEncoder()
         planned = (
             (prep_text & prep_nums)
             >> ConcatFeatures

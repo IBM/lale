@@ -59,9 +59,9 @@ class TestDatasetSchemas(unittest.TestCase):
 
             train_X, train_y = load_movie_review()
             cls._movies = {"X": train_X, "y": train_y}
-            from lale.datasets.uci.uci_datasets import fetch_drugscom
+            from lale.datasets.uci.uci_datasets import fetch_drugslib
 
-            train_X, train_y, _test_X, _test_y = fetch_drugscom()
+            train_X, train_y, _test_X, _test_y = fetch_drugslib()
             cls._drugRev = {"X": train_X, "y": train_y}
 
     @classmethod
