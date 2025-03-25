@@ -76,9 +76,10 @@ class _BaggingOrbisClassifierImpl:
         self.sampling_strategy = sampling_strategy
         self.sampler_hparams = {
             "replacement": replacement,
-            "n_jobs": n_jobs,
             "random_state": random_state,
         }
+        if imblearn_version < version.Version("0.12"):
+            self.sampler_hparams["n_jobs"] = (n_jobs,)
 
     def fit(self, X, y):
         assert isinstance(X, pd.DataFrame), "not yet implemented"
@@ -119,8 +120,12 @@ class _BaggingOrbisClassifierImpl:
             **with_fixed_estimator_name(
                 estimator=repair_dtypes >> orbis,
                 n_estimators=self.n_estimators,
-                n_jobs=self.sampler_hparams["n_jobs"],
                 random_state=self.sampler_hparams["random_state"],
+                **(
+                    {"n_jobs": self.sampler_hparams["n_jobs"]}
+                    if imblearn_version < version.Version("0.12")
+                    else {}
+                ),
             )
         )
         encoded_y = pd.Series(self.lab_enc.transform(y), index=y.index)

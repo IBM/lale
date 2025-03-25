@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import typing
+
 import imblearn.over_sampling
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -30,6 +33,7 @@ from ._common_schemas import (
     _output_predict_proba_schema,
     _output_predict_schema,
     _output_transform_schema,
+    imblearn_version,
 )
 from .base_resampler import _BaseResamplerImpl
 
@@ -107,5 +111,14 @@ Borderline samples will be detected and used to generate new synthetic samples."
 
 
 BorderlineSMOTE = lale.operators.make_operator(_BorderlineSMOTEImpl, _combined_schemas)
+
+if imblearn_version is not None and imblearn_version >= version.Version("0.12"):
+    BorderlineSMOTE = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        BorderlineSMOTE.customize_schema(
+            n_jobs=None,
+            set_as_available=True,
+        ),
+    )
 
 lale.docstrings.set_docstrings(BorderlineSMOTE)
