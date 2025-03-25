@@ -5523,13 +5523,16 @@ def customize_schema(  # pylint: disable=differing-param-doc,differing-type-doc
                 op._schemas["properties"][arg] = value
             elif value is None:
                 scm = op._schemas["properties"]["hyperparams"]["allOf"][0]
-                scm["required"] = [k for k in scm["required"] if k != arg]
-                scm["relevantToOptimizer"] = [
-                    k for k in scm["relevantToOptimizer"] if k != arg
-                ]
-                scm["properties"] = {
-                    k: scm["properties"][k] for k in scm["properties"] if k != arg
-                }
+                if "required" in scm:
+                    scm["required"] = [k for k in scm["required"] if k != arg]
+                if "relevantToOptimizer" in scm:
+                    scm["relevantToOptimizer"] = [
+                        k for k in scm["relevantToOptimizer"] if k != arg
+                    ]
+                if "properties" in scm:
+                    scm["properties"] = {
+                        k: scm["properties"][k] for k in scm["properties"] if k != arg
+                    }
             else:
                 op._schemas["properties"]["hyperparams"]["allOf"][0]["properties"][
                     arg
