@@ -16,6 +16,14 @@ from typing import Any, Dict
 
 JSON_TYPE = Dict[str, Any]
 
+try:
+    import imblearn  # type: ignore
+    from packaging import version
+
+    imblearn_version = version.parse(getattr(imblearn, "__version__"))
+
+except ImportError:
+    imblearn_version = None
 
 _hparam_kind_sel = {
     "description": """Strategy to use in order to exclude samples.
