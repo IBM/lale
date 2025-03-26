@@ -22,3 +22,22 @@ schema_silent: JSON_TYPE = {
     "default": None,
     "description": "Deprecated and replaced with verbosity, but adding to be backward compatible.",
 }
+
+schema_random_state: JSON_TYPE = {
+    "description": "Random number seed.  (replaces seed)",
+    "anyOf": [
+        {
+            "description": "RandomState used by np.random",
+            "enum": [None],
+        },
+        {
+            "description": "The seed used by the random number generator",
+            "type": "integer",
+        },
+        {
+            "description": "Random number generator instance.",
+            "laleType": "numpy.random.RandomState",
+        },
+    ],
+    "default": 0,
+}

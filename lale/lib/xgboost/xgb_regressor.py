@@ -23,7 +23,7 @@ import lale.helpers
 import lale.operators
 import lale.schemas
 
-from ._common_schemas import schema_silent
+from ._common_schemas import schema_random_state, schema_silent
 
 try:
     import xgboost  # type: ignore
@@ -902,5 +902,12 @@ if xgboost_version is not None and xgboost_version >= version.Version("2.0"):
         },
         set_as_available=True,
     )
+
+if xgboost_version is not None and xgboost_version >= version.Version("2.1.0"):
+    XGBRegressor = XGBRegressor.customize_schema(
+        random_state=schema_random_state,
+        set_as_available=True,
+    )
+
 
 lale.docstrings.set_docstrings(XGBRegressor)

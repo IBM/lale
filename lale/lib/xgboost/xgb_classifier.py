@@ -25,7 +25,7 @@ import lale.helpers
 import lale.operators
 import lale.schemas
 
-from ._common_schemas import schema_silent
+from ._common_schemas import schema_random_state, schema_silent
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=FutureWarning)
@@ -79,7 +79,7 @@ class _XGBClassifierImpl:
         renamed_X = _rename_all_features(X)
         assert xgboost_version is not None
         if (
-            xgboost_version >= version.Version("1.3.0")
+            version.Version("1.3.0") <= xgboost_version < version.Version("2.0.0")
             and "eval_metric" not in fit_params
         ):
             # set eval_metric explicitly to avoid spurious warning
@@ -974,5 +974,10 @@ if xgboost_version is not None and xgboost_version >= version.Version("2.0"):
         set_as_available=True,
     )
 
+if xgboost_version is not None and xgboost_version >= version.Version("2.1.0"):
+    XGBClassifier = XGBClassifier.customize_schema(
+        random_state=schema_random_state,
+        set_as_available=True,
+    )
 
 lale.docstrings.set_docstrings(XGBClassifier)
