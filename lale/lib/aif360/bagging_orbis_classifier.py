@@ -12,15 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import typing
 import warnings
 
 import pandas as pd
 import sklearn.preprocessing
+from packaging import version
 
 import lale.docstrings
 import lale.lib.sklearn
 import lale.operators
-from lale.lib.imblearn._common_schemas import _hparam_n_jobs, _hparam_random_state
+from lale.lib.imblearn._common_schemas import (
+    _hparam_n_jobs,
+    _hparam_random_state,
+    imblearn_version,
+)
 
 from ...helpers import with_fixed_estimator_name
 from .orbis import Orbis
@@ -251,5 +257,14 @@ come from AIF360.
 BaggingOrbisClassifier = lale.operators.make_operator(
     _BaggingOrbisClassifierImpl, _combined_schemas
 )
+
+if imblearn_version is not None and imblearn_version >= version.Version("0.12"):
+    BaggingOrbisClassifier = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        BaggingOrbisClassifier.customize_schema(
+            n_jobs=None,
+            set_as_available=True,
+        ),
+    )
 
 lale.docstrings.set_docstrings(BaggingOrbisClassifier)

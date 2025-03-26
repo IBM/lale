@@ -22,6 +22,7 @@ import lale.docstrings
 import lale.operators
 
 from ._common_schemas import (
+    _hparam_categorical_encoder,
     _hparam_n_jobs,
     _hparam_n_neighbors,
     _hparam_operator,
@@ -131,6 +132,45 @@ Can handle some nominal features, but not designed to work with only nominal fea
 
 
 SMOTENC = lale.operators.make_operator(_SMOTENCImpl, _combined_schemas)
+
+if imblearn_version is not None and imblearn_version >= version.Version("0.11"):
+    SMOTENC = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        SMOTENC.customize_schema(
+            n_jobs=None,
+            categorical_encoder=_hparam_categorical_encoder,
+            categorical_features={
+                "description": "Specifies which features are categorical.",
+                "default": "auto",
+                "anyOf": [
+                    {
+                        "description": "Treat all features with non-numeric dtype as categorical.",
+                        "enum": [None],
+                    },
+                    {
+                        "description": "Automatically detect categorical features. Only supported when X is a pandas.DataFrame and it corresponds to columns that have a pandas.CategoricalDtype.",
+                        "enum": ["auto"],
+                    },
+                    {
+                        "description": "Indices specifying the categorical features.",
+                        "type": "array",
+                        "items": {"type": "integer"},
+                    },
+                    {
+                        "description": "Array of str corresponding to the feature names. X should be a pandas pandas.DataFrame in this case.",
+                        "type": "array",
+                        "items": {"type": "string"},
+                    },
+                    {
+                        "description": "Mask array of shape `(n_features,)` where True indicates the categorical features.",
+                        "type": "array",
+                        "items": {"type": "boolean"},
+                    },
+                ],
+            },
+            set_as_available=True,
+        ),
+    )
 
 if imblearn_version is not None and imblearn_version >= version.Version("0.12"):
     SMOTENC = typing.cast(

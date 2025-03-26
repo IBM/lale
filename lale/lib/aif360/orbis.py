@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import typing
 import warnings
 from typing import Dict, Set
 
@@ -21,6 +22,7 @@ import numpy as np
 import pandas as pd
 import sklearn.preprocessing
 from numpy.testing import assert_allclose
+from packaging import version
 
 import lale.docstrings
 import lale.lib.lale
@@ -29,6 +31,7 @@ from lale.lib.imblearn._common_schemas import (
     _hparam_n_jobs,
     _hparam_n_neighbors,
     _hparam_random_state,
+    imblearn_version,
 )
 
 from ._mystic_util import (
@@ -337,5 +340,14 @@ come from AIF360.
 
 
 Orbis = lale.operators.make_operator(_OrbisImpl, _combined_schemas)
+
+if imblearn_version is not None and imblearn_version >= version.Version("0.12"):
+    Orbis = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        Orbis.customize_schema(
+            n_jobs=None,
+            set_as_available=True,
+        ),
+    )
 
 lale.docstrings.set_docstrings(Orbis)

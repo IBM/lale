@@ -215,7 +215,8 @@ class TestImblearn(unittest.TestCase):
                 & (Project(columns={"type": "string"}) >> OrdinalEncoder())
             )
             >> ConcatFeatures
-            >> LogisticRegression()
+            >> LogisticRegression(),
+            categorical_features=["position", "race"],
         )
         trained = pipeline.fit(train_X, train_y)
         _ = trained.predict(test_X)
@@ -236,7 +237,8 @@ class TestImblearn(unittest.TestCase):
                     >> ConcatFeatures,
                 )
                 >> LogisticRegression()
-            )
+            ),
+            categorical_features=["position", "race"],
         )
         (
             train_X,

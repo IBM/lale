@@ -315,3 +315,14 @@ _output_decision_function_schema = {
     "description": "Output data schema for predictions.",
     "laleType": "Any",
 }
+
+_hparam_categorical_encoder = {
+    "description": "One-hot encoder used to encode the categorical features.",
+    "anyOf": [
+        {"laleType": "operator"},
+        {
+            "enum": [None],
+            "description": "A OneHotEncoder is used with default parameters apart from handle_unknown which is set to 'ignore'.",
+        },
+    ],
+}
