@@ -21,6 +21,7 @@ import lale.docstrings
 import lale.operators
 
 from ._common_schemas import (
+    _hparam_categorical_encoder,
     _hparam_n_jobs,
     _hparam_n_neighbors,
     _hparam_operator,
@@ -102,6 +103,16 @@ Expects that the data to resample are only made of categorical features.""",
 
 
 SMOTEN = lale.operators.make_operator(_SMOTENImpl, _combined_schemas)
+
+if imblearn_version is not None and imblearn_version >= version.Version("0.11"):
+    SMOTEN = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        SMOTEN.customize_schema(
+            n_jobs=None,
+            categorical_encoder=_hparam_categorical_encoder,
+            set_as_available=True,
+        ),
+    )
 
 if imblearn_version is not None and imblearn_version >= version.Version("0.12"):
     SMOTEN = typing.cast(
