@@ -66,7 +66,7 @@ else:
 extras_require = {
     "full": [
         "mystic",
-        "xgboost<2.1.0",
+        "xgboost<3.1.0",
         "lightgbm<4.4.0",
         "snapml>=1.7.0rc3,<1.16.0",
         "liac-arff>=2.4.0",
