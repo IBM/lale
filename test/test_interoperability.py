@@ -16,6 +16,7 @@ import unittest
 from test import EnableSchemaValidation
 
 from jsonschema.exceptions import ValidationError
+from packaging import version
 
 import lale.datasets.openml
 import lale.lib.aif360
@@ -204,6 +205,7 @@ class TestImblearn(unittest.TestCase):
 
     def test_smotenc(self):
         from lale.lib.imblearn import SMOTENC
+        from lale.lib.imblearn._common_schemas import imblearn_version
 
         (train_X, train_y), (test_X, _) = lale.datasets.openml.fetch(
             "ricci", "classification", astype="pandas", preprocess=False
@@ -216,7 +218,12 @@ class TestImblearn(unittest.TestCase):
             )
             >> ConcatFeatures
             >> LogisticRegression(),
-            categorical_features=["position", "race"],
+            **(
+                {"categorical_features": ["position", "race"]}
+                if imblearn_version is not None
+                and imblearn_version >= version.Version("0.11")
+                else {}
+            ),
         )
         trained = pipeline.fit(train_X, train_y)
         _ = trained.predict(test_X)
@@ -224,6 +231,7 @@ class TestImblearn(unittest.TestCase):
     def test_smotenc_with_disparate_impact_remover(self):
         from lale.lib.aif360 import DisparateImpactRemover
         from lale.lib.imblearn import SMOTENC
+        from lale.lib.imblearn._common_schemas import imblearn_version
 
         X, y, fairness_info = lale.lib.aif360.fetch_ricci_df(preprocess=False)
         pipeline = SMOTENC(
@@ -238,7 +246,12 @@ class TestImblearn(unittest.TestCase):
                 )
                 >> LogisticRegression()
             ),
-            categorical_features=["position", "race"],
+            **(
+                {"categorical_features": ["position", "race"]}
+                if imblearn_version is not None
+                and imblearn_version >= version.Version("0.11")
+                else {}
+            ),
         )
         (
             train_X,
