@@ -211,8 +211,8 @@ if lale.operators.sklearn_version >= version.Version("1.4"):
                 },
                 {
                     "laleType": "callable",
-                    "description": "It takes two arrays representing 1D vectors as inputs and must return one value indicating the distance between those vectors. This works for Scipy’s metrics, but is less efficient than passing the metric name as a string.",
                     "forOptimizer": False,
+                    "description": "It takes two arrays representing 1D vectors as inputs and must return one value indicating the distance between those vectors. This works for Scipy’s metrics, but is less efficient than passing the metric name as a string.",
                 },
                 {
                     "laleType": "Any",

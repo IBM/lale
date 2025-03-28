@@ -10,15 +10,15 @@ class _LatentDirichletAllocationImpl:
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fit_params):
         if y is not None:
-            self._wrapped_model.fit(X, y)
+            self._wrapped_model.fit(X, y, **fit_params)
         else:
-            self._wrapped_model.fit(X)
+            self._wrapped_model.fit(X, **fit_params)
         return self
 
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
+    def transform(self, X, **transform_params):
+        return self._wrapped_model.transform(X, **transform_params)
 
 
 _hyperparams_schema = {

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import sklearn.neighbors
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -152,8 +153,16 @@ _input_predict_schema = {
     "properties": {
         "X": {
             "description": "Features; the outer array is over samples.",
-            "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
+            "anyOf": [
+                {
+                    "type": "array",
+                    "items": {"type": "array", "items": {"type": "number"}},
+                },
+                {
+                    "enum": [None],
+                    "description": "Predictions for all training set points are returned, and points are not included into their own neighbors",
+                },
+            ],
         }
     },
 }
@@ -176,8 +185,16 @@ _input_predict_proba_schema = {
     "properties": {
         "X": {
             "description": "Features; the outer array is over samples.",
-            "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
+            "anyOf": [
+                {
+                    "type": "array",
+                    "items": {"type": "array", "items": {"type": "number"}},
+                },
+                {
+                    "enum": [None],
+                    "description": "Predictions for all training set points are returned, and points are not included into their own neighbors",
+                },
+            ],
         }
     },
 }
@@ -216,5 +233,22 @@ KNeighborsClassifier = lale.operators.make_operator(
     sklearn.neighbors.KNeighborsClassifier,
     _combined_schemas,
 )
+
+if lale.operators.sklearn_version >= version.Version("1.6"):
+    KNeighborsClassifier = KNeighborsClassifier.customize_schema(
+        metric={
+            "anyOf": [
+                {"enum": ["euclidean", "manhattan", "minkowski", "nan_euclidean"]},
+                {
+                    "laleType": "callable",
+                    "forOptimizer": False,
+                    "description": "Takes two arrays representing 1D vectors as inputs and must return one value indicating the distance between those vectors.",
+                },
+            ],
+            "description": "The distance metric to use for the tree.",
+            "default": "minkowski",
+        },
+        set_as_available=True,
+    )
 
 lale.docstrings.set_docstrings(KNeighborsClassifier)

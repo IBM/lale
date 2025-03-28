@@ -1,6 +1,8 @@
 from numpy import inf, nan
+from packaging import version
 from sklearn.neighbors import RadiusNeighborsClassifier as Op
 
+import lale.operators
 from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
@@ -147,9 +149,17 @@ _input_predict_schema = {
     "required": ["X"],
     "properties": {
         "X": {
-            "laleType": "Any",
-            "XXX TODO XXX": "array-like, shape (n_query, n_features),                 or (n_query, n_indexed) if metric == 'precomputed'",
-            "description": "Test samples.",
+            "description": "Features; the outer array is over samples.",
+            "anyOf": [
+                {
+                    "type": "array",
+                    "items": {"type": "array", "items": {"type": "number"}},
+                },
+                {
+                    "enum": [None],
+                    "description": "Predictions for all training set points are returned, and points are not included into their own neighbors",
+                },
+            ],
         }
     },
 }
@@ -178,5 +188,21 @@ _combined_schemas = {
 RadiusNeighborsClassifier = make_operator(
     _RadiusNeighborsClassifierImpl, _combined_schemas
 )
+
+if lale.operators.sklearn_version >= version.Version("1.6"):
+    RadiusNeighborsClassifier = RadiusNeighborsClassifier.customize_schema(
+        metric={
+            "anyOf": [
+                {"enum": ["euclidean", "manhattan", "minkowski", "nan_euclidean"]},
+                {
+                    "laleType": "callable",
+                    "description": "Takes two arrays representing 1D vectors as inputs and must return one value indicating the distance between those vectors.",
+                },
+            ],
+            "description": "The distance metric to use for the tree.",
+            "default": "minkowski",
+        },
+        set_as_available=True,
+    )
 
 set_docstrings(RadiusNeighborsClassifier)
