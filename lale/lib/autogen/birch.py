@@ -1,6 +1,8 @@
 from numpy import inf, nan
+from packaging import version
 from sklearn.cluster import Birch as Op
 
+import lale.operators
 from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
@@ -150,5 +152,18 @@ _combined_schemas = {
     },
 }
 Birch = make_operator(_BirchImpl, _combined_schemas)
+
+if lale.operators.sklearn_version >= version.Version("1.6"):
+    Birch = Birch.customize_schema(
+        copy={
+            "anyOf": [{"type": "boolean"}, {"enum": ["deprecated"]}],
+            "default": "deprecated",
+            "description": "Deprecated.  Has not effect.",
+        },
+        set_as_available=True,
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.8"):
+    Birch = Birch.customize_schema(copy=None, set_as_available=True)
 
 set_docstrings(Birch)

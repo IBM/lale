@@ -1,6 +1,8 @@
 from numpy import inf, nan
+from packaging import version
 from sklearn.linear_model import TheilSenRegressor as Op
 
+import lale.operators
 from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
@@ -172,5 +174,20 @@ _combined_schemas = {
     },
 }
 TheilSenRegressor = make_operator(_TheilSenRegressorImpl, _combined_schemas)
+
+if lale.operators.sklearn_version >= version.Version("1.6"):
+    TheilSenRegressor = TheilSenRegressor.customize_schema(
+        copy={
+            "anyOf": [{"type": "boolean"}, {"enum": ["deprecated"]}],
+            "default": "deprecated",
+            "description": "Deprecated.  Has not effect.",
+        },
+        set_as_available=True,
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.8"):
+    TheilSenRegressor = TheilSenRegressor.customize_schema(
+        copy=None, set_as_available=True
+    )
 
 set_docstrings(TheilSenRegressor)

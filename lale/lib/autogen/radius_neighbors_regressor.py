@@ -1,6 +1,8 @@
 from numpy import inf, nan
+from packaging import version
 from sklearn.neighbors import RadiusNeighborsRegressor as Op
 
+import lale.operators
 from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
@@ -159,5 +161,22 @@ _combined_schemas = {
 RadiusNeighborsRegressor = make_operator(
     _RadiusNeighborsRegressorImpl, _combined_schemas
 )
+
+if lale.operators.sklearn_version >= version.Version("1.6"):
+    RadiusNeighborsRegressor = RadiusNeighborsRegressor.customize_schema(
+        metric={
+            "anyOf": [
+                {"enum": ["euclidean", "manhattan", "minkowski", "nan_euclidean"]},
+                {
+                    "laleType": "callable",
+                    "forOptimizer": False,
+                    "description": "Takes two arrays representing 1D vectors as inputs and must return one value indicating the distance between those vectors.",
+                },
+            ],
+            "description": "The distance metric to use for the tree.",
+            "default": "minkowski",
+        },
+        set_as_available=True,
+    )
 
 set_docstrings(RadiusNeighborsRegressor)

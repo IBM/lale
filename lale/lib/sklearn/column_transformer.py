@@ -231,5 +231,28 @@ If False, get_feature_names_out will not prefix any feature names and will error
         set_as_available=True,
     )
 
+if lale.operators.sklearn_version >= version.Version("1.6"):
+    ColumnTransformer = ColumnTransformer.customize_schema(
+        verbose_feature_names_out={
+            "anyOf": [
+                {
+                    "description": """If True, get_feature_names_out will prefix all feature names with the name of the transformer that generated that feature.
+    If False, get_feature_names_out will not prefix any feature names and will error if feature names are not unique.""",
+                    "type": "boolean",
+                },
+                {
+                    "type": "str",
+                    "description": 'A string ready for formatting. The given string will be formatted using two field names: transformer_name and feature_name. e.g. "{feature_name}__{transformer_name}"',
+                },
+                {
+                    "laleType": "callable",
+                    "description": "A Callable[[str, str], str]. ColumnTransformer.get_feature_names_out will rename all the features using the name of the transformer. The first argument of the callable is the transformer name and the second argument is the feature name. The returned string will be the new feature name.",
+                },
+            ],
+            "default": True,
+        },
+        set_as_available=True,
+    )
+
 
 lale.docstrings.set_docstrings(ColumnTransformer)
