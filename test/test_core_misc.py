@@ -941,9 +941,11 @@ class TestHyperparamRanges(unittest.TestCase):
 
     def test_logisticregression(self):
         ranges, dists = LogisticRegression.get_param_ranges()
-        # allowed solver changes between sklearn versions, so we will just remove them from the comparison for now
+        # allowed solver and multiclass change between sklearn versions, so we will just remove them from the comparison for now
         del ranges["solver"]
         del dists["solver"]
+        del ranges["multi_class"]
+        del dists["multi_class"]
 
         expected_ranges = {
             # "solver": ["newton-cg", "liblinear", "sag", "saga", "lbfgs"],
@@ -952,9 +954,8 @@ class TestHyperparamRanges(unittest.TestCase):
             "fit_intercept": (False, True, True),
             "intercept_scaling": (0.0, 1.0, 1.0),
             "max_iter": (10, 1000, 100),
-            "multi_class": ["ovr", "multinomial", "auto"],
         }
-        expected_dists = {"multi_class": (0, 2, 2)}
+        expected_dists = {}
 
         self.maxDiff = None
         self.assertEqual(ranges, expected_ranges)

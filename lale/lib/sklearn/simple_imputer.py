@@ -227,4 +227,22 @@ if lale.operators.sklearn_version >= version.Version("1.3"):
     # new: https://scikit-learn.org/1.1/modules/generated/sklearn.impute.SimpleImputer.html#sklearn.impute.SimpleImputer
     SimpleImputer = SimpleImputer.customize_schema(verbose=None, set_as_available=True)
 
+if lale.operators.sklearn_version >= version.Version("1.5"):
+    SimpleImputer = SimpleImputer.customize_schema(
+        strategy={
+            "anyOf": [
+                {"enum": ["constant"], "forOptimizer": False},
+                {"enum": ["mean", "median", "most_frequent"]},
+                {
+                    "laleType": "callable",
+                    "forOptimizer": False,
+                    "description": "Replace missing values using the scalar statistic returned by running the callable over a dense 1d array containing non-missing values of each column.",
+                },
+            ],
+            "default": "mean",
+            "description": "The imputation strategy.",
+        },
+        set_as_available=True,
+    )
+
 lale.docstrings.set_docstrings(SimpleImputer)

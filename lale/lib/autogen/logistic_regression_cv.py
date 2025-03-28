@@ -1,6 +1,10 @@
+import typing
+
 from numpy import inf, nan
+from packaging import version
 from sklearn.linear_model import LogisticRegressionCV as Op
 
+import lale.operators
 from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
@@ -306,5 +310,30 @@ _combined_schemas = {
     },
 }
 LogisticRegressionCV = make_operator(_LogisticRegressionCVImpl, _combined_schemas)
+
+if lale.operators.sklearn_version >= version.Version("1.5"):
+    LogisticRegressionCV = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        LogisticRegressionCV.customize_schema(
+            multi_class={
+                "anyOf": [
+                    {"enum": ["ovr", "multinomial", "auto"]},
+                    {"enum": ["deprecated"]},
+                ],
+                "default": "deprecated",
+                "description": "the recommended ‘multinomial’ will always be used for n_classes >= 3. Solvers that do not support ‘multinomial’ will raise an error. Use sklearn.multiclass.OneVsRestClassifier(LogisticRegression()) if you still want to use OvR.",
+            },
+            set_as_available=True,
+        ),
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.7"):
+    LogisticRegressionCV = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        LogisticRegressionCV.customize_schema(
+            multi_class=None,
+            set_as_available=True,
+        ),
+    )
 
 set_docstrings(LogisticRegressionCV)

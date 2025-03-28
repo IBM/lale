@@ -234,4 +234,30 @@ if sklearn_version >= version.Version("1.2"):
         set_as_available=True,
     )
 
+if sklearn_version >= version.Version("1.5"):
+    RidgeClassifierCV = RidgeClassifierCV.customize_schema(
+        store_cv_values={
+            "anyOf": [
+                {
+                    "type": "boolean",
+                },
+                {"enum": ["deprecated"]},
+            ],
+            "default": "deprecated",
+            "description": "Deprecated.  Use store_cv_results instead.",
+        },
+        store_cv_results={
+            "type": "boolean",
+            "default": False,
+            "description": "Flag indicating if the cross-validation values corresponding to each alpha should be stored in the ``cv_values_`` attribute (see below)",
+        },
+        set_as_available=True,
+    )
+
+if sklearn_version >= version.Version("1.7"):
+    RidgeClassifierCV = RidgeClassifierCV.customize_schema(
+        store_cv_values=None,
+        set_as_available=True,
+    )
+
 set_docstrings(RidgeClassifierCV)

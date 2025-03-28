@@ -462,7 +462,7 @@ class _LogisticRegressionImpl:
         return self._wrapped_model.decision_function(X)
 
     def score(self, X, y, sample_weight=None):
-        return self._wrapped_model.score(X, y, sample_weight)
+        return self._wrapped_model.score(X, y, sample_weight=sample_weight)
 
 
 LogisticRegression = lale.operators.make_operator(
@@ -560,6 +560,31 @@ if lale.operators.sklearn_version >= version.Version("1.4"):
                 desc="Norm used in the penalization.",
                 default="l2",
             ),
+            set_as_available=True,
+        ),
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.5"):
+    LogisticRegression = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        LogisticRegression.customize_schema(
+            multi_class={
+                "anyOf": [
+                    {"enum": ["ovr", "multinomial", "auto"]},
+                    {"enum": ["deprecated"]},
+                ],
+                "default": "deprecated",
+                "description": "the recommended ‘multinomial’ will always be used for n_classes >= 3. Solvers that do not support ‘multinomial’ will raise an error. Use sklearn.multiclass.OneVsRestClassifier(LogisticRegression()) if you still want to use OvR.",
+            },
+            set_as_available=True,
+        ),
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.7"):
+    LogisticRegression = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        LogisticRegression.customize_schema(
+            multi_class=None,
             set_as_available=True,
         ),
     )

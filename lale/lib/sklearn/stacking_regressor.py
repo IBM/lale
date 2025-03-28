@@ -28,7 +28,7 @@ class _StackingRegressorImpl(SKLModel):
         return super().predict(X, **predict_params)
 
     def score(self, X, y, sample_weight=None):
-        return super().score(X, y, sample_weight)
+        return super().score(X, y, sample_weight=sample_weight)
 
     def _concatenate_predictions(self, X, predictions):
         if not isinstance(X, pd.DataFrame):

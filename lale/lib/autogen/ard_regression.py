@@ -225,6 +225,14 @@ if sklearn_version >= version.Version("1.5"):
 
     ARDRegression = ARDRegression.customize_schema(
         n_iter=None,
+        max_iter={
+            "type": "integer",
+            "minimumForOptimizer": 5,
+            "maximumForOptimizer": 1000,
+            "distribution": "uniform",
+            "description": "Maximum number of iterations",
+            "default": 300,
+        },
         set_as_available=True,
     )
 

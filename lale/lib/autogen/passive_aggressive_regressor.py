@@ -1,6 +1,8 @@
 from numpy import inf, nan
+from packaging import version
 from sklearn.linear_model import PassiveAggressiveRegressor as Op
 
+import lale.operators
 from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
@@ -222,5 +224,23 @@ _combined_schemas = {
 PassiveAggressiveRegressor = make_operator(
     _PassiveAggressiveRegressorImpl, _combined_schemas
 )
+
+if lale.operators.sklearn_version >= version.Version("1.7"):
+    PassiveAggressiveRegressor = PassiveAggressiveRegressor.customize_schema(
+        average={
+            "anyOf": [
+                {"type": "boolean"},
+                {
+                    "type": "integer",
+                    "forOptimizer": False,
+                    "minimum": 0,
+                    "exclusiveMinimum": True,
+                },
+            ],
+            "default": False,
+            "description": "When set to True, computes the averaged SGD weights and stores the result in the ``coef_`` attribute.",
+        },
+        set_as_available=True,
+    )
 
 set_docstrings(PassiveAggressiveRegressor)

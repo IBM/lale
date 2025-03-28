@@ -132,7 +132,7 @@ Note that this setting takes advantage of a per-process runtime setting in libli
                     "type": "object",
                     "properties": {"loss": {"enum": ["squared_epsilon_insensitive"]}},
                 },
-                {"type": "object", "properties": {"dual": {"enum": [True]}}},
+                {"type": "object", "properties": {"dual": {"enum": [True, "auto"]}}},
             ],
         },
     ],
