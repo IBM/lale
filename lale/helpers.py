@@ -1293,6 +1293,14 @@ class GenSym:
         return result
 
 
+def _should_force_estimator():
+    from packaging import version
+
+    import lale.operators
+
+    return lale.operators.sklearn_version >= version.Version("1.5")
+
+
 def get_sklearn_estimator_name() -> str:
     """Some higher order sklearn operators changed the name of the nested estimatator in later versions.
     This returns the appropriate version dependent paramater name
@@ -1332,6 +1340,8 @@ def with_fixed_estimator_name(**kwargs):
 
 
 def get_estimator_param_name_from_hyperparams(hyperparams):
+    if _should_force_estimator():
+        return "estimator"
     be = hyperparams.get("base_estimator", "deprecated")
     if be == "deprecated" or (be is None and "estimator" in hyperparams):
         return "estimator"

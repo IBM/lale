@@ -435,4 +435,23 @@ More details about the losses formulas can be found in the scikit-learn User Gui
         },
         set_as_available=True,
     )
+
+if lale.operators.sklearn_version >= version.Version("1.7"):
+    SGDClassifier = SGDClassifier.customize_schema(
+        average={
+            "anyOf": [
+                {"type": "boolean"},
+                {
+                    "type": "integer",
+                    "forOptimizer": False,
+                    "minimum": 0,
+                    "exclusiveMinimum": True,
+                },
+            ],
+            "default": False,
+            "description": "When set to True, computes the averaged SGD weights and stores the result in the ``coef_`` attribute.",
+        },
+        set_as_available=True,
+    )
+
 lale.docstrings.set_docstrings(SGDClassifier)

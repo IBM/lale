@@ -712,6 +712,10 @@ class TestErrorMessages(unittest.TestCase):
             fix1 = cm.exception.message.split("\n")[2]
             self.assertRegex(fix1, "C=1.0")
 
+    @unittest.skipIf(
+        lale.operators.sklearn_version >= version.Version("1.5"),
+        "multi-class has been removed",
+    )
     def test_fixes2(self):
         with EnableSchemaValidation():
             with self.assertRaises(jsonschema.ValidationError) as cm:
@@ -766,6 +770,10 @@ class TestErrorMessages(unittest.TestCase):
             fix1 = cm.exception.message.split("\n")[2]
             self.assertRegex(fix1, "set penalty='l2'")
 
+    @unittest.skipIf(
+        lale.operators.sklearn_version >= version.Version("1.5"),
+        "multi-class has been removed",
+    )
     def test_unknown_arg_and_constraint2(self):
         with EnableSchemaValidation():
             with EnableSchemaValidation():

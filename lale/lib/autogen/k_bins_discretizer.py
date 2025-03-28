@@ -149,4 +149,14 @@ if sklearn_version >= version.Version("1.3"):
         set_as_available=True,
     )
 
+if sklearn_version >= version.Version("1.5"):
+    KBinsDiscretizer = KBinsDiscretizer.customize_schema(
+        subsample={
+            "anyOf": [{"enum": [None]}, {"type": "integer", "minimum": 0}],
+            "default": 20000,
+            "description": "Maximum number of samples, used to fit the model, for computational efficiency. Defaults to 200_000 when strategy='quantile' and to None when strategy='uniform' or strategy='kmeans'. subsample=None means that all the training samples are used when computing the quantiles that determine the binning thresholds. Since quantile computation relies on sorting each column of X and that sorting has an n log(n) time complexity, it is recommended to use subsampling on datasets with a very large number of samples.",
+        },
+        set_as_available=True,
+    )
+
 set_docstrings(KBinsDiscretizer)

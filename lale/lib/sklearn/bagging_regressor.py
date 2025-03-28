@@ -36,7 +36,7 @@ class _BaggingRegressorImpl:
         out[est_name] = self._hyperparams[est_name]
         return out
 
-    def fit(self, X, y, sample_weight=None):
+    def fit(self, X, y, sample_weight=None, **fit_params):
         if isinstance(X, pd.DataFrame):
             feature_transformer = FunctionTransformer(
                 func=lambda X_prime: pd.DataFrame(X_prime, columns=X.columns),
@@ -49,7 +49,7 @@ class _BaggingRegressorImpl:
                 feature_transformer >> self._hyperparams[est_name]
             )
             self._wrapped_model = SKLModel(**self._hyperparams)
-        self._wrapped_model.fit(X, y, sample_weight)
+        self._wrapped_model.fit(X, y, sample_weight=sample_weight, **fit_params)
 
         return self
 

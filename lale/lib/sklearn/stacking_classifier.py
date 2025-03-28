@@ -31,7 +31,7 @@ class _StackingClassifierImpl(SKLModel):
         return super().predict_proba(X)
 
     def score(self, X, y, sample_weight=None):
-        return super().score(X, y, sample_weight)
+        return super().score(X, y, sample_weight=sample_weight)
 
     def decision_function(self, X):
         return super().decision_function(X)

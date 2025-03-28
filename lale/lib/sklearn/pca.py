@@ -260,4 +260,14 @@ if lale.operators.sklearn_version >= version.Version("1.1"):
         set_as_available=True,
     )
 
+if lale.operators.sklearn_version >= version.Version("1.5"):
+    PCA = PCA.customize_schema(
+        svd_solver={
+            "description": "Algorithm to use.",
+            "enum": ["auto", "full", "covariance_eigh", "arpack", "randomized"],
+            "default": "auto",
+        },
+        set_as_available=True,
+    )
+
 lale.docstrings.set_docstrings(PCA)

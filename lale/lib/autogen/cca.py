@@ -1,6 +1,8 @@
 from numpy import inf, nan
+from packaging import version
 from sklearn.cross_decomposition import CCA as Op
 
+import lale.operators
 from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
@@ -73,6 +75,21 @@ _hyperparams_schema = {
         }
     ],
 }
+
+_inp_Y = {
+    "type": "array",
+    "items": {"type": "array", "items": {"type": "number"}},
+    "description": "Target vectors, where n_samples is the number of samples and n_targets is the number of response variables.",
+}
+
+if lale.operators.sklearn_version < version.Version("1.5"):
+    _inp_Yy = {"Y": _inp_Y}
+elif lale.operators.sklearn_version < version.Version("1.7"):
+    _inp_Yy = {"Y": _inp_Y, "y": _inp_Y}
+else:
+    _inp_Yy = {"y": _inp_Y}
+
+
 _input_fit_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Fit model to data.",
@@ -84,11 +101,7 @@ _input_fit_schema = {
             "items": {"type": "array", "items": {"type": "number"}},
             "description": "Training vectors, where n_samples is the number of samples and n_features is the number of predictors.",
         },
-        "Y": {
-            "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
-            "description": "Target vectors, where n_samples is the number of samples and n_targets is the number of response variables.",
-        },
+        **_inp_Yy,
     },
 }
 _input_transform_schema = {

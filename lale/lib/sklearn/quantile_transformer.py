@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from packaging import version
 from sklearn.preprocessing import QuantileTransformer as SKLModel
 
 import lale.docstrings
@@ -131,5 +132,26 @@ _combined_schemas = {
 
 
 QuantileTransformer = lale.operators.make_operator(SKLModel, _combined_schemas)
+
+if lale.operators.sklearn_version >= version.Version("1.5"):
+    QuantileTransformer = QuantileTransformer.customize_schema(
+        subsample={
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "minimumForOptimizer": 1,
+                    "maximumForOptimizer": 100000,
+                    "distribution": "uniform",
+                },
+                {
+                    "description": "Disable subsampling",
+                    "enum": [None],
+                },
+            ],
+            "default": 100000,
+            "description": "Maximum number of samples used to estimate the quantiles for computational efficiency. Note that the subsampling procedure may differ for value-identical sparse and dense matrices.",
+        },
+        set_as_available=True,
+    )
 
 lale.docstrings.set_docstrings(QuantileTransformer)
