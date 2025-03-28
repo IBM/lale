@@ -345,10 +345,21 @@ if lale.operators.sklearn_version >= version.Version("1.4"):
 if lale.operators.sklearn_version >= version.Version("1.6"):
     AdaBoostClassifier = AdaBoostClassifier.customize_schema(
         algorithm={
-            "enum": ["SAMME"],
-            "default": "SAMME",
-            "description": "Use the SAMME discrete boosting algorithm.",
+            "anyOf": [
+                {
+                    "enum": ["SAMME"],
+                },
+                {"enum": ["deprecated"]},
+            ],
+            "default": "deprecated",
+            "description": "deprecated",
         },
+        set_as_available=True,
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.8"):
+    AdaBoostClassifier = AdaBoostClassifier.customize_schema(
+        algorithm=None,
         set_as_available=True,
     )
 

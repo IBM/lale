@@ -580,6 +580,44 @@ if lale.operators.sklearn_version >= version.Version("1.5"):
         ),
     )
 
+if lale.operators.sklearn_version >= version.Version("1.6"):
+    old_constraint = {
+        "description": "The multi_class multinomial option is unavailable when the solver is liblinear or newton-cholesky.",
+        "anyOf": [
+            {
+                "type": "object",
+                "properties": {"multi_class": {"not": {"enum": ["multinomial"]}}},
+            },
+            {
+                "type": "object",
+                "properties": {
+                    "solver": {"not": {"enum": ["liblinear", "newton-cholesky"]}}
+                },
+            },
+        ],
+    }
+    relaxed_constraint = {
+        "description": "The multi_class multinomial option is unavailable when the solver is liblinear or newton-cholesky.",
+        "anyOf": [
+            {
+                "type": "object",
+                "properties": {"multi_class": {"not": {"enum": ["multinomial"]}}},
+            },
+            {
+                "type": "object",
+                "properties": {"solver": {"not": {"enum": ["liblinear"]}}},
+            },
+        ],
+    }
+    allofs: typing.List[typing.Any] = LogisticRegression._schemas["properties"][
+        "hyperparams"
+    ]["allOf"]
+    for i, v in enumerate(allofs):
+        if v == old_constraint:
+            allofs[i] = relaxed_constraint
+            break
+
+
 if lale.operators.sklearn_version >= version.Version("1.7"):
     LogisticRegression = typing.cast(
         lale.operators.PlannedIndividualOp,
