@@ -16,7 +16,6 @@ import ast  # see also https://greentreesnakes.readthedocs.io/
 import pprint
 import typing
 from copy import deepcopy
-from io import StringIO
 from typing import Any, Dict, Literal, Optional, Union, overload
 
 import astunparse
@@ -47,27 +46,6 @@ AstExpr = Union[
     ast.Attribute,
     ast.Subscript,
 ]
-
-
-# !! WORKAROUND !!
-# There is a bug with astunparse and Python 3.8.
-# https://github.com/simonpercivall/astunparse/issues/43
-# Until it is fixed (which may be never), here is a workaround,
-# based on the workaround found in https://github.com/juanlao7/codeclose
-class FixUnparser(astunparse.Unparser):
-    def _Constant(self, t):
-        if not hasattr(t, "kind"):
-            setattr(t, "kind", None)
-
-        super()._Constant(t)
-
-
-# !! WORKAROUND !!
-# This method should be called instead of astunparse.unparse
-def fixedUnparse(tree):
-    v = StringIO()
-    FixUnparser(tree, file=v)
-    return v.getvalue()
 
 
 class Expr:
@@ -245,7 +223,7 @@ class Expr:
             return False
 
     def __str__(self) -> str:
-        result = fixedUnparse(self._expr).strip()
+        result = astunparse.unparse(self._expr).strip()
         if isinstance(self._expr, (ast.UnaryOp, ast.BinOp, ast.Compare, ast.BoolOp)):
             if result.startswith("(") and result.endswith(")"):
                 result = result[1:-1]
@@ -601,7 +579,7 @@ def _it_column(expr):
             return expr.attr
         else:
             raise ValueError(
-                f"Illegal {fixedUnparse(expr)}. Only the access to `it` is supported"
+                f"Illegal {astunparse.unparse(expr)}. Only the access to `it` is supported"
             )
     elif isinstance(expr, ast.Subscript):
         if isinstance(expr.slice, ast.Constant) or (
@@ -616,15 +594,15 @@ def _it_column(expr):
                 return v.s
             else:
                 raise ValueError(
-                    f"Illegal {fixedUnparse(expr)}. Only the access to `it` is supported"
+                    f"Illegal {astunparse.unparse(expr)}. Only the access to `it` is supported"
                 )
         else:
             raise ValueError(
-                f"Illegal {fixedUnparse(expr)}. Only the access to `it` is supported"
+                f"Illegal {astunparse.unparse(expr)}. Only the access to `it` is supported"
             )
     else:
         raise ValueError(
-            f"Illegal {fixedUnparse(expr)}. Only the access to `it` is supported"
+            f"Illegal {astunparse.unparse(expr)}. Only the access to `it` is supported"
         )
 
 

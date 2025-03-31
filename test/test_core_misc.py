@@ -76,14 +76,12 @@ class TestTags(unittest.TestCase):
 
 class TestUnparseExpr(unittest.TestCase):
     def test_unparse_const38(self):
-        from lale.expressions import fixedUnparse, it
+        import astunparse
+
+        from lale.expressions import it
 
         test_expr = it.hello["hi"]
-        # This fails on 3.8 with some versions of the library
-        # which is why we use the fixed version
-        # import astunparse
-        # astunparse.unparse(he._expr)
-        str(fixedUnparse(test_expr._expr))
+        str(astunparse.unparse(test_expr._expr))
 
 
 class TestOperatorWithoutSchema(unittest.TestCase):
