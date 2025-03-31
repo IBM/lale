@@ -213,7 +213,7 @@ class SearchSpaceNumber(SearchSpacePrimitive):
             ret += "\u2308"
 
         if self.minimum is None:
-            ret += "\u221E"
+            ret += "\u221e"
         else:
             ret += str(self.minimum)
 
@@ -229,7 +229,7 @@ class SearchSpaceNumber(SearchSpacePrimitive):
             ret += ",<" + self.distribution + ">,"
 
         if self.maximum is None:
-            ret += "\u221E"
+            ret += "\u221e"
         else:
             ret += str(self.maximum)
 
@@ -370,9 +370,9 @@ class SearchSpaceOperator(SearchSpace):
         self.sub_space = sub_space
 
     def _focused_str(self, path: Optional[List[SearchSpace]] = None) -> str:
-        ret: str = "\u00AB"
+        ret: str = "\u00ab"
         ret += self.sub_space.str_with_focus(path=path, default="")
-        ret += "\u00BB"
+        ret += "\u00bb"
         return ret
 
 
@@ -407,7 +407,7 @@ class SearchSpaceProduct(SearchSpace):
         ]
 
     def _focused_str(self, path: Optional[List[SearchSpace]] = None) -> str:
-        ret: str = "\u220F{"
+        ret: str = "\u220f{"
         vv: Optional[str]
         parts: List[str] = []
         for k, v in self.sub_spaces:

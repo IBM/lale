@@ -37,7 +37,9 @@ from lale.lib.sklearn import (
     Nystroem,
 )
 from lale.lib.sklearn import TargetEncoder as SkTargetEncoder
-from lale.lib.sklearn import TfidfVectorizer
+from lale.lib.sklearn import (
+    TfidfVectorizer,
+)
 from lale.operators import sklearn_version
 
 

@@ -1619,10 +1619,7 @@ class TestMap(unittest.TestCase):
         scan_0 = Scan(table=it["customers"])
         join = Join(
             pred=[
-                (
-                    it["main"]["group_customer_id"]
-                    == it["customers"]["group_customer_id"]
-                )
+                it["main"]["group_customer_id"] == it["customers"]["group_customer_id"]
             ]
         )
         map_op = Map(
@@ -1640,7 +1637,7 @@ class TestMap(unittest.TestCase):
         pipeline_4 = join >> map_op
         scan_1 = Scan(table=it["purchase"])
         join_0 = Join(
-            pred=[(it["main"]["group_id"] == it["purchase"]["group_id"])],
+            pred=[it["main"]["group_id"] == it["purchase"]["group_id"]],
             join_limit=50.0,
         )
         aggregate = Aggregate(
@@ -1694,9 +1691,7 @@ class TestMap(unittest.TestCase):
         )
         pipeline_6 = join_1 >> map_1
         join_2 = Join(
-            pred=[
-                (it["main"]["transaction_id"] == it["transactions"]["transaction_id"])
-            ]
+            pred=[it["main"]["transaction_id"] == it["transactions"]["transaction_id"]]
         )
         map_2 = Map(
             columns={
