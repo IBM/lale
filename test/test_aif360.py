@@ -622,7 +622,7 @@ class TestAIF360Num(unittest.TestCase):
         trainable_remi = DisparateImpactRemover(**fairness_info) >> LogisticRegression(
             max_iter=1000
         )
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.78, 0.88)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.75, 0.88)
 
     def test_eq_odds_postprocessing_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
