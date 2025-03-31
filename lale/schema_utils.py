@@ -245,7 +245,7 @@ def has_operator(schema: JsonSchema) -> bool:
 
 
 def atomize_schema_enumerations(
-    schema: Union[None, JsonSchema, List[JsonSchema]]
+    schema: Union[None, JsonSchema, List[JsonSchema]],
 ) -> None:
     """Given a schema, converts structured enumeration values (records, arrays)
     into schemas where the structured part is specified as a schema, with the

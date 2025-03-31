@@ -1059,7 +1059,7 @@ def add_missing_values(orig_X, missing_rate=0.1, seed=None):
 
 
 def partition_sklearn_params(
-    d: Dict[str, Any]
+    d: Dict[str, Any],
 ) -> Tuple[Dict[str, Any], Dict[str, Dict[str, Any]]]:
     sub_parts: Dict[str, Dict[str, Any]] = {}
     main_parts: Dict[str, Any] = {}

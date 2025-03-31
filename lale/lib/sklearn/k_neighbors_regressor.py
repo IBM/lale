@@ -102,7 +102,7 @@ _hyperparams_schema = {
                             "description": "1 unless in joblib.parallel_backend context.",
                             "enum": [None],
                         },
-                        {"description": "Use all processors.", "enum": [(-1)]},
+                        {"description": "Use all processors.", "enum": [-1]},
                         {
                             "description": "Number of CPU cores.",
                             "type": "integer",

@@ -1,4 +1,4 @@
-""" Lale autogen schemas
+"""Lale autogen schemas
 
 The JSON schemas of the operators defined in this module were automatically generated from the source code of 115 scikit-learn operators.
 The resulting schemas are all valid and usable to build Lale pipelines.

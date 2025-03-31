@@ -4,7 +4,7 @@ default_language_version:
 repos:
   # check some basic stuff
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+    rev: v5.0.0
     hooks:
       # Check for files that would conflict in case-insensitive filesystems
       - id: check-case-conflict
@@ -15,28 +15,28 @@ repos:
       - id: debug-statements
   # Clean up imports in Python using isort
   - repo: https://github.com/pycqa/isort
-    rev: 5.13.2
+    rev: 6.0.1
     hooks:
       - id: isort
         args: [--filter-files]
   # Format the python code with black
   - repo: https://github.com/psf/black
-    rev: 24.1.1
+    rev: 25.1.0
     hooks:
       - id: black
   # Lint the yaml files
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.33.0
+    rev: v1.37.0
     hooks:
       - id: yamllint
   # Lint the python code with flake
   - repo: https://github.com/PyCQA/flake8
-    rev: 7.0.0
+    rev: 7.2.0
     hooks:
       - id: flake8
   # run the bandit security linter
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.7
+    rev: 1.8.3
     hooks:
       - id: bandit
         args: [-c, bandit.yaml]
