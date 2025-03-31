@@ -360,7 +360,7 @@ def _dtype_to_schema(typ) -> JSON_TYPE:
         result = {"type": "integer"}
     elif issubdtype(typ, np.number):
         result = {"type": "number"}
-    elif issubdtype(typ, np.string_) or issubdtype(typ, np.unicode_):
+    elif issubdtype(typ, np.str_) or issubdtype(typ, np.bytes_):
         result = {"type": "string"}
     elif isinstance(typ, np.dtype):
         if typ.fields:

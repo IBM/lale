@@ -52,7 +52,7 @@ def load_movie_review():
             X.append(str(line))
             y.append(1)
 
-    X = np.asarray(X, dtype=np.string_)
+    X = np.asarray(X, dtype=np.str_)
     y = np.asarray(y)
 
     from sklearn.utils import shuffle
