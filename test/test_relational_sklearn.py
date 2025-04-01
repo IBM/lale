@@ -157,7 +157,7 @@ class TestMinMaxScaler(unittest.TestCase):
         rasl_scaler = RaslMinMaxScaler()
         sk_params = sk_scaler.get_params()
         rasl_params = rasl_scaler.get_params()
-        self.assertDictContainsSubset(sk_params, rasl_params)
+        self.assertEqual(sk_params, sk_params | rasl_params)
 
     def test_error(self):
         _ = RaslMinMaxScaler(clip=True)  # should raise no error

@@ -126,11 +126,11 @@ class Expr:
         return Expr(attr)
 
     def __getitem__(self, key: Union[int, str, slice]) -> "Expr":
-        key_ast: Union[ast.Index, ast.Slice]
+        key_ast: Union[ast.expr, ast.Slice]
         if isinstance(key, int):
-            key_ast = ast.Index(ast.Num(n=key))
+            key_ast = ast.Constant(value=key)
         elif isinstance(key, str):
-            key_ast = ast.Index(ast.Str(s=key))
+            key_ast = ast.Constant(value=key)
         elif isinstance(key, slice):
             key_ast = ast.Slice(key.start, key.stop, key.step)
         else:
@@ -338,9 +338,9 @@ def _make_ast_expr(arg: Union[None, Expr, int, float, str, AstExpr]) -> AstExpr:
     elif isinstance(arg, Expr):
         return arg.expr
     elif isinstance(arg, (int, float)):
-        return ast.Num(n=arg)
+        return ast.Constant(value=arg)
     elif isinstance(arg, str):
-        return ast.Str(s=arg)
+        return ast.Constant(value=arg)
     else:
         assert isinstance(arg, AstExprs), type(arg)
         return arg

@@ -57,6 +57,8 @@ from .monoid import Monoid, MonoidFactory
 
 if lale.helpers.spark_installed:
     from pyspark.sql.dataframe import DataFrame as SparkDataFrame
+else:
+    SparkDataFrame = None
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
@@ -1165,7 +1167,7 @@ def _run_tasks_inner(
             assert scan_pred.batch is not None
             cache.ensure_space(cache.estimate_space(task), {scan_pred.batch})
             input_X, input_y = scan_pred.batch.Xy
-            is_sparky = lale.helpers.spark_installed and isinstance(
+            is_sparky = SparkDataFrame is not None and isinstance(
                 input_X, SparkDataFrame
             )
             if is_sparky:  # TODO: use Spark native split instead
@@ -1235,7 +1237,7 @@ def _run_tasks_inner(
                     if all(isinstance(X, pd.DataFrame) for X in list_X):
                         input_X = pd.concat(list_X)
                         input_y = pd.concat(list_y)
-                    elif lale.helpers.spark_installed and all(
+                    elif SparkDataFrame is not None and all(
                         isinstance(X, SparkDataFrame) for X in list_X
                     ):
                         input_X = functools.reduce(lambda a, b: a.union(b), list_X)  # type: ignore

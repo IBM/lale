@@ -92,6 +92,7 @@
 # too-many-statements (R0915)
 # too-many-boolean-expressions (R0916)
 # too-many-nested-blocks (R1702)
+# too-many-positional-arguments (R0917)
 #   some of our code is complex
 
 disable=
@@ -122,7 +123,8 @@ disable=
    too-few-public-methods,too-many-public-methods,
    too-many-return-statements,too-many-branches,too-many-arguments,
    too-many-locals,too-many-statements,
-   too-many-boolean-expressions,too-many-nested-blocks
+   too-many-boolean-expressions,too-many-nested-blocks,
+   too-many-positional-arguments
 
 load-plugins=pylint.extensions.docparams,pylint.extensions.bad_builtin
 
