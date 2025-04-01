@@ -24,22 +24,20 @@ from lale.datasets.data_schemas import add_table_name
 from lale.datasets.util import download_data_cache_dir
 from lale.helpers import datatype_param_type
 
+try:
+    from pyspark.sql import SparkSession
+except ImportError:
+    SparkSession = None
+
+from lale.datasets.data_schemas import (  # pylint:disable=ungrouped-imports
+    SparkDataFrameWithIndex,
+)
+
 logging.basicConfig()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 download_multitable_data_cache_dir = download_data_cache_dir / "multitable"
-
-try:
-    from pyspark.sql import SparkSession
-
-    from lale.datasets.data_schemas import (  # pylint:disable=ungrouped-imports
-        SparkDataFrameWithIndex,
-    )
-
-    spark_installed = True
-except ImportError:
-    spark_installed = False
 
 
 def get_data_from_csv(datatype: datatype_param_type, data_file_name):
@@ -47,7 +45,7 @@ def get_data_from_csv(datatype: datatype_param_type, data_file_name):
     if datatype == "pandas":
         return pd.read_csv(data_file_name)
     elif datatype == "spark":
-        if spark_installed:
+        if SparkSession is not None:
             spark = SparkSession.builder.appName("GoSales Dataset").getOrCreate()  # type: ignore
             df = spark.read.options(inferSchema="True", delimiter=",").csv(
                 data_file_name, header=True

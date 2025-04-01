@@ -739,7 +739,7 @@ def fetch(
         if sklearn_version >= version.Version("1.2"):
             ohe2 = OneHotEncoder(sparse_output=False)
         else:
-            ohe2 = OneHotEncoder(sparse=False)
+            ohe2 = OneHotEncoder(sparse=False)  # type: ignore
         transformers2 = [
             ("ohe", ohe2, list(range(len(categorical_cols)))),
             (

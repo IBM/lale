@@ -48,11 +48,8 @@ import lale.datasets.data_schemas
 
 try:
     import torch
-
-    torch_installed = True
 except ImportError:
-    torch_installed = False
-
+    torch = None
 
 spark_loader = util.find_spec("pyspark")
 spark_installed = spark_loader is not None
@@ -127,7 +124,7 @@ def data_to_json(data, subsample_array: bool = True) -> Union[list, dict, int, f
     elif isinstance(data, (pd.DataFrame, pd.Series)):
         np_array = data.values
         return ndarray_to_json(np_array, subsample_array)
-    elif torch_installed and isinstance(data, torch.Tensor):
+    elif torch is not None and isinstance(data, torch.Tensor):
         np_array = data.detach().numpy()
         return ndarray_to_json(np_array, subsample_array)
     elif isinstance(data, (np.int64, np.int32, np.int16)):  # type: ignore
@@ -840,7 +837,7 @@ def append_batch(data, batch_data):
             X = append_batch(X, batch_X)
             y = append_batch(y, batch_y)
             return X, y
-    elif torch_installed and isinstance(data, torch.Tensor):
+    elif torch is not None and isinstance(data, torch.Tensor):
         if isinstance(batch_data, torch.Tensor):
             return torch.cat((data, batch_data))
     elif isinstance(data, (pd.Series, pd.DataFrame)):
@@ -894,6 +891,7 @@ def create_data_loader(
     TypeError
         Raises a TypeError if the input format is not supported.
     """
+    assert torch is not None
     from torch.utils.data import DataLoader, Dataset, TensorDataset
 
     from lale.util.batch_data_dictionary_dataset import BatchDataDict

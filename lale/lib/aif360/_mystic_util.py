@@ -20,14 +20,16 @@ try:
     from mystic.coupler import and_
     from mystic.penalty import quadratic_equality
     from mystic.solvers import diffev2
-
-    mystic_installed = True
 except ModuleNotFoundError:
-    mystic_installed = False
+    and_ = None
+    quadratic_equality = None
+    diffev2 = None
 
 
 def _assert_mystic_installed():
-    assert mystic_installed, """Your Python environment does not have mystic installed. You can install it with
+    assert (
+        quadratic_equality is not None
+    ), """Your Python environment does not have mystic installed. You can install it with
     pip install mystic
 or with
     pip install 'lale[fairness]'"""
@@ -150,6 +152,7 @@ def obtain_solver_info(
 
 def construct_ci_penalty(A, C, n_ci, i):
     _assert_mystic_installed()
+    assert quadratic_equality is not None
 
     def condition(x):
         reshape_list = []
@@ -162,7 +165,7 @@ def construct_ci_penalty(A, C, n_ci, i):
             / np.sum(ndx[(slice(None),) * A + (i + 1,)])
         ) - n_ci[i, 0]
 
-    @quadratic_equality(condition, k=1e6, h=10)
+    @quadratic_equality(condition, k=int(1e6), h=10)
     def penalty(x):
         return 0
 
@@ -183,6 +186,7 @@ def create_ci_penalties(n_ci, n_di):
 
 def construct_di_penalty(A, C, n_di, F, i):
     _assert_mystic_installed()
+    assert quadratic_equality is not None
 
     def condition(x):
         reshape_list = []
@@ -212,7 +216,7 @@ def construct_di_penalty(A, C, n_di, F, i):
         )
         return (di_ratio_top / di_ratio_bottom) - n_di[i, 0]
 
-    @quadratic_equality(condition, k=1e6, h=10)
+    @quadratic_equality(condition, k=int(1e6), h=10)
     def penalty(x):
         return 0
 
@@ -233,6 +237,9 @@ def create_di_penalties(n_ci, n_di, F):
 
 def calc_oversample_soln(o_flat, F, n_ci, n_di):
     _assert_mystic_installed()
+    assert and_ is not None
+    assert diffev2 is not None
+
     # integer constraint
     ints = np.round
 
@@ -268,6 +275,9 @@ def calc_oversample_soln(o_flat, F, n_ci, n_di):
 
 def calc_undersample_soln(o_flat, F, n_ci, n_di):
     _assert_mystic_installed()
+    assert and_ is not None
+    assert diffev2 is not None
+
     # integer constraint
     ints = np.round
 
@@ -303,6 +313,9 @@ def calc_undersample_soln(o_flat, F, n_ci, n_di):
 
 def calc_mixedsample_soln(o_flat, F, n_ci, n_di):
     _assert_mystic_installed()
+    assert and_ is not None
+    assert diffev2 is not None
+
     # integer constraint
     ints = np.round
 

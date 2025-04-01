@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, List, Optional, Tuple, Type, Union
+from typing import Any, List, Literal, Optional, Tuple, Type, Union
 
 import numpy as np
 from numpy import issubdtype, ndarray
@@ -27,19 +27,19 @@ from lale.type_checking import JSON_TYPE
 try:
     import torch
     from torch import Tensor
-
-    torch_installed = True
 except ImportError:
-    torch_installed = False
+    torch = None
+    Tensor = None
 
 try:
-    import py4j.protocol
+    from py4j.protocol import Py4JError
     from pyspark.sql import DataFrame as SparkDataFrame
     from pyspark.sql import GroupedData as SparkGroupedData
 
-    spark_installed = True
 except ImportError:
-    spark_installed = False
+    Py4JError = None
+    SparkDataFrame = None
+    SparkGroupedData = None
 
 
 # See instructions for subclassing numpy ndarray:
@@ -96,7 +96,7 @@ class SeriesWithSchema(Series):
         return SeriesWithSchema
 
 
-if spark_installed:
+if SparkDataFrame is not None:
 
     def _gen_index_name(df, cpt=None):
         name = f"index{cpt if cpt is not None else ''}"
@@ -220,7 +220,7 @@ def add_table_name(obj, name) -> Any:
         return None
     if name is None:
         return obj
-    if spark_installed and isinstance(obj, SparkDataFrame):
+    if SparkDataFrame is not None and isinstance(obj, SparkDataFrame):
         # alias method documentation: https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.sql.DataFrame.alias.html
         # Python class DataFrame with method alias(self, alias): https://github.com/apache/spark/blob/master/python/pyspark/sql/dataframe.py
         # Scala type DataFrame: https://github.com/apache/spark/blob/master/sql/core/src/main/scala/org/apache/spark/sql/package.scala
@@ -254,7 +254,7 @@ def add_table_name(obj, name) -> Any:
         result = obj.view(NDArrayWithSchema)
     elif isinstance(obj, (DataFrameGroupBy, SeriesGroupBy)):
         result = obj
-    elif spark_installed and isinstance(obj, SparkGroupedData):
+    elif SparkGroupedData is not None and isinstance(obj, SparkGroupedData):
         result = obj
     else:
         raise ValueError(f"unexpected type(obj) {type(obj)}")
@@ -263,7 +263,11 @@ def add_table_name(obj, name) -> Any:
 
 
 def get_table_name(obj):
-    if spark_installed and isinstance(obj, SparkDataFrame):
+    if (
+        SparkDataFrame is not None
+        and Py4JError is not None
+        and isinstance(obj, SparkDataFrame)
+    ):
         # Python class DataFrame with field self._jdf: https://github.com/apache/spark/blob/master/python/pyspark/sql/dataframe.py
         # Scala type DataFrame: https://github.com/apache/spark/blob/master/sql/core/src/main/scala/org/apache/spark/sql/package.scala
         # Scala class DataSet with field queryExecution: https://github.com/apache/spark/blob/master/sql/core/src/main/scala/org/apache/spark/sql/Dataset.scala
@@ -277,7 +281,7 @@ def get_table_name(obj):
             # Scala class SuqueryAlias with field identifier: https://github.com/apache/spark/blob/master/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/plans/logical/basicLogicalOperators.scala
             # str(..) converts the Java string into a Python string
             result = str(spark_query.identifier())
-        except py4j.protocol.Py4JError:
+        except Py4JError:
             result = None
         return result
     if isinstance(
@@ -289,14 +293,14 @@ def get_table_name(obj):
             DataFrameGroupBy,
             SeriesGroupBy,
         ),
-    ) or (spark_installed and isinstance(obj, SparkGroupedData)):
+    ) or (SparkGroupedData is not None and isinstance(obj, SparkGroupedData)):
         return getattr(obj, "table_name", None)
     return None
 
 
 def get_index_name(obj):
     result = None
-    if spark_installed and isinstance(obj, SparkDataFrameWithIndex):
+    if SparkDataFrame is not None and isinstance(obj, SparkDataFrameWithIndex):
         result = obj.index_name
     elif isinstance(
         obj,
@@ -313,7 +317,7 @@ def get_index_name(obj):
 
 def get_index_names(obj):
     result = None
-    if spark_installed and isinstance(obj, SparkDataFrameWithIndex):
+    if SparkDataFrame is not None and isinstance(obj, SparkDataFrameWithIndex):
         result = obj.index_names
     elif isinstance(
         obj,
@@ -400,7 +404,7 @@ def list_tensor_to_shape_and_dtype(ls) -> Optional[Tuple[Tuple[int, ...], Type]]
     if isinstance(ls, (int, float, str)):
         return ((), type(ls))
     if isinstance(ls, list):
-        sub_result: Any = "Any"
+        sub_result: Union[Tuple[Tuple[int, ...], Type], Literal["Any"]] = "Any"
         for item in ls:
             item_result = list_tensor_to_shape_and_dtype(item)
             if item_result is None:
@@ -409,8 +413,11 @@ def list_tensor_to_shape_and_dtype(ls) -> Optional[Tuple[Tuple[int, ...], Type]]
                 sub_result = item_result
             elif sub_result != item_result:
                 return None
-        if sub_result == "Any" and len(ls) == 0:
-            return ((len(ls),) + (), int)
+        if sub_result == "Any":
+            if len(ls) == 0:
+                return ((len(ls),) + (), int)
+            else:
+                return None
         sub_shape, sub_dtype = sub_result
         return ((len(ls),) + sub_shape, sub_dtype)
     return None
@@ -529,7 +536,9 @@ def series_to_schema(series) -> JSON_TYPE:
 
 
 def _torch_tensor_to_schema(tensor) -> JSON_TYPE:
-    assert torch_installed, """Your Python environment does not have torch installed. You can install it with
+    assert (
+        torch is not None and Tensor is not None
+    ), """Your Python environment does not have torch installed. You can install it with
     pip install torch
 or with
     pip install 'lale[full]'"""
@@ -621,7 +630,9 @@ def make_optional_schema(schema: JSON_TYPE) -> JSON_TYPE:
 
 
 def _spark_df_to_schema(df) -> JSON_TYPE:
-    assert spark_installed, """Your Python environment does not have spark installed. You can install it with
+    assert (
+        SparkDataFrame is not None
+    ), """Your Python environment does not have spark installed. You can install it with
         pip install pyspark
 """
     assert isinstance(df, SparkDataFrameWithIndex)
@@ -713,7 +724,7 @@ def _to_schema(obj) -> JSON_TYPE:
         result = _dataframe_to_schema(obj)
     elif isinstance(obj, Series):
         result = _series_to_schema(obj)
-    elif torch_installed and isinstance(obj, Tensor):
+    elif Tensor is not None and isinstance(obj, Tensor):
         result = _torch_tensor_to_schema(obj)
     elif is_liac_arff(obj):
         result = _liac_arff_to_schema(obj)

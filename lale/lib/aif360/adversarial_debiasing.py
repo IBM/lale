@@ -40,10 +40,8 @@ from .util import (  # noqa:E402 # pylint:disable=wrong-import-position,wrong-im
 
 try:
     import tensorflow as tf
-
-    tensorflow_installed = True
 except ImportError:
-    tensorflow_installed = False
+    tf = None
 
 
 class _AdversarialDebiasingImpl(_BaseInEstimatorImpl):
@@ -59,7 +57,9 @@ class _AdversarialDebiasingImpl(_BaseInEstimatorImpl):
         verbose=0,
         **hyperparams,
     ):
-        assert tensorflow_installed, """Your Python environment does not have tensorflow installed. You can install it with
+        assert (
+            tf is not None
+        ), """Your Python environment does not have tensorflow installed. You can install it with
     pip install tensorflow
 or with
     pip install 'lale[full]'"""
@@ -75,6 +75,7 @@ or with
         self.hyperparams = hyperparams
 
     def fit(self, X, y=None):
+        assert tf is not None
         tf.compat.v1.disable_eager_execution()
         tf.compat.v1.reset_default_graph()
         if self.hyperparams.get("sess", None) is None:
