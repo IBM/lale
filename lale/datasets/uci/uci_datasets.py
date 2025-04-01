@@ -21,8 +21,9 @@ import numpy as np
 import pandas as pd
 
 import lale.datasets.data_schemas
+from lale.datasets.util import download_data_cache_dir
 
-download_data_dir = os.path.join(os.path.dirname(__file__), "download_data")
+download_data_dir = download_data_cache_dir / "uci" / "download_data"
 download_data_url = "http://archive.ics.uci.edu/static/public"
 
 

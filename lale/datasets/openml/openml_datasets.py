@@ -25,6 +25,8 @@ from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
+from lale.datasets.util import download_data_cache_dir
+
 sklearn_version = version.parse(getattr(sklearn, "__version__"))
 
 try:
@@ -37,7 +39,8 @@ or with
     pip install 'lale[full]'"""
     ) from import_exc
 
-download_data_dir = os.path.join(os.path.dirname(__file__), "download_data")
+download_data_dir = download_data_cache_dir / "openml" / "download_data"
+
 experiments_dict: Dict[str, Dict[str, Union[str, int]]] = {}
 
 # 1.25

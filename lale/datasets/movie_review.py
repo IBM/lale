@@ -18,15 +18,18 @@ import urllib.request
 
 import numpy as np
 
+from lale.datasets.util import download_data_cache_dir
+
 
 def load_movie_review():
     """Loads the sentiment classification from a movie reviews dataset.
     Read the readme from data/movie_review for more details.
     """
     download_base_url = "https://www.cs.cornell.edu/people/pabo/movie%2Dreview%2Ddata/rt-polaritydata.tar.gz"
-    download_data_dir = os.path.join(
-        os.path.dirname(__file__), "data", "movie_review", "download_data"
+    download_data_dir = (
+        download_data_cache_dir / "data" / "movie_review" / "download_data"
     )
+
     data_file_path = os.path.join(download_data_dir, "rt-polaritydata.tar.gz")
     if not os.path.exists(download_data_dir):
         os.makedirs(download_data_dir)

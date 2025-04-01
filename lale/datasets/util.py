@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
+import pathlib
 from typing import Any, Literal, Tuple, overload
 
 import numpy as np
@@ -18,6 +20,10 @@ import pandas as pd
 from sklearn.utils import Bunch
 
 from lale.datasets.data_schemas import add_table_name, get_table_name
+
+download_data_cache_dir: pathlib.Path = pathlib.Path(
+    os.environ.get("LALE_DOWNLOAD_CACHE_DIR", os.path.dirname(__file__))
+)
 
 try:
     from pyspark.sql import SparkSession
