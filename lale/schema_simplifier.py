@@ -136,8 +136,7 @@ def liftAllOf(schemas: List[JsonSchema]) -> Iterable[JsonSchema]:
     """
     for sch in schemas:
         schs2 = toAllOfList(sch)
-        for s in schs2:
-            yield s
+        yield from schs2
 
 
 def liftAnyOf(schemas: List[JsonSchema]) -> Iterable[JsonSchema]:
@@ -146,8 +145,7 @@ def liftAnyOf(schemas: List[JsonSchema]) -> Iterable[JsonSchema]:
     """
     for sch in schemas:
         schs2 = toAnyOfList(sch)
-        for s in schs2:
-            yield s
+        yield from schs2
 
 
 # This is a great function for a breakpoint :-)

@@ -161,7 +161,6 @@ def add_sub_space(space, k, v):
         if k not in space.keys:
             space.keys.append(k)
             space.choices = (c + (SearchSpaceConstant(v),) for c in space.choices)
-            return
 
 
 # TODO: do we use 'path' above anymore?
