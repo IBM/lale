@@ -60,6 +60,7 @@ def load_movie_review():
 
     from sklearn.utils import shuffle
 
-    X, y = shuffle(X, y)
+    sh = shuffle(X, y)
+    assert sh is not None
 
-    return X, y
+    return sh

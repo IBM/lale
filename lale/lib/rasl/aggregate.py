@@ -27,14 +27,13 @@ from lale.datasets.data_schemas import (
 )
 
 try:
-    import pyspark.sql
-    import pyspark.sql.functions
-    from pyspark.sql.functions import col, isnan, when
-
-    spark_installed = True
+    import pyspark.sql.functions as pyspark_sql_functions
+    from pyspark.sql import DataFrame, GroupedData
 
 except ImportError:
-    spark_installed = False
+    GroupedData = None
+    DataFrame = None
+    pyspark_sql_functions = None
 
 
 class _AggregateImpl:
@@ -72,7 +71,11 @@ class _AggregateImpl:
             agg_info.append((new_col_name, old_col_name, agg_func_name))
         if isinstance(X, (pd.DataFrame, pd.core.groupby.generic.DataFrameGroupBy)):
             aggregated_df = self._transform_pandas(X, agg_info)
-        elif isinstance(X, (pyspark.sql.DataFrame, pyspark.sql.GroupedData)):  # type: ignore
+        elif (
+            DataFrame is not None
+            and GroupedData is not None
+            and isinstance(X, (DataFrame, GroupedData))
+        ):
             aggregated_df = self._transform_spark(X, agg_info)
         else:
             raise ValueError(f"Unsupported type(X) {type(X)} for Aggregate.")
@@ -126,9 +129,10 @@ class _AggregateImpl:
 
     def _transform_spark(self, X, agg_info):
         def create_spark_agg_expr(new_col_name, old_col_name, agg_func_name):
+            assert pyspark_sql_functions is not None
             if agg_func_name == "median":
                 agg_func_name = "percentile_approx"
-            func = getattr(pyspark.sql.functions, agg_func_name)
+            func = getattr(pyspark_sql_functions, agg_func_name)
             if agg_func_name == "percentile_approx":
                 if self.exclude_value is not None:
                     result = func(self._get_exclude_when_expr(old_col_name), 0.5).alias(
@@ -165,11 +169,11 @@ class _AggregateImpl:
 
         aggregated_df = X.agg(*agg_expr)
         if len(mode_column_names) > 0:
-            if isinstance(X, pyspark.sql.GroupedData):
+            if GroupedData is not None and isinstance(X, GroupedData):
                 raise ValueError(
                     "Mode is not supported as an aggregate immediately after GroupBy for Spark dataframes."
                 )
-            from pyspark.sql.functions import lit
+            from pyspark.sql.functions import col, isnan, lit
 
             for new_col_name, old_col_name in mode_column_names:
                 if self.exclude_value is not None:
@@ -204,6 +208,8 @@ class _AggregateImpl:
         return aggregated_df
 
     def _get_exclude_when_expr(self, col_name):
+        from pyspark.sql.functions import col, isnan, when
+
         if self.exclude_value is not None:
             if self.exclude_value in [np.nan, "nan"]:
                 when_expr = when(~isnan(col_name), col(col_name))
