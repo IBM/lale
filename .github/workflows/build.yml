@@ -42,6 +42,7 @@ jobs:
         pipdeptree -fl
     - name: pre-commit checks
       run: pre-commit run -a
+
   docs:
     name: Documentation build
     runs-on: ubuntu-latest
@@ -78,6 +79,53 @@ jobs:
       run: sphinx-build "." "_build" -W --keep-going
       working-directory: ./docs
 
+  download_data:
+    name: Download data used for tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    - name: Cache pip
+      uses: actions/cache@v4
+      with:
+        # This path is specific to Ubuntu
+        path: ${{ env.pythonLocation }}
+        # Look to see if there is a cache hit for the setup file
+        key: ${{ runner.os }}-pip-new3-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-new3
+          ${{ runner.os }}-new3
+    - name: Install numpy
+      run: pip install -U numpy
+    - name: Install dependencies
+      run: pip install --upgrade --upgrade-strategy eager .[full,test,dev]
+    - name: pip list packages
+      run: pip list
+    - name: show pip dependencies
+      run: |
+        pip install pipdeptree
+        pipdeptree -fl
+    - name: Cache test data restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-${{ hashFiles('lale/datasets/prefetch.py') }}
+        restore-keys: |
+          ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-
+          ${{ runner.os }}-dcache-new3
+    - name: Download the test data
+      run: python lale/datasets/prefetch.py
+    - name: Cache test data save
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-${{ hashFiles('lale/datasets/prefetch.py') }}
+
+
   # test_matrix_pr and test_matrix_master have a lot of redundancy
   # If GitHub actions adds support for conditional matrix expressions
   # these should be combined, but current workarounds seem overly complex
@@ -85,7 +133,7 @@ jobs:
     name: Test (PR)
     runs-on: ubuntu-latest
     if: ${{github.event_name == 'pull_request' }}
-    needs: [static]
+    needs: [static, download_data]
     strategy:
       fail-fast: false
       matrix:
@@ -155,8 +203,9 @@ jobs:
       uses: actions/cache/restore@v4
       with:
         path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
-        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }} }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-${{ hashFiles('lale/datasets/prefetch.py') }}
         restore-keys: |
+          ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-
           ${{ runner.os }}-dcache-new3
     - name: Install numpy
       run: pip install -U numpy
@@ -176,17 +225,12 @@ jobs:
         pipdeptree -fl
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
-    - name: Cache test data save
-      uses: actions/cache/save@v4
-      with:
-        path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
-        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }} }}
 
   test_matrix_master:
     name: Test (master)
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'push' }}
-    needs: [static]
+    needs: [static, download_data]
     strategy:
       fail-fast: false
       matrix:
@@ -257,8 +301,9 @@ jobs:
       uses: actions/cache/restore@v4
       with:
         path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
-        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }} }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-${{ hashFiles('lale/datasets/prefetch.py') }}
         restore-keys: |
+          ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-
           ${{ runner.os }}-dcache-new3
     - name: Install numpy
       run: pip install -U numpy
@@ -278,16 +323,11 @@ jobs:
         pipdeptree -fl
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
-    - name: Cache test data save
-      uses: actions/cache/save@v4
-      with:
-        path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
-        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }} }}
 
   test_newer:
     name: Test with newest sklearn
     runs-on: ubuntu-latest
-    needs: [static]
+    needs: [static, download_data]
     strategy:
       fail-fast: false
       matrix:
@@ -319,8 +359,9 @@ jobs:
       uses: actions/cache/restore@v4
       with:
         path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
-        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }} }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-${{ hashFiles('lale/datasets/prefetch.py') }}
         restore-keys: |
+          ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-
           ${{ runner.os }}-dcache-new3
     - name: Install numpy
       run: pip install -U numpy
@@ -342,7 +383,7 @@ jobs:
 
   test_notebooks_pr:
     name: Test Notebooks (PR)
-    needs: [static]
+    needs: [static, download_data]
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' }}
     env:
@@ -386,8 +427,9 @@ jobs:
       uses: actions/cache/restore@v4
       with:
         path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
-        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }} }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-${{ hashFiles('lale/datasets/prefetch.py') }}
         restore-keys: |
+          ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-
           ${{ runner.os }}-dcache-new3
     - name: Install packages
       run: sudo apt-get install graphviz swig
@@ -411,15 +453,10 @@ jobs:
         NOTEBOOK_DIR=${{matrix.dir}}
         NOTEBOOK_CATEGORY=${{matrix.category}}
         py.test -v --capture=tee-sys ${{matrix.test-case}}
-    - name: Cache test data save
-      uses: actions/cache/save@v4
-      with:
-        path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
-        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }} }}
 
   test_notebooks_master:
     name: Test Notebooks (master)
-    needs: [static]
+    needs: [static, download_data]
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'push' }}
     env:
@@ -483,8 +520,9 @@ jobs:
       uses: actions/cache/restore@v4
       with:
         path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
-        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }} }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-${{ hashFiles('lale/datasets/prefetch.py') }}
         restore-keys: |
+          ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-
           ${{ runner.os }}-dcache-new3
     - name: Install packages
       run: sudo apt-get install graphviz swig
@@ -508,16 +546,11 @@ jobs:
         NOTEBOOK_DIR=${{matrix.dir}}
         NOTEBOOK_CATEGORY=${{matrix.category}}
         py.test -v --capture=tee-sys ${{matrix.test-case}}
-    - name: Cache test data save
-      uses: actions/cache/save@v4
-      with:
-        path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
-        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }} }}
 
   test_fairness:
     name: Test fairness install
     runs-on: ubuntu-latest
-    needs: [static]
+    needs: [static, download_data]
     strategy:
       fail-fast: false
       matrix:
@@ -548,8 +581,9 @@ jobs:
       uses: actions/cache/restore@v4
       with:
         path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
-        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }} }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-${{ hashFiles('lale/datasets/prefetch.py') }}
         restore-keys: |
+          ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-
           ${{ runner.os }}-dcache-new3
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
