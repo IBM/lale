@@ -2,6 +2,8 @@
 name: Tests
 
 on: [push, pull_request, workflow_dispatch]
+env:
+  LALE_DOWNLOAD_CACHE_DIR: ${{ github.workspace }}/.cache/data
 
 jobs:
   static:
@@ -149,6 +151,13 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-pip-new3
           ${{ runner.os }}-new3
+    - name: Cache test data restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }} }}
+        restore-keys: |
+          ${{ runner.os }}-dcache-new3
     - name: Install numpy
       run: pip install -U numpy
     - name: Install dependencies
@@ -167,6 +176,11 @@ jobs:
         pipdeptree -fl
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
+    - name: Cache test data save
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }} }}
 
   test_matrix_master:
     name: Test (master)
@@ -239,6 +253,13 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-pip-new3
           ${{ runner.os }}-new3
+    - name: Cache test data restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }} }}
+        restore-keys: |
+          ${{ runner.os }}-dcache-new3
     - name: Install numpy
       run: pip install -U numpy
     - name: Install dependencies
@@ -257,6 +278,11 @@ jobs:
         pipdeptree -fl
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
+    - name: Cache test data save
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }} }}
 
   test_newer:
     name: Test with newest sklearn
@@ -289,6 +315,13 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-pip-new3
           ${{ runner.os }}-new3
+    - name: Cache test data restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }} }}
+        restore-keys: |
+          ${{ runner.os }}-dcache-new3
     - name: Install numpy
       run: pip install -U numpy
     - name: Install dependencies
@@ -349,6 +382,13 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-pip-new3
           ${{ runner.os }}-new3
+    - name: Cache test data restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }} }}
+        restore-keys: |
+          ${{ runner.os }}-dcache-new3
     - name: Install packages
       run: sudo apt-get install graphviz swig
     - name: Install numpy
@@ -371,6 +411,11 @@ jobs:
         NOTEBOOK_DIR=${{matrix.dir}}
         NOTEBOOK_CATEGORY=${{matrix.category}}
         py.test -v --capture=tee-sys ${{matrix.test-case}}
+    - name: Cache test data save
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }} }}
 
   test_notebooks_master:
     name: Test Notebooks (master)
@@ -434,6 +479,13 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-pip-new3
           ${{ runner.os }}-new3
+    - name: Cache test data restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }} }}
+        restore-keys: |
+          ${{ runner.os }}-dcache-new3
     - name: Install packages
       run: sudo apt-get install graphviz swig
     - name: Install numpy
@@ -456,6 +508,11 @@ jobs:
         NOTEBOOK_DIR=${{matrix.dir}}
         NOTEBOOK_CATEGORY=${{matrix.category}}
         py.test -v --capture=tee-sys ${{matrix.test-case}}
+    - name: Cache test data save
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }} }}
 
   test_fairness:
     name: Test fairness install
@@ -487,6 +544,13 @@ jobs:
       run: |
         pip install pipdeptree
         pipdeptree -fl
+    - name: Cache test data restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }} }}
+        restore-keys: |
+          ${{ runner.os }}-dcache-new3
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 

@@ -169,9 +169,9 @@ class FrequencyDistribution(Generic[T]):
 
         if single:
             assert len(values) == 1
-            return values[0]
+            return values[0]  # type: ignore
         else:
-            return values
+            return values  # type: ignore
 
     def sample(self) -> T:
         ll = len(self)

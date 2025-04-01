@@ -21,11 +21,14 @@ import pandas as pd
 
 import lale.datasets.openml
 from lale.datasets.data_schemas import add_table_name
+from lale.datasets.util import download_data_cache_dir
 from lale.helpers import datatype_param_type
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+download_multitable_data_cache_dir = download_data_cache_dir / "multitable"
 
 try:
     from pyspark.sql import SparkSession
@@ -93,7 +96,7 @@ def fetch_go_sales_dataset(datatype: datatype_param_type = "pandas"):
     go_sales_list : list of singleton dictionary of pandas / spark dataframes
     """
 
-    download_data_dir = os.path.join(os.path.dirname(__file__), "go_sales_data")
+    download_data_dir = download_multitable_data_cache_dir / "go_sales_data"
     base_url = "https://github.com/IBM/watson-machine-learning-samples/raw/master/cloud/data/go_sales/"
     filenames = [
         "go_1k.csv",
@@ -158,7 +161,7 @@ def fetch_imdb_dataset(datatype: datatype_param_type = "pandas"):
         dataset not found
     """
 
-    download_data_dir = os.path.join(os.path.dirname(__file__), "imdb_data")
+    download_data_dir = download_multitable_data_cache_dir / "imdb_data"
     imdb_list = []
     if not os.path.exists(download_data_dir):
         raise ValueError(
