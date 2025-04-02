@@ -3,7 +3,8 @@ name: Tests
 
 on: [push, pull_request, workflow_dispatch]
 env:
-  LALE_DOWNLOAD_CACHE_DIR: ${{ github.workspace }}/.cache/data
+  DOWNLOAD_CACHE_DIR: /home/runner/scikit_learn_data
+  LALE_DOWNLOAD_CACHE_DIR: /home/runner/scikit_learn_data/lale
 
 jobs:
   static:
@@ -112,18 +113,18 @@ jobs:
     - name: Cache test data restore
       uses: actions/cache/restore@v4
       with:
-        path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
-        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-${{ hashFiles('lale/datasets/prefetch.py') }}
+        path: ${{ env.DOWNLOAD_CACHE_DIR }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.DOWNLOAD_CACHE_DIR }}-${{ hashFiles('lale/datasets/prefetch.py') }}
         restore-keys: |
-          ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-
+          ${{ runner.os }}-dcache-new3-${{ env.DOWNLOAD_CACHE_DIR }}-
           ${{ runner.os }}-dcache-new3
     - name: Download the test data
       run: python lale/datasets/prefetch.py
     - name: Cache test data save
       uses: actions/cache/save@v4
       with:
-        path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
-        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-${{ hashFiles('lale/datasets/prefetch.py') }}
+        path: ${{ env.DOWNLOAD_CACHE_DIR }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.DOWNLOAD_CACHE_DIR }}-${{ hashFiles('lale/datasets/prefetch.py') }}
 
 
   # test_matrix_pr and test_matrix_master have a lot of redundancy
@@ -202,10 +203,10 @@ jobs:
     - name: Cache test data restore
       uses: actions/cache/restore@v4
       with:
-        path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
-        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-${{ hashFiles('lale/datasets/prefetch.py') }}
+        path: ${{ env.DOWNLOAD_CACHE_DIR }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.DOWNLOAD_CACHE_DIR }}-${{ hashFiles('lale/datasets/prefetch.py') }}
         restore-keys: |
-          ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-
+          ${{ runner.os }}-dcache-new3-${{ env.DOWNLOAD_CACHE_DIR }}-
           ${{ runner.os }}-dcache-new3
     - name: Install numpy
       run: pip install -U numpy
@@ -300,10 +301,10 @@ jobs:
     - name: Cache test data restore
       uses: actions/cache/restore@v4
       with:
-        path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
-        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-${{ hashFiles('lale/datasets/prefetch.py') }}
+        path: ${{ env.DOWNLOAD_CACHE_DIR }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.DOWNLOAD_CACHE_DIR }}-${{ hashFiles('lale/datasets/prefetch.py') }}
         restore-keys: |
-          ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-
+          ${{ runner.os }}-dcache-new3-${{ env.DOWNLOAD_CACHE_DIR }}-
           ${{ runner.os }}-dcache-new3
     - name: Install numpy
       run: pip install -U numpy
@@ -358,10 +359,10 @@ jobs:
     - name: Cache test data restore
       uses: actions/cache/restore@v4
       with:
-        path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
-        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-${{ hashFiles('lale/datasets/prefetch.py') }}
+        path: ${{ env.DOWNLOAD_CACHE_DIR }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.DOWNLOAD_CACHE_DIR }}-${{ hashFiles('lale/datasets/prefetch.py') }}
         restore-keys: |
-          ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-
+          ${{ runner.os }}-dcache-new3-${{ env.DOWNLOAD_CACHE_DIR }}-
           ${{ runner.os }}-dcache-new3
     - name: Install numpy
       run: pip install -U numpy
@@ -426,10 +427,10 @@ jobs:
     - name: Cache test data restore
       uses: actions/cache/restore@v4
       with:
-        path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
-        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-${{ hashFiles('lale/datasets/prefetch.py') }}
+        path: ${{ env.DOWNLOAD_CACHE_DIR }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.DOWNLOAD_CACHE_DIR }}-${{ hashFiles('lale/datasets/prefetch.py') }}
         restore-keys: |
-          ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-
+          ${{ runner.os }}-dcache-new3-${{ env.DOWNLOAD_CACHE_DIR }}-
           ${{ runner.os }}-dcache-new3
     - name: Install packages
       run: sudo apt-get install graphviz swig
@@ -519,10 +520,10 @@ jobs:
     - name: Cache test data restore
       uses: actions/cache/restore@v4
       with:
-        path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
-        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-${{ hashFiles('lale/datasets/prefetch.py') }}
+        path: ${{ env.DOWNLOAD_CACHE_DIR }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.DOWNLOAD_CACHE_DIR }}-${{ hashFiles('lale/datasets/prefetch.py') }}
         restore-keys: |
-          ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-
+          ${{ runner.os }}-dcache-new3-${{ env.DOWNLOAD_CACHE_DIR }}-
           ${{ runner.os }}-dcache-new3
     - name: Install packages
       run: sudo apt-get install graphviz swig
@@ -580,10 +581,10 @@ jobs:
     - name: Cache test data restore
       uses: actions/cache/restore@v4
       with:
-        path: ${{ env.LALE_DOWNLOAD_CACHE_DIR }}
-        key: ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-${{ hashFiles('lale/datasets/prefetch.py') }}
+        path: ${{ env.DOWNLOAD_CACHE_DIR }}
+        key: ${{ runner.os }}-dcache-new3-${{ env.DOWNLOAD_CACHE_DIR }}-${{ hashFiles('lale/datasets/prefetch.py') }}
         restore-keys: |
-          ${{ runner.os }}-dcache-new3-${{ env.LALE_DOWNLOAD_CACHE_DIR }}-
+          ${{ runner.os }}-dcache-new3-${{ env.DOWNLOAD_CACHE_DIR }}-
           ${{ runner.os }}-dcache-new3
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
