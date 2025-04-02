@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn.datasets
+
 import lale.lib.aif360.datasets
 from lale.datasets.movie_review import load_movie_review
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
@@ -92,6 +94,16 @@ def prefetch_data():
         download_if_missing(name, True)
 
     fetch_fairness_dbs()
+
+    sklearn.datasets.fetch_california_housing()
+    sklearn.datasets.load_digits()
+    sklearn.datasets.load_iris()
+    sklearn.datasets.fetch_20newsgroups()
+    sklearn.datasets.load_diabetes()
+    sklearn.datasets.fetch_covtype()
+    sklearn.datasets.load_diabetes()
+    sklearn.datasets.fetch_openml(name="house_prices", as_frame=True)
+    sklearn.datasets.load_breast_cancer()
 
 
 def main():
