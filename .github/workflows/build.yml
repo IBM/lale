@@ -20,17 +20,9 @@ jobs:
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
+        cache: 'pip'
+        cache-dependency-path: setup.py
         python-version: ${{ matrix.python-version }}
-    - name: Cache pip
-      uses: actions/cache@v4
-      with:
-        # This path is specific to Ubuntu
-        path: ${{ env.pythonLocation }}
-        # Look to see if there is a cache hit for the setup file
-        key: ${{ runner.os }}-pip-new3-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-new3
-          ${{ runner.os }}-new3
     - name: Install numpy
       run: pip install -U numpy
     - name: Install dependencies
@@ -54,16 +46,8 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: 3.9
-    - name: Cache pip
-      uses: actions/cache@v4
-      with:
-        # This path is specific to Ubuntu
-        path: ${{ env.pythonLocation }}
-        # Look to see if there is a cache hit for the setup file
-        key: ${{ runner.os }}-pip-new3-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-new3
-          ${{ runner.os }}-new3
+        cache: 'pip'
+        cache-dependency-path: setup.py
     - name: Install doc dependencies
       run: pip install -r docs/requirements.txt
     - name: Install lale
@@ -90,16 +74,8 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-    - name: Cache pip
-      uses: actions/cache@v4
-      with:
-        # This path is specific to Ubuntu
-        path: ${{ env.pythonLocation }}
-        # Look to see if there is a cache hit for the setup file
-        key: ${{ runner.os }}-pip-new3-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-new3
-          ${{ runner.os }}-new3
+        cache: 'pip'
+        cache-dependency-path: setup.py
     - name: Install numpy
       run: pip install -U numpy
     - name: Install dependencies
@@ -188,18 +164,10 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+        cache-dependency-path: setup.py
     - name: Install system packages
       run: sudo apt-get install graphviz swig
-    - name: Cache pip
-      uses: actions/cache@v4
-      with:
-        # This path is specific to Ubuntu
-        path: ${{ env.pythonLocation }}
-        # Look to see if there is a cache hit for the setup file
-        key: ${{ runner.os }}-pip-new3-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-new3
-          ${{ runner.os }}-new3
     - name: Cache test data restore
       uses: actions/cache/restore@v4
       with:
@@ -286,18 +254,10 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+        cache-dependency-path: setup.py
     - name: Install system packages
       run: sudo apt-get install graphviz swig
-    - name: Cache pip
-      uses: actions/cache@v4
-      with:
-        # This path is specific to Ubuntu
-        path: ${{ env.pythonLocation }}
-        # Look to see if there is a cache hit for the setup file
-        key: ${{ runner.os }}-pip-new3-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-new3
-          ${{ runner.os }}-new3
     - name: Cache test data restore
       uses: actions/cache/restore@v4
       with:
@@ -344,18 +304,10 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+        cache-dependency-path: setup.py
     - name: Install system packages
       run: sudo apt-get install graphviz swig
-    - name: Cache pip
-      uses: actions/cache@v4
-      with:
-        # This path is specific to Ubuntu
-        path: ${{ env.pythonLocation }}
-        # Look to see if there is a cache hit for the setup file
-        key: ${{ runner.os }}-pip-new3-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-new3
-          ${{ runner.os }}-new3
     - name: Cache test data restore
       uses: actions/cache/restore@v4
       with:
@@ -414,16 +366,8 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Cache pip
-      uses: actions/cache@v4
-      with:
-        # This path is specific to Ubuntu
-        path: ${{ env.pythonLocation }}
-        # Look to see if there is a cache hit for the setup file
-        key: ${{ runner.os }}-pip-new3-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-new3
-          ${{ runner.os }}-new3
+        cache: 'pip'
+        cache-dependency-path: setup.py
     - name: Cache test data restore
       uses: actions/cache/restore@v4
       with:
@@ -507,16 +451,8 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Cache pip
-      uses: actions/cache@v4
-      with:
-        # This path is specific to Ubuntu
-        path: ${{ env.pythonLocation }}
-        # Look to see if there is a cache hit for the setup file
-        key: ${{ runner.os }}-pip-new3-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-new3
-          ${{ runner.os }}-new3
+        cache: 'pip'
+        cache-dependency-path: setup.py
     - name: Cache test data restore
       uses: actions/cache/restore@v4
       with:
