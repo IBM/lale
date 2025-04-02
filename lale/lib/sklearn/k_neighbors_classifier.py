@@ -238,7 +238,8 @@ if lale.operators.sklearn_version >= version.Version("1.6"):
     KNeighborsClassifier = KNeighborsClassifier.customize_schema(
         metric={
             "anyOf": [
-                {"enum": ["euclidean", "manhattan", "minkowski", "nan_euclidean"]},
+                {"enum": ["euclidean", "manhattan", "minkowski"]},
+                {"type": "string", "forOptimizer": False},
                 {
                     "laleType": "callable",
                     "forOptimizer": False,

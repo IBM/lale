@@ -180,7 +180,7 @@ _hyperparams_schema = {
                                 "reg:tweedie",
                             ]
                         },
-                        {"laleType": "callable"},
+                        {"laleType": "callable", "forOptimizer": False},
                     ],
                     "default": "reg:linear",
                 },
@@ -498,7 +498,7 @@ if xgboost_version is not None and xgboost_version >= version.Version("0.90"):
                             "reg:squarederror",
                         ]
                     },
-                    {"laleType": "callable"},
+                    {"laleType": "callable", "forOptimizer": False},
                 ],
                 "default": "reg:linear",
             }
@@ -797,7 +797,11 @@ if xgboost_version is not None and xgboost_version >= version.Version("1.6"):
             "anyOf": [
                 {"type": "string"},
                 {"type": "array", "items": {"type": "string"}},
-                {"type": "array", "items": {"laleType": "callable"}},
+                {
+                    "type": "array",
+                    "items": {"laleType": "callable"},
+                    "forOptimizer": False,
+                },
                 {"enum": [None]},
             ],
             "default": None,
@@ -816,7 +820,11 @@ if xgboost_version is not None and xgboost_version >= version.Version("1.6"):
             "description": """List of callback functions that are applied at end of each iteration.
             It is possible to use predefined callbacks by using Callback API.""",
             "anyOf": [
-                {"type": "array", "items": {"laleType": "callable"}},
+                {
+                    "type": "array",
+                    "items": {"laleType": "callable"},
+                    "forOptimizer": False,
+                },
                 {"enum": [None]},
             ],
             "default": None,

@@ -174,6 +174,7 @@ if lale.operators.sklearn_version >= version.Version("0.24"):
                 {
                     "description": "The callable is passed with the fitted estimator and it should return importance for each feature.",
                     "laleType": "callable",
+                    "forOptimizer": False,
                 },
             ],
             "default": "auto",

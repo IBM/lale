@@ -272,7 +272,10 @@ _input_fit_schema = {
             "description": "Sample weights. If None, then samples are equally weighted. Splits",
         },
         "monitor": {
-            "anyOf": [{"laleType": "callable"}, {"enum": [None]}],
+            "anyOf": [
+                {"laleType": "callable", "forOptimizer": False},
+                {"enum": [None]},
+            ],
             "default": None,
             "description": "The monitor is called after each iteration with the current the current iteration, a reference to the estimator and the local variables of _fit_stages as keyword arguments callable(i, self, locals()).",
         },

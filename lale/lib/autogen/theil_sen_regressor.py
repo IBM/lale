@@ -177,7 +177,7 @@ TheilSenRegressor = make_operator(_TheilSenRegressorImpl, _combined_schemas)
 
 if lale.operators.sklearn_version >= version.Version("1.6"):
     TheilSenRegressor = TheilSenRegressor.customize_schema(
-        copy={
+        copy_X={
             "anyOf": [{"type": "boolean"}, {"enum": ["deprecated"]}],
             "default": "deprecated",
             "description": "Deprecated.  Has not effect.",
@@ -187,7 +187,7 @@ if lale.operators.sklearn_version >= version.Version("1.6"):
 
 if lale.operators.sklearn_version >= version.Version("1.8"):
     TheilSenRegressor = TheilSenRegressor.customize_schema(
-        copy=None, set_as_available=True
+        copy_X=None, set_as_available=True
     )
 
 set_docstrings(TheilSenRegressor)

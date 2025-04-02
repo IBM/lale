@@ -77,6 +77,7 @@ _hyperparams_schema = {
                                     },
                                     {
                                         "laleType": "callable",
+                                        "forOptimizer": False,
                                         "not": {"type": ["integer", "array", "string"]},
                                         "description": "Callable that is passed the input data X and can return any of the above.",
                                     },
@@ -241,12 +242,13 @@ if lale.operators.sklearn_version >= version.Version("1.6"):
                     "type": "boolean",
                 },
                 {
-                    "type": "str",
+                    "type": "string",
                     "description": 'A string ready for formatting. The given string will be formatted using two field names: transformer_name and feature_name. e.g. "{feature_name}__{transformer_name}"',
                 },
                 {
                     "laleType": "callable",
                     "description": "A Callable[[str, str], str]. ColumnTransformer.get_feature_names_out will rename all the features using the name of the transformer. The first argument of the callable is the transformer name and the second argument is the feature name. The returned string will be the new feature name.",
+                    "forOptimizer": False,
                 },
             ],
             "default": True,

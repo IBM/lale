@@ -50,6 +50,7 @@ _hyperparams_schema = {
             "properties": {
                 "score_func": {
                     "laleType": "callable",
+                    "forOptimizer": False,
                     "default": sklearn.feature_selection.f_classif,
                     "description": "Function taking two arrays X and y, and returning a pair of arrays (scores, pvalues) or a single array with scores.",
                 },

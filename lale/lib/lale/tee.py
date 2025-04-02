@@ -47,6 +47,7 @@ _hyperparams_schema = {
                             "is called on this operator, the callable will be passed the given"
                             "X and y values",
                             "laleType": "callable",
+                            "forOptimizer": False,
                         },
                         {
                             "description": "No listener.  Causes this operator to behave like NoOp.",

@@ -48,6 +48,7 @@ Or it can be a completely custom user-written Python callable.
 .. _`lale.lib.aif360 metrics`: https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.html#metrics
 """,
             "laleType": "callable",
+            "forOptimizer": False,
         },
         {
             "description": "Known scorer for classification task.",

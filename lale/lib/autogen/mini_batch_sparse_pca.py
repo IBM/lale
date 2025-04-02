@@ -91,7 +91,10 @@ _hyperparams_schema = {
                     "description": "number of iterations to perform for each mini batch",
                 },
                 "callback": {
-                    "anyOf": [{"laleType": "callable"}, {"enum": [None]}],
+                    "anyOf": [
+                        {"laleType": "callable", "forOptimizer": False},
+                        {"enum": [None]},
+                    ],
                     "default": None,
                     "description": "callable that gets invoked every five iterations",
                 },
