@@ -63,7 +63,7 @@ else:
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
-_BatchStatus = enum.Enum("BatchStatus", "RESIDENT SPILLED")
+_BatchStatus = enum.Enum("_BatchStatus", "RESIDENT SPILLED")
 
 _TaskStatus = enum.Enum("_TaskStatus", "FRESH READY WAITING DONE")
 

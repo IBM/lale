@@ -88,12 +88,12 @@ class Expr:
     def __eq__(self, other: Union["Expr", str, int, float, bool, None]):
         if isinstance(other, Expr):
             comp = ast.Compare(
-                left=self._expr, ops=[ast.Eq()], comparators=[other._expr]
+                left=self._expr, ops=[ast.Eq()], comparators=[other._expr]  # type: ignore
             )
             return Expr(comp, istrue=self is other)
         elif other is not None:
             comp = ast.Compare(
-                left=self._expr, ops=[ast.Eq()], comparators=[ast.Constant(value=other)]
+                left=self._expr, ops=[ast.Eq()], comparators=[ast.Constant(value=other)]  # type: ignore
             )
             return Expr(comp, istrue=False)
         else:
@@ -122,7 +122,7 @@ class Expr:
             return False
 
     def __getattr__(self, name: str) -> "Expr":
-        attr = ast.Attribute(value=self._expr, attr=name)
+        attr = ast.Attribute(value=self._expr, attr=name)  # type: ignore
         return Expr(attr)
 
     def __getitem__(self, key: Union[int, str, slice]) -> "Expr":
@@ -135,7 +135,7 @@ class Expr:
             key_ast = ast.Slice(key.start, key.stop, key.step)
         else:
             raise TypeError(f"expected int, str, or slice, got {type(key)}")
-        subscript = ast.Subscript(value=self._expr, slice=key_ast)
+        subscript = ast.Subscript(value=self._expr, slice=key_ast)  # type: ignore
         return Expr(subscript)
 
     @overload
@@ -351,7 +351,7 @@ def _make_call_expr(
 ) -> Expr:
     func_ast = ast.Name(id=name)
     args_asts = [_make_ast_expr(arg) for arg in args]
-    call_ast = ast.Call(func=func_ast, args=args_asts, keywords=[])
+    call_ast = ast.Call(func=func_ast, args=args_asts, keywords=[])  # type: ignore
     return Expr(call_ast)
 
 
