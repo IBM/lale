@@ -40,10 +40,8 @@ except ImportError:
 
 try:
     import tensorflow as tf
-
-    tensorflow_installed = True
 except ImportError:
-    tensorflow_installed = False
+    tf = None
 
 import lale.helpers
 import lale.lib.aif360
@@ -570,7 +568,7 @@ class TestAIF360Num(unittest.TestCase):
         disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
         di_list = []
         for split in splits:
-            if tensorflow_installed:  # for AdversarialDebiasing
+            if tf is not None:  # for AdversarialDebiasing
                 tf.compat.v1.reset_default_graph()
                 tf.compat.v1.disable_eager_execution()
             train_X = split["train_X"]
@@ -603,7 +601,7 @@ class TestAIF360Num(unittest.TestCase):
         self.assertTrue(0.8 < impact_remi < 1.0, f"impact_remi {impact_remi}")
 
     def test_adversarial_debiasing_pd_num(self):
-        if tensorflow_installed:
+        if tf is not None:
             fairness_info = self.creditg_pd_num["fairness_info"]
             tf.compat.v1.reset_default_graph()
             trainable_remi = AdversarialDebiasing(**fairness_info)
@@ -1462,7 +1460,7 @@ class TestAIF360Cat(unittest.TestCase):
         disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
         di_list = []
         for split in splits:
-            if tensorflow_installed:  # for AdversarialDebiasing
+            if tf is not None:  # for AdversarialDebiasing
                 tf.compat.v1.reset_default_graph()
             train_X = split["train_X"]
             train_y = split["train_y"]
@@ -1479,7 +1477,7 @@ class TestAIF360Cat(unittest.TestCase):
         )
 
     def test_adversarial_debiasing_pd_cat(self):
-        if tensorflow_installed:
+        if tf is not None:
             fairness_info = self.creditg_pd_cat["fairness_info"]
             trainable_remi = AdversarialDebiasing(
                 **fairness_info, preparation=self.prep_pd_cat

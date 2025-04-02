@@ -442,7 +442,7 @@ class SearchSpaceOperatorVisitor(Visitor):
                 if sub_space:
                     return SearchSpaceDict(o)
                 else:
-                    all_keys = list(o.keys())
+                    all_keys: list[str] = list(o.keys())
                     all_keys.sort()
                     o_choice = tuple(o.get(k, None) for k in all_keys)
                     return SearchSpaceObject(longName, all_keys, [o_choice])
@@ -488,7 +488,7 @@ class SearchSpaceOperatorVisitor(Visitor):
                 )
 
         if "anyOf" in schema:
-            objs = []
+            objs: list[dict[str, SearchSpace]] = []
             for s_obj in schema["anyOf"]:
                 if "type" in s_obj and s_obj["type"] == "object":
                     o = self.JsonSchemaToSearchSpaceHelper(

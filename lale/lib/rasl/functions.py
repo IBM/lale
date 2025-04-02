@@ -30,11 +30,11 @@ from ..dataframe import (
 from .monoid import Monoid, MonoidFactory
 
 try:
-    import pyspark.sql.functions
-
-    spark_installed = True
+    from pyspark.sql.functions import isnan as spark_isnan
+    from pyspark.sql.functions import isnull as spark_isnull
 except ImportError:
-    spark_installed = False
+    spark_isnan = None
+    spark_isnull = None
 
 
 class _column_distinct_count_data(Monoid):
@@ -233,8 +233,8 @@ class date_time:
 def filter_isnan(df: Any, column_name: str):
     if _is_pandas_df(df):
         return df[df[column_name].isnull()]
-    elif spark_installed and _is_spark_df(df):
-        return df.filter(pyspark.sql.functions.isnan(df[column_name]))
+    elif spark_isnan is not None and _is_spark_df(df):
+        return df.filter(spark_isnan(df[column_name]))
     else:
         raise ValueError(
             "the filter isnan supports only Pandas dataframes or spark dataframes."
@@ -244,8 +244,8 @@ def filter_isnan(df: Any, column_name: str):
 def filter_isnotnan(df: Any, column_name: str):
     if _is_pandas_df(df):
         return df[df[column_name].notnull()]
-    elif spark_installed and _is_spark_df(df):
-        return df.filter(~pyspark.sql.functions.isnan(df[column_name]))
+    elif spark_isnan is not None and _is_spark_df(df):
+        return df.filter(~spark_isnan(df[column_name]))
     else:
         raise ValueError(
             "the filter isnotnan supports only Pandas dataframes or spark dataframes."
@@ -255,8 +255,8 @@ def filter_isnotnan(df: Any, column_name: str):
 def filter_isnull(df: Any, column_name: str):
     if _is_pandas_df(df):
         return df[df[column_name].isnull()]
-    elif spark_installed and _is_spark_df(df):
-        return df.filter(pyspark.sql.functions.isnull(df[column_name]))
+    elif spark_isnull is not None and _is_spark_df(df):
+        return df.filter(spark_isnull(df[column_name]))
     else:
         raise ValueError(
             "the filter isnan supports only Pandas dataframes or spark dataframes."
@@ -266,8 +266,8 @@ def filter_isnull(df: Any, column_name: str):
 def filter_isnotnull(df: Any, column_name: str):
     if _is_pandas_df(df):
         return df[df[column_name].notnull()]
-    elif spark_installed and _is_spark_df(df):
-        return df.filter(~pyspark.sql.functions.isnull(df[column_name]))
+    elif spark_isnull is not None and _is_spark_df(df):
+        return df.filter(~spark_isnull(df[column_name]))
     else:
         raise ValueError(
             "the filter isnotnan supports only Pandas dataframes or spark dataframes."

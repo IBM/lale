@@ -19,26 +19,27 @@ import numpy as np
 import pandas as pd
 from sklearn.utils import Bunch
 
-from lale.datasets.data_schemas import add_table_name, get_table_name
-
-download_data_cache_dir: pathlib.Path = pathlib.Path(
-    os.environ.get("LALE_DOWNLOAD_CACHE_DIR", os.path.dirname(__file__))
+from lale.datasets.data_schemas import (
+    SparkDataFrameWithIndex,
+    add_table_name,
+    get_table_name,
 )
 
 try:
     from pyspark.sql import SparkSession
 
-    from lale.datasets.data_schemas import (  # pylint:disable=ungrouped-imports
-        SparkDataFrameWithIndex,
-    )
-
-    spark_installed = True
 except ImportError:
-    spark_installed = False
+    SparkSession = None
+
+
+download_data_cache_dir: pathlib.Path = pathlib.Path(
+    os.environ.get("LALE_DOWNLOAD_CACHE_DIR", os.path.dirname(__file__))
+)
 
 
 def pandas2spark(pandas_df):
-    assert spark_installed
+    assert SparkSession is not None
+
     spark_session = (
         SparkSession.builder.master("local[2]")  # type: ignore
         .config("spark.driver.memory", "64g")

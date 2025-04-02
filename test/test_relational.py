@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import unittest
+from test import EnableSchemaValidation  # pylint:disable=wrong-import-order
 from typing import List
 
 import jsonschema
@@ -22,25 +23,9 @@ from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 
 import lale.operators
-from lale.lib.rasl.convert import Convert
-from lale.operator_wrapper import wrap_imported_operators
-
-try:
-    from pyspark import SparkConf, SparkContext
-    from pyspark.sql import Row, SparkSession, SQLContext
-
-    from lale.datasets.data_schemas import (  # pylint:disable=ungrouped-imports
-        SparkDataFrameWithIndex,
-    )
-
-    spark_installed = True
-except ImportError:
-    spark_installed = False
-
-from test import EnableSchemaValidation  # pylint:disable=wrong-import-order
-
 from lale.datasets import pandas2spark
 from lale.datasets.data_schemas import (
+    SparkDataFrameWithIndex,
     add_table_name,
     get_index_name,
     get_table_name,
@@ -98,7 +83,18 @@ from lale.lib.rasl import (
     Scan,
     SortIndex,
 )
+from lale.lib.rasl.convert import Convert
 from lale.lib.sklearn import PCA, KNeighborsClassifier, LogisticRegression
+from lale.operator_wrapper import wrap_imported_operators
+
+try:
+    from pyspark import SparkConf, SparkContext
+    from pyspark.sql import SparkSession, SQLContext
+except ImportError:
+    SparkConf = None
+    SparkContext = None
+    SparkSession = None
+    SQLContext = None
 
 
 def _set_index_name(df, name):
@@ -171,7 +167,12 @@ class TestFilter(unittest.TestCase):
             (5, "CA", 0, float(3)),
         ]
 
-        if spark_installed:
+        if SparkConf is not None:
+            from pyspark.sql import Row
+
+            assert SparkContext is not None
+            assert SQLContext is not None
+
             conf = (
                 SparkConf()
                 .setMaster("local[2]")
@@ -2388,9 +2389,10 @@ class TestOrderBy(unittest.TestCase):
 
 class TestSplitXy(unittest.TestCase):
     @classmethod
-    def setUp(cls):  # pylint:disable=arguments-differ
+    def setUpClass(cls):
         data = load_iris()
-        X, y = data.data, data.target
+        X, y = data.data, data.target  # type: ignore
+
         X_train, _X_test, y_train, _y_test = train_test_split(
             pd.DataFrame(X), pd.DataFrame(y)
         )

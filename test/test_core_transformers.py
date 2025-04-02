@@ -25,7 +25,7 @@ import lale.lib.sklearn
 import lale.type_checking
 from lale.datasets import pandas2spark
 from lale.datasets.data_schemas import add_table_name, get_table_name
-from lale.datasets.util import spark_installed
+from lale.helpers import spark_installed
 from lale.lib.lale import ConcatFeatures
 from lale.lib.sklearn import (
     NMF,

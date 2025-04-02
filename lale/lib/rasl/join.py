@@ -11,13 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import Any, Iterable, List, Optional, Set
+from typing import Any, Iterable, List, Literal, Optional, Set
 
 import pandas as pd
 
 import lale.docstrings
 import lale.operators
-from lale.datasets.data_schemas import add_table_name, get_table_name
+from lale.datasets.data_schemas import (  # pylint:disable=ungrouped-imports
+    SparkDataFrameWithIndex,
+    add_table_name,
+    get_table_name,
+)
 from lale.helpers import (
     _get_subscript_value,
     _is_ast_attribute,
@@ -31,14 +35,10 @@ from lale.lib.dataframe import get_columns
 try:
     from pyspark.sql.functions import col
 
-    from lale.datasets.data_schemas import (  # pylint:disable=ungrouped-imports
-        SparkDataFrameWithIndex,
-    )
-
-    spark_installed = True
-
 except ImportError:
-    spark_installed = False
+    col = None
+
+MergeHow = Literal["left", "right", "inner", "outer", "cross"]
 
 
 class _JoinImpl:
@@ -48,7 +48,7 @@ class _JoinImpl:
         pred=None,
         join_limit=None,
         sliding_window_length=None,
-        join_type="inner",
+        join_type: MergeHow = "inner",
         name=None,
     ):
         self.pred = pred
@@ -166,6 +166,8 @@ class _JoinImpl:
                 drop_col = []
                 left_table = left_df.alias("left_table")
                 right_table = right_df.alias("right_table")
+
+                assert col is not None
 
                 for k, key in enumerate(left_key_col):
                     on.append(

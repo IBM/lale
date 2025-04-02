@@ -225,5 +225,5 @@ class FClassif(ScoreMonoidFactory[FOnewayData]):
         X, y = batch
         return _f_oneway_lift(X, y)
 
-    def from_monoid(self, monoid: FOnewayData):
+    def from_monoid(self, monoid: FOnewayData):  # type: ignore
         return _f_oneway_lower(monoid)

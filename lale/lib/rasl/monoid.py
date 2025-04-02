@@ -38,7 +38,7 @@ class Monoid(ABC):
         pass
 
     @property
-    def is_absorbing(self):
+    def is_absorbing(self) -> bool:
         """
         A monoid value `x` is absorbing if for all `y`, `x.combine(y) == x`.
         This can help stop training early for monoids with learned coefficients.

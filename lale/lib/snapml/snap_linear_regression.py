@@ -11,28 +11,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-try:
-    import snapml  # type: ignore
-
-    snapml_installed = True
-except ImportError:
-    snapml_installed = False
 
 import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
 
+try:
+    from snapml import LinearRegression as Base
+except ImportError:
+    Base = None
+
 
 class _SnapLinearRegressionImpl:
     def __init__(self, **hyperparams):
         assert (
-            snapml_installed
+            Base is not None
         ), """Your Python environment does not have snapml installed. Install using: pip install snapml"""
 
         if hyperparams.get("device_ids", None) is None:
             hyperparams["device_ids"] = []
 
-        self._wrapped_model = snapml.LinearRegression(**hyperparams)
+        self._wrapped_model = Base(**hyperparams)
 
     def fit(self, X, y, **fit_params):
         X = lale.datasets.data_schemas.strip_schema(X)

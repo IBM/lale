@@ -11,18 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-try:
-    import snapml  # type: ignore
-
-    snapml_installed = True
-except ImportError:
-    snapml_installed = False
-
 import pandas as pd
 
 import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
+
+try:
+    from snapml import BatchedTreeEnsembleRegressor as Base
+except ImportError:
+    Base = None
 
 
 def _ensure_numpy(data):
@@ -34,13 +32,13 @@ def _ensure_numpy(data):
 class _BatchedTreeEnsembleRegressorImpl:
     def __init__(self, **hyperparams):
         assert (
-            snapml_installed
+            Base is not None
         ), """Your Python environment does not have snapml installed. Install using: pip install snapml"""
         if hyperparams.get("base_ensemble") is None:
             from snapml import SnapBoostingMachineRegressor
 
             hyperparams["base_ensemble"] = SnapBoostingMachineRegressor()
-        self._wrapped_model = snapml.BatchedTreeEnsembleRegressor(**hyperparams)
+        self._wrapped_model = Base(**hyperparams)
 
     def fit(self, X, y, **fit_params):
         X = _ensure_numpy(X)

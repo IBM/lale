@@ -12,6 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Due to changes in the ast package, the types are confused, but the code still works
+# changing the types presents compatibility challenges for now, so some pyright errors are disabled for now
+# pyright: reportArgumentType=false
+# pyright: reportIncompatibleMethodOverride=false
+
+
 import ast  # see also https://greentreesnakes.readthedocs.io/
 import pprint
 import typing

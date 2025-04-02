@@ -34,9 +34,9 @@ func_timeout_installed = False
 try:
     from func_timeout import FunctionTimedOut, func_timeout
 
-    func_timeout_installed = True
 except ImportError:
-    pass
+    FunctionTimedOut = None
+    func_timeout = None
 
 
 class _HalvingGridSearchCVImpl:
@@ -170,7 +170,7 @@ class _HalvingGridSearchCVImpl:
                     n_jobs=self._hyperparams["n_jobs"],
                 )
                 if self._hyperparams["max_opt_time"] is not None:
-                    if func_timeout_installed:
+                    if func_timeout is not None and FunctionTimedOut is not None:
                         try:
                             func_timeout(
                                 self._hyperparams["max_opt_time"], self.grid.fit, (X, y)

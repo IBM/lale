@@ -315,8 +315,8 @@ def get_index_name(obj):
     return result
 
 
-def get_index_names(obj):
-    result = None
+def get_index_names(obj) -> Optional[list[str]]:
+    result: Optional[list[str]] = None
     if SparkDataFrame is not None and isinstance(obj, SparkDataFrameWithIndex):
         result = obj.index_names
     elif isinstance(
