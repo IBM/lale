@@ -38,8 +38,9 @@ _PandasBatch: TypeAlias = Tuple[pd.DataFrame, pd.Series]
 
 if spark_installed:
     from pyspark.sql.dataframe import DataFrame as SparkDataFrame
+    from pyspark.sql.dataframe import DataFrame as SparkDataFrameT
 
-    _SparkBatch: TypeAlias = Tuple[SparkDataFrame, SparkDataFrame]
+    _SparkBatch: TypeAlias = Tuple[SparkDataFrameT, SparkDataFrameT]
 
     _Batch_XyAux = Union[_PandasBatch, _SparkBatch]
 
@@ -55,6 +56,8 @@ else:
     _Batch_yyXAux = Tuple[  # type: ignore
         Union[pd.Series, np.ndarray], Union[pd.Series, np.ndarray], pd.DataFrame
     ]
+
+    SparkDataFrame = None
 
 # pyright does not currently accept a TypeAlias with conditional definitions
 _Batch_Xy: TypeAlias = _Batch_XyAux  # type: ignore
@@ -117,7 +120,7 @@ def _make_dataframe_yy(batch):
             series = pd.Series(y)
         elif isinstance(y, pd.DataFrame):
             series = y.squeeze()
-        elif spark_installed and isinstance(y, SparkDataFrame):
+        elif SparkDataFrame is not None and isinstance(y, SparkDataFrame):
             series = cast(pd.DataFrame, y.toPandas()).squeeze()
         else:
             series = y

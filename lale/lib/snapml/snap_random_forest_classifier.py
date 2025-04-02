@@ -13,22 +13,24 @@
 # limitations under the License.
 from packaging import version
 
-try:
-    import snapml  # type: ignore
-
-    snapml_version = version.parse(getattr(snapml, "__version__"))
-except ImportError:
-    snapml_version = None
-
 import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
+
+try:
+    import snapml
+    from snapml import SnapRandomForestClassifier as Base
+
+    snapml_version = version.parse(getattr(snapml, "__version__"))
+except ImportError:
+    Base = None
+    snapml_version = None
 
 
 class _SnapRandomForestClassifierImpl:
     def __init__(self, **hyperparams):
         assert (
-            snapml_version is not None
+            snapml_version is not None and Base is not None
         ), """Your Python environment does not have snapml installed. Install using: pip install snapml"""
 
         if (
@@ -39,7 +41,7 @@ class _SnapRandomForestClassifierImpl:
         if hyperparams.get("gpu_ids", None) is None:
             hyperparams["gpu_ids"] = [0]
 
-        self._wrapped_model = snapml.SnapRandomForestClassifier(**hyperparams)
+        self._wrapped_model = Base(**hyperparams)
 
     def fit(self, X, y, **fit_params):
         X = lale.datasets.data_schemas.strip_schema(X)

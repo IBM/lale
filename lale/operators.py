@@ -1246,7 +1246,7 @@ class TrainedOperator(TrainableOperator):
         pass
 
     @abstractmethod
-    def predict_proba(self, X: Any):
+    def predict_proba(self, X: Any) -> Any:
         """Probability estimates for all classes.
 
         Parameters
@@ -1262,7 +1262,7 @@ class TrainedOperator(TrainableOperator):
         pass
 
     @abstractmethod
-    def decision_function(self, X: Any):
+    def decision_function(self, X: Any) -> Any:
         """Confidence scores for all classes.
 
         Parameters
@@ -1278,7 +1278,7 @@ class TrainedOperator(TrainableOperator):
         pass
 
     @abstractmethod
-    def score_samples(self, X: Any):
+    def score_samples(self, X: Any) -> Any:
         """Scores for each sample in X. The type of scores depends on the operator.
 
         Parameters
@@ -1294,7 +1294,7 @@ class TrainedOperator(TrainableOperator):
         pass
 
     @abstractmethod
-    def score(self, X: Any, y: Any, **score_params):
+    def score(self, X: Any, y: Any, **score_params) -> Any:
         """Performance evaluation with a default metric.
 
         Parameters
@@ -1314,7 +1314,7 @@ class TrainedOperator(TrainableOperator):
         pass
 
     @abstractmethod
-    def predict_log_proba(self, X: Any):
+    def predict_log_proba(self, X: Any) -> Any:
         """Predicted class log-probabilities for X.
 
         Parameters
@@ -2375,8 +2375,10 @@ class IndividualOp(Operator):
             validate_schema_directly(hp_all, hp_schema)
         except jsonschema.ValidationError as e_orig:
             e = e_orig if e_orig.parent is None else e_orig.parent
-            validate_is_schema(e.schema)
-            schema = lale.pretty_print.to_string(e.schema)
+            sch = e.schema
+            assert isinstance(sch, dict)
+            validate_is_schema(sch)
+            schema = lale.pretty_print.to_string(sch)
 
             defaults = self.get_defaults()
             extra_keys = [k for k in hp_explicit.keys() if k not in defaults]
@@ -2451,7 +2453,12 @@ class IndividualOp(Operator):
                 schema = self.get_defaults()
             elif e.schema_path[0] == "allOf" and int(e.schema_path[1]) != 0:
                 assert e.schema_path[2] == "anyOf"
-                descr = e.schema["description"]
+                schema = e.schema
+                if isinstance(schema, dict):
+                    descr = schema["description"]
+                else:
+                    descr = "Boolean schema"
+
                 if descr.endswith("."):
                     descr = descr[:-1]
                 reason = f"constraint {descr[0].lower()}{descr[1:]}"
@@ -3177,12 +3184,12 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
             or _lale_trained
             or (_lale_impl is not None and not hasattr(_lale_impl, "fit"))
         ):
-            obj = super().__new__(TrainedIndividualOp)
+            obj = super().__new__(TrainedIndividualOp)  # type: ignore
             return obj
         else:
             # unless _lale_trained=True, we actually want to return a Trainable
-            obj = super().__new__(TrainableIndividualOp)
-            # apparently python does not call __ini__ if the type returned is not the
+            obj = super().__new__(TrainableIndividualOp)  # type: ignore
+            # apparently python does not call __init__ if the type returned is not the
             # expected type
             obj.__init__(*args, **kwargs)
             return obj
@@ -4028,7 +4035,24 @@ class BasePipeline(Operator, Generic[OpType_co]):
         result = [s for s in self.steps_list() if is_source[s]]
         return result
 
-    def _validate_or_transform_schema(self, X: Any, y: Any = None, validate=True):
+    @overload
+    def _validate_or_transform_schema(
+        self, X, *, y: Optional[Any], validate: Literal[False]
+    ) -> JSON_TYPE: ...
+
+    @overload
+    def _validate_or_transform_schema(
+        self, X, *, y: Optional[Any] = None, validate: Literal[False]
+    ) -> JSON_TYPE: ...
+
+    @overload
+    def _validate_or_transform_schema(
+        self, X, y: Optional[Any] = None, validate: Literal[True] = True
+    ) -> None: ...
+
+    def _validate_or_transform_schema(
+        self, X: Any, y: Any = None, validate=True
+    ) -> Optional[JSON_TYPE]:
         def combine_schemas(schemas):
             n_datasets = len(schemas)
             if n_datasets == 1:
@@ -4059,7 +4083,9 @@ class BasePipeline(Operator, Generic[OpType_co]):
                 output_X = operator.transform_schema(input_X)
                 output_y = input_y
             outputs[operator] = output_X, output_y
-        if not validate:
+        if validate:
+            return None
+        else:
             sinks = self._find_sink_nodes()
             pipeline_outputs = [outputs[sink][0] for sink in sinks]
             return combine_schemas(pipeline_outputs)
@@ -4067,7 +4093,7 @@ class BasePipeline(Operator, Generic[OpType_co]):
     def validate_schema(self, X: Any, y: Any = None):
         self._validate_or_transform_schema(X, y, validate=True)
 
-    def transform_schema(self, s_X: JSON_TYPE):
+    def transform_schema(self, s_X: JSON_TYPE) -> JSON_TYPE:
         from lale.settings import disable_data_schema_validation
 
         if disable_data_schema_validation:
@@ -4652,11 +4678,11 @@ TrainedOpType_co = TypeVar("TrainedOpType_co", bound=TrainedIndividualOp, covari
 class TrainedPipeline(TrainablePipeline[TrainedOpType_co], TrainedOperator):
     def __new__(cls, *args, _lale_trained=False, **kwargs):
         if "steps" not in kwargs or _lale_trained:
-            obj = super().__new__(TrainedPipeline)
+            obj = super().__new__(TrainedPipeline)  # type: ignore
             return obj
         else:
             # unless _lale_trained=True, we actually want to return a Trainable
-            obj = super().__new__(TrainablePipeline)
+            obj = super().__new__(TrainablePipeline)  # type: ignore
             # apparently python does not call __ini__ if the type returned is not the
             # expected type
             obj.__init__(*args, **kwargs)

@@ -39,6 +39,7 @@ if lale.helpers.spark_installed:
 
 else:
     _PandasOrSparkBatchAux = _PandasBatch  # type: ignore
+    DataFrame = None
 
 # pyright does not currently accept a TypeAlias with conditional definitions
 _PandasOrSparkBatch: TypeAlias = _PandasOrSparkBatchAux  # type: ignore
@@ -48,16 +49,16 @@ try:
 
     from lale.datasets.openml import openml_datasets  # pylint:disable=ungrouped-imports
 
-    liac_arff_installed = True
 except ModuleNotFoundError:
-    liac_arff_installed = False
+    arff = None
+    openml_datasets = None  # type: ignore
 
 
 def arff_data_loader(
     file_name: str, label_name: str, rows_per_batch: int
 ) -> Iterable[_PandasBatch]:
     """Incrementally load an ARFF file and yield it one (X, y) batch at a time."""
-    assert liac_arff_installed
+    assert arff is not None
     split_x_y = SplitXy(label_name=label_name)
 
     def make_batch():
@@ -144,7 +145,8 @@ def mockup_data_loader(
 
 def openml_data_loader(dataset_name: str, batch_size: int) -> Iterable[_PandasBatch]:
     """Download the OpenML dataset, incrementally load it, and yield it one (X,y) batch at a time."""
-    assert liac_arff_installed
+    assert arff is not None
+    assert openml_datasets is not None
     metadata = openml_datasets.experiments_dict[dataset_name]
     label_name = cast(str, metadata["target"]).lower()
     file_name = openml_datasets.download_if_missing(dataset_name)

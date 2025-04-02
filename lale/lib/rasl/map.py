@@ -33,12 +33,9 @@ from lale.lib.rasl._eval_pandas_df import eval_expr_pandas_df
 from lale.lib.rasl._eval_spark_df import eval_expr_spark_df
 
 try:
-    # noqa in the imports here because those get used dynamically and flake fails.
-    from pyspark.sql.functions import col as spark_col  # noqa
-
-    spark_installed = True
+    from pyspark.sql.functions import col as spark_col
 except ImportError:
-    spark_installed = False
+    spark_col = None
 
 
 def _new_column_name(name, expr):
@@ -179,6 +176,8 @@ class _MapImpl:
         return mapped_df
 
     def transform_spark_df(self, X):
+        assert spark_col is not None
+
         new_columns = []
         accessed_column_names = set()
 

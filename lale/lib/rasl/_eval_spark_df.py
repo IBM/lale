@@ -18,16 +18,13 @@ from lale.expressions import AstExpr, Expr, _it_column
 from lale.helpers import _ast_func_id
 
 try:
-    import pyspark.sql.functions
-
     # noqa in the imports here because those get used dynamically and flake fails.
-    from pyspark.sql.functions import col  # noqa
-    from pyspark.sql.functions import lit  # noqa
-    from pyspark.sql.functions import to_timestamp  # noqa
-    from pyspark.sql.functions import hour as spark_hour  # noqa
-    from pyspark.sql.functions import isnan, isnull  # noqa
-    from pyspark.sql.functions import minute as spark_minute  # noqa
-    from pyspark.sql.functions import month as spark_month  # noqa
+    from pyspark.sql.functions import col
+    from pyspark.sql.functions import hour as spark_hour
+    from pyspark.sql.functions import isnan, isnull, lit
+    from pyspark.sql.functions import minute as spark_minute
+    from pyspark.sql.functions import month as spark_month
+    from pyspark.sql.functions import to_timestamp
     from pyspark.sql.types import LongType
 
     from pyspark.sql.functions import (  # noqa; isort: skip
@@ -42,6 +39,26 @@ try:
 
     spark_installed = True
 except ImportError:
+    lit = None
+    col = None
+    to_timestamp = None
+    isnan = None
+    isnull = None
+    spark_udf = None
+    spark_floor = None
+    LongType = None
+    spark_when = None
+    dayofmonth = None
+    dayofweek = None
+    dayofyear = None
+    spark_floor = None
+    spark_md5 = None
+    spark_udf = None
+    spark_when = None
+    spark_hour = None
+    spark_minute = None
+    spark_month = None
+
     spark_installed = False
 
 
@@ -59,21 +76,18 @@ class _SparkEvaluator(ast.NodeVisitor):
     def __init__(self):
         self.result = None
 
-    def visit_Num(self, node: ast.Num):
-        self.result = lit(node.n)
-
-    def visit_Str(self, node: ast.Str):
-        self.result = lit(node.s)
-
     def visit_Constant(self, node: ast.Constant):
+        assert lit is not None
         self.result = lit(node.value)
 
     def visit_Attribute(self, node: ast.Attribute):
         column_name = _it_column(node)
+        assert col is not None
         self.result = col(column_name)  # type: ignore
 
     def visit_Subscript(self, node: ast.Subscript):
         column_name = _it_column(node)
+        assert col is not None
         self.result = col(column_name)  # type: ignore
 
     def visit_BinOp(self, node: ast.BinOp):
@@ -92,6 +106,7 @@ class _SparkEvaluator(ast.NodeVisitor):
         elif isinstance(node.op, ast.Div):
             self.result = v1 / v2
         elif isinstance(node.op, ast.FloorDiv):
+            assert spark_floor is not None
             self.result = spark_floor(v1 / v2)
         elif isinstance(node.op, ast.Mod):
             self.result = v1 % v2
@@ -155,7 +170,9 @@ def hash(call: ast.Call):  # pylint:disable=redefined-builtin
     hashing_method = ast.literal_eval(call.args[0])
     column = _eval_ast_expr_spark_df(call.args[1])  # type: ignore
     if hashing_method == "md5":
-        hash_fun = spark_md5(column)  # type: ignore
+        assert spark_md5 is not None
+        assert column is not None
+        hash_fun = spark_md5(column)
     else:
         raise ValueError(f"Unimplementade hash function in Spark: {hashing_method}")
     return hash_fun
@@ -164,6 +181,8 @@ def hash(call: ast.Call):  # pylint:disable=redefined-builtin
 def hash_mod(call: ast.Call):
     h_column = hash(call)
     N = ast.literal_eval(call.args[2])
+    assert spark_udf is not None
+    assert LongType is not None
     int16_mod_N = spark_udf((lambda x: int(x, 16) % N), LongType())
     return int16_mod_N(h_column)
 
@@ -188,18 +207,23 @@ def replace(call: ast.Call):
 
     handle_unknown = ast.literal_eval(call.args[2])
     chain_of_whens = None
+    assert column is not None
     for key, value in mapping_dict.items():
         if key == "nan":
-            when_expr = isnan(column)  # type: ignore
+            assert isnan is not None
+            when_expr = isnan(column)
         elif key is None:
-            when_expr = isnull(column)  # type: ignore
+            assert isnull is not None
+            when_expr = isnull(column)
         else:
-            when_expr = column == key  # type: ignore
+            when_expr = column == key
         if chain_of_whens is None:
-            chain_of_whens = pyspark.sql.functions.when(when_expr, value)
+            assert spark_when is not None
+            chain_of_whens = spark_when(when_expr, value)
         else:
             chain_of_whens = chain_of_whens.when(when_expr, value)
     if handle_unknown == "use_encoded_value":
+        assert lit is not None
         fallback = lit(ast.literal_eval(call.args[3]))
     else:
         fallback = column
@@ -216,31 +240,39 @@ def identity(call: ast.Call):
 
 def time_functions(call, spark_func):
     column = _eval_ast_expr_spark_df(call.args[0])
+    assert to_timestamp is not None
+    assert column is not None
     if len(call.args) > 1:
         fmt = ast.literal_eval(call.args[1])
-        return spark_func(to_timestamp(column, format=fmt))  # type: ignore
-    return spark_func(to_timestamp(column))  # type: ignore
+        return spark_func(to_timestamp(column, format=fmt))
+    return spark_func(to_timestamp(column))
 
 
 def day_of_month(call: ast.Call):
+    assert dayofmonth is not None
     return time_functions(call, dayofmonth)
 
 
 def day_of_week(call: ast.Call):
+    assert dayofweek is not None
     return time_functions(call, dayofweek)
 
 
 def day_of_year(call: ast.Call):
+    assert dayofyear is not None
     return time_functions(call, dayofyear)
 
 
 def hour(call: ast.Call):
+    assert spark_hour is not None
     return time_functions(call, spark_hour)
 
 
 def minute(call: ast.Call):
+    assert spark_minute is not None
     return time_functions(call, spark_minute)
 
 
 def month(call: ast.Call):
+    assert spark_month is not None
     return time_functions(call, spark_month)

@@ -18,9 +18,8 @@ from typing import Any, Dict
 try:
     import tensorflow as tf
 
-    tensorflow_installed = True
 except ImportError:
-    tensorflow_installed = False
+    tf = None
 
 from lale.helpers import with_fixed_estimator_name
 from lale.lib.aif360 import (
@@ -94,7 +93,7 @@ class TestEnsemblesWithAIF360(unittest.TestCase):
         self._attempt_fit_predict(model)
 
     def test_bagging_in_estimator_mitigation_base_1(self):
-        if tensorflow_installed:
+        if tf is not None:
             tf.compat.v1.disable_eager_execution()
             model = BaggingClassifier(
                 **with_fixed_estimator_name(

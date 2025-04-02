@@ -36,11 +36,9 @@ logger.setLevel(logging.WARNING)
 
 
 try:
-    import torch
-
-    torch_installed = True
+    from torch import Tensor
 except ImportError:
-    torch_installed = False
+    Tensor = None
 
 
 def _is_pandas_df(d):
@@ -122,7 +120,7 @@ class _ConcatFeaturesImpl:
                     np_dataset = dataset.toPandas().values
                 elif isinstance(dataset, scipy.sparse.csr_matrix):
                     np_dataset = dataset.toarray()
-                elif torch_installed and isinstance(dataset, torch.Tensor):
+                elif Tensor is not None and isinstance(dataset, Tensor):
                     np_dataset = dataset.detach().cpu().numpy()
                 else:
                     np_dataset = dataset

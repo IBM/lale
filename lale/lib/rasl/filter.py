@@ -32,10 +32,9 @@ from lale.helpers import (
 try:
     from pyspark.sql.functions import col
 
-    spark_installed = True
-
 except ImportError:
-    spark_installed = False
+
+    col = None
 
 
 class _FilterImpl:
@@ -120,6 +119,7 @@ class _FilterImpl:
 
             # Filtering spark dataframes
             if _is_spark_df(X):
+                assert col is not None
                 if isinstance(op, ast.Eq):
                     assert lhs is not None
                     assert rhs is not None

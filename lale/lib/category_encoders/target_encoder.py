@@ -19,10 +19,12 @@ from packaging import version
 
 try:
     import category_encoders
+    from category_encoders import TargetEncoder as Base
 
     catenc_version = version.parse(getattr(category_encoders, "__version__"))
 
 except ImportError:
+    Base = None
     catenc_version = None
 
 import lale.docstrings
@@ -169,11 +171,11 @@ _combined_schemas = {
 
 class _TargetEncoderImpl:
     def __init__(self, **hyperparams):
-        if catenc_version is None:
+        if catenc_version is None or Base is None:
             raise ValueError("The package 'category_encoders' is not installed.")
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore", category=FutureWarning)
-            self._wrapped_model = category_encoders.TargetEncoder(**hyperparams)
+            self._wrapped_model = Base(**hyperparams)
 
     def fit(self, X, y):
         if catenc_version is None:

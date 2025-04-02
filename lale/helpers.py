@@ -55,6 +55,8 @@ spark_loader = util.find_spec("pyspark")
 spark_installed = spark_loader is not None
 if spark_installed:
     from pyspark.sql.dataframe import DataFrame as spark_df
+else:
+    spark_df = None
 
 logger = logging.getLogger(__name__)
 
@@ -1252,10 +1254,7 @@ def _is_spark_df(df):
 
 
 def _is_spark_df_without_index(df):
-    if spark_installed:
-        return isinstance(df, spark_df) and not _is_spark_df(df)
-    else:
-        return False
+    return spark_df is not None and isinstance(df, spark_df) and not _is_spark_df(df)
 
 
 def _ensure_pandas(df) -> pd.DataFrame:

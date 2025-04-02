@@ -13,23 +13,25 @@
 # limitations under the License.
 from packaging import version
 
+import lale.datasets.data_schemas
+import lale.docstrings
+import lale.operators
+
 try:
-    import snapml  # type: ignore
+    import snapml
+    from snapml import SnapSVMClassifier as Base
 
     snapml_version = version.parse(getattr(snapml, "__version__"))
 
 except ImportError:
+    Base = None
     snapml_version = None
-
-import lale.datasets.data_schemas
-import lale.docstrings
-import lale.operators
 
 
 class _SnapSVMClassifierImpl:
     def __init__(self, **hyperparams):
         assert (
-            snapml_version is not None
+            snapml_version is not None and Base is not None
         ), """Your Python environment does not have snapml installed. Install using: pip install snapml"""
 
         if snapml_version <= version.Version("1.8.0") and "loss" in hyperparams:
@@ -38,7 +40,7 @@ class _SnapSVMClassifierImpl:
         if hyperparams.get("device_ids", None) is None:
             hyperparams["device_ids"] = [0]
 
-        self._wrapped_model = snapml.SnapSVMClassifier(**hyperparams)
+        self._wrapped_model = Base(**hyperparams)
 
     def fit(self, X, y, **fit_params):
         X = lale.datasets.data_schemas.strip_schema(X)

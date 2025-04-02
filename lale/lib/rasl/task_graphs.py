@@ -1243,8 +1243,8 @@ def _run_tasks_inner(
                         input_X = functools.reduce(lambda a, b: a.union(b), list_X)  # type: ignore
                         input_y = functools.reduce(lambda a, b: a.union(b), list_y)  # type: ignore
                     elif all(isinstance(X, np.ndarray) for X in list_X):
-                        input_X = np.concatenate(list_X)
-                        input_y = np.concatenate(list_y)
+                        input_X = np.concatenate(list_X)  # type: ignore
+                        input_y = np.concatenate(list_y)  # type: ignore
                     else:
                         raise ValueError(
                             f"""Input of {type(list_X[0])} is not supported for

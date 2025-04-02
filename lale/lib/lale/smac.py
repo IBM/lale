@@ -40,21 +40,8 @@ try:
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=FutureWarning)
         from smac.configspace import ConfigurationSpace
-
-    # Import SMAC-utilities
-    from smac.facade.smac_facade import SMAC as orig_SMAC
-    from smac.scenario.scenario import Scenario
-    from smac.tae.execute_ta_run import BudgetExhaustedException
-
-    from lale.search.lale_smac import (  # pylint:disable=wrong-import-position,ungrouped-imports
-        get_smac_space,
-        lale_op_smac_tae,
-        lale_trainable_op_from_config,
-    )
-
-    smac_installed = True
 except ImportError:
-    smac_installed = False
+    ConfigurationSpace = None
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +59,9 @@ class _SMACImpl:
         max_opt_time=None,
         lale_num_grids=None,
     ):
-        assert smac_installed, """Your Python environment does not have smac installed. You can install it with
+        assert (
+            ConfigurationSpace is not None
+        ), """Your Python environment does not have smac installed. You can install it with
     pip install smac<=0.10.0
 or with
     pip install 'lale[full]'"""
@@ -98,10 +87,22 @@ or with
         self.trials = None
 
     def fit(self, X_train, y_train, **fit_params):
+
+        # Import SMAC-utilities
+        from smac.facade.smac_facade import SMAC as orig_SMAC
+        from smac.scenario.scenario import Scenario
+        from smac.tae.execute_ta_run import BudgetExhaustedException
+
+        from lale.search.lale_smac import (  # pylint:disable=wrong-import-position,ungrouped-imports
+            get_smac_space,
+            lale_op_smac_tae,
+            lale_trainable_op_from_config,
+        )
+
         data_schema = lale.helpers.fold_schema(
             X_train, y_train, self.cv, self.estimator.is_classifier()
         )
-        self.search_space: ConfigurationSpace = get_smac_space(
+        self.search_space = get_smac_space(
             self.estimator, lale_num_grids=self.lale_num_grids, data_schema=data_schema
         )
         # Scenario object

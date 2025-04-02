@@ -57,7 +57,8 @@ class _GroupByImpl:
         if _is_pandas_df(X):
             grouped_df = X.groupby(group_by_keys, sort=False)
         elif _is_spark_df(X):
-            X = X.drop(*get_index_names(X))
+            idx_names = get_index_names(X)
+            X = X.drop(*(idx_names if idx_names is not None else []))
             grouped_df = X.groupby(group_by_keys)
         else:
             raise ValueError(
