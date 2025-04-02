@@ -311,12 +311,18 @@ _hyperparams_schema = {
                     "description": "Amount of memory to be used in bytes.",
                 },
                 "scoring": {
-                    "anyOf": [{"laleType": "callable"}, {"enum": [None]}],
+                    "anyOf": [
+                        {"laleType": "callable", "forOptimizer": False},
+                        {"enum": [None]},
+                    ],
                     "default": None,
                     "description": "Batch-wise scoring metrics from `lale.lib.rasl`.",
                 },
                 "progress_callback": {
-                    "anyOf": [{"laleType": "callable"}, {"enum": [None]}],
+                    "anyOf": [
+                        {"laleType": "callable", "forOptimizer": False},
+                        {"enum": [None]},
+                    ],
                     "default": None,
                     "description": "Callback function to get performance metrics per batch.",
                 },

@@ -77,12 +77,18 @@ _hyperparams_schema = {
                     "description": "Maximum residual for a data sample to be classified as an inlier",
                 },
                 "is_data_valid": {
-                    "anyOf": [{"laleType": "callable"}, {"enum": [None]}],
+                    "anyOf": [
+                        {"laleType": "callable", "forOptimizer": False},
+                        {"enum": [None]},
+                    ],
                     "default": None,
                     "description": "This function is called with the randomly selected data before the model is fitted to it: `is_data_valid(X, y)`",
                 },
                 "is_model_valid": {
-                    "anyOf": [{"laleType": "callable"}, {"enum": [None]}],
+                    "anyOf": [
+                        {"laleType": "callable", "forOptimizer": False},
+                        {"enum": [None]},
+                    ],
                     "default": None,
                     "description": "This function is called with the estimated model and the randomly selected data: `is_model_valid(model, X, y)`",
                 },

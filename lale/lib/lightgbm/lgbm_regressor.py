@@ -338,7 +338,7 @@ _input_fit_schema = {
             "anyOf": [
                 {"type": "array", "items": {"type": "string"}},
                 {"enum": ["l2", None]},
-                {"laleType": "callable"},
+                {"laleType": "callable", "forOptimizer": False},
             ],
             "default": None,
             "description": "string, list of strings, callable or None, optional (default=None).",

@@ -196,6 +196,7 @@ if lale.operators.sklearn_version >= version.Version("1.6"):
                 {"enum": ["euclidean", "manhattan", "minkowski", "nan_euclidean"]},
                 {
                     "laleType": "callable",
+                    "forOptimizer": False,
                     "description": "Takes two arrays representing 1D vectors as inputs and must return one value indicating the distance between those vectors.",
                 },
             ],

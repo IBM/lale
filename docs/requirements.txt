@@ -6,7 +6,7 @@ graphviz
 hyperopt
 jsonschema
 jsonsubschema
-scikit-learn>=1.0.0,<1.5.0
+scikit-learn>=1.0.0,<1.7.0
 scipy
 pandas
 decorator
@@ -16,7 +16,7 @@ typing-extensions
 # subset of setup.py -> extras_require -> full
 # mystic
 xgboost
-lightgbm<4.4.0
+lightgbm<4.7.0
 liac-arff>=2.4.0
 imbalanced-learn
 smac<=0.10.0

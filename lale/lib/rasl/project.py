@@ -396,6 +396,7 @@ using a JSON subschema_ check.
                         },
                         {
                             "laleType": "callable",
+                            "forOptimizer": False,
                             "description": "Callable that is passed the input data X and can return a list of column names or indices.",
                         },
                         {
@@ -428,6 +429,7 @@ also in `drop_columns`.""",
                         },
                         {
                             "laleType": "callable",
+                            "forOptimizer": False,
                             "description": "Callable that is passed the input data X and can return a list of column names or indices.",
                         },
                         {

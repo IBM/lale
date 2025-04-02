@@ -221,5 +221,27 @@ if lale.operators.sklearn_version >= version.Version("0.21"):
         ),
     )
 
+if lale.operators.sklearn_version >= version.Version("1.6"):
+    Pipeline = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        Pipeline.customize_schema(
+            transform_input={
+                "anyOf": [
+                    {"enum": [None]},
+                    {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "forOptimizer": False,
+                    },
+                ],
+                "description": """
+The names of the metadata parameters that should be transformed by the pipeline before passing it to the step consuming it.
+This enables transforming some input arguments to fit (other than X) to be transformed by the steps of the pipeline up to the step which requires them. Requirement is defined via metadata routing. For instance, this can be used to pass a validation set through the pipeline.
+You can only set this if metadata routing is enabled, which you can enable using sklearn.set_config(enable_metadata_routing=True).""",
+                "default": None,
+            },
+            set_as_available=True,
+        ),
+    )
 
 lale.docstrings.set_docstrings(Pipeline)
