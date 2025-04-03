@@ -78,7 +78,6 @@ extras_require = {
         "BlackBoxAuditing",
         "imbalanced-learn",
         "cvxpy>=1.0",
-        "osqp<=1.0.1",
         "fairlearn",
         "h5py",
     ],
