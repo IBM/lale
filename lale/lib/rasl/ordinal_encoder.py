@@ -92,12 +92,20 @@ class _OrdinalEncoderImpl(MonoidableOperator[_OrdinalEncoderMonoid]):
 
     def _build_transformer(self):
         assert self._monoid is not None
+
+        def simplify_val(v):
+            if np.issubdtype(type(v), np.integer):
+                return int(v)
+            if np.issubdtype(type(v), np.floating):
+                return float(v)
+            return v
+
         result = Map(
             columns={
                 col_name: replace(
                     it[col_name],
                     {
-                        cat_value: cat_idx
+                        simplify_val(cat_value): simplify_val(cat_idx)
                         for cat_idx, cat_value in enumerate(
                             self._monoid.categories_[col_idx]
                         )
