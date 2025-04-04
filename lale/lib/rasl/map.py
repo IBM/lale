@@ -86,6 +86,8 @@ class _Validate(ast.NodeVisitor):
         self.accessed = set()
 
     def visit_Attribute(self, node: ast.Attribute):
+        if getattr(node.value, "id", None) != "it":
+            return
         column_name = _it_column(node)
         if column_name not in self.df.columns:
             raise ValueError(
@@ -94,6 +96,8 @@ class _Validate(ast.NodeVisitor):
         self.accessed.add(_it_column(node))
 
     def visit_Subscript(self, node: ast.Subscript):
+        if getattr(node.value, "id", None) != "it":
+            return
         column_name = _it_column(node)
         if column_name is None or (
             isinstance(column_name, str) and not column_name.strip()
