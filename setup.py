@@ -71,7 +71,6 @@ extras_require = {
         "snapml>=1.7.0rc3,<1.17.0",
         "liac-arff>=2.4.0",
         "tensorflow>=2.4.0",
-        "smac<=0.10.0",
         "numba",
         "aif360>=0.5.0",
         "torch>=1.0",
