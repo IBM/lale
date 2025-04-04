@@ -205,7 +205,6 @@ if lale.operators.sklearn_version >= version.Version("1.4"):
                         "l1",
                         "l2",
                         "manhattan",
-                        "nan_euclidean",
                         "precomputed",
                     ],
                 },
