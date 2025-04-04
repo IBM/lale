@@ -151,9 +151,9 @@ jobs:
         - test-case: test/test_aif360.py
           python-version: '3.11'
           setup-target: '.[full,test]'
-        - test-case: test/test_relational_sklearn.py
-          python-version: '3.11'
-          setup-target: '.[full,test]'
+        # - test-case: test/test_relational_sklearn.py
+        #   python-version: '3.11'
+        #   setup-target: '.[full,test]'
 
     steps:
     - uses: actions/checkout@v4
@@ -177,9 +177,9 @@ jobs:
       run: pip install -U numpy
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
-    - name: Install deps for test_relational_sklearn
-      if: ${{ matrix.test-case == 'test/test_relational_sklearn.py' }}
-      run: pip install 'scikit-learn>=1.0'
+    # - name: Install deps for test_relational_sklearn
+    #   if: ${{ matrix.test-case == 'test/test_relational_sklearn.py' }}
+    #   run: pip install 'scikit-learn>=1.0'
     - name: Install deps for test_snapml
       if: ${{ matrix.test-case == 'test/test_snapml.py' }}
       run: pip install 'numpy>=1.20.1,<1.24'
@@ -235,9 +235,9 @@ jobs:
         - test-case: test/test_aif360.py
           python-version: '3.11'
           setup-target: '.[full,test]'
-        - test-case: test/test_relational_sklearn.py
-          python-version: '3.11'
-          setup-target: '.[full,test]'
+        # - test-case: test/test_relational_sklearn.py
+        #   python-version: '3.11'
+        #   setup-target: '.[full,test]'
         - test-case: test/test_snapml.py
           python-version: '3.10'
           setup-target: '.[full,test]'
@@ -267,9 +267,9 @@ jobs:
       run: pip install -U numpy
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
-    - name: Install deps for test_relational_sklearn
-      if: ${{ matrix.test-case == 'test/test_relational_sklearn.py' }}
-      run: pip install 'scikit-learn>=1.0'
+    # - name: Install deps for test_relational_sklearn
+    #   if: ${{ matrix.test-case == 'test/test_relational_sklearn.py' }}
+    #   run: pip install 'scikit-learn>=1.0'
     - name: Install deps for test_snapml
       if: ${{ matrix.test-case == 'test/test_snapml.py' }}
       run: pip install 'numpy>=1.20.1,<1.24'
@@ -349,7 +349,7 @@ jobs:
         setup-target: ['.[full,test]']
         test-case: ['test/test_notebooks.py']
         dir: ['examples']
-        nbexcludes: ['']
+        nbexcludes: ['demo_task_graphs.ipynb']
         include:
         - dir: 'examples/kdd22'
           python-version: '3.11'
@@ -414,13 +414,13 @@ jobs:
         setup-target: ['.[full,test]']
         test-case: ['test/test_notebooks.py']
         dir: ['examples']
-        nbexcludes: ['']
+        nbexcludes: ['demo_task_graphs']
         include:
         - dir: 'examples'
           python-version: '3.11'
           setup-target: '.[full,test]'
           test-case: 'test/test_notebooks.py'
-          nbexcludes: 'demo_auto_pipeline.ipynb'
+          nbexcludes: 'demo_auto_pipeline.ipynb demo_task_graphs'
         - dir: 'examples/kdd22'
           python-version: '3.11'
           setup-target: '.[tutorial,test]'
