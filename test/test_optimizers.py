@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
+# pyright: reportMissingImports=false
+
 import tempfile
 import unittest
 import warnings
@@ -57,7 +58,6 @@ from lale.lib.sklearn import (
     TfidfVectorizer,
 )
 from lale.operators import TrainedIndividualOp, TrainedPipeline, sklearn_version
-from lale.search.lale_smac import get_smac_space, lale_op_smac_tae
 from lale.search.op2hp import hyperopt_search_space
 
 from .mock_custom_operators import OpThatWorksWithFiles
@@ -87,11 +87,12 @@ def iris_f_min_for_folds(num_folds=5):
 
 
 def iris_fmin_tae(op, num_folds=5):
+    from lale.search.lale_smac import lale_op_smac_tae
+
     return lale_op_smac_tae(op, iris_f_min_for_folds(num_folds=num_folds))
 
 
-@unittest.skipIf(
-    sys.version_info >= (3, 11),
+@unittest.skip(
     "SMAC interface is not currently supported with newer version of Python",
 )
 class TestSMAC(unittest.TestCase):
@@ -104,6 +105,8 @@ class TestSMAC(unittest.TestCase):
         from smac.configspace import ConfigurationSpace
         from smac.facade.smac_facade import SMAC as orig_SMAC
         from smac.scenario.scenario import Scenario
+
+        from lale.search.lale_smac import get_smac_space
 
         # Import SMAC-utilities
         lr = LogisticRegression()
@@ -139,6 +142,8 @@ class TestSMAC(unittest.TestCase):
         from smac.configspace import ConfigurationSpace
         from smac.facade.smac_facade import SMAC as orig_SMAC
         from smac.scenario.scenario import Scenario
+
+        from lale.search.lale_smac import get_smac_space
 
         # Import SMAC-utilities
 
@@ -700,8 +705,7 @@ class TestAutoConfigureClassification(unittest.TestCase):
         _ = best_pipeline.predict(self.X_test)
         assert best_pipeline is not None
 
-    @unittest.skipIf(
-        sys.version_info >= (3, 11),
+    @unittest.skip(
         "SMAC interface is not currently supported with newer version of Python",
     )
     def test_with_smaccv(self):
@@ -1101,8 +1105,7 @@ class TestKNeighborsClassifier(unittest.TestCase):
             )
         _ = trained.predict(self.test_X)
 
-    @unittest.skipIf(
-        sys.version_info >= (3, 11),
+    @unittest.skip(
         "SMAC interface is not currently supported with newer version of Python",
     )
     def test_smac(self):
@@ -1154,8 +1157,7 @@ class TestKNeighborsRegressor(unittest.TestCase):
             )
         _ = trained.predict(self.test_X)
 
-    @unittest.skipIf(
-        sys.version_info >= (3, 11),
+    @unittest.skip(
         "SMAC interface is not currently supported with newer version of Python",
     )
     def test_smac(self):

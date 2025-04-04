@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pyright: reportMissingImports=false
+
 
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional
 
@@ -73,7 +75,7 @@ def get_smac_space(
     lale_num_grids: Optional[float] = None,
     lale_pgo: Optional[PGO] = None,
     data_schema: Optional[Dict[str, Any]] = None,
-) -> ConfigurationSpace:
+) -> "ConfigurationSpace":
     """Top level function: given a lale operator, returns a ConfigurationSpace for use with SMAC.
 
     Parameters
@@ -185,7 +187,7 @@ def HPValuetoSMAC(key: str, hp: SearchSpace) -> Hyperparameter:
         )
 
 
-def SearchSpaceGridtoSMAC(hp: SearchSpaceGrid, disc: int) -> Iterable[Hyperparameter]:
+def SearchSpaceGridtoSMAC(hp: SearchSpaceGrid, disc: int) -> Iterable["Hyperparameter"]:
     return (HPValuetoSMAC(f"{k}_{disc}", v) for k, v in hp.items())
 
 
@@ -193,7 +195,10 @@ disc_str = "disjunct_discriminant"
 
 
 def addSearchSpaceGrid(
-    hp: SearchSpaceGrid, disc: int, parent_disc: Hyperparameter, cs: ConfigurationSpace
+    hp: SearchSpaceGrid,
+    disc: int,
+    parent_disc: "Hyperparameter",
+    cs: "ConfigurationSpace",
 ) -> None:
     smac = SearchSpaceGridtoSMAC(hp, disc)
     for hyp in smac:
