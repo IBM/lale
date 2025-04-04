@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.9, '3.10', '3.11', '3.12']
+        python-version: ['3.10', '3.11', '3.12']
 
     steps:
     - uses: actions/checkout@v4
@@ -45,7 +45,7 @@ jobs:
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
-        python-version: 3.9
+        python-version: '3.11'
         cache: 'pip'
         cache-dependency-path: setup.py
     - name: Install doc dependencies
@@ -134,12 +134,6 @@ jobs:
         setup-target: ['.[full,test]']
         include:
         - test-case: test/test_core_misc.py
-          python-version: 3.9
-          setup-target: '.[full,test]'
-        - test-case: test/test_core_misc.py
-          python-version: '3.10'
-          setup-target: '.[full,test]'
-        - test-case: test/test_core_misc.py
           python-version: '3.10'
           setup-target: '.[full,test]'
         - test-case: test/test_core_misc.py
@@ -152,10 +146,10 @@ jobs:
           python-version: '3.11'
           setup-target: '.[test]'
         - test-case: test/test_halving_gridsearchcv.py
-          python-version: 3.9
+          python-version: '3.11'
           setup-target: '.[full,test]'
         - test-case: test/test_aif360.py
-          python-version: 3.9
+          python-version: '3.11'
           setup-target: '.[full,test]'
         - test-case: test/test_relational_sklearn.py
           python-version: '3.11'
@@ -220,7 +214,7 @@ jobs:
         - test/test_pipeline.py
         - test/test_relational.py
         - test/test_category_encoders.py
-        python-version: [3.9, '3.10', '3.11', '3.12']
+        python-version: ['3.10', '3.11', '3.12']
         setup-target: ['.[full,test]']
         include:
         - test-case: test/test_core_transformers.py
@@ -236,19 +230,19 @@ jobs:
           python-version: '3.11'
           setup-target: '.[test]'
         - test-case: test/test_halving_gridsearchcv.py
-          python-version: 3.9
+          python-version: '3.11'
           setup-target: '.[full,test]'
         - test-case: test/test_aif360.py
-          python-version: 3.9
+          python-version: '3.11'
           setup-target: '.[full,test]'
         - test-case: test/test_relational_sklearn.py
           python-version: '3.11'
           setup-target: '.[full,test]'
         - test-case: test/test_snapml.py
-          python-version: 3.9
+          python-version: '3.10'
           setup-target: '.[full,test]'
         - test-case: test/test_snapml.py
-          python-version: '3.10'
+          python-version: '3.11'
           setup-target: '.[full,test]'
 
     steps:
@@ -351,14 +345,14 @@ jobs:
         - demo_
         - docs_
         - talk_
-        python-version: [3.9]
+        python-version: ['3.11']
         setup-target: ['.[full,test]']
         test-case: ['test/test_notebooks.py']
         dir: ['examples']
         nbexcludes: ['']
         include:
         - dir: 'examples/kdd22'
-          python-version: 3.9
+          python-version: '3.11'
           setup-target: '.[tutorial,test]'
           test-case: 'test/test_notebooks.py'
           # nbexcludes: '06_multobj.ipynb'
@@ -416,27 +410,22 @@ jobs:
         - demo_
         - docs_
         - talk_
-        python-version: [3.9, '3.10', '3.11', '3.12']
+        python-version: ['3.10', '3.11', '3.12']
         setup-target: ['.[full,test]']
         test-case: ['test/test_notebooks.py']
         dir: ['examples']
         nbexcludes: ['']
         include:
         - dir: 'examples'
-          python-version: 3.9
+          python-version: '3.11'
           setup-target: '.[full,test]'
           test-case: 'test/test_notebooks.py'
           nbexcludes: 'demo_auto_pipeline.ipynb'
         - dir: 'examples/kdd22'
-          python-version: 3.9
+          python-version: '3.11'
           setup-target: '.[tutorial,test]'
           test-case: 'test/test_notebooks.py'
           nbexcludes: '02_total.ipynb'
-        - dir: 'examples/kdd22'
-          python-version: '3.9'
-          setup-target: '.[tutorial,test]'
-          test-case: 'test/test_notebooks.py'
-          # nbexcludes: '06_multobj.ipynb'
         - dir: 'examples/kdd22'
           python-version: '3.10'
           setup-target: '.[tutorial,test]'
@@ -502,7 +491,7 @@ jobs:
         test-case:
         - test/test_aif360.py
         - test/test_aif360_ensembles.py
-        python-version: [3.9]
+        python-version: ['3.11']
         setup-target: ['.[fairness]']
     steps:
     - uses: actions/checkout@v4
@@ -541,7 +530,7 @@ jobs:
     needs: [static, test_matrix_master, test_newer, test_fairness, test_notebooks_master, docs]
     strategy:
       matrix:
-        python-version: [3.9]
+        python-version: ['3.11']
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
