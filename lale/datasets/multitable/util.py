@@ -123,7 +123,7 @@ def multitable_train_test_split(
     else:
         num_test_rows = int(test_size)
     test_indices = random.choice(range(num_rows), num_test_rows, replace=False)
-    train_indices = list(set([*range(num_rows)]) - set(test_indices.tolist()))
+    train_indices = list(set([*range(num_rows)]) - set(test_indices.tolist()))  # type: ignore
     assert len(test_indices) + len(train_indices) == num_rows
     train_dataset = list(dataset)
     test_dataset = list(dataset)

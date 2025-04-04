@@ -117,6 +117,7 @@ def SearchSpaceNumberToGSValues(
     else:
         samples = num_samples
 
+    ret: List[Any]
     # Add preliminary support for PGO
     if hp.pgo is not None:
         ret = list(hp.pgo.samples(samples))
