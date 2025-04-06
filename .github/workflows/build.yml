@@ -414,13 +414,13 @@ jobs:
         setup-target: ['.[full,test]']
         test-case: ['test/test_notebooks.py']
         dir: ['examples']
-        nbexcludes: ['demo_task_graphs']
+        nbexcludes: ['demo_task_graphs.ipynb']
         include:
         - dir: 'examples'
           python-version: '3.11'
           setup-target: '.[full,test]'
           test-case: 'test/test_notebooks.py'
-          nbexcludes: 'demo_auto_pipeline.ipynb demo_task_graphs'
+          nbexcludes: 'demo_auto_pipeline.ipynb demo_task_graphs.ipynb'
         - dir: 'examples/kdd22'
           python-version: '3.11'
           setup-target: '.[tutorial,test]'
