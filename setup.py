@@ -42,7 +42,6 @@ else:
     install_requires = [
         "numpy",
         "black>=22.1.0",
-        "graphviz",
         "hyperopt>=0.2,<=0.2.7",
         "jsonschema<=4.20.0",
         "jsonsubschema>=0.0.6",
@@ -66,6 +65,7 @@ else:
 extras_require = {
     "full": [
         "mystic",
+        "graphviz",
         "xgboost<3.1.0",
         "lightgbm<4.7.0",
         "snapml>=1.7.0rc3,<1.17.0",
@@ -86,6 +86,7 @@ extras_require = {
         "joblib",
         "ipython<8.8.0",
         "jupyter",
+        "graphviz",
         "lxml<5.2.0",
         "sphinx>=5.0.0",
         "sphinx_rtd_theme>=0.5.2",
@@ -109,6 +110,7 @@ extras_require = {
     "tutorial": [
         "ipython<8.8.0",
         "jupyter",
+        "graphviz",
         "xgboost<=1.5.1",
         "imbalanced-learn",
         "liac-arff>=2.4.0",

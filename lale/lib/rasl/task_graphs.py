@@ -35,7 +35,6 @@ from typing import (
     cast,
 )
 
-import graphviz
 import numpy as np
 import pandas as pd
 import sklearn.model_selection
@@ -592,6 +591,14 @@ class _TaskGraph:
         self, prio: Prio, call_depth: int, trace: Optional[List[_TraceRecord]]
     ) -> None:
         cls2label = lale.json_operator._get_cls2label(call_depth + 1)
+        try:
+            import graphviz
+        except ImportError:
+            assert False, """Your Python environment does not have graphviz installed. You can install it with
+            pip install graphviz
+        or with
+            pip install 'lale[full]'"""
+
         dot = graphviz.Digraph()
         dot.attr("graph", rankdir="LR", nodesep="0.1")
         dot.attr("node", fontsize="11", margin="0.03,0.03", shape="box", height="0.1")
