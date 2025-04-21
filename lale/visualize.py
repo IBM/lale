@@ -15,8 +15,6 @@
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
-import graphviz
-
 import lale.json_operator
 import lale.pretty_print
 
@@ -126,6 +124,14 @@ def _indiv_op_tooltip(uid, jsn) -> str:
 
 
 def _json_to_graphviz_rec(uid, jsn, cluster2reps, is_root):
+    try:
+        import graphviz
+    except ImportError:
+        assert False, """Your Python environment does not have graphviz installed. You can install it with
+        pip install graphviz
+    or with
+        pip install 'lale[full]'"""
+
     kind = lale.json_operator.json_op_kind(jsn)
     dot: graphviz.Digraph
     if kind in ["Pipeline", "OperatorChoice"] or "steps" in jsn:
