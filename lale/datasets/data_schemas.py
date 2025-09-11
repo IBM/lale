@@ -106,12 +106,11 @@ if SparkDataFrame is not None:
             return name
 
     class SparkDataFrameWithIndex(SparkDataFrame):  # type: ignore
-        def __init__(self, df, index_names=None):
+        def __new__(cls, df, index_names=None):
             if index_names is not None and len(index_names) == 1:
                 index_name = index_names[0]
             elif index_names is None or len(index_names) == 0:
                 index_name = _gen_index_name(df)
-                index_names = [index_name]
             else:
                 index_name = None
             if index_name is not None and index_name not in df.columns:
@@ -125,7 +124,18 @@ if SparkDataFrame is not None:
             table_name = get_table_name(df)
             if table_name is not None:
                 df_with_index = df_with_index.alias(table_name)
-            super().__init__(df_with_index._jdf, df_with_index.sql_ctx)
+            return super().__new__(  # pylint: disable=too-many-function-args
+                cls, df_with_index._jdf, df_with_index.sql_ctx
+            )
+
+        def __init__(self, df, index_names=None):
+            if index_names is not None and len(index_names) == 1:
+                index_name = index_names[0]
+            elif index_names is None or len(index_names) == 0:
+                index_name = _gen_index_name(df)
+                index_names = [index_name]
+            else:
+                index_name = None
             self.index_name = index_name
             self.index_names = index_names
             for f in df.schema.fieldNames():
