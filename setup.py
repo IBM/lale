@@ -107,6 +107,15 @@ extras_require = {
         "imbalanced-learn",
         "BlackBoxAuditing",
     ],
+    "autoai-fairness": [
+        "dill<=0.3.8",
+        "mystic<=0.3.9",
+        "klepto<=0.2.2",
+        "liac-arff>=2.4.0",
+        "aif360>=0.5.0",
+        "imbalanced-learn",
+        "BlackBoxAuditing",
+    ],
     "tutorial": [
         "ipython<8.8.0",
         "jupyter",
