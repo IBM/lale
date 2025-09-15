@@ -95,7 +95,7 @@ extras_require = {
         "sphinxcontrib.apidoc",
         "sphinxcontrib-svg2pdfconverter",
         "pytest",
-        "pyspark",
+        "pyspark<4.0.0",
         "func_timeout",
         "category-encoders",
         "pynisher==0.6.4",
