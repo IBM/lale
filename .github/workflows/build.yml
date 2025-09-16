@@ -182,7 +182,7 @@ jobs:
     #   run: pip install 'scikit-learn>=1.0'
     - name: Install deps for test_snapml
       if: ${{ matrix.test-case == 'test/test_snapml.py' }}
-      run: pip install 'numpy>=1.20.1,<1.24'
+      run: pip install 'numpy>=1.20.1,<=1.26'
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
@@ -272,7 +272,7 @@ jobs:
     #   run: pip install 'scikit-learn>=1.0'
     - name: Install deps for test_snapml
       if: ${{ matrix.test-case == 'test/test_snapml.py' }}
-      run: pip install 'numpy>=1.20.1,<1.24'
+      run: pip install 'numpy>=1.20.1,<=1.26'
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
