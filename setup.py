@@ -14,7 +14,9 @@
 
 import logging
 import os
+import re
 from datetime import datetime
+from pathlib import Path
 
 from setuptools import find_packages, setup
 
@@ -54,13 +56,22 @@ else:
         "typing-extensions",
     ]
 
-import lale  # noqa: E402  # pylint:disable=wrong-import-position
+
+def get_version() -> str:
+    init_path = Path(__file__).parent / "lale" / "__init__.py"
+    content = init_path.read_text()
+    match = re.search(r"^__version__\s*=\s*['\"]([^'\"]+)['\"]", content, re.MULTILINE)
+    assert match is not None
+    return match.group(1)
+
+
+VERSION_BASE = get_version()
 
 if "TRAVIS" in os.environ:
     now = datetime.now().strftime("%y%m%d%H%M")
-    VERSION = f"{lale.__version__}-{now}"
+    VERSION = f"{VERSION_BASE}-{now}"
 else:
-    VERSION = lale.__version__
+    VERSION = VERSION_BASE
 
 extras_require = {
     "full": [
