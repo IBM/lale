@@ -357,13 +357,11 @@ class Operator(metaclass=AbstractVisitorMeta):
                 return impl.__sklearn_tags__()
             elif hasattr(impl, "_more_tags"):
                 return impl._more_tags()
-
-        # fallback for safety — works with scikit-learn 1.7+
         try:
             from sklearn.utils._tags import default_tags
+
             return default_tags(self)
         except ImportError:
-            # fallback for older sklearn versions
             return {}
 
     def name(self) -> str:
