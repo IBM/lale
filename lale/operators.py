@@ -349,6 +349,21 @@ class Operator(metaclass=AbstractVisitorMeta):
     def __ror__(self, other: Union[Any, "Operator"]) -> "OperatorChoice":
         return make_choice(other, self)
 
+    def __sklearn_tags__(self):
+        """Provide sklearn compatibility for >=1.6"""
+        if hasattr(self, "_impl_instance"):
+            impl = self._impl_instance()
+            if hasattr(impl, "__sklearn_tags__"):
+                return impl.__sklearn_tags__()
+            elif hasattr(impl, "_more_tags"):
+                return impl._more_tags()
+        try:
+            from sklearn.utils._tags import default_tags
+
+            return default_tags(self)
+        except ImportError:
+            return {}
+
     def name(self) -> str:
         """Get the name of this operator instance."""
         return self._name

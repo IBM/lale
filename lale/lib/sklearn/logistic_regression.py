@@ -618,7 +618,7 @@ if lale.operators.sklearn_version >= version.Version("1.6"):
             break
 
 
-if lale.operators.sklearn_version >= version.Version("1.7"):
+if lale.operators.sklearn_version >= version.Version("1.8"):
     LogisticRegression = typing.cast(
         lale.operators.PlannedIndividualOp,
         LogisticRegression.customize_schema(
