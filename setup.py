@@ -52,7 +52,6 @@ else:
         "pandas",
         "packaging",
         "decorator",
-        "astunparse",
         "typing-extensions",
     ]
 

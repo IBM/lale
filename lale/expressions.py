@@ -24,8 +24,6 @@ import typing
 from copy import deepcopy
 from typing import Any, Dict, Literal, Optional, Union, overload
 
-import astunparse
-
 AstLits = (ast.Num, ast.Str, ast.List, ast.Tuple, ast.Set, ast.Dict, ast.Constant)
 AstLit = Union[ast.Num, ast.Str, ast.List, ast.Tuple, ast.Set, ast.Dict, ast.Constant]
 AstExprs = (
@@ -229,7 +227,7 @@ class Expr:
             return False
 
     def __str__(self) -> str:
-        result = astunparse.unparse(self._expr).strip()
+        result = ast.unparse(self._expr).strip()
         if isinstance(self._expr, (ast.UnaryOp, ast.BinOp, ast.Compare, ast.BoolOp)):
             if result.startswith("(") and result.endswith(")"):
                 result = result[1:-1]
@@ -585,7 +583,7 @@ def _it_column(expr):
             return expr.attr
         else:
             raise ValueError(
-                f"Illegal {astunparse.unparse(expr)}. Only the access to `it` is supported"
+                f"Illegal {ast.unparse(expr)}. Only the access to `it` is supported"
             )
     elif isinstance(expr, ast.Subscript):
         if isinstance(expr.slice, ast.Constant) or (
@@ -600,15 +598,15 @@ def _it_column(expr):
                 return v.s
             else:
                 raise ValueError(
-                    f"Illegal {astunparse.unparse(expr)}. Only the access to `it` is supported"
+                    f"Illegal {ast.unparse(expr)}. Only the access to `it` is supported"
                 )
         else:
             raise ValueError(
-                f"Illegal {astunparse.unparse(expr)}. Only the access to `it` is supported"
+                f"Illegal {ast.unparse(expr)}. Only the access to `it` is supported"
             )
     else:
         raise ValueError(
-            f"Illegal {astunparse.unparse(expr)}. Only the access to `it` is supported"
+            f"Illegal {ast.unparse(expr)}. Only the access to `it` is supported"
         )
 
 
