@@ -380,4 +380,30 @@ if lale.operators.sklearn_version >= version.Version("1.7"):
         set_as_available=True,
     )
 
+if lale.operators.sklearn_version >= version.Version("1.7"):
+    SGDRegressor = SGDRegressor.customize_schema(
+        l1_ratio={
+            "anyOf": [
+                {
+                    "type": "number",
+                    "minimumForOptimizer": 1e-9,
+                    "maximumForOptimizer": 1.0,
+                    "distribution": "loguniform",
+                    "default": 0.15,
+                    "description": "The Elastic Net mixing parameter, with 0 <= l1_ratio <= 1.",
+                },
+                {"enum": [None]},
+            ],
+            "default": 0.15,
+        },
+        constraint={
+            "description": "l1_ratio can only be None if the penalty is not 'elasticnet'",
+            "anyOf": [
+                {"penalty": {"not": {"enum": ["elasticnet"]}}},
+                {"l1_ratio": {"not": {"enum": [None]}}},
+            ],
+        },
+        set_as_available=True,
+    )
+
 lale.docstrings.set_docstrings(SGDRegressor)

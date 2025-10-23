@@ -238,4 +238,31 @@ if lale.operators.sklearn_version >= version.Version("1.2"):
     # new: https://scikit-learn.org/1.2/modules/generated/sklearn.linear_model.MultiTaskLassoCV.html
     MultiTaskLassoCV = MultiTaskLassoCV.customize_schema(normalize=None)
 
+if lale.operators.sklearn_version >= version.Version("1.7"):
+
+    MultiTaskLassoCV = MultiTaskLassoCV.customize_schema(
+        n_alphas={
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "minimumForOptimizer": 100,
+                    "maximumForOptimizer": 101,
+                    "distribution": "uniform",
+                    "default": 100,
+                    "description": "Number of alphas along the regularization path, used for each l1_ratio.",
+                },
+                {"enum": ["deprecated"]},
+            ],
+            "default": "deprecated",
+        },
+        set_as_available=True,
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.9"):
+
+    MultiTaskLassoCV = MultiTaskLassoCV.customize_schema(
+        n_alphas=None,
+        set_as_available=True,
+    )
+
 set_docstrings(MultiTaskLassoCV)

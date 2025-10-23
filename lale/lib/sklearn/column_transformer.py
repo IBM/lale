@@ -17,6 +17,7 @@ from packaging import version
 
 import lale.docstrings
 import lale.operators
+from lale.schemas import AnyOf, Bool, Enum
 
 _hyperparams_schema = {
     "allOf": [
@@ -232,6 +233,11 @@ If False, get_feature_names_out will not prefix any feature names and will error
         set_as_available=True,
     )
 
+if lale.operators.sklearn_version >= version.Version("1.5"):
+    ColumnTransformer = ColumnTransformer.customize_schema(
+        force_int_remainder_cols=Bool(default=True), set_as_available=True
+    )
+
 if lale.operators.sklearn_version >= version.Version("1.6"):
     ColumnTransformer = ColumnTransformer.customize_schema(
         verbose_feature_names_out={
@@ -256,5 +262,25 @@ if lale.operators.sklearn_version >= version.Version("1.6"):
         set_as_available=True,
     )
 
+if lale.operators.sklearn_version >= version.Version("1.7"):
+    ColumnTransformer = ColumnTransformer.customize_schema(
+        force_int_remainder_cols=AnyOf(
+            types=[
+                Bool(default=False),
+                Enum(
+                    ["deprecated"],
+                    desc="This parameter is deprecated and will be removed in v1.9.",
+                ),
+            ],
+            default="deprecated",
+        ),
+        set_as_available=True,
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.9"):
+    ColumnTransformer = ColumnTransformer.customize_schema(
+        force_int_remainder_cols=None,
+        set_as_available=True,
+    )
 
 lale.docstrings.set_docstrings(ColumnTransformer)

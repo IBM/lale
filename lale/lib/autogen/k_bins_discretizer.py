@@ -12,11 +12,11 @@ class _KBinsDiscretizerImpl:
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **kwargs):
         if y is not None:
-            self._wrapped_model.fit(X, y)
+            self._wrapped_model.fit(X, y, **kwargs)
         else:
-            self._wrapped_model.fit(X)
+            self._wrapped_model.fit(X, **kwargs)
         return self
 
     def transform(self, X):
@@ -155,6 +155,26 @@ if sklearn_version >= version.Version("1.5"):
             "anyOf": [{"enum": [None]}, {"type": "integer", "minimum": 0}],
             "default": 20000,
             "description": "Maximum number of samples, used to fit the model, for computational efficiency. Defaults to 200_000 when strategy='quantile' and to None when strategy='uniform' or strategy='kmeans'. subsample=None means that all the training samples are used when computing the quantiles that determine the binning thresholds. Since quantile computation relies on sorting each column of X and that sorting has an n log(n) time complexity, it is recommended to use subsampling on datasets with a very large number of samples.",
+        },
+        set_as_available=True,
+    )
+
+if sklearn_version >= version.Version("1.7"):
+    KBinsDiscretizer = KBinsDiscretizer.customize_schema(
+        quantile_method={
+            "enum": [
+                "inverted_cdf",
+                "averaged_inverted_cdf",
+                "closest_observation",
+                "interpolated_inverted_cdf",
+                "hazen",
+                "weibull",
+                "linear",
+                "median_unbiased",
+                "normal_unbiased",
+            ],
+            "default": "linear",
+            "description": "Method to pass on to np.percentile calculation when using strategy='quantile'.",
         },
         set_as_available=True,
     )
