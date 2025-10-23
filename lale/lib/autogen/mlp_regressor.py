@@ -1,8 +1,8 @@
-from numpy import inf, nan
+from packaging import version
 from sklearn.neural_network import MLPRegressor as Op
 
 from lale.docstrings import set_docstrings
-from lale.operators import make_operator
+from lale.operators import make_operator, sklearn_version
 
 
 class _MLPRegressorImpl:
@@ -10,11 +10,11 @@ class _MLPRegressorImpl:
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **kwargs):
         if y is not None:
-            self._wrapped_model.fit(X, y)
+            self._wrapped_model.fit(X, y, **kwargs)
         else:
-            self._wrapped_model.fit(X)
+            self._wrapped_model.fit(X, **kwargs)
         return self
 
     def predict(self, X):
@@ -360,4 +360,14 @@ _combined_schemas = {
 }
 MLPRegressor = make_operator(_MLPRegressorImpl, _combined_schemas)
 
+if sklearn_version >= version.Version("1.7"):
+
+    MLPRegressor = MLPRegressor.customize_schema(
+        loss={
+            "description": "The loss function to use when training the weights.",
+            "enum": ["squared_error", "poisson"],
+            "default": "squared_error",
+        },
+        set_as_available=True,
+    )
 set_docstrings(MLPRegressor)

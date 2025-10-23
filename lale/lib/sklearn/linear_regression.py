@@ -179,4 +179,17 @@ if lale.operators.sklearn_version >= version.Version("1.2"):
         set_as_available=True,
     )
 
+
+if lale.operators.sklearn_version >= version.Version("1.7"):
+    LinearRegression = LinearRegression.customize_schema(
+        tol={
+            "type": "number",
+            "minimumForOptimizer": 1e-08,
+            "maximumForOptimizer": 0.01,
+            "default": 1e-06,
+            "description": "The precision of the solution (coef_) is determined by tol which specifies a different convergence criterion for the lsqr solver.  tol is set as atol and btol of scipy.sparse.linalg.lsqr when fitting on sparse training data. This parameter has no effect when fitting on dense data.",
+        },
+        set_as_available=True,
+    )
+
 lale.docstrings.set_docstrings(LinearRegression)

@@ -261,4 +261,31 @@ if sklearn_version >= version.Version("1.2"):
         set_as_available=True,
     )
 
+if sklearn_version >= version.Version("1.7"):
+
+    LassoCV = LassoCV.customize_schema(
+        n_alphas={
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "minimumForOptimizer": 100,
+                    "maximumForOptimizer": 101,
+                    "distribution": "uniform",
+                    "default": 100,
+                    "description": "Number of alphas along the regularization path, used for each l1_ratio.",
+                },
+                {"enum": ["deprecated"]},
+            ],
+            "default": "deprecated",
+        },
+        set_as_available=True,
+    )
+
+if sklearn_version >= version.Version("1.9"):
+
+    LassoCV = LassoCV.customize_schema(
+        n_alphas=None,
+        set_as_available=True,
+    )
+
 set_docstrings(LassoCV)
