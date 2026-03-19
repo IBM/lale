@@ -44,6 +44,7 @@ else:
     install_requires = [
         "numpy",
         "black>=22.1.0",
+        "setuptools>=61.0,<82.0",  # needed for hyperopt
         "hyperopt>=0.2,<=0.2.7",
         "jsonschema<=5",
         "jsonsubschema>=0.0.6",
