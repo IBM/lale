@@ -1,4 +1,4 @@
 {
-  "exclude": ["build"],
+  "exclude": ["build", ".venv"],
   "useLibraryCodeForTypes": false
 }
