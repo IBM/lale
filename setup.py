@@ -79,7 +79,7 @@ extras_require = {
         "graphviz",
         "xgboost<3.1.0",
         "lightgbm<4.7.0",
-        "snapml>=1.7.0rc3,<1.17.0",
+        "snapml>=1.7.0rc3,<1.18.0",
         "liac-arff>=2.4.0",
         "tensorflow>=2.4.0",
         "numba",

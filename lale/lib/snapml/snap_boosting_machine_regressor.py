@@ -11,17 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import Optional
+
 from packaging import version
 
 import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
 
+from .utils import get_snapml_version
+
 try:
     import snapml
     from snapml import SnapBoostingMachineRegressor as Base
 
-    snapml_version = version.parse(getattr(snapml, "__version__"))
+    snapml_version: Optional[version.Version] = get_snapml_version(snapml)
 except ImportError:
     Base = None
     snapml_version = None
