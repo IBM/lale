@@ -875,7 +875,7 @@ _Batch_Xy = Tuple[pd.DataFrame, pd.Series]
 _Batch_yyX = Tuple[Optional[pd.Series], pd.Series, pd.DataFrame]
 
 
-class _DIorSPDData(MetricMonoid):
+class _DIorSPDData(MetricMonoid["_DIorSPDData"]):
     def __init__(
         self, priv0_fav0: float, priv0_fav1: float, priv1_fav0: float, priv1_fav1: float
     ):
@@ -932,7 +932,7 @@ class _DIorSPDScorerFactory(_AIF360ScorerFactory):
         )
 
 
-class _AODorEODData(MetricMonoid):
+class _AODorEODData(MetricMonoid["_AODorEODData"]):
     def __init__(
         self,
         tru0_pred0_priv0: float,
@@ -1134,7 +1134,7 @@ _BLENDED_SCORER_DOCSTRING = (
 )
 
 
-class _AccuracyAndSymmDIData(MetricMonoid):
+class _AccuracyAndSymmDIData(MetricMonoid["_AccuracyAndSymmDIData"]):
     def __init__(
         self,
         accuracy_data: lale.lib.rasl.metrics._AccuracyData,
@@ -1319,7 +1319,7 @@ average_odds_difference.__doc__ = (
 )
 
 
-class _BalAccAndSymmDIData(MetricMonoid):
+class _BalAccAndSymmDIData(MetricMonoid["_BalAccAndSymmDIData"]):
     def __init__(
         self,
         bal_acc_data: lale.lib.rasl.metrics._BalancedAccuracyData,
@@ -1555,7 +1555,7 @@ equal_opportunity_difference.__doc__ = (
 )
 
 
-class _F1AndSymmDIData(MetricMonoid):
+class _F1AndSymmDIData(MetricMonoid["_F1AndSymmDIData"]):
     def __init__(
         self,
         f1_data: lale.lib.rasl.metrics._F1Data,
@@ -1691,7 +1691,7 @@ f1_and_disparate_impact.__doc__ = (
 )
 
 
-class _R2AndSymmDIData(MetricMonoid):
+class _R2AndSymmDIData(MetricMonoid["_R2AndSymmDIData"]):
     def __init__(
         self,
         r2_data: lale.lib.rasl.metrics._R2Data,

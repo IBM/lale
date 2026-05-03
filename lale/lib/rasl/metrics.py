@@ -134,7 +134,7 @@ def _make_dataframe_yy(batch):
     return result
 
 
-class _AccuracyData(MetricMonoid):
+class _AccuracyData(MetricMonoid["_AccuracyData"]):
     def __init__(self, match: int, total: int):
         self.match = match
         self.total = total
@@ -166,7 +166,7 @@ def accuracy_score(y_true: pd.Series, y_pred: pd.Series) -> float:
     return get_scorer("accuracy").score_data(y_true, y_pred)
 
 
-class _BalancedAccuracyData(MetricMonoid):
+class _BalancedAccuracyData(MetricMonoid["_BalancedAccuracyData"]):
     def __init__(self, true_pos: Dict[str, int], false_neg: Dict[str, int]):
         self.true_pos = true_pos
         self.false_neg = false_neg
@@ -223,7 +223,7 @@ def balanced_accuracy_score(y_true: pd.Series, y_pred: pd.Series) -> float:
     return get_scorer("balanced_accuracy").score_data(y_true, y_pred)
 
 
-class _F1Data(MetricMonoid):
+class _F1Data(MetricMonoid["_F1Data"]):
     def __init__(self, true_pos: int, false_pos: int, false_neg: int):
         self.true_pos = true_pos
         self.false_pos = false_pos
@@ -284,7 +284,7 @@ def f1_score(
     return get_scorer("f1", pos_label=pos_label).score_data(y_true, y_pred)
 
 
-class _R2Data(MetricMonoid):
+class _R2Data(MetricMonoid["_R2Data"]):
     def __init__(self, n: int, tot_sum: float, tot_sum_sq: float, res_sum_sq: float):
         self.n = n
         self.sum = tot_sum

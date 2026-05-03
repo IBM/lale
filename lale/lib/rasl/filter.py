@@ -76,7 +76,7 @@ class _FilterImpl:
                 raise ValueError(
                     f"Cannot perform filter predicate operation as {lhs} not a column of input dataframe X."
                 )
-            return lhs, op, None
+            return str(lhs), op, None
 
         if _is_ast_subscript(expr_to_parse.left):
             lhs = _get_subscript_value(expr_to_parse.left)
@@ -105,7 +105,11 @@ class _FilterImpl:
             raise ValueError(
                 f"Cannot perform filter operation as {rhs} not a column of input dataframe X."
             )
-        return lhs, op, rhs
+        return (
+            str(lhs),
+            op,
+            str(rhs) if not _is_ast_constant(expr_to_parse.comparators[0]) else rhs,
+        )
 
     def transform(self, X):
         filtered_df = X

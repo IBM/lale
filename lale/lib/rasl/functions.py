@@ -114,7 +114,7 @@ class make_categorical_column:
 _D = TypeVar("_D", bound=Monoid)
 
 
-class DictMonoid(Generic[_D], Monoid):
+class DictMonoid(Monoid, Generic[_D]):
     """
     Given a monoid, this class lifts it to a dictionary pointwise
     """

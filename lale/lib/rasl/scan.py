@@ -26,7 +26,7 @@ class _ScanImpl:
     def __init__(self, table=None):
         assert table is not None
         if isinstance(table.expr, ast.Attribute):
-            self.table_name = table.expr.attr
+            self.table_name: str = table.expr.attr
         elif isinstance(table.expr, ast.Subscript):
             self.table_name = _get_subscript_value(table.expr)
 

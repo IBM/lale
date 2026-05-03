@@ -20,7 +20,7 @@ _OutputType_co = TypeVar("_OutputType_co", covariant=True)
 _SelfType = TypeVar("_SelfType")
 
 
-class Monoid(ABC):
+class Monoid(ABC, Generic[_SelfType]):
     """
     Data that can be combined in an associative way.  See :class:MonoidFactory for ways to create/unpack
     a given monoid.
