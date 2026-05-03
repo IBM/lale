@@ -243,7 +243,10 @@ class TestAIF360Datasets(unittest.TestCase):
     @classmethod
     def _try_download_csv(cls, filename):
         directory = os.path.join(
-            os.path.dirname(os.path.abspath(aif360.__file__)), "data", "raw", "meps"
+            os.path.dirname(os.path.abspath(aif360.__file__)),  # type: ignore[arg-type]
+            "data",
+            "raw",
+            "meps",
         )
         csv_exists = os.path.exists(
             os.path.join(
@@ -270,7 +273,10 @@ class TestAIF360Datasets(unittest.TestCase):
     @classmethod
     def _cleanup_meps(cls, filename):
         directory = os.path.join(
-            os.path.dirname(os.path.abspath(aif360.__file__)), "data", "raw", "meps"
+            os.path.dirname(os.path.abspath(aif360.__file__)),  # type: ignore[arg-type]
+            "data",
+            "raw",
+            "meps",
         )
         filename_without_extension = os.path.splitext(filename)[0]
         zip_filename = f"{filename_without_extension}ssp.zip"

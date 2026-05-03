@@ -48,8 +48,14 @@ import lale.datasets.data_schemas
 
 try:
     import torch
+    from torch import cat as torch_cat  # pyright: ignore[reportPrivateImportUsage]
+    from torch import (
+        from_numpy as torch_from_numpy,  # pyright: ignore[reportPrivateImportUsage]
+    )
 except ImportError:
     torch = None
+    torch_cat = None  # type: ignore[assignment]
+    torch_from_numpy = None  # type: ignore[assignment]
 
 spark_loader = util.find_spec("pyspark")
 spark_installed = spark_loader is not None
@@ -841,7 +847,7 @@ def append_batch(data, batch_data):
             return X, y
     elif torch is not None and isinstance(data, torch.Tensor):
         if isinstance(batch_data, torch.Tensor):
-            return torch.cat((data, batch_data))
+            return torch_cat((data, batch_data))  # pyright: ignore[reportOptionalCall]
     elif isinstance(data, (pd.Series, pd.DataFrame)):
         return pd.concat([data, batch_data], axis=0)
     try:
@@ -946,7 +952,7 @@ def create_data_loader(
             return [X]
     elif isinstance(X, torch.Tensor) and y is not None:
         if isinstance(y, np.ndarray):
-            y = torch.from_numpy(y)
+            y = torch_from_numpy(y)  # pyright: ignore[reportOptionalCall]
         dataset = TensorDataset(X, y)
     elif isinstance(X, torch.Tensor):
         dataset = TensorDataset(X)
@@ -1021,10 +1027,10 @@ def write_batch_output_to_file(
         labels = file_obj["y"]
         if batch_out_y is not None:
             labels[
-                batch_idx * len(batch_out_y) : (batch_idx + 1) * len(batch_out_y)
+                batch_idx * len(batch_out_y) : (batch_idx + 1) * len(batch_out_y)  # type: ignore[arg-type]
             ] = batch_out_y
         else:
-            labels[batch_idx * len(batch_y) : (batch_idx + 1) * len(batch_y)] = batch_y
+            labels[batch_idx * len(batch_y) : (batch_idx + 1) * len(batch_y)] = batch_y  # type: ignore[arg-type]
     return file_obj
 
 
@@ -1264,12 +1270,12 @@ def _ensure_pandas(df) -> pd.DataFrame:
     return df
 
 
-def _get_subscript_value(subscript_expr):
+def _get_subscript_value(subscript_expr) -> str:
     if isinstance(subscript_expr.slice, ast.Constant):  # for Python 3.9
         subscript_value = subscript_expr.slice.value
     else:
         subscript_value = subscript_expr.slice.value.s  # type: ignore
-    return subscript_value
+    return str(subscript_value)
 
 
 class GenSym:

@@ -661,7 +661,10 @@ def _get_compas_filename(violent_recidivism=False):
 
 def _get_compas_filepath(filename):
     directory = os.path.join(
-        os.path.dirname(os.path.abspath(aif360.__file__)), "data", "raw", "compas"
+        os.path.dirname(os.path.abspath(aif360.__file__)),  # type: ignore[arg-type]
+        "data",
+        "raw",
+        "compas",
     )
     return os.path.join(
         directory,
@@ -1553,7 +1556,7 @@ def _fetch_meps_raw_df(panel, fiscal_year):
         logger.error(f"Unexpected FiscalYear received: {fiscal_year}")
         raise ValueError(f"Unexpected FiscalYear received: {fiscal_year}")
     filepath = os.path.join(
-        os.path.dirname(os.path.abspath(aif360.__file__)),
+        os.path.dirname(os.path.abspath(aif360.__file__)),  # type: ignore[arg-type]
         "data",
         "raw",
         "meps",

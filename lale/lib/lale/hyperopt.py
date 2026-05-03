@@ -125,7 +125,7 @@ class _HyperoptImpl:
         else:
             self.cv = check_cv(self.cv, y=y_train, classifier=is_clf)
         try:
-            data_schema = lale.helpers.fold_schema(X_train, y_train, self.cv, is_clf)
+            data_schema = lale.helpers.fold_schema(X_train, y_train, self.cv, is_clf)  # type: ignore[arg-type]
         except (
             BaseException
         ):  # we may not always be able to extract schema for the given data format.

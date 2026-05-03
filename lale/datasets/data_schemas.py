@@ -26,10 +26,20 @@ from lale.type_checking import JSON_TYPE
 
 try:
     import torch
-    from torch import Tensor
+    from torch import (
+        Tensor,
+    )
+    from torch import bool as torch_bool  # pyright: ignore[reportPrivateImportUsage]
+    from torch import (
+        is_floating_point as torch_is_floating_point,  # pyright: ignore[reportPrivateImportUsage]
+    )
+    from torch import uint8 as torch_uint8  # pyright: ignore[reportPrivateImportUsage]
 except ImportError:
     torch = None
     Tensor = None
+    torch_bool = None  # type: ignore[assignment]
+    torch_uint8 = None  # type: ignore[assignment]
+    torch_is_floating_point = None  # type: ignore[assignment]
 
 try:
     from py4j.protocol import Py4JError
@@ -545,11 +555,11 @@ or with
     assert isinstance(tensor, Tensor)
     result: JSON_TYPE
     # https://pytorch.org/docs/stable/tensor_attributes.html#torch-dtype
-    if tensor.dtype == torch.bool:
+    if tensor.dtype == torch_bool:
         result = {"type": "boolean"}
-    elif tensor.dtype == torch.uint8:
+    elif tensor.dtype == torch_uint8:
         result = {"type": "integer", "minimum": 0, "maximum": 255}
-    elif torch.is_floating_point(tensor):
+    elif torch_is_floating_point(tensor):  # pyright: ignore[reportOptionalCall]
         result = {"type": "number"}
     else:
         result = {"type": "integer"}

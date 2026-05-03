@@ -58,12 +58,12 @@ class _JoinImpl:
     # Parse the predicate element passed as input
     @classmethod
     def _get_join_info(cls, expr_to_parse):
-        left_key = []
-        right_key = []
+        left_key: List[str] = []
+        right_key: List[str] = []
         if _is_ast_subscript(expr_to_parse.left.value):
             left_name = _get_subscript_value(expr_to_parse.left.value)
         elif _is_ast_attribute(expr_to_parse.left.value):
-            left_name = expr_to_parse.left.value.attr
+            left_name = str(expr_to_parse.left.value.attr)
         else:
             raise ValueError(
                 "ERROR: Expression type not supported! Formats supported: it.table_name.column_name or it['table_name'].column_name"
@@ -71,7 +71,7 @@ class _JoinImpl:
         if _is_ast_subscript(expr_to_parse.left):
             left_key.append(_get_subscript_value(expr_to_parse.left))
         elif _is_ast_attribute(expr_to_parse.left):
-            left_key.append(expr_to_parse.left.attr)
+            left_key.append(str(expr_to_parse.left.attr))
         else:
             raise ValueError(
                 "ERROR: Expression type not supported! Formats supported: it.table_name.column_name or it.table_name['column_name']"
@@ -79,7 +79,7 @@ class _JoinImpl:
         if _is_ast_subscript(expr_to_parse.comparators[0].value):
             right_name = _get_subscript_value(expr_to_parse.comparators[0].value)
         elif _is_ast_attribute(expr_to_parse.comparators[0].value):
-            right_name = expr_to_parse.comparators[0].value.attr
+            right_name = str(expr_to_parse.comparators[0].value.attr)
         else:
             raise ValueError(
                 "ERROR: Expression type not supported! Formats supported: it.table_name.column_name or it['table_name'].column_name"
@@ -87,7 +87,7 @@ class _JoinImpl:
         if _is_ast_subscript(expr_to_parse.comparators[0]):
             right_key.append(_get_subscript_value(expr_to_parse.comparators[0]))
         elif _is_ast_attribute(expr_to_parse.comparators[0]):
-            right_key.append(expr_to_parse.comparators[0].attr)
+            right_key.append(str(expr_to_parse.comparators[0].attr))
         else:
             raise ValueError(
                 "ERROR: Expression type not supported! Formats supported: it.table_name.column_name or it.table_name['column_name']"

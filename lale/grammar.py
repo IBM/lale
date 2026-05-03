@@ -105,9 +105,9 @@ class Grammar(Operator):
 
     def __setattr__(self, name, value):
         if name.startswith("_"):
-            self.__dict__[name] = value
+            self.__dict__[name] = value  # pyright: ignore[reportIndexIssue]
         else:
-            self._variables[name] = value
+            self._variables[name] = value  # pyright: ignore[reportIndexIssue]
 
     def _has_same_impl(self, other: Operator):
         return False

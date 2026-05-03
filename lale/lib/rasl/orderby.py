@@ -68,15 +68,15 @@ class _OrderByImpl:
         if isinstance(arg, str):
             col = arg
         elif isinstance(arg, ast.Name):
-            col = arg.id  # type: ignore
+            col = str(arg.id)  # type: ignore
         elif hasattr(ast, "Constant") and isinstance(arg, ast.Constant):
-            col = arg.value  # type: ignore
+            col = str(arg.value)  # type: ignore
         elif hasattr(ast, "Str") and isinstance(arg, ast.Str):
-            col = arg.s
+            col = str(arg.s)
         elif _is_ast_subscript(arg):
-            col = arg.slice.value.s  # type: ignore
+            col = str(arg.slice.value.s)  # type: ignore
         elif _is_ast_attribute(arg):
-            col = arg.attr  # type: ignore
+            col = str(arg.attr)  # type: ignore
         else:
             raise ValueError(
                 "OrderBy parameters only support string, subscript or dot notation for the column name. For example, it.col_name or it['col_name']."
