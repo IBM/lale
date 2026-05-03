@@ -714,7 +714,7 @@ class TestAIF360OrbisPickSizes(unittest.TestCase):
             favorable_labels={1},
             sampling_strategy="mixed",
         )
-        self.assertDictEqual(nsizes, {"00": 122, "01": 122, "10": 398, "11": 398})
+        self.assertDictEqual(nsizes, {"00": 187, "01": 187, "10": 386, "11": 386})
 
     def test_pick_sizes_mixed_single_pa_single_class_reversed(self):
         nsizes = _orbis_pick_sizes(
@@ -724,7 +724,7 @@ class TestAIF360OrbisPickSizes(unittest.TestCase):
             favorable_labels={1},
             sampling_strategy="mixed",
         )
-        self.assertDictEqual(nsizes, {"00": 398, "01": 398, "10": 122, "11": 122})
+        self.assertDictEqual(nsizes, {"00": 386, "01": 386, "10": 187, "11": 187})
 
     def test_pick_sizes_mixed_multi_pa_multi_class_normal(self):
         osizes = {
@@ -751,18 +751,18 @@ class TestAIF360OrbisPickSizes(unittest.TestCase):
         self.assertDictEqual(
             nsizes,
             {
-                "000": 573,
+                "000": 674,
                 "001": 670,
-                "002": 725,
-                "010": 923,
+                "002": 678,
+                "010": 899,
                 "011": 970,
-                "012": 1059,
-                "100": 7246,
+                "012": 1029,
+                "100": 7152,
                 "101": 7170,
-                "102": 7137,
-                "110": 7406,
+                "102": 7177,
+                "110": 7423,
                 "111": 7471,
-                "112": 7495,
+                "112": 7532,
             },
         )
 
@@ -791,17 +791,17 @@ class TestAIF360OrbisPickSizes(unittest.TestCase):
         self.assertDictEqual(
             nsizes,
             {
-                "002": 1406,
+                "002": 1501,
                 "000": 1200,
-                "001": 1308,
+                "001": 1496,
                 "012": 700,
                 "010": 900,
                 "011": 800,
                 "102": 400,
                 "100": 600,
                 "101": 500,
-                "112": 306,
-                "110": 111,
+                "112": 400,
+                "110": 299,
                 "111": 200,
             },
         )
@@ -851,17 +851,17 @@ class TestAIF360OrbisPickSizes(unittest.TestCase):
         self.assertDictEqual(
             nsizes,
             {
-                "000": 570,
+                "000": 571,
                 "001": 670,
                 "002": 770,
-                "010": 884,
-                "011": 970,
+                "010": 1074,
+                "011": 1065,
                 "012": 1070,
-                "100": 7244,
-                "101": 7223,
+                "100": 7177,
+                "101": 7190,
                 "102": 7270,
-                "110": 7571,
-                "111": 7541,
+                "110": 7447,
+                "111": 7479,
                 "112": 7571,
             },
         )
@@ -952,17 +952,17 @@ class TestAIF360OrbisPickSizes(unittest.TestCase):
             nsizes,
             {
                 "000": 570,
-                "001": 627,
-                "002": 761,
+                "001": 651,
+                "002": 769,
                 "010": 870,
-                "011": 968,
-                "012": 976,
+                "011": 859,
+                "012": 799,
                 "100": 7070,
                 "101": 7170,
-                "102": 7129,
+                "102": 7169,
                 "110": 7370,
-                "111": 7381,
-                "112": 7414,
+                "111": 7466,
+                "112": 7543,
             },
         )
 
@@ -995,11 +995,11 @@ class TestAIF360OrbisPickSizes(unittest.TestCase):
                 "111": 100,
                 "110": 100,
                 "102": 400,
-                "101": 498,
-                "100": 304,
+                "101": 495,
+                "100": 307,
                 "012": 700,
-                "011": 655,
-                "010": 748,
+                "011": 658,
+                "010": 745,
                 "002": 1150,
                 "001": 1100,
                 "000": 1200,
