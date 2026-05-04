@@ -236,6 +236,16 @@ class _HyperoptImpl:
             return proc_dict
 
         algo = getattr(hyperopt, self.algo)
+        if self.algo == "anneal":
+            # hyperopt.anneal has an upstream incompatibility with newer NumPy
+            # RNG/value handling for hp.choice with a single option, which is
+            # how Lale wraps the estimator search space under "meta_model".
+            # Fall back to random search rather than failing the whole fit.
+            logger.warning(
+                "hyperopt anneal is incompatible with this search space/runtime; "
+                "falling back to rand.suggest"
+            )
+            algo = hyperopt.rand
         # Search in the search space with defaults
         if self.evals_with_defaults > 0:
             try:
