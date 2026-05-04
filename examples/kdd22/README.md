@@ -140,6 +140,8 @@ documented.
 This notebook walks through the steps to add a new operator wrapper and
 to define a search space for that operator's hyperparameters.
 
+NB: While the Lale concepts remain the same, the underlying example no longer works.
+
 #### 9. Scikit-learn compatibility
 
 [09_compat.ipynb](09_compat.ipynb)
