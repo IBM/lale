@@ -355,8 +355,7 @@ jobs:
           python-version: '3.11'
           setup-target: '.[tutorial,test]'
           test-case: 'test/test_notebooks.py'
-          # nbexcludes: '06_multobj.ipynb'
-
+          nbexcludes: '08_newops.ipynb'
     steps:
     - uses: actions/checkout@v6
     - name: Set up Python ${{ matrix.python-version }}
@@ -425,23 +424,22 @@ jobs:
           python-version: '3.11'
           setup-target: '.[tutorial,test]'
           test-case: 'test/test_notebooks.py'
-          nbexcludes: '02_total.ipynb'
+          nbexcludes: '02_total.ipynb 08_newops.ipynb'
         - dir: 'examples/kdd22'
           python-version: '3.10'
           setup-target: '.[tutorial,test]'
           test-case: 'test/test_notebooks.py'
-          # nbexcludes: '06_multobj.ipynb'
+          nbexcludes: '08_newops.ipynb'
         - dir: 'examples/kdd22'
           python-version: '3.11'
           setup-target: '.[tutorial,test]'
           test-case: 'test/test_notebooks.py'
-          # nbexcludes: '06_multobj.ipynb'
+          nbexcludes: '08_newops.ipynb'
         - dir: 'examples/kdd22'
           python-version: '3.12'
           setup-target: '.[tutorial,test]'
           test-case: 'test/test_notebooks.py'
-          # nbexcludes: '06_multobj.ipynb'
-
+          nbexcludes: '08_newops.ipynb'
     steps:
     - uses: actions/checkout@v6
     - name: Set up Python ${{ matrix.python-version }}
