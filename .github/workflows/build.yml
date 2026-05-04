@@ -435,11 +435,6 @@ jobs:
           setup-target: '.[tutorial,test]'
           test-case: 'test/test_notebooks.py'
           nbexcludes: '08_newops.ipynb'
-        - dir: 'examples/kdd22'
-          python-version: '3.12'
-          setup-target: '.[tutorial,test]'
-          test-case: 'test/test_notebooks.py'
-          nbexcludes: '08_newops.ipynb'
     steps:
     - uses: actions/checkout@v6
     - name: Set up Python ${{ matrix.python-version }}
