@@ -17,6 +17,27 @@ Schema-enhanced versions of the operators from `Snap ML`_ to enable hyperparamet
 
 .. _`Snap ML`: https://www.zurich.ibm.com/snapml/
 
+Example
+=======
+
+The following example shows how to use a Snap ML classifier with Lale::
+
+    from lale.lib.snapml import SnapLogisticRegression
+    from sklearn.datasets import load_breast_cancer
+    from sklearn.metrics import accuracy_score
+    from sklearn.model_selection import train_test_split
+
+    X, y = load_breast_cancer(return_X_y=True)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, random_state=42
+    )
+
+    clf = SnapLogisticRegression()
+    clf = clf.fit(X_train, y_train)
+    predictions = clf.predict(X_test)
+
+    print(accuracy_score(y_test, predictions))
+
 Operators
 =========
 
