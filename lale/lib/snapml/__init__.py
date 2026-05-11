@@ -21,7 +21,7 @@ Example
 =======
 
 This example demonstrates a simple Lale pipeline using SnapLogisticRegression,
-including schema validation and operator composition:
+including schema validation and operator composition: 
 
 .. code-block:: python
     
