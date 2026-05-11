@@ -17,7 +17,7 @@ Schema-enhanced versions of the operators from `Snap ML`_ to enable hyperparamet
 
 .. _`Snap ML`: https://www.zurich.ibm.com/snapml/
 
-Example
+Example 
 =======
 
 This example demonstrates a simple Lale pipeline using SnapLogisticRegression,
