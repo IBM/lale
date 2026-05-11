@@ -20,24 +20,33 @@ Schema-enhanced versions of the operators from `Snap ML`_ to enable hyperparamet
 Example
 =======
 
-The following example shows how to use a Snap ML classifier with Lale on a binary classification dataset::
+This example demonstrates a simple Lale pipeline using SnapLogisticRegression,
+including schema validation and operator composition:
 
+.. code-block:: python
+    
     from lale.lib.snapml import SnapLogisticRegression
+    from lale.operators import make_pipeline
     from sklearn.datasets import load_breast_cancer
-    from sklearn.metrics import accuracy_score
     from sklearn.model_selection import train_test_split
-
+    
+    # Load dataset
     X, y = load_breast_cancer(return_X_y=True)
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, random_state=42
-    )
-
-    clf = SnapLogisticRegression()
-    clf = clf.fit(X_train, y_train)
-    predictions = clf.predict(X_test)
-
-    print(accuracy_score(y_test, predictions))
-
+    X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=42)
+    
+    # Create a Lale pipeline (shows Lale-specific features)
+    pipe = make_pipeline(SnapLogisticRegression())
+    
+    # Fit the pipeline
+    pipe = pipe.fit(X_train, y_train)
+    
+    # Make predictions
+    predictions = pipe.predict(X_test)
+    print(predictions)
+    
+    # Show schema validation (feature beyond scikit-learn)
+    pipe.print_schema()
+    
 Operators
 =========
 
