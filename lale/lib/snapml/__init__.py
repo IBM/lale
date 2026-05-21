@@ -42,7 +42,7 @@ from Lale and inspect its hyperparameter schema:
     trained = trainable.fit(X_train, y_train)
     predictions = trained.predict(X_test)
     print(accuracy_score(y_test, predictions))
-    
+
 Operators
 =========
 
@@ -75,6 +75,7 @@ Regressors:
 .. _`SnapRandomForestRegressor`: lale.lib.snapml.snap_random_forest_regressor.html
 .. _`SnapSVMClassifier`: lale.lib.snapml.snap_svm_classifier.html
 """
+
 from lale import register_lale_wrapper_modules
 
 from .batched_tree_ensemble_classifier import (
