@@ -17,6 +17,32 @@ Schema-enhanced versions of the operators from `Snap ML`_ to enable hyperparamet
 
 .. _`Snap ML`: https://www.zurich.ibm.com/snapml/
 
+Example
+=======
+
+The following example shows how to use a schema-enhanced Snap ML classifier
+from Lale and inspect its hyperparameter schema:
+
+.. code-block:: python
+
+    from lale.lib.snapml import SnapLogisticRegression
+    from sklearn.datasets import load_breast_cancer
+    from sklearn.metrics import accuracy_score
+    from sklearn.model_selection import train_test_split
+
+    X, y = load_breast_cancer(return_X_y=True)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, random_state=42
+    )
+
+    trainable = SnapLogisticRegression()
+    hyperparam_schema = trainable.get_schema("hyperparams")
+    print(hyperparam_schema["description"])
+
+    trained = trainable.fit(X_train, y_train)
+    predictions = trained.predict(X_test)
+    print(accuracy_score(y_test, predictions))
+
 Operators
 =========
 
@@ -49,6 +75,7 @@ Regressors:
 .. _`SnapRandomForestRegressor`: lale.lib.snapml.snap_random_forest_regressor.html
 .. _`SnapSVMClassifier`: lale.lib.snapml.snap_svm_classifier.html
 """
+
 from lale import register_lale_wrapper_modules
 
 from .batched_tree_ensemble_classifier import (
