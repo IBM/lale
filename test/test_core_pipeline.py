@@ -16,11 +16,11 @@ import pickle
 import traceback
 import typing
 import unittest
-import pytest
 
 import numpy as np
 import sklearn.datasets
 import sklearn.pipeline
+from sklearn.datasets import load_iris
 from sklearn.feature_selection import SelectKBest as SkSelectKBest
 from sklearn.metrics import accuracy_score, r2_score
 from sklearn.model_selection import train_test_split
@@ -1130,12 +1130,6 @@ class TestPartialFit(unittest.TestCase):
             )
 
     def test_missing_concat_features_error_message(self):
-        from sklearn.datasets import load_iris
-
-        import lale.settings
-        from lale.lib.lale import NoOp
-        from lale.lib.sklearn import LogisticRegression, PCA
-
         X, y = load_iris(return_X_y=True)
         trainable = (PCA() & NoOp) >> LogisticRegression()
 
