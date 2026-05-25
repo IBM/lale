@@ -16,6 +16,7 @@ import pickle
 import traceback
 import typing
 import unittest
+import pytest
 
 import numpy as np
 import sklearn.datasets
@@ -1127,3 +1128,29 @@ class TestPartialFit(unittest.TestCase):
                 freeze_trained_prefix=False,
                 classes=[0, 1, 2],
             )
+
+    def test_missing_concat_features_error_message(self):
+        from sklearn.datasets import load_iris
+
+        import lale.settings
+        from lale.lib.lale import NoOp
+        from lale.lib.sklearn import LogisticRegression, PCA
+
+        X, y = load_iris(return_X_y=True)
+        trainable = (PCA() & NoOp) >> LogisticRegression()
+
+        old_disable_data_schema_validation = (
+            lale.settings.disable_data_schema_validation
+        )
+        try:
+            lale.settings.set_disable_data_schema_validation(False)
+            with self.assertRaises(ValueError) as exc_info:
+                trainable.fit(X, y)
+        finally:
+            lale.settings.set_disable_data_schema_validation(
+                old_disable_data_schema_validation
+            )
+
+        message = str(exc_info.exception)
+        self.assertIn("ConcatFeatures", message)
+        self.assertIn("pipeline using `&`", message)
