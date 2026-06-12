@@ -47,7 +47,7 @@ else:
         "setuptools>=61.0,<82.0",  # needed for hyperopt
         "hyperopt>=0.2,<=0.2.7",
         "jsonschema<=5",
-        "jsonsubschema>=0.0.6",
+        "jsonsubschema @ git+https://github.com/IBM/jsonsubschema.git@modernize",
         "scikit-learn>=1.0.0,<1.8.0",
         "scipy",
         "pandas<3.0.0",
