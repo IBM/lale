@@ -51,8 +51,10 @@ class _SMOTENCImpl(_BaseResamplerImpl):
     def fit(self, X, y=None):
         if self.resampler is None:
             if self._hyperparams["categorical_features"] is None:
+                from lale.helpers import _safe_issubdtype
+
                 self._hyperparams["categorical_features"] = [
-                    not np.issubdtype(typ, np.number) for typ in X.dtypes
+                    not _safe_issubdtype(typ, np.number) for typ in X.dtypes
                 ]
             self.resampler = imblearn.over_sampling.SMOTENC(**self._hyperparams)
         return super().fit(X, y)

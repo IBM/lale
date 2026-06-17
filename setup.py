@@ -50,7 +50,7 @@ else:
         "jsonsubschema>=0.0.6",
         "scikit-learn>=1.0.0,<1.8.0",
         "scipy",
-        "pandas<3.0.0",
+        "pandas",
         "packaging",
         "decorator",
         "typing-extensions",

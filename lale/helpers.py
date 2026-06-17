@@ -57,6 +57,32 @@ except ImportError:
     torch_cat = None  # type: ignore[assignment]
     torch_from_numpy = None  # type: ignore[assignment]
 
+
+def _safe_issubdtype(typ, dtype_class):
+    """
+    Safely check if typ is a subdtype of dtype_class.
+    Handles pandas extension dtypes (e.g., StringDtype in pandas 3.x) that
+    np.issubdtype cannot handle.
+
+    Parameters
+    ----------
+    typ : dtype-like
+        The dtype to check
+    dtype_class : dtype class
+        The dtype class to check against (e.g., np.number, np.integer)
+
+    Returns
+    -------
+    bool
+        True if typ is a subtype of dtype_class, False otherwise
+    """
+    try:
+        return np.issubdtype(typ, dtype_class)
+    except (TypeError, AttributeError):
+        # pandas extension dtypes raise TypeError in np.issubdtype
+        return False
+
+
 spark_loader = util.find_spec("pyspark")
 spark_installed = spark_loader is not None
 if spark_installed:
@@ -179,11 +205,11 @@ def ndarray_to_json(arr: np.ndarray, subsample_array: bool = True) -> Union[list
         if len(indices) == len(arr.shape):
             if isinstance(arr[indices], (bool, int, float, str)):
                 return arr[indices]
-            elif np.issubdtype(arr.dtype, np.bool_):
+            elif _safe_issubdtype(arr.dtype, np.bool_):
                 return bool(arr[indices])
-            elif np.issubdtype(arr.dtype, np.integer):
+            elif _safe_issubdtype(arr.dtype, np.integer):
                 return int(arr[indices])
-            elif np.issubdtype(arr.dtype, np.number):
+            elif _safe_issubdtype(arr.dtype, np.number):
                 return float(arr[indices])
             elif arr.dtype.kind in ["U", "S", "O"]:
                 return str(arr[indices])
