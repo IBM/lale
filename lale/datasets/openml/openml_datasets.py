@@ -790,6 +790,14 @@ def fetch(
     else:
         col_names = [attr[0].lower() for attr in dataDictionary["attributes"]]
         df_all = pd.DataFrame(dataDictionary["data"], columns=col_names)
+        # Convert string columns to object dtype for backward compatibility with pandas 2.x
+        # In pandas 3.x, string columns use StringDtype by default which causes issues with sklearn
+        for col in df_all.columns:
+            if (
+                hasattr(df_all[col].dtype, "name")
+                and df_all[col].dtype.name == "string"
+            ):
+                df_all[col] = df_all[col].astype("object")
         assert target_col in col_names, (target_col, col_names)
         y = df_all[target_col]
         # the type stubs for pandas are not currently complete enough to type this correctly
