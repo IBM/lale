@@ -684,6 +684,14 @@ def fetch(
     y: Optional[Any] = None
     if preprocess:
         arffData = pd.DataFrame(dataDictionary["data"])
+        # Convert string columns to object dtype for backward compatibility with pandas 2.x
+        # In pandas 3.x, string columns use StringDtype by default which causes issues with SimpleImputer
+        for col in arffData.columns:
+            if (
+                hasattr(arffData[col].dtype, "name")
+                and arffData[col].dtype.name == "string"
+            ):
+                arffData[col] = arffData[col].astype("object")
         # arffData = arffData.fillna(0)
         attributes = dataDictionary["attributes"]
 
@@ -729,7 +737,9 @@ def fetch(
         transformers1 = [
             (
                 "imputer_str",
-                SimpleImputer(missing_values=None, strategy="most_frequent"),
+                # Use np.nan for missing_values to handle both None and np.nan
+                # In pandas 3.x, pd.NA becomes np.nan when converted to object dtype
+                SimpleImputer(missing_values=np.nan, strategy="most_frequent"),
                 categorical_cols,
             ),
             ("imputer_num", SimpleImputer(strategy="mean"), numeric_cols),
@@ -780,6 +790,14 @@ def fetch(
     else:
         col_names = [attr[0].lower() for attr in dataDictionary["attributes"]]
         df_all = pd.DataFrame(dataDictionary["data"], columns=col_names)
+        # Convert string columns to object dtype for backward compatibility with pandas 2.x
+        # In pandas 3.x, string columns use StringDtype by default which causes issues with sklearn
+        for col in df_all.columns:
+            if (
+                hasattr(df_all[col].dtype, "name")
+                and df_all[col].dtype.name == "string"
+            ):
+                df_all[col] = df_all[col].astype("object")
         assert target_col in col_names, (target_col, col_names)
         y = df_all[target_col]
         # the type stubs for pandas are not currently complete enough to type this correctly

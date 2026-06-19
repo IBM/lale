@@ -15,7 +15,7 @@
 from typing import Any, List, Literal, Optional, Tuple, Type, Union
 
 import numpy as np
-from numpy import issubdtype, ndarray
+from numpy import ndarray
 from pandas import DataFrame, Series
 from pandas.core.groupby import DataFrameGroupBy, SeriesGroupBy
 from scipy.sparse import csr_matrix
@@ -365,16 +365,34 @@ def strip_schema(obj):
 
 
 def _dtype_to_schema(typ) -> JSON_TYPE:
+    from lale.helpers import safe_issubdtype
+
     result: JSON_TYPE
-    if typ is bool or issubdtype(typ, np.bool_):
+    # Handle pandas extension dtypes (e.g., StringDtype in pandas 3.x)
+    # These are not np.dtype instances and have a 'name' attribute
+    if hasattr(typ, "name") and not isinstance(typ, np.dtype):
+        # Pandas extension dtype - check the name to determine the type
+        dtype_name = str(typ.name).lower()
+        if "string" in dtype_name or "str" in dtype_name:
+            result = {"type": "string"}
+        elif "int" in dtype_name:
+            result = {"type": "integer"}
+        elif "float" in dtype_name or "double" in dtype_name:
+            result = {"type": "number"}
+        elif "bool" in dtype_name:
+            result = {"type": "boolean"}
+        else:
+            # Default to string for unknown extension dtypes
+            result = {"type": "string"}
+    elif typ is bool or safe_issubdtype(typ, np.bool_):
         result = {"type": "boolean"}
-    elif issubdtype(typ, np.unsignedinteger):
+    elif safe_issubdtype(typ, np.unsignedinteger):
         result = {"type": "integer", "minimum": 0}
-    elif issubdtype(typ, np.integer):
+    elif safe_issubdtype(typ, np.integer):
         result = {"type": "integer"}
-    elif issubdtype(typ, np.number):
+    elif safe_issubdtype(typ, np.number):
         result = {"type": "number"}
-    elif issubdtype(typ, np.str_) or issubdtype(typ, np.bytes_):
+    elif safe_issubdtype(typ, np.str_) or safe_issubdtype(typ, np.bytes_):
         result = {"type": "string"}
     elif isinstance(typ, np.dtype):
         if typ.fields:
@@ -382,7 +400,7 @@ def _dtype_to_schema(typ) -> JSON_TYPE:
             result = {"type": "object", "properties": props}
         elif typ.shape:
             result = _shape_and_dtype_to_schema(typ.shape, typ.subdtype)
-        elif issubdtype(typ, np.object_):
+        elif safe_issubdtype(typ, np.object_):
             result = {"type": "string"}
         else:
             assert False, f"unexpected dtype {typ}"

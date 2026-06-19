@@ -23,25 +23,7 @@ import jsonschema
 import numpy as np
 import pandas as pd
 import sklearn.model_selection
-
-try:
-    import cvxpy  # noqa because the import is only done as a check and flake fails
-
-    cvxpy_installed = True
-except ImportError:
-    cvxpy_installed = False
-
-try:
-    import numba  # noqa because the import is only done as a check and flake fails
-
-    numba_installed = True
-except ImportError:
-    numba_installed = False
-
-try:
-    import tensorflow as tf
-except ImportError:
-    tf = None
+from packaging import version
 
 import lale.helpers
 import lale.lib.aif360
@@ -74,6 +56,31 @@ from lale.lib.sklearn import (
     LogisticRegression,
     OneHotEncoder,
 )
+
+
+def _pandas_version_ge_3():
+    """Check if pandas version is >= 3.0"""
+    return version.parse(pd.__version__) >= version.parse("3.0")
+
+
+try:
+    import cvxpy  # noqa because the import is only done as a check and flake fails
+
+    cvxpy_installed = True
+except ImportError:
+    cvxpy_installed = False
+
+try:
+    import numba  # noqa because the import is only done as a check and flake fails
+
+    numba_installed = True
+except ImportError:
+    numba_installed = False
+
+try:
+    import tensorflow as tf
+except ImportError:
+    tf = None
 
 
 class TestAIF360Datasets(unittest.TestCase):
@@ -291,6 +298,12 @@ class TestAIF360Datasets(unittest.TestCase):
         )
         self._attempt_dataset(X, y, fairness_info, 16578, 1825, {0, 1}, 0.496)
 
+    @unittest.skipIf(
+        _pandas_version_ge_3(),
+        "MEPS dataset preprocessing with aif360 is incompatible with pandas 3.x due to "
+        "aif360's internal use of StandardDataset which tries to assign float values to "
+        "StringDtype columns. This is a limitation in the aif360 library itself.",
+    )
     def test_dataset_meps_panel19_fy2015_pd_num(self):
         X, y, fairness_info = lale.lib.aif360.fetch_meps_panel19_fy2015_df(
             preprocess=True
@@ -303,6 +316,12 @@ class TestAIF360Datasets(unittest.TestCase):
         )
         self._attempt_dataset(X, y, fairness_info, 18849, 1825, {0, 1}, 0.493)
 
+    @unittest.skipIf(
+        _pandas_version_ge_3(),
+        "MEPS dataset preprocessing with aif360 is incompatible with pandas 3.x due to "
+        "aif360's internal use of StandardDataset which tries to assign float values to "
+        "StringDtype columns. This is a limitation in the aif360 library itself.",
+    )
     def test_dataset_meps_panel20_fy2015_pd_num(self):
         X, y, fairness_info = lale.lib.aif360.fetch_meps_panel20_fy2015_df(
             preprocess=True
@@ -315,6 +334,12 @@ class TestAIF360Datasets(unittest.TestCase):
         )
         self._attempt_dataset(X, y, fairness_info, 17052, 1936, {0, 1}, 0.462)
 
+    @unittest.skipIf(
+        _pandas_version_ge_3(),
+        "MEPS dataset preprocessing with aif360 is incompatible with pandas 3.x due to "
+        "aif360's internal use of StandardDataset which tries to assign float values to "
+        "StringDtype columns. This is a limitation in the aif360 library itself.",
+    )
     def test_dataset_meps_panel21_fy2016_pd_num(self):
         X, y, fairness_info = lale.lib.aif360.fetch_meps_panel21_fy2016_df(
             preprocess=True
