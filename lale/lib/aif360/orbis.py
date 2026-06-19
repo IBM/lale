@@ -135,9 +135,9 @@ def _orbis_resample(X, y, diaeresis_y, osizes, nsizes, sampler_hparams):
         **{h: v for h, v in sampler_hparams.items() if h not in ["replacement"]},
         "sampling_strategy": over_sizes,
     }
-    from lale.helpers import _safe_issubdtype
+    from lale.helpers import safe_issubdtype
 
-    cats_mask = [not _safe_issubdtype(typ, np.number) for typ in Xyy.dtypes]
+    cats_mask = [not safe_issubdtype(typ, np.number) for typ in Xyy.dtypes]
     if all(cats_mask):  # all nominal -> use SMOTEN
         over_op = imblearn.over_sampling.SMOTEN(**over_hparams)
     elif not any(cats_mask):  # all continuous -> use vanilla SMOTE

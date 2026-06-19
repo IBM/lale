@@ -365,7 +365,7 @@ def strip_schema(obj):
 
 
 def _dtype_to_schema(typ) -> JSON_TYPE:
-    from lale.helpers import _safe_issubdtype
+    from lale.helpers import safe_issubdtype
 
     result: JSON_TYPE
     # Handle pandas extension dtypes (e.g., StringDtype in pandas 3.x)
@@ -384,15 +384,15 @@ def _dtype_to_schema(typ) -> JSON_TYPE:
         else:
             # Default to string for unknown extension dtypes
             result = {"type": "string"}
-    elif typ is bool or _safe_issubdtype(typ, np.bool_):
+    elif typ is bool or safe_issubdtype(typ, np.bool_):
         result = {"type": "boolean"}
-    elif _safe_issubdtype(typ, np.unsignedinteger):
+    elif safe_issubdtype(typ, np.unsignedinteger):
         result = {"type": "integer", "minimum": 0}
-    elif _safe_issubdtype(typ, np.integer):
+    elif safe_issubdtype(typ, np.integer):
         result = {"type": "integer"}
-    elif _safe_issubdtype(typ, np.number):
+    elif safe_issubdtype(typ, np.number):
         result = {"type": "number"}
-    elif _safe_issubdtype(typ, np.str_) or _safe_issubdtype(typ, np.bytes_):
+    elif safe_issubdtype(typ, np.str_) or safe_issubdtype(typ, np.bytes_):
         result = {"type": "string"}
     elif isinstance(typ, np.dtype):
         if typ.fields:
@@ -400,7 +400,7 @@ def _dtype_to_schema(typ) -> JSON_TYPE:
             result = {"type": "object", "properties": props}
         elif typ.shape:
             result = _shape_and_dtype_to_schema(typ.shape, typ.subdtype)
-        elif _safe_issubdtype(typ, np.object_):
+        elif safe_issubdtype(typ, np.object_):
             result = {"type": "string"}
         else:
             assert False, f"unexpected dtype {typ}"

@@ -180,9 +180,9 @@ class _TargetEncoderImpl:
     def fit(self, X, y):
         if catenc_version is None:
             raise ValueError("The package 'category_encoders' is not installed.")
-        from lale.helpers import _safe_issubdtype
+        from lale.helpers import safe_issubdtype
 
-        if _safe_issubdtype(y.dtype, np.number):
+        if safe_issubdtype(y.dtype, np.number):
             numeric_y = y
         else:
             from sklearn.preprocessing import LabelEncoder

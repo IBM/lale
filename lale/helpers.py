@@ -58,7 +58,7 @@ except ImportError:
     torch_from_numpy = None  # type: ignore[assignment]
 
 
-def _safe_issubdtype(typ, dtype_class):
+def safe_issubdtype(typ: Any, dtype_class: Any) -> bool:
     """
     Safely check if typ is a subdtype of dtype_class.
     Handles pandas extension dtypes (e.g., StringDtype in pandas 3.x) that
@@ -66,9 +66,9 @@ def _safe_issubdtype(typ, dtype_class):
 
     Parameters
     ----------
-    typ : dtype-like
+    typ
         The dtype to check
-    dtype_class : dtype class
+    dtype_class
         The dtype class to check against (e.g., np.number, np.integer)
 
     Returns
@@ -205,11 +205,11 @@ def ndarray_to_json(arr: np.ndarray, subsample_array: bool = True) -> Union[list
         if len(indices) == len(arr.shape):
             if isinstance(arr[indices], (bool, int, float, str)):
                 return arr[indices]
-            elif _safe_issubdtype(arr.dtype, np.bool_):
+            elif safe_issubdtype(arr.dtype, np.bool_):
                 return bool(arr[indices])
-            elif _safe_issubdtype(arr.dtype, np.integer):
+            elif safe_issubdtype(arr.dtype, np.integer):
                 return int(arr[indices])
-            elif _safe_issubdtype(arr.dtype, np.number):
+            elif safe_issubdtype(arr.dtype, np.number):
                 return float(arr[indices])
             elif arr.dtype.kind in ["U", "S", "O"]:
                 return str(arr[indices])

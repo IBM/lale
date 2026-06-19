@@ -93,12 +93,12 @@ class _OrdinalEncoderImpl(MonoidableOperator[_OrdinalEncoderMonoid]):
     def _build_transformer(self):
         assert self._monoid is not None
 
-        from lale.helpers import _safe_issubdtype
+        from lale.helpers import safe_issubdtype
 
         def simplify_val(v):
-            if _safe_issubdtype(type(v), np.integer):
+            if safe_issubdtype(type(v), np.integer):
                 return int(v)
-            if _safe_issubdtype(type(v), np.floating):
+            if safe_issubdtype(type(v), np.floating):
                 return float(v)
             return v
 
