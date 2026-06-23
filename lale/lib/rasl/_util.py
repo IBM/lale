@@ -30,7 +30,7 @@ def get_obj_cols(df):
     obj_cols = []
     if _is_pandas_df(df):
         for idx, dt in enumerate(df.dtypes):
-            if dt == "object" or _is_category(dt):
+            if dt == "object" or _is_category(dt) or pd.api.types.is_string_dtype(dt):
                 obj_cols.append(df.columns.values[idx])
     elif _is_spark_df(df):
         for idx, (col, dt) in enumerate(df.dtypes):

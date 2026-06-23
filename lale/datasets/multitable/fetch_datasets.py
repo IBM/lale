@@ -256,7 +256,7 @@ def fetch_creditg_multitable_dataset(datatype: datatype_param_type = "pandas"):
     # existing credits is a fake table we are adding, so a join and count can create the `existing_credits` column
     df_col = X["existing_credits"]
     records = []
-    for row in df_col.iteritems():
+    for row in df_col.items():
         row_id = row[0]
         credit_count = int(row[1])
         for _i in range(credit_count):

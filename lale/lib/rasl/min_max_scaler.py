@@ -152,8 +152,11 @@ class _MinMaxScalerImpl(MonoidableOperator[_MinMaxScalerMonoid]):
         data_min_ = np.zeros(shape=n)
         data_max_ = np.zeros(shape=n)
         for i, c in enumerate(X_cols):
-            data_min_[i] = data_min_max[f"{c}_min"]
-            data_max_[i] = data_min_max[f"{c}_max"]
+            min_val = data_min_max[f"{c}_min"]
+            max_val = data_min_max[f"{c}_max"]
+            # Extract scalar value from Series if needed (for pandas >= 2.0)
+            data_min_[i] = min_val.iloc[0] if hasattr(min_val, "iloc") else min_val
+            data_max_[i] = max_val.iloc[0] if hasattr(max_val, "iloc") else max_val
         data_min_ = np.array(data_min_)
         data_max_ = np.array(data_max_)
         n_samples_seen_ = count(X)

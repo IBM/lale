@@ -79,6 +79,11 @@ class _HashingEncoderImpl(MonoidableOperator[_HashingEncoderMonoid]):
         cols = self._hyperparams["cols"]
         hash_method = self._hyperparams["hash_method"]
         N = self._hyperparams["n_components"]
+
+        if not cols:
+            # If no columns to encode, just pass through all columns
+            return Map(columns={}, remainder="passthrough")
+
         columns_hash = {
             col_name: hash_mod(hash_method, it[col_name], N) for col_name in cols
         }
