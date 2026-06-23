@@ -121,13 +121,13 @@ extras_require = {
         "ipython<8.8.0",
         "jupyter",
         "graphviz",
-        "xgboost<=1.5.1",
+        "xgboost<3.1.0",
         "imbalanced-learn",
         "liac-arff>=2.4.0",
         "aif360>=0.5.0",
         "BlackBoxAuditing",
         "typing-extensions",
-        "pandas<2.0.0",
+        "pandas",
     ],
 }
 

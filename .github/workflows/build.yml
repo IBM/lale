@@ -378,10 +378,6 @@ jobs:
       run: pip install -U numpy
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
-    - name: Fix tutorial dependencies
-      if: ${{ matrix.dir == 'examples/kdd22' }}
-      run: |
-        pip install "numpy<2.0.0" "pandas<2.0.0" "xgboost<=1.5.1"
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
@@ -457,10 +453,6 @@ jobs:
       run: pip install -U numpy
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
-    - name: Fix tutorial dependencies
-      if: ${{ matrix.dir == 'examples/kdd22' }}
-      run: |
-        pip install "numpy<2.0.0" "pandas<2.0.0" "xgboost<=1.5.1"
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
