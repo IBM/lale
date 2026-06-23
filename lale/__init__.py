@@ -16,21 +16,8 @@ import sys
 
 __version__ = "0.9.3"
 
-try:
-    # This variable is injected in the __builtins__ by the build
-    # process. It is used to not try to import rest of the lale packages when
-    # it is being installed.
-    __LALE_SETUP__  # type: ignore  # pylint:disable=used-before-assignment
-except NameError:
-    __LALE_SETUP__ = False
-
-if __LALE_SETUP__:  # type: ignore
-    sys.stderr.write("Partial import of lale during the build process.\n")
-    # We are not importing the rest of lale during the build
-    # process.
-else:
-    # all other code will go here.
-    from .operator_wrapper import (
-        register_lale_wrapper_modules as register_lale_wrapper_modules,
-    )
-    from .operator_wrapper import wrap_imported_operators as wrap_imported_operators
+# all other code will go here.
+from .operator_wrapper import (
+    register_lale_wrapper_modules as register_lale_wrapper_modules,
+)
+from .operator_wrapper import wrap_imported_operators as wrap_imported_operators
