@@ -195,10 +195,19 @@ class TestImblearn(unittest.TestCase):
     def test_smoten(self):
         from lale.lib.imblearn import SMOTEN
 
-        (train_X, train_y), (test_X, _) = lale.datasets.openml.fetch(
+        (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
             "breast-cancer", "classification", astype="pandas", preprocess=False
         )
-        # SMOTEN can only use Nominal features
+        # SMOTEN can only use Nominal features and doesn't handle missing values
+        # Drop rows with missing values.
+        train_mask = ~train_X.isnull().any(axis=1)
+        train_X = train_X[train_mask]
+        train_y = train_y[train_mask]
+
+        test_mask = ~test_X.isnull().any(axis=1)
+        test_X = test_X[test_mask]
+        test_y = test_y[test_mask]
+
         pipeline = SMOTEN(operator=OrdinalEncoder() >> LogisticRegression())
         trained = pipeline.fit(train_X, train_y)
         _ = trained.predict(test_X)
