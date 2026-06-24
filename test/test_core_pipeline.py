@@ -20,12 +20,14 @@ import unittest
 import numpy as np
 import sklearn.datasets
 import sklearn.pipeline
+from sklearn.datasets import load_iris
 from sklearn.feature_selection import SelectKBest as SkSelectKBest
 from sklearn.metrics import accuracy_score, r2_score
 from sklearn.model_selection import train_test_split
 
 import lale.datasets.openml
 import lale.helpers
+import lale.settings as lale_settings
 from lale.helpers import import_from_sklearn_pipeline
 from lale.lib.lale import ConcatFeatures, NoOp
 from lale.lib.sklearn import (
@@ -870,7 +872,6 @@ class TestAutoPipeline(unittest.TestCase):
 
 class TestOperatorChoice(unittest.TestCase):
     def test_make_choice_with_instance(self):
-        from sklearn.datasets import load_iris
 
         iris = load_iris()
         X, y = iris.data, iris.target
@@ -1127,3 +1128,23 @@ class TestPartialFit(unittest.TestCase):
                 freeze_trained_prefix=False,
                 classes=[0, 1, 2],
             )
+
+    def test_missing_concat_features_error_message(self):
+        X, y = load_iris(return_X_y=True)
+        trainable = (PCA() & NoOp) >> LogisticRegression()
+
+        old_disable_data_schema_validation = (
+            lale_settings.disable_data_schema_validation
+        )
+        try:
+            lale_settings.set_disable_data_schema_validation(False)
+            with self.assertRaises(ValueError) as exc_info:
+                trainable.fit(X, y)
+        finally:
+            lale_settings.set_disable_data_schema_validation(
+                old_disable_data_schema_validation
+            )
+
+        message = str(exc_info.exception)
+        self.assertIn("ConcatFeatures", message)
+        self.assertIn("pipeline using `&`", message)
