@@ -624,5 +624,5 @@ class SearchSpaceOperatorVisitor(Visitor):
     def schemaToSearchSpace(
         self, longName: str, name: str, schema: JsonSchema
     ) -> Optional[SearchSpace]:
-        (_s, h) = self.schemaToSimplifiedAndSearchSpace(longName, name, schema)
+        _s, h = self.schemaToSimplifiedAndSearchSpace(longName, name, schema)
         return h

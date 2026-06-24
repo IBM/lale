@@ -941,10 +941,10 @@ class TestSimpleImputer(unittest.TestCase):
             if tgt == "pandas":
                 train_X.loc[train_X[col_name] == value, col_name] = (
                     missing_value
-                )  # type:ignore
+                )  # type: ignore
                 test_X.loc[test_X[col_name] == value, col_name] = (
                     missing_value
-                )  # type:ignore
+                )  # type: ignore
             elif tgt == "spark":
                 from pyspark.sql.functions import col, when
 
@@ -1237,10 +1237,10 @@ class TestSimpleImputer(unittest.TestCase):
                     data3 = data3_pandas
                     test_X = test_X_pandas
                 elif tgt == "spark":
-                    data1 = pandas2spark(data1_pandas)  # type:ignore
-                    data2 = pandas2spark(data2_pandas)  # type:ignore
-                    data3 = pandas2spark(data3_pandas)  # type:ignore
-                    test_X = pandas2spark(test_X_pandas)  # type:ignore
+                    data1 = pandas2spark(data1_pandas)  # type: ignore
+                    data2 = pandas2spark(data2_pandas)  # type: ignore
+                    data3 = pandas2spark(data3_pandas)  # type: ignore
+                    test_X = pandas2spark(test_X_pandas)  # type: ignore
                 else:
                     assert False
                 rasl_trainable = prefix >> RaslSimpleImputer(

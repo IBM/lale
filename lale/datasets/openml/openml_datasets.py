@@ -32,12 +32,10 @@ sklearn_version = version.parse(getattr(sklearn, "__version__"))
 try:
     import arff
 except ModuleNotFoundError as import_exc:
-    raise ModuleNotFoundError(
-        """Package 'arff' not found. You can install it with
+    raise ModuleNotFoundError("""Package 'arff' not found. You can install it with
     pip install 'liac-arff>=2.4.0'
 or with
-    pip install 'lale[full]'"""
-    ) from import_exc
+    pip install 'lale[full]'""") from import_exc
 
 download_data_dir = download_data_cache_dir / "openml" / "download_data"
 

@@ -62,11 +62,9 @@ class _BatchingImpl:
             try:
                 from torch.utils.data import DataLoader
             except ImportError as exc:
-                raise ImportError(
-                    """Batching uses Pytorch for data loading. It is not
+                raise ImportError("""Batching uses Pytorch for data loading. It is not
                 installed in the current environment, please install
-                the package and try again."""
-                ) from exc
+                the package and try again.""") from exc
             if isinstance(X, DataLoader):
                 assert (
                     y is None
@@ -91,9 +89,9 @@ class _BatchingImpl:
 
         self.operator = fit_with_batches(
             pipeline=self.operator,
-            batches_train=data_loader,  # type:ignore
+            batches_train=data_loader,  # type: ignore
             batches_valid=None,
-            unique_class_labels=classes,  # type:ignore
+            unique_class_labels=classes,  # type: ignore
             max_resident=self.max_resident,
             prio=prio,
             partial_transform=self.partial_transform,
@@ -113,11 +111,9 @@ class _BatchingImpl:
             try:
                 from torch.utils.data import DataLoader
             except ImportError as exc:
-                raise ImportError(
-                    """Batching uses Pytorch for data loading. It is not
+                raise ImportError("""Batching uses Pytorch for data loading. It is not
                 installed in the current environment, please install
-                the package and try again."""
-                ) from exc
+                the package and try again.""") from exc
             if isinstance(X, DataLoader):
                 assert (
                     y is None

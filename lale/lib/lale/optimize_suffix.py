@@ -38,7 +38,7 @@ class _OptimizeSuffix:
         suffix: Optional[lale.operators.Operator] = None,
         optimizer: Optional[lale.operators.PlannedIndividualOp] = None,
         optimizer_args=None,
-        **kwargs
+        **kwargs,
     ):
         self._prefix = prefix
 
@@ -102,7 +102,7 @@ class _OptimizeSuffix:
         self,
         pipeline_name: Optional[str] = None,
         astype: lale.helpers.astype_type = "lale",
-        **kwargs
+        **kwargs,
     ):
         """Retrieve one of the trials.
 

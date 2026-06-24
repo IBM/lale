@@ -251,10 +251,8 @@ class _SimpleImputerImpl(MonoidableOperator[_SimpleImputerMonoid]):
         # validate that the dataset is either a pandas dataframe or spark.
         # For example, sparse matrix is not allowed.
         if not _is_df(X):
-            raise ValueError(
-                f"""Unsupported type(X) {type(X)} for SimpleImputer.
-            Only pandas.DataFrame or pyspark.sql.DataFrame are allowed."""
-            )
+            raise ValueError(f"""Unsupported type(X) {type(X)} for SimpleImputer.
+            Only pandas.DataFrame or pyspark.sql.DataFrame are allowed.""")
         # validate input to check the correct dtype and strategy
         # `mean` and `median` are not applicable to string inputs
         if not _is_numeric_df(X) and self._hyperparams["strategy"] in [

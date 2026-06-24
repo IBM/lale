@@ -38,7 +38,7 @@ class _ReweighingImpl:
         protected_attributes,
         estimator,
         unfavorable_labels=None,
-        redact=True
+        redact=True,
     ):
         _validate_fairness_info(
             favorable_labels, protected_attributes, unfavorable_labels, False

@@ -29,7 +29,7 @@ class _SortIndexImpl:
         if _is_pandas_df(X):
             ordered_df = X.sort_index(ascending=self.ascending)
         elif _is_spark_df(X):
-            index_cols = get_index_names(X)  # type:ignore
+            index_cols = get_index_names(X)  # type: ignore
             ordered_df = X.orderBy(index_cols, ascending=self.ascending)
         else:
             raise ValueError(

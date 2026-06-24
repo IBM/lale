@@ -181,7 +181,7 @@ _input_fit_schema = {
 }
 
 if sklearn_version >= version.Version("1.3"):
-    _input_fit_schema["properties"]["sample_weight"] = {  # type:ignore
+    _input_fit_schema["properties"]["sample_weight"] = {  # type: ignore
         "anyOf": [
             {"type": "array", "items": {"type": "number"}},
             {"enum": [None, "deprecated"]},
@@ -191,7 +191,7 @@ if sklearn_version >= version.Version("1.3"):
     }
 
 if sklearn_version >= version.Version("1.5"):
-    del _input_fit_schema["properties"]["sample_weight"]  # type:ignore
+    del _input_fit_schema["properties"]["sample_weight"]  # type: ignore
 
 _input_transform_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",

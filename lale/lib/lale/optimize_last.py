@@ -33,7 +33,7 @@ class _OptimizeLastImpl:
         estimator: Optional[lale.operators.TrainedOperator] = None,
         last_optimizer: Optional[lale.operators.Operator] = None,
         optimizer_args=None,
-        **kwargs
+        **kwargs,
     ):
         if estimator is None:
             last_estimator = None
@@ -56,7 +56,7 @@ class _OptimizeLastImpl:
             suffix=last_estimator,
             optimizer=last_optimizer,
             optimizer_args=optimizer_args,
-            **kwargs
+            **kwargs,
         )
 
     def __getattr__(self, item):

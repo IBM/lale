@@ -76,7 +76,7 @@ _input_fit_schema = {
 }
 
 if sklearn_version >= version.Version("1.3"):
-    _input_fit_schema["properties"]["sample_weight"] = {  # type:ignore
+    _input_fit_schema["properties"]["sample_weight"] = {  # type: ignore
         "anyOf": [{"type": "array", "items": {"type": "number"}}, {"enum": [None]}],
         "default": None,
         "description": 'Contains weight values to be associated with each sample. Only possible when strategy is set to "quantile".',

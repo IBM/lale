@@ -102,13 +102,13 @@ def get_search_space_grids(
                 warnings.warn(
                     f"get_search_space_grids(num_grids={num_grids}) sampling {math.ceil(num_grids)}/{len(all_parameters)}"
                 )
-                return random.sample(all_parameters, math.ceil(num_grids))
+                return random.sample(all_parameters, math.ceil(num_grids))  # nosec
         else:
             samples = round(len(all_parameters) * num_grids)
             warnings.warn(
                 f"get_search_space_grids(num_grids={num_grids}) sampling {samples}/{len(all_parameters)}"
             )
-            return random.sample(all_parameters, samples)
+            return random.sample(all_parameters, samples)  # nosec
 
 
 def search_space_to_grids(hp: SearchSpace) -> List[SearchSpaceGrid]:

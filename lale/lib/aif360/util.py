@@ -1122,16 +1122,12 @@ _SCORER_DOCSTRING_RETURNS = """
 
 _SCORER_DOCSTRING = _SCORER_DOCSTRING_ARGS + _SCORER_DOCSTRING_RETURNS
 
-_BLENDED_SCORER_DOCSTRING = (
-    _SCORER_DOCSTRING_ARGS
-    + """
+_BLENDED_SCORER_DOCSTRING = _SCORER_DOCSTRING_ARGS + """
 
     fairness_weight : number, >=0, <=1, default=0.5
 
       At the default weight of 0.5, the two metrics contribute equally to the blended result. Above 0.5, fairness influences the combination more, and below 0.5, fairness influences the combination less. In the extreme, at 1, the outcome is only determined by fairness, and at 0, the outcome ignores fairness.
-"""
-    + _SCORER_DOCSTRING_RETURNS
-)
+""" + _SCORER_DOCSTRING_RETURNS
 
 
 class _AccuracyAndSymmDIData(MetricMonoid["_AccuracyAndSymmDIData"]):
