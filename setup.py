@@ -12,39 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
 import os
 import re
 from datetime import datetime
 from pathlib import Path
 
-from setuptools import find_packages, setup
-
-logger = logging.getLogger(__name__)
-logger.addHandler(logging.StreamHandler())
-
-
-with open("README.md", "r", encoding="utf-8") as fh:
-    long_description = fh.read()
-
-on_rtd = os.environ.get("READTHEDOCS") == "True"
-if on_rtd:
-    install_requires = []
-else:
-    install_requires = [
-        "numpy",
-        "black>=22.1.0",
-        "setuptools>=61.0,<82.0",  # needed for hyperopt
-        "hyperopt>=0.2,<=0.2.7",
-        "jsonschema<=5",
-        "jsonsubschema>=0.0.6",
-        "scikit-learn>=1.0.0,<1.8.0",
-        "scipy",
-        "pandas",
-        "packaging",
-        "decorator",
-        "typing-extensions",
-    ]
+from setuptools import setup
 
 
 def get_version() -> str:
@@ -55,115 +28,14 @@ def get_version() -> str:
     return match.group(1)
 
 
-VERSION_BASE = get_version()
-
-if "TRAVIS" in os.environ:
-    now = datetime.now().strftime("%y%m%d%H%M")
-    VERSION = f"{VERSION_BASE}-{now}"
-else:
-    VERSION = VERSION_BASE
-
-extras_require = {
-    "full": [
-        "mystic",
-        "graphviz",
-        "xgboost<3.1.0",
-        "lightgbm<4.7.0",
-        "snapml>=1.7.0rc3,<1.18.0",
-        "liac-arff>=2.4.0",
-        "tensorflow>=2.4.0",
-        "numba",
-        "aif360>=0.5.0",
-        "torch>=1.0",
-        "BlackBoxAuditing",
-        "imbalanced-learn",
-        "cvxpy>=1.0",
-        "fairlearn",
-        "h5py",
-    ],
-    "dev": ["pre-commit"],
-    "test": [
-        "mystic",
-        "joblib",
-        "ipython<8.8.0",
-        "jupyter",
-        "graphviz",
-        "lxml<5.2.0",
-        "sphinx>=5.0.0",
-        "sphinx_rtd_theme>=0.5.2",
-        "docutils<0.17",
-        "m2r2",
-        "sphinxcontrib.apidoc",
-        "sphinxcontrib-svg2pdfconverter",
-        "pytest",
-        "pyspark<4.0.0",
-        "func_timeout",
-        "category-encoders",
-        "pynisher==0.6.4",
-    ],
-    "fairness": [
-        "mystic",
-        "liac-arff>=2.4.0",
-        "aif360>=0.5.0",
-        "imbalanced-learn",
-        "BlackBoxAuditing",
-    ],
-    "autoai-fairness": [
-        "dill<=0.3.8",
-        "mystic<=0.3.9",
-        "klepto<=0.2.2",
-        "liac-arff>=2.4.0",
-        "aif360>=0.5.0",
-        "imbalanced-learn",
-        "BlackBoxAuditing",
-    ],
-    "tutorial": [
-        "ipython<8.8.0",
-        "jupyter",
-        "graphviz",
-        "xgboost<3.1.0",
-        "imbalanced-learn",
-        "liac-arff>=2.4.0",
-        "aif360>=0.5.0",
-        "BlackBoxAuditing",
-        "typing-extensions",
-        "pandas",
-    ],
-}
-
-classifiers = [
-    "Development Status :: 5 - Production/Stable",
-    "Intended Audience :: Developers",
-    "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: Apache Software License",
-    "Operating System :: MacOS",
-    "Operating System :: Microsoft :: Windows",
-    "Operating System :: POSIX",
-    "Operating System :: Unix",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Topic :: Software Development",
-    "Topic :: Scientific/Engineering",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence",
-]
-
-setup(
-    name="lale",
-    version=VERSION,
-    author="Guillaume Baudart, Martin Hirzel, Kiran Kate, Parikshit Ram, Avraham Shinnar",
-    description="Library for Semi-Automated Data Science",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/IBM/lale",
-    python_requires=">=3.9",
-    package_data={"lale": ["py.typed"]},
-    packages=find_packages(),
-    license="Apache License 2.0",
-    classifiers=classifiers,
-    install_requires=install_requires,
-    extras_require=extras_require,
+version_base = get_version()
+version = (
+    f"{version_base}-{datetime.now().strftime('%y%m%d%H%M')}"
+    if "TRAVIS" in os.environ
+    else version_base
 )
+
+if os.environ.get("READTHEDOCS") == "True":
+    setup(version=version, install_requires=[])
+else:
+    setup(version=version)
