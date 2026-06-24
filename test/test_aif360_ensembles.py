@@ -71,7 +71,7 @@ class TestEnsemblesWithAIF360(unittest.TestCase):
             **self.fairness_info,
             estimator=BaggingClassifier(
                 **with_fixed_estimator_name(estimator=DecisionTreeClassifier())
-            )
+            ),
         )
         self._attempt_fit_predict(model)
 
@@ -124,7 +124,7 @@ class TestEnsemblesWithAIF360(unittest.TestCase):
             **self.fairness_info,
             estimator=AdaBoostClassifier(
                 **with_fixed_estimator_name(estimator=DecisionTreeClassifier())
-            )
+            ),
         )
         self._attempt_fit_predict(model)
 
@@ -172,7 +172,7 @@ class TestEnsemblesWithAIF360(unittest.TestCase):
                     ("dtc", DecisionTreeClassifier()),
                     ("lr", LogisticRegression()),
                 ]
-            )
+            ),
         )
         self._attempt_fit_predict(model)
 
@@ -226,7 +226,7 @@ class TestEnsemblesWithAIF360(unittest.TestCase):
                     ("dtc", DecisionTreeClassifier()),
                     ("lr", LogisticRegression()),
                 ]
-            )
+            ),
         )
         self._attempt_fit_predict(model)
 

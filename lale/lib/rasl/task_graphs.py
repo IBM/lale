@@ -125,19 +125,15 @@ class _Batch:
         elif isinstance(self.X, np.ndarray):
             np.save(name_X, self.X, allow_pickle=True)
         else:
-            raise ValueError(
-                f"""Spilling of {type(self.X)} is not supported.
-            Supported types are: pandas DataFrame, numpy ndarray."""
-            )
+            raise ValueError(f"""Spilling of {type(self.X)} is not supported.
+            Supported types are: pandas DataFrame, numpy ndarray.""")
         if isinstance(self.y, pd.Series):
             cast(pd.Series, self.y).to_pickle(name_y)
         elif isinstance(self.y, np.ndarray):
             np.save(name_y, self.y, allow_pickle=True)
         else:
-            raise ValueError(
-                f"""Spilling of {type(self.y)} is not supported.
-            Supported types are: pandas DataFrame, pandas Series, and numpy ndarray."""
-            )
+            raise ValueError(f"""Spilling of {type(self.y)} is not supported.
+            Supported types are: pandas DataFrame, pandas Series, and numpy ndarray.""")
         self.X, self.y = name_X, name_y
 
     def load_spilled(self) -> None:

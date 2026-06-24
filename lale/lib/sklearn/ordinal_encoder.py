@@ -73,7 +73,7 @@ class _OrdinalEncoderImpl:
                 return result
             except ValueError as e:
                 if self.handle_unknown == "ignore":
-                    (transformed_X, X_mask) = self._wrapped_model._transform(
+                    transformed_X, X_mask = self._wrapped_model._transform(
                         X, handle_unknown="ignore"
                     )
                     # transformed_X is output with the encoding of the unknown category in column i set to be same

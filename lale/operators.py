@@ -2276,7 +2276,7 @@ class IndividualOp(Operator):
                     f"threw exception {e}"
                 )
                 # TODO: Is this really a reasonable fallback?
-                instance = class_.__new__()  # type:ignore
+                instance = class_.__new__()  # type: ignore
             self._impl = instance
         return self._impl
 
@@ -5171,7 +5171,7 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType_co]):
             choice_index = 0
             chosen_params = impl_params
         else:
-            (choice_index, chosen_params) = partition_sklearn_choice_params(impl_params)
+            choice_index, chosen_params = partition_sklearn_choice_params(impl_params)
 
         assert 0 <= choice_index < len(choices)
         choice: Operator = choices[choice_index]
@@ -5663,7 +5663,7 @@ def with_structured_params(
             if len(sub_op) == 1:
                 sub_op = sub_op[0]
             else:
-                (disc, chosen_params) = partition_sklearn_choice_params(params)
+                disc, chosen_params = partition_sklearn_choice_params(params)
                 assert 0 <= disc < len(sub_op)
                 sub_op = sub_op[disc]
                 params = chosen_params

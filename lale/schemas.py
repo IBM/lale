@@ -214,7 +214,7 @@ class Object(Schema):
         forOptimizer: bool = True,
         required: Option[List[str]] = undefined,
         additionalProperties: Option[bool] = undefined,
-        **kwargs: Schema
+        **kwargs: Schema,
     ):
         super().__init__(desc, default, forOptimizer)
         self.set("type", "object")
