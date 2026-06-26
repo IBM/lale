@@ -59,7 +59,7 @@ Homepage = "https://github.com/IBM/lale"
 full = [
   "mystic",
   "graphviz",
-  "xgboost<3.1.0",
+  "xgboost<3.4.0",
   "lightgbm<4.7.0",
   "snapml>=1.7.0rc3,<1.18.0",
   "liac-arff>=2.4.0",
