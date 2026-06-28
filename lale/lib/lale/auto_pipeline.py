@@ -280,6 +280,11 @@ class _AutoPipelineImpl:
         result = best_pipeline.predict(X, **predict_params)
         return result
 
+    def predict_proba(self, X, **predict_proba_params):
+        best_pipeline = self._pipelines[self._name_of_best]
+        result = best_pipeline.predict_proba(X, **predict_proba_params)
+        return result
+
     def summary(self):
         """Table summarizing the trial results (name, tid, loss, time, log_loss, status).
         Returns
@@ -394,12 +399,19 @@ _input_predict_schema = {
     },
 }
 
+_input_predict_proba_schema = _input_predict_schema
+
 _output_predict_schema = {
     "anyOf": [
         {"type": "array", "items": {"type": "number"}},
         {"type": "array", "items": {"type": "string"}},
         {"type": "array", "items": {"type": "boolean"}},
     ]
+}
+
+_output_predict_proba_schema = {
+    "type": "array",
+    "items": {"type": "array", "items": {"type": "number"}},
 }
 
 _combined_schemas = {
@@ -421,6 +433,8 @@ For an example, see `demo_auto_pipeline.ipynb`_.
         "input_fit": _input_fit_schema,
         "input_predict": _input_predict_schema,
         "output_predict": _output_predict_schema,
+        "input_predict_proba": _input_predict_proba_schema,
+        "output_predict_proba": _output_predict_proba_schema,
     },
 }
 
