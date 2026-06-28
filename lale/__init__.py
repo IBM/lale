@@ -14,7 +14,7 @@
 
 import sys
 
-__version__ = "0.9.3"
+__version__ = "0.9.4"
 
 # all other code will go here.
 from .operator_wrapper import (
