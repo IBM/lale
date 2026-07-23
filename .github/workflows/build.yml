@@ -26,7 +26,7 @@ jobs:
     - name: Install numpy
       run: pip install -U numpy
     - name: Install dependencies
-      run: pip install --upgrade --upgrade-strategy eager .[full,test,dev]
+      run: pip install .[full,test,dev]
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
@@ -79,7 +79,7 @@ jobs:
     - name: Install numpy
       run: pip install -U numpy
     - name: Install dependencies
-      run: pip install --upgrade --upgrade-strategy eager .[full,test,dev]
+      run: pip install .[full,test,dev]
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
@@ -176,7 +176,7 @@ jobs:
     - name: Install numpy
       run: pip install -U numpy
     - name: Install dependencies
-      run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
+      run: pip install ${{matrix.setup-target}}
     # - name: Install deps for test_relational_sklearn
     #   if: ${{ matrix.test-case == 'test/test_relational_sklearn.py' }}
     #   run: pip install 'scikit-learn>=1.0'
@@ -266,7 +266,7 @@ jobs:
     - name: Install numpy
       run: pip install -U numpy
     - name: Install dependencies
-      run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
+      run: pip install ${{matrix.setup-target}}
     # - name: Install deps for test_relational_sklearn
     #   if: ${{ matrix.test-case == 'test/test_relational_sklearn.py' }}
     #   run: pip install 'scikit-learn>=1.0'
@@ -316,11 +316,11 @@ jobs:
     - name: Install numpy
       run: pip install -U numpy
     - name: Install dependencies
-      run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
+      run: pip install ${{matrix.setup-target}}
     - name: Install pytest
       run: pip install pytest
     - name: Install latest scikit-learn, xgboost, and lightgbm
-      run: pip install --upgrade --upgrade-strategy eager scikit-learn xgboost lightgbm
+      run: pip install scikit-learn xgboost lightgbm
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
@@ -377,7 +377,7 @@ jobs:
     - name: Install numpy
       run: pip install -U numpy
     - name: Install dependencies
-      run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
+      run: pip install ${{matrix.setup-target}}
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
@@ -452,7 +452,7 @@ jobs:
     - name: Install numpy
       run: pip install -U numpy
     - name: Install dependencies
-      run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
+      run: pip install ${{matrix.setup-target}}
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
@@ -489,7 +489,7 @@ jobs:
     - name: Install pytest
       run: pip install pytest
     - name: Install dependencies
-      run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
+      run: pip install ${{matrix.setup-target}}
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
