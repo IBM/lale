@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0,<82.0"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -40,8 +40,8 @@ dynamic = ["version"]
 dependencies = [
   "numpy",
   "black>=22.1.0",
-  "setuptools>=61.0,<82.0",
-  "hyperopt>=0.2,<=0.2.7",
+  "setuptools>=61.0",
+  "hyperopt==0.3.0rc0",
   "jsonschema<=5",
   "jsonsubschema>=0.0.6",
   "scikit-learn>=1.0.0,<1.8.0",
