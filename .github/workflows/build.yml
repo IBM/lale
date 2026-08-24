@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.10', '3.11', '3.12']
+        python-version: ['3.11', '3.12', '3.13', '3.14']
 
     steps:
     - uses: actions/checkout@v6
@@ -130,17 +130,20 @@ jobs:
         - test/test_snapml.py
         - test/test_relational.py
         - test/test_category_encoders.py
-        python-version: ['3.10']
+        python-version: ['3.13']
         setup-target: ['.[full,test]']
         include:
-        - test-case: test/test_core_misc.py
-          python-version: '3.10'
-          setup-target: '.[full,test]'
         - test-case: test/test_core_misc.py
           python-version: '3.11'
           setup-target: '.[full,test]'
         - test-case: test/test_core_misc.py
           python-version: '3.12'
+          setup-target: '.[full,test]'
+        - test-case: test/test_core_misc.py
+          python-version: '3.13'
+          setup-target: '.[full,test]'
+        - test-case: test/test_core_misc.py
+          python-version: '3.14'
           setup-target: '.[full,test]'
         - test-case: test/test_autogen_lib.py
           python-version: '3.11'
@@ -214,17 +217,20 @@ jobs:
         - test/test_pipeline.py
         - test/test_relational.py
         - test/test_category_encoders.py
-        python-version: ['3.10', '3.11', '3.12']
+        python-version: ['3.11', '3.12', '3.13']
         setup-target: ['.[full,test]']
         include:
         - test-case: test/test_core_transformers.py
-          python-version: '3.10'
-          setup-target: '.[full,test]'
-        - test-case: test/test_core_transformers.py
-          python-version: '3.10'
-          setup-target: '.[full,test]'
-        - test-case: test/test_core_transformers.py
           python-version: '3.11'
+          setup-target: '.[full,test]'
+        - test-case: test/test_core_transformers.py
+          python-version: '3.12'
+          setup-target: '.[full,test]'
+        - test-case: test/test_core_transformers.py
+          python-version: '3.13'
+          setup-target: '.[full,test]'
+        - test-case: test/test_core_transformers.py
+          python-version: '3.14'
           setup-target: '.[full,test]'
         - test-case: test/test_autogen_lib.py
           python-version: '3.11'
@@ -239,10 +245,10 @@ jobs:
         #   python-version: '3.11'
         #   setup-target: '.[full,test]'
         - test-case: test/test_snapml.py
-          python-version: '3.10'
+          python-version: '3.11'
           setup-target: '.[full,test]'
         - test-case: test/test_snapml.py
-          python-version: '3.11'
+          python-version: '3.12'
           setup-target: '.[full,test]'
 
     steps:
@@ -293,7 +299,7 @@ jobs:
         - test/test_core_classifiers.py
         - test/test_core_regressors.py
         - test/test_core_transformers.py
-        python-version: ['3.10', '3.11', '3.12']
+        python-version: ['3.11', '3.12', '3.13', '3.14']
         setup-target: ['.']
     steps:
     - uses: actions/checkout@v6
@@ -405,7 +411,7 @@ jobs:
         - demo_
         - docs_
         - talk_
-        python-version: ['3.10', '3.11', '3.12']
+        python-version: ['3.11', '3.12', '3.13']
         setup-target: ['.[full,test]']
         test-case: ['test/test_notebooks.py']
         dir: ['examples']
@@ -422,12 +428,12 @@ jobs:
           test-case: 'test/test_notebooks.py'
           nbexcludes: '02_total.ipynb 08_newops.ipynb'
         - dir: 'examples/kdd22'
-          python-version: '3.10'
+          python-version: '3.12'
           setup-target: '.[tutorial,test]'
           test-case: 'test/test_notebooks.py'
           nbexcludes: '08_newops.ipynb'
         - dir: 'examples/kdd22'
-          python-version: '3.11'
+          python-version: '3.13'
           setup-target: '.[tutorial,test]'
           test-case: 'test/test_notebooks.py'
           nbexcludes: '08_newops.ipynb'
