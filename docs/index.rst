@@ -67,8 +67,6 @@ Operator libraries
 .. _`PyTorch`: https://pytorch.org/
 .. _`lale.lib.spacy`: modules/lale.lib.spacy.html#module-lale.lib.spacy
 .. _`spaCy`: https://spacy.io/
-.. _`lale.lib.tensorflow`: modules/lale.lib.tensorflow.html#module-lale.lib.tensorflow
-.. _`TensorFlow`: https://www.tensorflow.org/
 .. _`lale.lib.xgboost`: modules/lale.lib.xgboost.html#module-lale.lib.xgboost
 .. _`XGBoost`: https://xgboost.readthedocs.io/en/latest/python/python_api.html
 
