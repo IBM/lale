@@ -17,6 +17,14 @@ import unittest
 import lale.operators
 import lale.pretty_print
 
+try:
+    import snapml as _snapml_check  # type: ignore[import-untyped] # noqa: F401
+
+    snapml_available = True
+    del _snapml_check
+except ImportError:
+    snapml_available = False
+
 
 class TestToGraphviz(unittest.TestCase):
     def test_with_operator_choice(self):
@@ -666,6 +674,7 @@ disparate_impact_remover = DisparateImpactRemover(
 pipeline = disparate_impact_remover >> KNeighborsClassifier()"""
         self._roundtrip(expected, pipeline.pretty_print())
 
+    @unittest.skipUnless(snapml_available, "snapml is not installed")
     def test_snap_logistic_regression_1(self):
         # force printing arguments via "transient": "alwaysPrint", case True
         from lale.lib.snapml import SnapLogisticRegression
@@ -678,6 +687,7 @@ lale.wrap_imported_operators()
 pipeline = SnapLogisticRegression(fit_intercept=True, normalize=True)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
+    @unittest.skipUnless(snapml_available, "snapml is not installed")
     def test_snap_logistic_regression_2(self):
         # force printing arguments via "transient": "alwaysPrint", case False
         from lale.lib.snapml import SnapLogisticRegression

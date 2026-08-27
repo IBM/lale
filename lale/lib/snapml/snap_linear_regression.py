@@ -17,7 +17,7 @@ import lale.docstrings
 import lale.operators
 
 try:
-    from snapml import LinearRegression as Base
+    from snapml import LinearRegression as Base  # type: ignore[attr-defined]
 except ImportError:
     Base = None
 

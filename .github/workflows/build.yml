@@ -127,7 +127,6 @@ jobs:
         - test/test_optimizers.py
         - test/test_pipeline.py
         - test/test_autogen_lib.py
-        - test/test_snapml.py
         - test/test_relational.py
         - test/test_category_encoders.py
         python-version: ['3.13']
@@ -153,6 +152,10 @@ jobs:
           setup-target: '.[full,test]'
         - test-case: test/test_aif360.py
           python-version: '3.11'
+          setup-target: '.[full,test]'
+        # snapml does not yet support Python 3.13, so pin to 3.12
+        - test-case: test/test_snapml.py
+          python-version: '3.12'
           setup-target: '.[full,test]'
         # - test-case: test/test_relational_sklearn.py
         #   python-version: '3.11'

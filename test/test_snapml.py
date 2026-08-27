@@ -17,7 +17,16 @@ import unittest
 import sklearn.datasets
 import sklearn.metrics
 
+try:
+    import snapml as _snapml_check  # type: ignore[import-untyped] # noqa: F401
 
+    snapml_available = True
+    del _snapml_check
+except ImportError:
+    snapml_available = False
+
+
+@unittest.skipUnless(snapml_available, "snapml is not installed")
 class TestSnapMLClassifiers(unittest.TestCase):
     def setUp(self):
         from sklearn.datasets import load_breast_cancer
@@ -27,7 +36,7 @@ class TestSnapMLClassifiers(unittest.TestCase):
         self.train_X, self.test_X, self.train_y, self.test_y = train_test_split(X, y)
 
     def test_without_lale(self):
-        import snapml  # type: ignore
+        import snapml  # type: ignore[import-untyped]
 
         clf = snapml.RandomForestClassifier()
         self.assertIsInstance(clf, snapml.RandomForestClassifier)
@@ -38,7 +47,7 @@ class TestSnapMLClassifiers(unittest.TestCase):
             _ = scorer(clf, self.test_X, self.test_y)
 
     def test_decision_tree_classifier(self):
-        import snapml
+        import snapml  # type: ignore[import-untyped]
 
         import lale.lib.snapml
 
@@ -53,7 +62,7 @@ class TestSnapMLClassifiers(unittest.TestCase):
                 _ = scorer(trained, self.test_X, self.test_y)
 
     def test_random_forest_classifier(self):
-        import snapml
+        import snapml  # type: ignore[import-untyped]
 
         import lale.lib.snapml
 
@@ -68,7 +77,7 @@ class TestSnapMLClassifiers(unittest.TestCase):
                 _ = scorer(trained, self.test_X, self.test_y)
 
     def test_boosting_machine_classifier(self):
-        import snapml
+        import snapml  # type: ignore[import-untyped]
 
         import lale.lib.snapml
 
@@ -83,7 +92,7 @@ class TestSnapMLClassifiers(unittest.TestCase):
                 _ = scorer(trained, self.test_X, self.test_y)
 
     def test_logistic_regression(self):
-        import snapml
+        import snapml  # type: ignore[import-untyped]
 
         import lale.lib.snapml
 
@@ -98,7 +107,7 @@ class TestSnapMLClassifiers(unittest.TestCase):
                 _ = scorer(trained, self.test_X, self.test_y)
 
     def test_support_vector_machine(self):
-        import snapml
+        import snapml  # type: ignore[import-untyped]
 
         import lale.lib.snapml
 
@@ -137,6 +146,7 @@ class TestSnapMLClassifiers(unittest.TestCase):
                 _ = scorer(trained, self.test_X, self.test_y)
 
 
+@unittest.skipUnless(snapml_available, "snapml is not installed")
 class TestSnapMLRegressors(unittest.TestCase):
     def setUp(self):
         from sklearn.datasets import load_diabetes
@@ -146,7 +156,7 @@ class TestSnapMLRegressors(unittest.TestCase):
         self.train_X, self.test_X, self.train_y, self.test_y = train_test_split(X, y)
 
     def test_decision_tree_regressor(self):
-        import snapml
+        import snapml  # type: ignore[import-untyped]
 
         import lale.lib.snapml
 
@@ -157,7 +167,7 @@ class TestSnapMLRegressors(unittest.TestCase):
             _ = scorer(trained, self.test_X, self.test_y)
 
     def test_linear_regression(self):
-        import snapml
+        import snapml  # type: ignore[import-untyped]
 
         import lale.lib.snapml
 
@@ -168,7 +178,7 @@ class TestSnapMLRegressors(unittest.TestCase):
             _ = scorer(trained, self.test_X, self.test_y)
 
     def test_random_forest_regressor(self):
-        import snapml
+        import snapml  # type: ignore[import-untyped]
 
         import lale.lib.snapml
 
@@ -179,7 +189,7 @@ class TestSnapMLRegressors(unittest.TestCase):
             _ = scorer(trained, self.test_X, self.test_y)
 
     def test_boosting_machine_regressor(self):
-        import snapml
+        import snapml  # type: ignore[import-untyped]
 
         import lale.lib.snapml
 
