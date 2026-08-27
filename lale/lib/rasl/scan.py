@@ -38,10 +38,7 @@ class _ScanImpl:
             if isinstance(base, ast.Name) and base.id == "it":
                 if isinstance(table.expr, ast.Subscript):
                     sub = table.expr.slice
-                    if isinstance(sub, ast.Constant) or (
-                        isinstance(sub, ast.Index)
-                        and isinstance(getattr(sub, "value", None), ast.Str)
-                    ):
+                    if isinstance(sub, ast.Constant):
                         return
                 else:
                     return

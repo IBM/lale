@@ -21,11 +21,18 @@
 import ast  # see also https://greentreesnakes.readthedocs.io/
 import pprint
 import typing
+import warnings as _warnings
 from copy import deepcopy
 from typing import Any, Dict, Literal, Optional, Union, overload
 
-AstLits = (ast.Num, ast.Str, ast.List, ast.Tuple, ast.Set, ast.Dict, ast.Constant)
-AstLit = Union[ast.Num, ast.Str, ast.List, ast.Tuple, ast.Set, ast.Dict, ast.Constant]
+with _warnings.catch_warnings():
+    _warnings.simplefilter("ignore", DeprecationWarning)
+    _ast_Num = getattr(ast, "Num", None)
+    _ast_Str = getattr(ast, "Str", None)
+del _warnings
+_legacy_ast_lits = tuple(t for t in [_ast_Num, _ast_Str] if t is not None)
+AstLits = (*_legacy_ast_lits, ast.List, ast.Tuple, ast.Set, ast.Dict, ast.Constant)
+AstLit = Union[ast.List, ast.Tuple, ast.Set, ast.Dict, ast.Constant]
 AstExprs = (
     *AstLits,
     ast.Name,
@@ -594,8 +601,13 @@ def _it_column(expr):
                 return v
             elif isinstance(v, ast.Constant):
                 return v.value
-            elif isinstance(v, ast.Str):
-                return v.s
+            elif (
+                _ast_Str is not None
+                and isinstance(  # pylint: disable=isinstance-second-argument-not-valid-type
+                    v, _ast_Str
+                )
+            ):
+                return v.s  # type: ignore[attr-defined]
             else:
                 raise ValueError(
                     f"Illegal {ast.unparse(expr)}. Only the access to `it` is supported"

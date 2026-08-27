@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import ast
-from typing import List, Tuple
+from typing import List, Optional, Tuple, Type
 
 import lale.docstrings
 import lale.operators
@@ -24,6 +24,8 @@ from lale.helpers import (
     _is_pandas_df,
     _is_spark_df,
 )
+
+_ast_Str: Optional[Type] = getattr(ast, "Str", None)
 
 
 class _OrderByImpl:
@@ -71,8 +73,13 @@ class _OrderByImpl:
             col = str(arg.id)  # type: ignore
         elif hasattr(ast, "Constant") and isinstance(arg, ast.Constant):
             col = str(arg.value)  # type: ignore
-        elif hasattr(ast, "Str") and isinstance(arg, ast.Str):
-            col = str(arg.s)
+        elif (
+            _ast_Str is not None
+            and isinstance(  # pylint: disable=isinstance-second-argument-not-valid-type
+                arg, _ast_Str
+            )
+        ):
+            col = str(arg.s)  # type: ignore[attr-defined]
         elif _is_ast_subscript(arg):
             col = str(arg.slice.value.s)  # type: ignore
         elif _is_ast_attribute(arg):
