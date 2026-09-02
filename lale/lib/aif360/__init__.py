@@ -215,7 +215,7 @@ from .bagging_orbis_classifier import BaggingOrbisClassifier as BaggingOrbisClas
 from .calibrated_eq_odds_postprocessing import (
     CalibratedEqOddsPostprocessing as CalibratedEqOddsPostprocessing,
 )
-from .datasets import _fetch_boston_housing_df as _fetch_boston_housing_df
+from .datasets import _fetch_california_housing_df as _fetch_california_housing_df
 from .datasets import fetch_adult_df as fetch_adult_df
 from .datasets import fetch_bank_df as fetch_bank_df
 from .datasets import fetch_compas_df as fetch_compas_df

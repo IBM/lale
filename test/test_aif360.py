@@ -217,15 +217,19 @@ class TestAIF360Datasets(unittest.TestCase):
         X, y, fairness_info = lale.lib.aif360.fetch_student_por_df()
         self._attempt_dataset(X, y, fairness_info, 649, 32, {0, 1}, 0.858)
 
-    def test_dataset_boston_housing_pd_cat(self):
-        X, y, fairness_info = lale.lib.aif360._fetch_boston_housing_df(preprocess=False)
+    def test_dataset_california_housing_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360._fetch_california_housing_df(
+            preprocess=False
+        )
         # TODO: consider better way of handling "set_y" parameter for regression problems
-        self._attempt_dataset(X, y, fairness_info, 506, 13, set(y), 0.814)
+        self._attempt_dataset(X, y, fairness_info, 20640, 8, set(y), 0.785)
 
-    def test_dataset_boston_housing_pd_num(self):
-        X, y, fairness_info = lale.lib.aif360._fetch_boston_housing_df(preprocess=True)
+    def test_dataset_california_housing_pd_num(self):
+        X, y, fairness_info = lale.lib.aif360._fetch_california_housing_df(
+            preprocess=True
+        )
         # TODO: consider better way of handling "set_y" parameter for regression problems
-        self._attempt_dataset(X, y, fairness_info, 506, 13, set(y), 0.814)
+        self._attempt_dataset(X, y, fairness_info, 20640, 8, set(y), 0.778)
 
     def test_dataset_titanic_pd_cat(self):
         X, y, fairness_info = lale.lib.aif360.fetch_titanic_df(preprocess=False)
@@ -410,10 +414,8 @@ class TestAIF360Num(unittest.TestCase):
         return result
 
     @classmethod
-    def _boston_pd_num(cls):
-        # TODO: Consider investigating test failure when preprocess is set to True
-        # (eo_diff is not less than 0 in this case; perhaps regression model learns differently?)
-        orig_X, orig_y, fairness_info = lale.lib.aif360._fetch_boston_housing_df(
+    def _california_pd_num(cls):
+        orig_X, orig_y, fairness_info = lale.lib.aif360._fetch_california_housing_df(
             preprocess=False
         )
         train_X, test_X, train_y, test_y = sklearn.model_selection.train_test_split(
@@ -433,11 +435,11 @@ class TestAIF360Num(unittest.TestCase):
         return result
 
     @classmethod
-    def _boston_np_num(cls):
-        train_X = cls.boston_pd_num["train_X"].to_numpy()
-        train_y = cls.boston_pd_num["train_y"].to_numpy()
-        test_X = cls.boston_pd_num["test_X"].to_numpy()
-        test_y = cls.boston_pd_num["test_y"].to_numpy()
+    def _california_np_num(cls):
+        train_X = cls.california_pd_num["train_X"].to_numpy()
+        train_y = cls.california_pd_num["train_y"].to_numpy()
+        test_X = cls.california_pd_num["test_X"].to_numpy()
+        test_y = cls.california_pd_num["test_y"].to_numpy()
         assert isinstance(train_X, np.ndarray), type(train_X)
         assert not isinstance(train_X, NDArrayWithSchema), type(train_X)
         assert isinstance(train_y, np.ndarray), type(train_y)
@@ -446,14 +448,16 @@ class TestAIF360Num(unittest.TestCase):
         assert not isinstance(test_X, NDArrayWithSchema), type(test_X)
         assert isinstance(test_y, np.ndarray), type(test_y)
         assert not isinstance(test_y, NDArrayWithSchema), type(test_y)
-        pd_columns = cls.boston_pd_num["train_X"].columns
+        pd_columns = cls.california_pd_num["train_X"].columns
         # pulling attributes off of stored fairness_info to avoid recomputing medians
         fairness_info = {
-            "favorable_labels": cls.boston_pd_num["fairness_info"]["favorable_labels"],
+            "favorable_labels": cls.california_pd_num["fairness_info"][
+                "favorable_labels"
+            ],
             "protected_attributes": [
                 {
-                    "feature": pd_columns.get_loc("B"),
-                    "reference_group": cls.boston_pd_num["fairness_info"][
+                    "feature": pd_columns.get_loc("Latitude"),
+                    "reference_group": cls.california_pd_num["fairness_info"][
                         "protected_attributes"
                     ][0]["reference_group"],
                 },
@@ -472,8 +476,8 @@ class TestAIF360Num(unittest.TestCase):
     def setUpClass(cls):
         cls.creditg_pd_num = cls._creditg_pd_num()
         cls.creditg_np_num = cls._creditg_np_num()
-        cls.boston_pd_num = cls._boston_pd_num()
-        cls.boston_np_num = cls._boston_np_num()
+        cls.california_pd_num = cls._california_pd_num()
+        cls.california_np_num = cls._california_np_num()
 
     def test_fair_stratified_train_test_split(self):
         X = self.creditg_np_num["train_X"]
@@ -543,23 +547,23 @@ class TestAIF360Num(unittest.TestCase):
         self._attempt_scorers(fairness_info, trained, test_X, test_y)
 
     def test_scorers_regression_pd_num(self):
-        fairness_info = self.boston_pd_num["fairness_info"]
+        fairness_info = self.california_pd_num["fairness_info"]
         trainable = LinearRegression()
-        train_X = self.boston_pd_num["train_X"]
-        train_y = self.boston_pd_num["train_y"]
+        train_X = self.california_pd_num["train_X"]
+        train_y = self.california_pd_num["train_y"]
         trained = trainable.fit(train_X, train_y)
-        test_X = self.boston_pd_num["test_X"]
-        test_y = self.boston_pd_num["test_y"]
+        test_X = self.california_pd_num["test_X"]
+        test_y = self.california_pd_num["test_y"]
         self._attempt_scorers(fairness_info, trained, test_X, test_y)
 
     def test_scorers_regression_np_num(self):
-        fairness_info = self.boston_np_num["fairness_info"]
+        fairness_info = self.california_np_num["fairness_info"]
         trainable = LinearRegression()
-        train_X = self.boston_np_num["train_X"]
-        train_y = self.boston_np_num["train_y"]
+        train_X = self.california_np_num["train_X"]
+        train_y = self.california_np_num["train_y"]
         trained = trainable.fit(train_X, train_y)
-        test_X = self.boston_np_num["test_X"]
-        test_y = self.boston_np_num["test_y"]
+        test_X = self.california_np_num["test_X"]
+        test_y = self.california_np_num["test_y"]
         self._attempt_scorers(fairness_info, trained, test_X, test_y)
 
     def test_scorers_blend_acc(self):

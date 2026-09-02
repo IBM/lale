@@ -18,7 +18,6 @@
 # and not private imports (this affects lale users that use pyright)
 
 from .movie_review import load_movie_review as load_movie_review
-from .sklearn_to_pandas import boston_housing_df as boston_housing_df
 from .sklearn_to_pandas import california_housing_df as california_housing_df
 from .sklearn_to_pandas import covtype_df as covtype_df
 from .sklearn_to_pandas import digits_df as digits_df

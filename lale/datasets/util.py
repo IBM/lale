@@ -13,11 +13,8 @@
 # limitations under the License.
 import os
 import pathlib
-from typing import Any, Literal, Tuple, overload
 
-import numpy as np
 import pandas as pd
-from sklearn.utils import Bunch
 
 from lale.datasets.data_schemas import (
     SparkDataFrameWithIndex,
@@ -56,23 +53,3 @@ def pandas2spark(pandas_df):
     spark_dataframe = spark_session.createDataFrame(pandas_df)
     spark_dataframe_with_index = SparkDataFrameWithIndex(spark_dataframe, index_names)
     return add_table_name(spark_dataframe_with_index, name)
-
-
-@overload
-def load_boston(return_X_y: Literal[True]) -> Tuple[Any, Any]: ...
-
-
-@overload
-def load_boston(return_X_y: Literal[False] = False) -> Bunch: ...
-
-
-def load_boston(return_X_y: bool = False):
-    data_url = "http://lib.stat.cmu.edu/datasets/boston"
-    raw_df = pd.read_csv(data_url, sep=r"\s+", skiprows=22, header=None)
-    data = np.hstack([raw_df.values[::2, :], raw_df.values[1::2, :2]])
-    target = raw_df.values[1::2, 2]
-
-    if return_X_y:
-        return (data, target)
-    else:
-        return Bunch(data=data, target=target)

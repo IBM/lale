@@ -1280,20 +1280,18 @@ def fetch_speeddating_df(preprocess: bool = False):
         return orig_X, orig_y, fairness_info
 
 
-def _fetch_boston_housing_df(preprocess: bool = False):
+def _fetch_california_housing_df(preprocess: bool = False):
     """
-    Fetch the `Boston housing`_ dataset from sklearn and add `fairness info`.
+    Fetch the `California housing`_ dataset from sklearn and add `fairness info`.
 
-    It contains data about housing values in the suburbs of Boston with various
+    It contains data about housing values in California districts with various
     features that can be used to perform regression. Without preprocessing,
-    the dataset has 506 rows and 14 columns. There is one protected attribute,
-    1000(Bk - 0.63)^2 where Bk is the proportion of Blacks by town, and the disparate
-    impact is 0.5. The data includes only numeric columns, with no missing values.
+    the dataset has 20640 rows and 8 columns. There is one protected attribute,
+    Latitude, used as a geographic proxy (northern vs southern California, where
+    northern CA with lat > median is the privileged group), and the disparate
+    impact is 0.807. The data includes only numeric columns, with no missing values.
 
-    Hiding dataset from public consumption based on issues described at length `here`_
-
-    .. _`Boston housing`: https://scikit-learn.org/0.20/datasets/index.html#boston-house-prices-dataset
-    .. _`here`: https://medium.com/@docintangible/racist-data-destruction-113e3eff54a8
+    .. _`California housing`: https://scikit-learn.org/stable/modules/generated/sklearn.datasets.fetch_california_housing.html
 
     Parameters
     ----------
@@ -1319,32 +1317,32 @@ def _fetch_boston_housing_df(preprocess: bool = False):
           JSON meta-data following the format understood by fairness metrics
           and mitigation operators in `lale.lib.aif360`.
     """
-    (train_X, train_y), (test_X, test_y) = lale.datasets.boston_housing_df(
+    (train_X, train_y), (test_X, test_y) = lale.datasets.california_housing_df(
         test_size=0.33
     )
     orig_X = pd.concat([train_X, test_X]).sort_index()
     orig_y = pd.concat([train_y, test_y]).sort_index()
     assert train_X is not None
-    black_median = np.median(train_X["B"])
+    lat_median = np.median(train_X["Latitude"])
     label_median = np.median(train_y)
 
     if preprocess:
-        # 1000(Bk - 0.63)^2 where Bk is the proportion of Blacks by town
-        B = pd.Series(orig_X["B"] > black_median, dtype=np.float64)
-        encoded_X = orig_X.assign(B=B)
+        # Encode: 1 = northern CA (lat > median, privileged), 0 = southern CA (unprivileged)
+        Lat = pd.Series(orig_X["Latitude"] > lat_median, dtype=np.float64)
+        encoded_X = orig_X.assign(Latitude=Lat)
         fairness_info = {
             "favorable_labels": [[-10000.0, label_median]],
             "protected_attributes": [
-                {"feature": "B", "reference_group": [0]},
+                {"feature": "Latitude", "reference_group": [1]},
             ],
         }
         return encoded_X, orig_y, fairness_info
     else:
+        # Northern CA (lat > median) is the privileged group
         fairness_info = {
             "favorable_labels": [[-10000.0, label_median]],
             "protected_attributes": [
-                # 1000(Bk - 0.63)^2 where Bk is the proportion of Blacks by town
-                {"feature": "B", "reference_group": [[0.0, black_median]]},
+                {"feature": "Latitude", "reference_group": [[lat_median, 90.0]]},
             ],
         }
         return orig_X, orig_y, fairness_info

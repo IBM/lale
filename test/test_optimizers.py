@@ -215,14 +215,14 @@ class TestSMAC(unittest.TestCase):
 
     def test_smac_timeout_zero_regression(self):
         planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
-        from lale.datasets.util import load_boston
+        from sklearn.datasets import load_diabetes
 
-        X, y = load_boston(return_X_y=True)
+        X, y = load_diabetes(return_X_y=True)
         opt = SMAC(
             estimator=planned_pipeline, scoring="r2", max_evals=1, max_opt_time=0.0
         )
         # run optimizer
-        res = opt.fit(X[:500, :], y[:500])
+        res = opt.fit(X, y)
         assert res.get_pipeline() is None
 
     def test_smac_timeout_classification(self):
@@ -246,10 +246,10 @@ class TestSMAC(unittest.TestCase):
     def test_smac_timeout_regression(self):
         import time
 
-        from lale.datasets.util import load_boston
+        from sklearn.datasets import load_diabetes
 
         planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
-        X, y = load_boston(return_X_y=True)
+        X, y = load_diabetes(return_X_y=True)
         max_opt_time = 2.0
         opt = SMAC(
             estimator=planned_pipeline,
@@ -259,7 +259,7 @@ class TestSMAC(unittest.TestCase):
         )
 
         start = time.time()
-        _ = opt.fit(X[:500, :], y[:500])
+        _ = opt.fit(X, y)
         end = time.time()
         opt_time = end - start
         rel_diff = (opt_time - max_opt_time) / max_opt_time
@@ -426,10 +426,10 @@ class TestHyperopt(unittest.TestCase):
     def test_runtime_limit_hor(self):
         import time
 
-        planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
-        from lale.datasets.util import load_boston
+        from sklearn.datasets import load_diabetes
 
-        X, y = load_boston(return_X_y=True)
+        planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
+        X, y = load_diabetes(return_X_y=True)
 
         max_opt_time = 3.0
         hor = Hyperopt(
@@ -440,7 +440,7 @@ class TestHyperopt(unittest.TestCase):
             scoring="r2",
         )
         start = time.time()
-        _ = hor.fit(X[:500, :], y[:500])
+        _ = hor.fit(X, y)
         end = time.time()
         opt_time = end - start
         rel_diff = (opt_time - max_opt_time) / max_opt_time
@@ -449,10 +449,10 @@ class TestHyperopt(unittest.TestCase):
         ), f"Max time: {max_opt_time}, Actual time: {opt_time}, relative diff: {rel_diff}"
 
     def test_runtime_limit_zero_time_hor(self):
-        planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
-        from lale.datasets.util import load_boston
+        from sklearn.datasets import load_diabetes
 
-        X, y = load_boston(return_X_y=True)
+        planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
+        X, y = load_diabetes(return_X_y=True)
 
         hor = Hyperopt(
             estimator=planned_pipeline,
@@ -724,9 +724,9 @@ class TestAutoConfigureClassification(unittest.TestCase):
 
 class TestAutoConfigureRegression(unittest.TestCase):
     def setUp(self):
-        from lale.datasets.util import load_boston
+        from sklearn.datasets import load_diabetes
 
-        X, y = load_boston(return_X_y=True)
+        X, y = load_diabetes(return_X_y=True)
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
 
     def test_with_Hyperopt(self):
@@ -841,10 +841,10 @@ class TestGridSearchCV(unittest.TestCase):
     def test_runtime_limit_hor(self):
         import time
 
-        planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
-        from lale.datasets.util import load_boston
+        from sklearn.datasets import load_diabetes
 
-        X, y = load_boston(return_X_y=True)
+        planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
+        X, y = load_diabetes(return_X_y=True)
 
         max_opt_time = 3
         hor = GridSearchCV(
@@ -855,7 +855,7 @@ class TestGridSearchCV(unittest.TestCase):
         )
         start = time.time()
         with self.assertRaises(BaseException):
-            _ = hor.fit(X[:500, :], y[:500])
+            _ = hor.fit(X, y)
         end = time.time()
         opt_time = end - start
         print(opt_time)
@@ -960,9 +960,9 @@ class TestHigherOrderOperators(unittest.TestCase):
         clf.fit(self.X_train, self.y_train)
 
     def test_ada_boost_regressor(self):
-        from lale.datasets.util import load_boston
+        from sklearn.datasets import load_diabetes
 
-        X, y = load_boston(return_X_y=True)
+        X, y = load_diabetes(return_X_y=True)
         X_train, _X_test, y_train, _y_test = train_test_split(X, y)
         from lale.lib.sklearn import AdaBoostRegressor, DecisionTreeRegressor
 
@@ -981,9 +981,9 @@ class TestHigherOrderOperators(unittest.TestCase):
         )
 
     def test_ada_boost_regressor_pipe(self):
-        from lale.datasets.util import load_boston
+        from sklearn.datasets import load_diabetes
 
-        X, y = load_boston(return_X_y=True)
+        X, y = load_diabetes(return_X_y=True)
         X_train, _X_test, y_train, _y_test = train_test_split(X, y)
         from lale.lib.sklearn import AdaBoostRegressor, DecisionTreeRegressor
 

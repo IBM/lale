@@ -82,10 +82,10 @@ class TestAutoConfigureClassification(unittest.TestCase):
     def test_runtime_limit_hor(self):
         import time
 
-        planned_pipeline = (MinMaxScaler | Normalizer) >> RandomForestRegressor
-        from lale.datasets.util import load_boston
+        from sklearn.datasets import load_diabetes
 
-        X, y = load_boston(return_X_y=True)
+        planned_pipeline = (MinMaxScaler | Normalizer) >> RandomForestRegressor
+        X, y = load_diabetes(return_X_y=True)
 
         max_opt_time = 2
         hor = HalvingGridSearchCV(
@@ -96,7 +96,7 @@ class TestAutoConfigureClassification(unittest.TestCase):
         )
         start = time.time()
         with self.assertRaises(BaseException):
-            _ = hor.fit(X[:500, :], y[:500])
+            _ = hor.fit(X, y)
         end = time.time()
         opt_time = end - start
         rel_diff = (opt_time - max_opt_time) / max_opt_time

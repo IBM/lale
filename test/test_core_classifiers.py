@@ -686,11 +686,10 @@ class TestLogisticRegression(unittest.TestCase):
 
 class TestIsolationForest(unittest.TestCase):
     def setUp(self):
+        from sklearn.datasets import load_diabetes
         from sklearn.model_selection import train_test_split
 
-        from lale.datasets.util import load_boston
-
-        data = load_boston()
+        data = load_diabetes()
         X, y = data.data, data.target
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
 
@@ -771,11 +770,10 @@ class TestIsolationForest(unittest.TestCase):
 
 class TestKMeans(unittest.TestCase):
     def setUp(self):
+        from sklearn.datasets import load_diabetes
         from sklearn.model_selection import train_test_split
 
-        from lale.datasets.util import load_boston
-
-        data = load_boston()
+        data = load_diabetes()
         X, y = data.data, data.target
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
 
