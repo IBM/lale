@@ -179,16 +179,17 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-dcache-new3-${{ env.DOWNLOAD_CACHE_DIR }}-
           ${{ runner.os }}-dcache-new3
+    - name: Install numpy (pinned for snapml)
+      if: ${{ matrix.test-case == 'test/test_snapml.py' }}
+      run: pip install 'numpy>=1.20.1,<=1.26'
     - name: Install numpy
+      if: ${{ matrix.test-case != 'test/test_snapml.py' }}
       run: pip install -U numpy
     - name: Install dependencies
       run: pip install ${{matrix.setup-target}}
     # - name: Install deps for test_relational_sklearn
     #   if: ${{ matrix.test-case == 'test/test_relational_sklearn.py' }}
     #   run: pip install 'scikit-learn>=1.0'
-    - name: Install deps for test_snapml
-      if: ${{ matrix.test-case == 'test/test_snapml.py' }}
-      run: pip install 'numpy>=1.20.1,<=1.26'
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
@@ -272,16 +273,17 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-dcache-new3-${{ env.DOWNLOAD_CACHE_DIR }}-
           ${{ runner.os }}-dcache-new3
+    - name: Install numpy (pinned for snapml)
+      if: ${{ matrix.test-case == 'test/test_snapml.py' }}
+      run: pip install 'numpy>=1.20.1,<=1.26'
     - name: Install numpy
+      if: ${{ matrix.test-case != 'test/test_snapml.py' }}
       run: pip install -U numpy
     - name: Install dependencies
       run: pip install ${{matrix.setup-target}}
     # - name: Install deps for test_relational_sklearn
     #   if: ${{ matrix.test-case == 'test/test_relational_sklearn.py' }}
     #   run: pip install 'scikit-learn>=1.0'
-    - name: Install deps for test_snapml
-      if: ${{ matrix.test-case == 'test/test_snapml.py' }}
-      run: pip install 'numpy>=1.20.1,<=1.26'
     - name: pip list packages
       run: pip list
     - name: show pip dependencies
