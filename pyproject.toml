@@ -89,7 +89,7 @@ test = [
   "sphinxcontrib.apidoc",
   "sphinxcontrib-svg2pdfconverter",
   "pytest",
-  "pyspark<4.0.0",
+  "pyspark",
   "func_timeout",
   "category-encoders",
   "pynisher==0.6.4",
