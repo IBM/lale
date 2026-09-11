@@ -1,7 +1,7 @@
 # all of setup.py -> install_requires
 numpy
 # aif360>=0.5.0
-black==19.10b0
+black>=22.1.0
 graphviz
 hyperopt
 jsonschema
