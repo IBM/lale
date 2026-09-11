@@ -46,10 +46,18 @@ try:
     from pyspark.sql import DataFrame as SparkDataFrame
     from pyspark.sql import GroupedData as SparkGroupedData
 
+    try:
+        # PySpark 4.x: concrete DataFrame lives in pyspark.sql.classic.dataframe
+        from pyspark.sql.classic.dataframe import DataFrame as _SparkDataFrameBase
+    except ImportError:
+        # PySpark 3.x: pyspark.sql.DataFrame is already the concrete class
+        _SparkDataFrameBase = SparkDataFrame  # type: ignore[assignment]
+
 except ImportError:
     Py4JError = None
     SparkDataFrame = None
     SparkGroupedData = None
+    _SparkDataFrameBase = None  # type: ignore[assignment]
 
 
 # See instructions for subclassing numpy ndarray:
@@ -115,7 +123,12 @@ if SparkDataFrame is not None:
         else:
             return name
 
-    class SparkDataFrameWithIndex(SparkDataFrame):  # type: ignore
+    class SparkDataFrameWithIndex(_SparkDataFrameBase):  # type: ignore
+        def __new__(cls, *args, **kwargs):
+            # Override __new__ to bypass pyspark.sql.DataFrame.__new__ which
+            # requires (jdf, sql_ctx) positional args (changed in PySpark 4.x).
+            return object.__new__(cls)
+
         def __init__(self, df, index_names=None):
             if index_names is not None and len(index_names) == 1:
                 index_name = index_names[0]
@@ -135,7 +148,12 @@ if SparkDataFrame is not None:
             table_name = get_table_name(df)
             if table_name is not None:
                 df_with_index = df_with_index.alias(table_name)
-            super().__init__(df_with_index._jdf, df_with_index.sql_ctx)
+            # PySpark 4.x deprecated sql_ctx in favour of sparkSession;
+            # keep sql_ctx as fallback for older PySpark versions.
+            session = (
+                getattr(df_with_index, "sparkSession", None) or df_with_index.sql_ctx
+            )
+            super().__init__(df_with_index._jdf, session)
             self.index_name = index_name
             self.index_names = index_names
             for f in df.schema.fieldNames():

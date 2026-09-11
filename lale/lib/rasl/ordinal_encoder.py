@@ -100,6 +100,8 @@ class _OrdinalEncoderImpl(MonoidableOperator[_OrdinalEncoderMonoid]):
                 return int(v)
             if safe_issubdtype(type(v), np.floating):
                 return float(v)
+            if isinstance(v, np.str_):
+                return str(v)
             return v
 
         result = Map(
