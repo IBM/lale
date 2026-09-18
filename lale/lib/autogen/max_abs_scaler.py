@@ -1,8 +1,13 @@
+import typing
+
 from numpy import inf, nan
+from packaging import version
 from sklearn.preprocessing import MaxAbsScaler as Op
 
+import lale.operators
 from lale.docstrings import set_docstrings
-from lale.operators import make_operator
+from lale.operators import make_operator, sklearn_version
+from lale.schemas import Bool
 
 
 class _MaxAbsScalerImpl:
@@ -88,5 +93,18 @@ _combined_schemas = {
     },
 }
 MaxAbsScaler = make_operator(_MaxAbsScalerImpl, _combined_schemas)
+
+if sklearn_version >= version.Version("1.8"):
+    MaxAbsScaler = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        MaxAbsScaler.customize_schema(
+            clip=Bool(
+                desc="Set to True to clip transformed values of held-out data to [-1, 1]",
+                default=False,
+            ),
+            set_as_available=True,
+        ),
+    )
+
 
 set_docstrings(MaxAbsScaler)

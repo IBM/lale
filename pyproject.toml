@@ -46,7 +46,7 @@ dependencies = [
   "hyperopt>=0.2,<0.4",
   "jsonschema<=5",
   "jsonsubschema>=0.0.6",
-  "scikit-learn>=1.0.0,<1.8.0",
+  "scikit-learn>=1.0.0,<1.9.0",
   "scipy",
   "pandas",
   "packaging",
