@@ -2,6 +2,10 @@
 name: Tests
 
 on: [push, pull_request, workflow_dispatch]
+
+permissions:
+  contents: read
+
 env:
   DOWNLOAD_CACHE_DIR: /home/runner/scikit_learn_data
   LALE_DOWNLOAD_CACHE_DIR: /home/runner/scikit_learn_data/lale
