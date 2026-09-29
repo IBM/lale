@@ -5,6 +5,9 @@ on:
   release:
     types: [released]
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
