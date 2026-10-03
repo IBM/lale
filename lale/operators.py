@@ -2543,8 +2543,26 @@ class IndividualOp(Operator):
                 except SubschemaError as e:
                     sub_str: str = lale.pretty_print.json_to_string(e.sub)
                     sup_str: str = lale.pretty_print.json_to_string(e.sup)
+                    hint = ""
+                    if (
+                        arg_name == "X"
+                        and isinstance(e.sub, dict)
+                        and e.sub.get("type") == "array"
+                        and isinstance(e.sub.get("items"), list)
+                        and len(e.sub["items"]) > 1
+                        and isinstance(e.sup, dict)
+                        and e.sup.get("type") == "array"
+                        and isinstance(e.sup.get("items"), dict)
+                    ):
+                        hint = (
+                            "\nThe actual data appears to contain multiple outputs. "
+                            "If this input comes from a pipeline using `&`, you may need to "
+                            "combine the parallel outputs with `ConcatFeatures`, for example "
+                            "`(op1 & op2) >> ConcatFeatures >> estimator`."
+                        )
                     raise ValueError(
-                        f"{self.name()}.{method}() invalid {arg_name}, the schema of the actual data is not a subschema of the expected schema of the argument.\nactual_schema = {sub_str}\nexpected_schema = {sup_str}"
+                        f"{self.name()}.{method}() invalid {arg_name}, the schema of the actual data is not a subschema of the expected schema of the argument."
+                        f"{hint}\nactual_schema = {sub_str}\nexpected_schema = {sup_str}"
                     ) from None
                 except Exception as e:
                     exception_type = f"{type(e).__module__}.{type(e).__name__}"
