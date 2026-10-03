@@ -809,6 +809,28 @@ class TestAutoPipeline(unittest.TestCase):
         all_X, all_y = sklearn.datasets.load_iris(return_X_y=True)
         self._fit_predict("classification", all_X, all_y)
 
+    def test_predict_proba_with_roc_auc(self):
+        from lale.lib.lale import AutoPipeline
+
+        all_X, all_y = sklearn.datasets.load_breast_cancer(return_X_y=True)
+        train_X, test_X, train_y, _test_y = train_test_split(
+            all_X, all_y, test_size=0.2, random_state=42
+        )
+
+        trainable = AutoPipeline(
+            prediction_type="classification",
+            scoring="roc_auc",
+            max_evals=5,
+            max_opt_time=60,
+            max_eval_time=30,
+            cv=3,
+        )
+        trained = trainable.fit(train_X, train_y)
+        predicted_proba = trained.predict_proba(test_X)
+
+        self.assertEqual(predicted_proba.shape[0], test_X.shape[0])
+        self.assertEqual(predicted_proba.shape[1], 2)
+
     def test_sklearn_digits(self):
         # classification, numbers but some appear categorical, no missing values
         all_X, all_y = sklearn.datasets.load_digits(return_X_y=True)
