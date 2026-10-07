@@ -406,4 +406,24 @@ if lale.operators.sklearn_version >= version.Version("1.7"):
         set_as_available=True,
     )
 
+if lale.operators.sklearn_version >= version.Version("1.10"):
+    SGDRegressor = SGDRegressor.customize_schema(
+        power_t={
+            "anyOf": [
+                {
+                    "type": "number",
+                    "minimum": 0,
+                    "minimumForOptimizer": 1e-9,
+                    "maximumForOptimizer": 1.0,
+                    "distribution": "loguniform",
+                    "default": 0.15,
+                    "description": "The Elastic Net mixing parameter, with 0 <= l1_ratio <= 1.",
+                },
+                {"enum": [None]},
+            ],
+            "default": 0.25,
+        },
+        set_as_available=True,
+    )
+
 lale.docstrings.set_docstrings(SGDRegressor)

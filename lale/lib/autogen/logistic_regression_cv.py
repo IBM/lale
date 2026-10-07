@@ -7,6 +7,7 @@ from sklearn.linear_model import LogisticRegressionCV as Op
 import lale.operators
 from lale.docstrings import set_docstrings
 from lale.operators import make_operator
+from lale.schemas import AnyOf, Array, Enum, Float, Null
 
 
 class _LogisticRegressionCVImpl:
@@ -332,6 +333,96 @@ if lale.operators.sklearn_version >= version.Version("1.7"):
         lale.operators.PlannedIndividualOp,
         LogisticRegressionCV.customize_schema(
             multi_class=None,
+            set_as_available=True,
+        ),
+    )
+
+
+if lale.operators.sklearn_version >= version.Version("1.8"):
+    LogisticRegressionCV = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        LogisticRegressionCV.customize_schema(
+            use_legacy_attributes={
+                "anyOf": [{"type": "boolean"}, {"enum": ["warn"]}],
+                "default": True,
+                "description": "If True, use legacy values for attributes",
+            },
+            set_as_available=True,
+        ),
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.10"):
+    LogisticRegressionCV = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        LogisticRegressionCV.customize_schema(
+            use_legacy_attributes={
+                "anyOf": [{"type": "boolean"}, {"enum": ["warn", "deprecated"]}],
+                "default": "deprecated",
+                "description": "If True, use legacy values for attributes",
+            },
+            set_as_available=True,
+        ),
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.12"):
+    LogisticRegressionCV = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        LogisticRegressionCV.customize_schema(
+            use_legacy_attributes=None,
+            set_as_available=True,
+        ),
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.8"):
+    LogisticRegressionCV = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        LogisticRegressionCV.customize_schema(
+            penalty=Enum(
+                values=["l1", "l2", "elasticnet", "deprecated", None],
+                desc="Norm used in the penalization.",
+                default="deprecated",
+            ),
+            set_as_available=True,
+        ),
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.10"):
+    LogisticRegressionCV = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        LogisticRegressionCV.customize_schema(
+            penalty=None,
+            set_as_available=True,
+        ),
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.8"):
+    LogisticRegressionCV = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        LogisticRegressionCV.customize_schema(
+            l1_ratio=AnyOf(
+                types=[Array(Float(minimum=0.0, maximum=1.0)), Null()],
+                desc="The Elastic-Net mixing parameters.",
+                default=None,
+            ),
+            n_jobs={
+                "anyOf": [{"type": "integer"}, {"enum": [None, "deprecated"]}],
+                "default": "deprecated",
+                "description": "Number of CPU cores used during the cross-validation loop",
+            },
+            set_as_available=True,
+        ),
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.10"):
+    LogisticRegressionCV = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        LogisticRegressionCV.customize_schema(
+            l1_ratio=Array(
+                Float(minimum=0.0, maximum=1.0),
+                desc="The Elastic-Net mixing parameters.",
+                default=[0.0],
+            ),
+            n_jobs=None,
             set_as_available=True,
         ),
     )

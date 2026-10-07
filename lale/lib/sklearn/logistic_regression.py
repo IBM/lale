@@ -627,4 +627,55 @@ if lale.operators.sklearn_version >= version.Version("1.8"):
         ),
     )
 
+if lale.operators.sklearn_version >= version.Version("1.8"):
+    LogisticRegression = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        LogisticRegression.customize_schema(
+            penalty=Enum(
+                values=["l1", "l2", "elasticnet", "deprecated", None],
+                desc="Norm used in the penalization.",
+                default="deprecated",
+            ),
+            set_as_available=True,
+        ),
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.10"):
+    LogisticRegression = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        LogisticRegression.customize_schema(
+            penalty=None,
+            set_as_available=True,
+        ),
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.8"):
+    # old: https://scikit-learn.org/0.21/modules/generated/sklearn.linear_model.LogisticRegression.html
+    # new: https://scikit-learn.org/0.23/modules/generated/sklearn.linear_model.LogisticRegression.html
+    LogisticRegression = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        LogisticRegression.customize_schema(
+            l1_ratio=AnyOf(
+                types=[Float(minimum=0.0, maximum=1.0), Null()],
+                desc="The Elastic-Net mixing parameter.",
+                default=0.0,
+            ),
+            set_as_available=True,
+        ),
+    )
+
+if lale.operators.sklearn_version >= version.Version("1.10"):
+    LogisticRegression = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        LogisticRegression.customize_schema(
+            l1_ratio=Float(
+                minimum=0.0,
+                maximum=1.0,
+                desc="The Elastic-Net mixing parameter.",
+                default=0.0,
+            ),
+            set_as_available=True,
+        ),
+    )
+
 lale.docstrings.set_docstrings(LogisticRegression)

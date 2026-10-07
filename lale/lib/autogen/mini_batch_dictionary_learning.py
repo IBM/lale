@@ -2,6 +2,7 @@ import sklearn
 from numpy import inf, nan
 from packaging import version
 from sklearn.decomposition import MiniBatchDictionaryLearning as Op
+from sklearn.utils.metaestimators import available_if
 
 from lale.docstrings import set_docstrings
 from lale.operators import make_operator, sklearn_version
@@ -21,6 +22,10 @@ class _MiniBatchDictionaryLearningImpl:
 
     def transform(self, X):
         return self._wrapped_model.transform(X)
+
+    @available_if(lambda self: (hasattr(self._wrapped_model, "inverse_transform")))
+    def inverse_transform(self, X):
+        return self._wrapped_model.inverse_transform(X)
 
 
 _hyperparams_schema = {

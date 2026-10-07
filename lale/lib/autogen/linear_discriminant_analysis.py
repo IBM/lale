@@ -272,7 +272,7 @@ if sklearn_version >= version.Version("0.24"):
         covariance_estimator={
             "anyOf": [
                 {
-                    "type": "string",
+                    "laleType": "Any",
                     "forOptimizer": False,
                 },
                 {"enum": [None]},

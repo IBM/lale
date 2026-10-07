@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import sklearn.discriminant_analysis
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -183,5 +184,45 @@ _combined_schemas = {
 QuadraticDiscriminantAnalysis = lale.operators.make_operator(
     sklearn.discriminant_analysis.QuadraticDiscriminantAnalysis, _combined_schemas
 )
+
+if lale.operators.sklearn_version >= version.Version("1.8"):
+    QuadraticDiscriminantAnalysis = QuadraticDiscriminantAnalysis.customize_schema(
+        covariance_estimator={
+            "anyOf": [
+                {
+                    "laleType": "Any",
+                    "forOptimizer": False,
+                },
+                {"enum": [None]},
+            ],
+            "default": None,
+            "description": "type of (covariance estimator). Estimate the covariance matrices instead of relying on the empirical covariance estimator (with potential shrinkage)",
+        },
+        shrinkage={
+            "anyOf": [
+                {"enum": ["auto"]},
+                {
+                    "type": "number",
+                    "minimumForOptimizer": 0,
+                    "maximumForOptimizer": 1,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "exclusiveMinimum": True,
+                    "exclusiveMaximum": True,
+                    "distribution": "uniform",
+                },
+                {"enum": [None]},
+            ],
+            "default": None,
+            "description": "Shrinkage parameter, possible values:   - None: no shrinkage (default)",
+        },
+        solver={
+            "enum": ["eigen", "svd"],
+            "default": "svd",
+            "description": "Solver to use, possible values:   - 'svd': Singular value decomposition (default)",
+        },
+        set_as_available=True,
+    )
+
 
 lale.docstrings.set_docstrings(QuadraticDiscriminantAnalysis)

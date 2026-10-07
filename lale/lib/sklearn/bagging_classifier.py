@@ -55,14 +55,14 @@ class _BaggingClassifierImpl:
     def predict(self, X, **predict_params):
         return self._wrapped_model.predict(X, **predict_params)
 
-    def predict_proba(self, X):
-        return self._wrapped_model.predict_proba(X)
+    def predict_proba(self, X, **predict_params):
+        return self._wrapped_model.predict_proba(X, **predict_params)
 
-    def predict_log_proba(self, X):
-        return self._wrapped_model.predict_log_proba(X)
+    def predict_log_proba(self, X, **predict_params):
+        return self._wrapped_model.predict_log_proba(X, **predict_params)
 
-    def decision_function(self, X):
-        return self._wrapped_model.decision_function(X)
+    def decision_function(self, X, **predict_params):
+        return self._wrapped_model.decision_function(X, **predict_params)
 
     def score(self, X, y, sample_weight=None):
         return self._wrapped_model.score(X, y, sample_weight)

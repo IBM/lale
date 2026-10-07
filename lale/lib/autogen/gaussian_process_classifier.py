@@ -1,5 +1,6 @@
 from numpy import inf, nan
 from sklearn.gaussian_process import GaussianProcessClassifier as Op
+from sklearn.utils.metaestimators import available_if
 
 from lale.docstrings import set_docstrings
 from lale.operators import make_operator
@@ -22,6 +23,12 @@ class _GaussianProcessClassifierImpl:
 
     def predict_proba(self, X):
         return self._wrapped_model.predict_proba(X)
+
+    @available_if(
+        lambda self: (hasattr(self._wrapped_model, "latent_mean_and_variance"))
+    )
+    def latent_mean_and_variance(self, *params, **key_params):
+        return self._wrapped_model.latent_mean_and_variance(*params, **key_params)
 
 
 _hyperparams_schema = {

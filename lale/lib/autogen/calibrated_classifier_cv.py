@@ -257,5 +257,14 @@ if sklearn_version >= version.Version("1.8"):
         set_as_available=True,
     )
 
+if sklearn_version >= version.Version("1.8"):
+    CalibratedClassifierCV = CalibratedClassifierCV.customize_schema(
+        method={
+            "description": "The method to use for calibration",
+            "enum": ["sigmoid", "isotonic", "temperature"],
+            "default": "sigmoid",
+        },
+        set_as_available=True,
+    )
 
 set_docstrings(CalibratedClassifierCV)
