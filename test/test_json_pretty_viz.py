@@ -1191,3 +1191,187 @@ class TestDiff(unittest.TestCase):
             single_op_schema, customize_schema=True, ipython_display=False
         )
         self.assertEqual(diff_str_no_schema, expected_diff_no_schema)
+
+
+# ---------------------------------------------------------------------------
+# Regression tests for security issues reported via HackerOne
+# ---------------------------------------------------------------------------
+
+
+class TestSecurityPrettyPrintInjection(unittest.TestCase):
+    """Regression tests for HackerOne report 4178204.
+
+    ``pretty_print`` must render dict keys safely (via ``repr()``) so that
+    a key containing a single-quote or other Python syntax cannot inject code
+    into the generated source.
+    """
+
+    def test_dict_key_with_single_quote_does_not_inject(self):
+        """A dict-valued hyperparameter whose key contains a single-quote injection
+        payload must be safely quoted in generated code (CVE regression).
+
+        repr() wraps the key in a string literal, so '__import__' appears only
+        as quoted data, never as a bare call.  We verify:
+        (1) the generated code is syntactically valid Python (ast.parse succeeds), and
+        (2) the AST contains no live __import__ call node (payload is inert string data).
+        """
+        import ast
+
+        from lale.json_operator import from_json
+
+        injection_key = "x': __import__('os').system('echo PWNED'), 'y"
+        spec = {
+            "class": "lale.lib.sklearn.tfidf_vectorizer._TfidfVectorizerImpl",
+            "state": "trainable",
+            "operator": "TfidfVectorizer",
+            "hyperparams": {"vocabulary": {injection_key: 0}},
+            "is_frozen_trainable": False,
+        }
+        op = from_json(spec)
+        code = lale.pretty_print.to_string(op)
+        # (1) Must be syntactically valid Python.
+        tree = ast.parse(code)
+        # (2) The injection payload must appear only as a string constant, never
+        #     as a live call.  Scan every Call node in the AST.
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
+                self.assertNotEqual(
+                    node.func.id,
+                    "__import__",
+                    "injection key produced a live __import__ call in generated AST",
+                )
+
+    def test_dict_key_with_backslash_roundtrips_safely(self):
+        """A dict key with a backslash must be represented without breaking the
+        generated source."""
+        import ast
+
+        from lale.json_operator import from_json
+
+        spec = {
+            "class": "lale.lib.sklearn.tfidf_vectorizer._TfidfVectorizerImpl",
+            "state": "trainable",
+            "operator": "TfidfVectorizer",
+            "hyperparams": {"vocabulary": {"key\\with\\backslash": 1}},
+            "is_frozen_trainable": False,
+        }
+        op = from_json(spec)
+        code = lale.pretty_print.to_string(op)
+        ast.parse(code)  # must be valid Python
+
+    def test_dict_key_with_newline_roundtrips_safely(self):
+        """A dict key containing a newline must not break the generated source."""
+        import ast
+
+        from lale.json_operator import from_json
+
+        spec = {
+            "class": "lale.lib.sklearn.tfidf_vectorizer._TfidfVectorizerImpl",
+            "state": "trainable",
+            "operator": "TfidfVectorizer",
+            "hyperparams": {"vocabulary": {"key\nwith\nnewline": 2}},
+            "is_frozen_trainable": False,
+        }
+        op = from_json(spec)
+        code = lale.pretty_print.to_string(op)
+        ast.parse(code)  # must be valid Python
+
+
+class TestSecurityFromJsonRefRejection(unittest.TestCase):
+    """Regression tests for HackerOne report 4178200.
+
+    ``from_json`` must reject any ``customize_schema`` that contains a
+    ``$ref`` keyword, preventing local file disclosure and SSRF.
+    """
+
+    def _make_spec(self, ref: str) -> dict:
+        return {
+            "class": "lale.lib.sklearn.logistic_regression._LogisticRegressionImpl",
+            "state": "trainable",
+            "operator": "LogisticRegression",
+            "hyperparams": {"C": 0.5},
+            "is_frozen_trainable": False,
+            "customize_schema": {
+                "properties": {
+                    "hyperparams": {"allOf": [{"properties": {"C": {"$ref": ref}}}]}
+                }
+            },
+        }
+
+    def test_file_ref_is_rejected(self):
+        """A ``file://`` $ref in customize_schema must raise ValueError before
+        any file is read (no SSRF / local file disclosure)."""
+        from lale.json_operator import from_json
+
+        spec = self._make_spec("file:///etc/passwd")
+        with self.assertRaises(ValueError) as ctx:
+            from_json(spec)
+        self.assertIn("$ref", str(ctx.exception))
+
+    def test_http_ref_is_rejected(self):
+        """An ``http://`` $ref in customize_schema must raise ValueError without
+        making any outbound network request."""
+        from lale.json_operator import from_json
+
+        spec = self._make_spec("http://attacker.example.com/evil.json")
+        with self.assertRaises(ValueError) as ctx:
+            from_json(spec)
+        self.assertIn("$ref", str(ctx.exception))
+
+    def test_nested_ref_is_rejected(self):
+        """A $ref nested deeper inside customize_schema must also be rejected."""
+        from lale.json_operator import from_json
+
+        spec = {
+            "class": "lale.lib.sklearn.logistic_regression._LogisticRegressionImpl",
+            "state": "trainable",
+            "operator": "LogisticRegression",
+            "hyperparams": {"C": 0.5},
+            "is_frozen_trainable": False,
+            "customize_schema": {
+                "properties": {
+                    "hyperparams": {
+                        "allOf": [
+                            {
+                                "properties": {
+                                    "C": {"anyOf": [{"$ref": "file:///tmp/evil.json"}]}
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+        }
+        with self.assertRaises(ValueError):
+            from_json(spec)
+
+    def test_customize_schema_without_ref_still_works(self):
+        """Legitimate customize_schema without $ref must continue to work."""
+        from lale.json_operator import from_json
+
+        spec = {
+            "class": "lale.lib.sklearn.logistic_regression._LogisticRegressionImpl",
+            "state": "trainable",
+            "operator": "LogisticRegression",
+            "hyperparams": {"C": 0.5},
+            "is_frozen_trainable": False,
+            "customize_schema": {
+                "properties": {
+                    "hyperparams": {
+                        "allOf": [
+                            {
+                                "properties": {
+                                    "C": {
+                                        "type": "number",
+                                        "minimum": 0.0,
+                                        "maximum": 10.0,
+                                    }
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+        }
+        op = from_json(spec)
+        self.assertIsNotNone(op)

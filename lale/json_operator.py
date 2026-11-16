@@ -385,6 +385,27 @@ def _get_customize_schema(after, before):
     return result
 
 
+def _reject_refs(schema: Any) -> None:
+    """Recursively walk a schema fragment and raise ValueError if any $ref is found.
+
+    $ref values can cause the jsonschema validator to fetch arbitrary URIs
+    (file:// or http://) when the schema is later used for validation, enabling
+    local file disclosure and SSRF.  This guard runs at deserialization time,
+    before the fragment is merged into the live operator schema.
+    """
+    if isinstance(schema, dict):
+        if "$ref" in schema:
+            raise ValueError(
+                "customize_schema must not contain '$ref': "
+                "remote or file references are not allowed in pipeline JSON"
+            )
+        for v in schema.values():
+            _reject_refs(v)
+    elif isinstance(schema, list):
+        for item in schema:
+            _reject_refs(item)
+
+
 def _top_schemas_to_hparams(top_level_schemas) -> JSON_TYPE:
     if not isinstance(top_level_schemas, dict):
         return {}
@@ -548,6 +569,7 @@ def _op_from_json_rec(jsn: JSON_TYPE) -> "lale.operators.Operator":
         name = jsn["operator"]
         result = lale.operators.make_operator(impl, schemas, name)
         if jsn.get("customize_schema", {}) != {}:
+            _reject_refs(jsn["customize_schema"])
             new_hps = _top_schemas_to_hp_props(jsn["customize_schema"])
             result = result.customize_schema(**new_hps)
         if jsn["state"] in ["trainable", "trained"]:

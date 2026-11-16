@@ -41,6 +41,8 @@ import jsonschema.validators
 import jsonsubschema
 import numpy as np
 import numpy.random
+import referencing
+import referencing.exceptions
 import sklearn.base
 
 import lale.datasets.data_schemas
@@ -96,6 +98,25 @@ def _is_extended_boolean(checker, instance):
 
 
 # https://github.com/Julian/jsonschema/blob/master/jsonschema/validators.py
+
+
+def _no_retrieve(uri: str) -> referencing.Resource:
+    """Retriever that refuses all external/file URI fetches.
+
+    This is passed to the jsonschema Registry so that any $ref pointing to a
+    ``file://``, ``http://``, or other external URI raises
+    ``referencing.exceptions.Unretrievable`` immediately instead of making a
+    network request or reading a local file.  All $refs used internally by
+    lale's own schemas are fragment-only (``#/definitions/...``) and are
+    resolved from the document itself, so they never reach this retriever.
+    """
+    raise referencing.exceptions.Unretrievable(ref=uri)
+
+
+# A Registry that resolves local fragment $refs normally but refuses any
+# external URI retrieval, preventing SSRF and local file disclosure.
+_no_fetch_registry = referencing.Registry(retrieve=_no_retrieve)
+
 _lale_validator = jsonschema.validators.extend(
     validator=jsonschema.Draft4Validator,
     validators={"laleType": _validate_lale_type},
@@ -127,10 +148,12 @@ def always_validate_schema(value: Any, schema: JSON_TYPE, subsample_array: bool 
     json_value = lale.helpers.data_to_json(value, subsample_array)
     sch: Any = lale.helpers.data_to_json(schema, False)
     try:
-        validator = _lale_validator(sch)
+        validator = _lale_validator(sch, registry=_no_fetch_registry)
         validator.validate(json_value)
     except Exception:
-        jsonschema.validate(json_value, sch, _lale_validator)
+        jsonschema.validate(
+            json_value, sch, _lale_validator, registry=_no_fetch_registry
+        )
 
 
 def validate_schema_directly(
@@ -168,7 +191,9 @@ def _json_meta_schema() -> Dict[str, Any]:
     return jsonschema.Draft4Validator.META_SCHEMA
 
 
-_validator = jsonschema.Draft4Validator(_json_meta_schema())
+_validator = jsonschema.Draft4Validator(
+    _json_meta_schema(), registry=_no_fetch_registry
+)
 
 
 def validate_is_schema(value: Dict[str, Any]):
