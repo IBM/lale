@@ -37,6 +37,20 @@ JSON_TYPE = Dict[str, Any]
 _black78 = black.FileMode(line_length=78)
 
 
+def _checked_identifier(name: str) -> str:
+    """Return *name* unchanged, or raise ValueError if it is not a valid Python identifier.
+
+    This is an active runtime guard used wherever a string is embedded raw
+    into generated source code as a name (keyword argument, variable, etc.).
+    It fires even under ``python -O`` (unlike ``assert``).
+    """
+    if not isinstance(name, str) or not name.isidentifier():
+        raise ValueError(
+            f"Expected a valid Python identifier for code generation, got {name!r}"
+        )
+    return name
+
+
 class _CodeGenState:
     imports: List[str]
     assigns: List[str]
@@ -93,7 +107,7 @@ def hyperparams_to_string(
                 step_uid = value["$ref"].split("/")[-1]
                 return steps[step_uid]
             else:
-                sl = {f"'{k}': {value_to_string(v)}" for k, v in value.items()}
+                sl = {f"{repr(k)}: {value_to_string(v)}" for k, v in value.items()}
                 return "{" + ", ".join(sl) + "}"
         elif isinstance(value, tuple):
             sl = [value_to_string(v) for v in value]
@@ -172,7 +186,8 @@ def hyperparams_to_string(
             func_string = f"{module}.{func.__name__}"
             sign_strings = [] if value._sign > 0 else ["greater_is_better=False"]  # type: ignore
             kwargs_strings = [
-                f"{k}={value_to_string(v)}" for k, v in value._kwargs.items()  # type: ignore
+                f"{_checked_identifier(k)}={value_to_string(v)}"
+                for k, v in value._kwargs.items()  # type: ignore
             ]
             args_strings = [func_string, *sign_strings, *kwargs_strings]
             printed = f"sklearn.metrics.make_scorer({', '.join(args_strings)})"
@@ -196,7 +211,8 @@ def hyperparams_to_string(
                     printed = f"{module}.{clazz}()"
             return printed
 
-    strings = [f"{k}={value_to_string(v)}" for k, v in hps.items()]
+    # k is a hyperparameter name (always a valid Python identifier), enforced actively.
+    strings = [f"{_checked_identifier(k)}={value_to_string(v)}" for k, v in hps.items()]
     return ", ".join(strings)
 
 
@@ -511,7 +527,7 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
             gen.assigns.append(f"{uid} = {op_expr}")
             return uid
     elif _op_kind(jsn) == "IndividualOp":
-        label: str = jsn["label"]
+        label: str = _checked_identifier(jsn["label"])
         class_name = jsn["class"]
         module_name = _get_module_name(label, jsn["operator"], class_name)
         if module_name.startswith("lale."):
@@ -545,7 +561,7 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
                 )
                 customize_schema_string = ",".join(
                     [
-                        f"{hp_name}={json_to_string(hp_schema)}"
+                        f"{_checked_identifier(hp_name)}={json_to_string(hp_schema)}"
                         for hp_name, hp_schema in new_hps.items()
                     ]
                 )
@@ -668,7 +684,7 @@ def json_to_string(jsn: JSON_TYPE) -> str:
             sl = [_inner(v) for v in value]
             return "(" + ", ".join(sl) + ")"
         elif isinstance(value, dict):
-            sl = [f"'{k}': {_inner(v)}" for k, v in value.items()]
+            sl = [f"{repr(k)}: {_inner(v)}" for k, v in value.items()]
             return "{" + ", ".join(sl) + "}"
         else:
             return f"<<{type(value).__qualname__}>>"
