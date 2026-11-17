@@ -272,56 +272,35 @@ def _final_trained_impl_has(attr):
 
 
 _combinators_docstrings = """
-    Methods
-    -------
+Methods
+-------
 
-    step_1 >> step_2 -> PlannedPipeline
-        Pipe combinator, create two-step pipeline with edge from step_1 to step_2.
+step_1 >> step_2 -> PlannedPipeline
+    Pipe combinator, create two-step pipeline with edge from step_1 to step_2.
 
-        If step_1 is a pipeline, create edges from all of its sinks.
-        If step_2 is a pipeline, create edges to all of its sources.
+    If step_1 is a pipeline, create edges from all of its sinks.
+    If step_2 is a pipeline, create edges to all of its sources.
 
-        Parameters
-        ^^^^^^^^^^
-        step_1 : Operator
-            The origin of the edge(s).
-        step_2 : Operator
-            The destination of the edge(s).
+    :param step_1: (Operator) The origin of the edge(s).
+    :param step_2: (Operator) The destination of the edge(s).
+    :returns: Pipeline with edge from step_1 to step_2.
+    :rtype: BasePipeline
 
-        Returns
-        ^^^^^^^
-        BasePipeline
-            Pipeline with edge from step_1 to step_2.
+step_1 & step_2 -> PlannedPipeline
+    And combinator, create two-step pipeline without an edge between step_1 and step_2.
 
-    step_1 & step_2 -> PlannedPipeline
-        And combinator, create two-step pipeline without an edge between step_1 and step_2.
+    :param step_1: (Operator) The first step.
+    :param step_2: (Operator) The second step.
+    :returns: Pipeline without any additional edges beyond those already inside of step_1 or step_2.
+    :rtype: BasePipeline
 
-        Parameters
-        ^^^^^^^^^^
-        step_1 : Operator
-            The first step.
-        step_2 : Operator
-            The second step.
+step_1 | step_2 -> OperatorChoice
+    Or combinator, create operator choice between step_1 and step_2.
 
-        Returns
-        ^^^^^^^
-        BasePipeline
-            Pipeline without any additional edges beyond those already inside of step_1 or step_2.
-
-    step_1 | step_2 -> OperatorChoice
-        Or combinator, create operator choice between step_1 and step_2.
-
-        Parameters
-        ^^^^^^^^^^
-        step_1 : Operator
-            The first step.
-        step_2 : Operator
-            The second step.
-
-        Returns
-        ^^^^^^^
-        OperatorChoice
-            Algorithmic coice between step_1 or step_2."""
+    :param step_1: (Operator) The first step.
+    :param step_2: (Operator) The second step.
+    :returns: Algorithmic choice between step_1 or step_2.
+    :rtype: OperatorChoice"""
 
 
 class Operator(metaclass=AbstractVisitorMeta):

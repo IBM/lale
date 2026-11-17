@@ -1021,11 +1021,35 @@ class _AODorEODScorerFactory(_AIF360ScorerFactory):
 
 _SCORER_DOCSTRING_ARGS = """
 
-    Parameters
-    ----------
-    favorable_labels : array of union
+Parameters
+----------
+favorable_labels : array of union
 
-      Label values which are considered favorable (i.e. "positive").
+  Label values which are considered favorable (i.e. "positive").
+
+  - string
+
+      Literal value
+
+  - *or* number
+
+      Numerical value
+
+  - *or* array of numbers, >= 2 items, <= 2 items
+
+      Numeric range [a,b] from a to b inclusive.
+
+protected_attributes : array of dict
+
+  Features for which fairness is desired.
+
+  - feature : string or integer
+
+      Column name or column index.
+
+  - reference_group : array of union
+
+      Values or ranges that indicate being a member of the privileged group.
 
       - string
 
@@ -1039,59 +1063,13 @@ _SCORER_DOCSTRING_ARGS = """
 
           Numeric range [a,b] from a to b inclusive.
 
-    protected_attributes : array of dict
+  - monitored_group : union type, default None
 
-      Features for which fairness is desired.
-
-      - feature : string or integer
-
-          Column name or column index.
-
-      - reference_group : array of union
-
-          Values or ranges that indicate being a member of the privileged group.
-
-          - string
-
-              Literal value
-
-          - *or* number
-
-              Numerical value
-
-          - *or* array of numbers, >= 2 items, <= 2 items
-
-              Numeric range [a,b] from a to b inclusive.
-
-      - monitored_group : union type, default None
-
-          Values or ranges that indicate being a member of the unprivileged group.
-
-          - None
-
-              If `monitored_group` is not explicitly specified, consider any values not captured by `reference_group` as monitored.
-
-          - *or* array of union
-
-            - string
-
-                Literal value
-
-            - *or* number
-
-                Numerical value
-
-            - *or* array of numbers, >= 2 items, <= 2 items
-
-                Numeric range [a,b] from a to b inclusive.
-
-    unfavorable_labels : union type, default None
-
-      Label values which are considered unfavorable (i.e. "negative").
+      Values or ranges that indicate being a member of the unprivileged group.
 
       - None
 
-          If `unfavorable_labels` is not explicitly specified, consider any labels not captured by `favorable_labels` as unfavorable.
+          If `monitored_group` is not explicitly specified, consider any values not captured by `reference_group` as monitored.
 
       - *or* array of union
 
@@ -1105,28 +1083,50 @@ _SCORER_DOCSTRING_ARGS = """
 
         - *or* array of numbers, >= 2 items, <= 2 items
 
-            Numeric range [a,b] from a to b inclusive."""
+            Numeric range [a,b] from a to b inclusive.
+
+unfavorable_labels : union type, default None
+
+  Label values which are considered unfavorable (i.e. "negative").
+
+  - None
+
+      If `unfavorable_labels` is not explicitly specified, consider any labels not captured by `favorable_labels` as unfavorable.
+
+  - *or* array of union
+
+    - string
+
+        Literal value
+
+    - *or* number
+
+        Numerical value
+
+    - *or* array of numbers, >= 2 items, <= 2 items
+
+        Numeric range [a,b] from a to b inclusive."""
 
 _SCORER_DOCSTRING_RETURNS = """
 
-    Returns
-    -------
-    result : callable
+Returns
+-------
+result : callable
 
-      Scorer that takes three arguments ``(estimator, X, y)`` and returns a
-      scalar number.  Furthermore, besides being callable, the returned object
-      also has two methods, ``score_data(y_true, y_pred, X)`` for evaluating
-      datasets and ``score_estimator(estimator, X, y)`` for evaluating
-      estimators.
+  Scorer that takes three arguments ``(estimator, X, y)`` and returns a
+  scalar number.  Furthermore, besides being callable, the returned object
+  also has two methods, ``score_data(y_true, y_pred, X)`` for evaluating
+  datasets and ``score_estimator(estimator, X, y)`` for evaluating
+  estimators.
 """
 
 _SCORER_DOCSTRING = _SCORER_DOCSTRING_ARGS + _SCORER_DOCSTRING_RETURNS
 
 _BLENDED_SCORER_DOCSTRING = _SCORER_DOCSTRING_ARGS + """
 
-    fairness_weight : number, >=0, <=1, default=0.5
+fairness_weight : number, >=0, <=1, default=0.5
 
-      At the default weight of 0.5, the two metrics contribute equally to the blended result. Above 0.5, fairness influences the combination more, and below 0.5, fairness influences the combination less. In the extreme, at 1, the outcome is only determined by fairness, and at 0, the outcome ignores fairness.
+  At the default weight of 0.5, the two metrics contribute equally to the blended result. Above 0.5, fairness influences the combination more, and below 0.5, fairness influences the combination less. In the extreme, at 1, the outcome is only determined by fairness, and at 0, the outcome ignores fairness.
 """ + _SCORER_DOCSTRING_RETURNS
 
 
