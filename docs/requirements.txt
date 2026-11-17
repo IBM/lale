@@ -19,11 +19,13 @@ xgboost
 lightgbm<4.7.0
 liac-arff>=2.4.0
 imbalanced-learn
-smac<=0.10.0
+# smac<=0.10.0 removed: pyrfr (a smac dependency) fails to compile with
+# modern g++ due to a C++ bug in its vendored rapidjson. smac is not needed
+# for the docs build since lale/lib/lale/smac.py guards its import with
+# try/except ImportError.
 # subset of setup.py -> extras_require -> test
-sphinx>=5.0.0
+sphinx>=7.2.0
 sphinx_rtd_theme>=0.5.2
-docutils<0.17
-m2r2
+m2r2>=2.1.0
 sphinxcontrib.apidoc
 sphinxcontrib-svg2pdfconverter

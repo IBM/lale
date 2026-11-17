@@ -51,8 +51,6 @@ release = f"{lale.__version__}-dev"
 
 
 sys.path.append(os.path.join(os.path.dirname(__name__), "../lale"))
-import sphinx_rtd_theme  # isort:skip # noqa:E402  # pylint:disable=wrong-import-position,wrong-import-order
-
 # For packages with mock imports, if we have wrappers without our impl classes,
 # schema validation fails as the mocking adds methods such as `transform`, `predict` etc.
 # when the schema may not have those tags. So we disable schema validation during doc generation.
@@ -99,6 +97,7 @@ autodoc_mock_imports = [
     "mystic",
     "numba",
     "pytorch",
+    "smac",
     "tensorflow",
     "torch",
 ]
@@ -136,7 +135,6 @@ pygments_style = None
 # a list of builtin themes.
 #
 html_theme = "sphinx_rtd_theme"
-html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -240,7 +238,7 @@ epub_exclude_files = ["search.html"]
 # -- Options for intersphinx extension ---------------------------------------
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {"https://docs.python.org/": None}
+intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 
 # -- Options for todo extension ----------------------------------------------
 
