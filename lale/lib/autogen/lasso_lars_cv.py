@@ -49,7 +49,10 @@ _hyperparams_schema = {
                 "max_n_alphas",
                 "eps",
                 "copy_X",
-                "positive",
+                # "positive" excluded: sklearn 1.7+ raises ValueError from
+                # scipy.interpolate.interp1d when positive=True causes the
+                # LARS alpha path to include a tiny negative near-zero value
+                # (-1e-15) that falls below the interpolation range minimum.
             ],
             "additionalProperties": False,
             "properties": {
