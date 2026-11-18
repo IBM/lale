@@ -47,13 +47,13 @@ performed by the continuous integration tests in GitHub Actions.
 
 # Making a Lale Release
 
-Every successful build automatically creates a release on
+Every successful build on master automatically creates a release on
 [test PyPI](https://test.pypi.org/project/lale/), which can be
 installed via `pip install -i https://test.pypi.org/simple/ lale`.
 
 To make a release on [public PyPI](https://pypi.org/project/lale/),
 which can be installed via `pip install lale`, perform the following
-two steps:
+three steps:
 
 1. Increment the version string.
     * The version string is stored in `lale/__init__` (as an example, [here is a prior version](https://github.com/IBM/lale/blob/b576449a3096847bab4962ab733d3c185a9afefc/lale/__init__.py#L17)).
@@ -75,4 +75,29 @@ two steps:
 
     * Click `Publish Release`.
 
-    * You are done!  The release will be automatically deployed to public PyPI.
+3. Approve the deployment to PyPI
+    * Publishing the release triggers the
+      [`Deploy Release`](https://github.com/IBM/lale/actions/workflows/release.yml)
+      workflow. It builds the package and publishes it to both test PyPI
+      and public PyPI using
+      [trusted publishing](https://docs.pypi.org/trusted-publishers/),
+      so no API tokens or passwords are stored in GitHub secrets.
+
+    * The deployment to public PyPI uses the `pypi` GitHub environment,
+      which requires approval from a reviewer. The publish job will show
+      as "Waiting" until it is approved (the test PyPI job does not
+      require approval).
+
+    * Open the workflow run under the
+      [Actions tab](https://github.com/IBM/lale/actions/workflows/release.yml),
+      click `Review pending deployments`, select `pypi`, and click
+      `Approve and deploy`.
+
+    * You are done!  Once approved, the release is deployed to public PyPI.
+
+The trusted publisher configuration (on PyPI and test PyPI) and the
+`pypi` / `testpypi` environments (in the GitHub repository settings)
+must match the workflow file name and environment names used in
+[`.github/workflows/release.yml`](.github/workflows/release.yml) and
+[`.github/workflows/build.yml`](.github/workflows/build.yml). If they are
+renamed, update the publisher settings accordingly.
