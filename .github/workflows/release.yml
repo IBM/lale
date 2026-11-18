@@ -9,22 +9,63 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  build:
+    name: Build distribution
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [3.11]
     steps:
     - uses: actions/checkout@v6
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python
       uses: actions/setup-python@v6
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: "3.11"
     - name: Install dependencies
-      run: pip install wheel twine
+      run: pip install build
     - name: Build distribution
-      run: python setup.py sdist bdist_wheel
-    - name: Publish package to (not-test) PyPi
-      run: twine upload -u "__token__" -p "${{ secrets.pypi_password }}" dist/*
+      run: python -m build
+    - name: Upload distribution
+      uses: actions/upload-artifact@v7
+      with:
+        name: python-package-distributions
+        path: dist/
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/lale
+    permissions:
+      id-token: write  # required for PyPI trusted publishing
+    steps:
+    - name: Download distribution
+      uses: actions/download-artifact@v8
+      with:
+        name: python-package-distributions
+        path: dist/
+    - name: Publish package to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        print-hash: true
+
+  publish-testpypi:
+    name: Publish to TestPyPI
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/lale
+    permissions:
+      id-token: write  # required for PyPI trusted publishing
+    steps:
+    - name: Download distribution
+      uses: actions/download-artifact@v8
+      with:
+        name: python-package-distributions
+        path: dist/
     - name: Publish package to TestPyPI
-      run: twine upload -u "__token__" -p "${{ secrets.test_pypi_password }}" -r testpypi dist/*
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        repository-url: https://test.pypi.org/legacy/
+        print-hash: true
+        skip-existing: true
